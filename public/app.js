@@ -32,7 +32,7 @@ photos.addEventListener('change',()=>{
   document.querySelector('#file-summary').textContent=selected.length?`${selected.length} photo${selected.length===1?'':'s'} selected`:'';
 });
 
-async function resizeFile(file,max=1400){
+async function resizeFile(file,max=480){
   const bitmap=await createImageBitmap(file);
   const scale=Math.min(1,max/Math.max(bitmap.width,bitmap.height));
   const w=Math.max(1,Math.round(bitmap.width*scale)),h=Math.max(1,Math.round(bitmap.height*scale));

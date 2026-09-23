@@ -27,7 +27,7 @@ const STYLES = {
   },
   comic: {
     name: "Comic Hero",
-    prompt: "original comic-book hero illustration, dynamic pose, clean ink linework, halftone texture, graphic shadows, original costume design"
+    prompt: "original upbeat comic-book adventure portrait, friendly heroic costumes, confident nonviolent pose, clean ink linework, halftone texture, bright graphic shadows, original costume design, no weapons, no combat"
   },
   space: {
     name: "Space Explorer",
@@ -93,6 +93,18 @@ function makePrompt(styleId, subjectType, notes) {
     "Create an original composition. Do not add logos, trademarks, famous characters, copied franchise costumes, branded typography, or recognizable copyrighted title treatments.",
     "No text in the artwork. Premium polished editorial/commercial quality, natural face detail, no distorted hands or duplicated features."
   ].filter(Boolean).join(" ");
+}
+
+function safeFallbackPrompt(styleId, subjectType) {
+  const style = STYLES[styleId] || STYLES.game;
+  return [
+    "Edit the supplied reference photo into a family-safe, nonviolent, original portrait.",
+    "Preserve the recognizable identity of every person, pet, or vehicle as closely as possible.",
+    `Subject type: ${subjectType || "person"}.`,
+    style.prompt + ".",
+    "Friendly confident expressions. No weapons, combat, injuries, threatening gestures, logos, trademarks, famous characters, copied costumes, or text.",
+    "Premium editorial quality with natural facial detail and an original setting."
+  ].join(" ");
 }
 
 function requestKey(id, suffix) {
@@ -215,7 +227,39 @@ async function transform(request, env) {
     if (!inputFiles.length) return json({ error: "Upload at least one photo.", stage: "validate-input" }, 400);
 
     stage = "ai-generation";
-    const rawImage = await runImage(aiForm, env);
+    let rawImage;
+    let usedSafeRetry = false;
+    try {
+      rawImage = await runImage(aiForm, env);
+    } catch (error) {
+      const message = error?.message || String(error);
+      if (message.includes("3030") || message.toLowerCase().includes("flagged")) {
+        stage = "ai-safe-retry";
+        const safeForm = new FormData();
+        safeForm.append("prompt", safeFallbackPrompt(styleId, subjectType));
+        safeForm.append("width", "512");
+        safeForm.append("height", "512");
+        for (let i = 0; i < inputFiles.length; i++) {
+          safeForm.append(`input_image_${i}`, inputFiles[i], inputFiles[i].name || `reference-${i}.jpg`);
+        }
+        try {
+          rawImage = await runImage(safeForm, env);
+          usedSafeRetry = true;
+        } catch (retryError) {
+          const retryMessage = retryError?.message || String(retryError);
+          if (retryMessage.includes("3030") || retryMessage.toLowerCase().includes("flagged")) {
+            return json({
+              error: "Workers AI declined this photo/request combination. Try a different photo or a simpler, nonviolent original direction.",
+              stage: "ai-moderation",
+              code: 3030
+            }, 422);
+          }
+          throw retryError;
+        }
+      } else {
+        throw error;
+      }
+    }
     const image = normalizeBase64(rawImage);
     if (!image || image.length < 100) throw new Error("AI returned malformed image data.");
 
@@ -237,7 +281,8 @@ async function transform(request, env) {
       persisted: stored.persisted,
       storageReady: Boolean(env.ARTWORK),
       storageError: stored.storageError || null,
-      debugStage: "complete"
+      debugStage: "complete",
+      usedSafeRetry
     });
   } catch (error) {
     console.error("Transform error", stage, error);
