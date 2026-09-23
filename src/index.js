@@ -82,14 +82,82 @@ function safeNotes(text = "") {
 function makePrompt(styleId, subjectType, notes) {
   const style = STYLES[styleId] || STYLES.game;
   return [
-    "Edit the provided customer photo rather than inventing a different person.",
-    "Preserve the recognizable identity, face, pet markings, vehicle shape, pose cues, and defining features of the provided subject as closely as possible.",
+    "Edit the supplied customer reference photo. The reference identity is the highest priority.",
+    "Preserve facial geometry, eye shape, nose, mouth, jawline, skin tone, hairline, age range, body proportions, pet markings, vehicle silhouette, and other defining features as closely as possible.",
+    "Do not replace the customer with a generic model. Do not materially alter ethnicity, age, or recognizable facial structure.",
+    "For multiple subjects, preserve each subject distinctly and keep their relative identities clear.",
     `Subject type: ${subjectType || "person"}.`,
     style.prompt + ".",
     safeNotes(notes || ""),
+    "Change styling, wardrobe, environment, lighting, props, and atmosphere more than identity.",
     "Create an original composition. Do not add logos, trademarks, famous characters, copied franchise costumes, branded typography, or recognizable copyrighted title treatments.",
-    "No text in the artwork. Premium polished commercial quality."
+    "No text in the artwork. Premium polished editorial/commercial quality, natural face detail, no distorted hands or duplicated features."
   ].filter(Boolean).join(" ");
+}
+
+function requestKey(id, suffix) {
+  return `requests/${id}/${suffix}`;
+}
+
+function bytesFromBase64(base64) {
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return bytes;
+}
+
+async function readMetadata(env, requestId) {
+  if (!env.ARTWORK) return null;
+  const object = await env.ARTWORK.get(requestKey(requestId, "request.json"));
+  if (!object) return null;
+  return object.json();
+}
+
+function tokenMatches(meta, token) {
+  return Boolean(meta?.accessToken && token && meta.accessToken === token);
+}
+
+async function storeRequest(env, { requestId, accessToken, styleId, subjectType, notes, inputs, imageBase64, safety }) {
+  if (!env.ARTWORK) return { persisted: false };
+
+  const createdAt = new Date().toISOString();
+  const previewBytes = bytesFromBase64(imageBase64);
+
+  for (let i = 0; i < inputs.length; i++) {
+    const file = inputs[i];
+    await env.ARTWORK.put(requestKey(requestId, `input-${i}.jpg`), await file.arrayBuffer(), {
+      httpMetadata: { contentType: "image/jpeg" },
+      customMetadata: { requestId, kind: "input", createdAt }
+    });
+  }
+
+  await env.ARTWORK.put(requestKey(requestId, "preview.jpg"), previewBytes, {
+    httpMetadata: { contentType: "image/jpeg" },
+    customMetadata: { requestId, kind: "preview", createdAt }
+  });
+
+  const metadata = {
+    requestId,
+    accessToken,
+    styleId,
+    styleName: STYLES[styleId]?.name || STYLES.game.name,
+    subjectType,
+    notes,
+    safety,
+    status: "preview_ready",
+    createdAt,
+    updatedAt: createdAt,
+    inputCount: inputs.length,
+    paid: false,
+    fulfillment: "not_started"
+  };
+
+  await env.ARTWORK.put(requestKey(requestId, "request.json"), JSON.stringify(metadata), {
+    httpMetadata: { contentType: "application/json" },
+    customMetadata: { requestId, kind: "metadata", createdAt }
+  });
+
+  return { persisted: true, metadata };
 }
 
 async function runImage(form, env) {
@@ -124,27 +192,44 @@ async function transform(request, env) {
   aiForm.append("width", "512");
   aiForm.append("height", "512");
 
-  let imageCount = 0;
+  const inputFiles = [];
   for (let i = 0; i < 4; i++) {
     const file = incoming.get(`image_${i}`);
     if (file instanceof File && file.size > 0) {
       if (!file.type.startsWith("image/")) return json({ error: "Uploads must be images." }, 400);
       if (file.size > 2_000_000) return json({ error: "Each prepared image must be under 2 MB." }, 400);
       aiForm.append(`input_image_${i}`, file, file.name || `reference-${i}.jpg`);
-      imageCount++;
+      inputFiles.push(file);
     }
   }
-  if (!imageCount) return json({ error: "Upload at least one photo." }, 400);
+  if (!inputFiles.length) return json({ error: "Upload at least one photo." }, 400);
 
   const image = await runImage(aiForm, env);
   const requestId = `RC-${Date.now().toString(36).toUpperCase()}-${crypto.randomUUID().slice(0, 6).toUpperCase()}`;
+  const accessToken = crypto.randomUUID().replaceAll("-", "") + crypto.randomUUID().replaceAll("-", "");
+
+  const stored = await storeRequest(env, {
+    requestId,
+    accessToken,
+    styleId,
+    subjectType,
+    notes,
+    inputs: inputFiles,
+    imageBase64: image,
+    safety
+  });
+
   return json({
     ok: true,
     requestId,
+    accessToken,
     style: STYLES[styleId]?.name || STYLES.game.name,
     image: `data:image/jpeg;base64,${image}`,
-    demoMode: true,
-    notice: "MVP preview: uploads are processed in-memory and are not yet stored for paid fulfillment. Checkout stays disabled until secure request storage is connected."
+    persisted: stored.persisted,
+    storageReady: Boolean(env.ARTWORK),
+    notice: stored.persisted
+      ? "Preview and prepared source photos are stored privately for this Recast request. Paid checkout remains disabled until Shopify order sync and final-generation automation are connected."
+      : "Preview works, but secure request storage is not connected yet."
   });
 }
 
@@ -169,6 +254,33 @@ async function printfulStatus(env) {
   return json({ connected: true, stores });
 }
 
+async function requestStatus(request, env, requestId) {
+  const url = new URL(request.url);
+  const token = url.searchParams.get("token");
+  const meta = await readMetadata(env, requestId);
+  if (!meta) return json({ error: "Request not found." }, 404);
+  if (!tokenMatches(meta, token)) return json({ error: "Invalid request token." }, 403);
+  const safe = { ...meta };
+  delete safe.accessToken;
+  return json({ ok: true, request: safe });
+}
+
+async function requestPreview(request, env, requestId) {
+  const url = new URL(request.url);
+  const token = url.searchParams.get("token");
+  const meta = await readMetadata(env, requestId);
+  if (!meta) return json({ error: "Request not found." }, 404);
+  if (!tokenMatches(meta, token)) return json({ error: "Invalid request token." }, 403);
+  const object = await env.ARTWORK.get(requestKey(requestId, "preview.jpg"));
+  if (!object) return json({ error: "Preview not found." }, 404);
+  return new Response(object.body, {
+    headers: {
+      "content-type": object.httpMetadata?.contentType || "image/jpeg",
+      "cache-control": "private, no-store"
+    }
+  });
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -179,12 +291,19 @@ export default {
           brand: "Recast Me",
           aiBinding: Boolean(env.AI),
           printfulSecretConfigured: Boolean(env.PRINTFUL_API_TOKEN),
+          privateArtworkStorage: Boolean(env.ARTWORK),
           mode: "MVP"
         });
       }
       if (url.pathname === "/api/ai-test" && request.method === "POST") return aiTest(env);
       if (url.pathname === "/api/transform" && request.method === "POST") return transform(request, env);
       if (url.pathname === "/api/printful-status" && request.method === "GET") return printfulStatus(env);
+
+      const requestMatch = url.pathname.match(/^\/api\/request\/([^/]+)$/);
+      if (requestMatch && request.method === "GET") return requestStatus(request, env, requestMatch[1]);
+      const previewMatch = url.pathname.match(/^\/api\/request\/([^/]+)\/preview$/);
+      if (previewMatch && request.method === "GET") return requestPreview(request, env, previewMatch[1]);
+
       if (url.pathname.startsWith("/api/")) return json({ error: "Not found" }, 404);
       return env.ASSETS.fetch(request);
     } catch (error) {

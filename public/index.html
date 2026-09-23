@@ -87,7 +87,7 @@
           </label>
           <div class="consent"><input id="consent" type="checkbox" required><label for="consent">I have permission to use the uploaded photos and agree to the Recast Me AI/Image Policy.</label></div>
           <button type="submit" class="button primary full" id="generate-button">Generate watermarked preview</button>
-          <p class="micro">MVP note: the live preview works now. Paid fulfillment stays disabled until secure photo storage and final-order automation are connected.</p>
+          <p class="micro">MVP note: preview generation is live. Once private storage is bound, each request and its prepared source photos are saved privately for paid-order automation.</p>
         </form>
       </div>
     </section>
@@ -111,7 +111,7 @@
         <div><span id="ai-dot" class="dot"></span><strong>Workers AI</strong><small id="ai-status">Checking…</small></div>
         <div><span id="pf-dot" class="dot"></span><strong>Printful</strong><small id="pf-status">Checking…</small></div>
         <div><span class="dot ready"></span><strong>Shopify catalog</strong><small>Draft catalog prepared</small></div>
-        <div><span class="dot pending"></span><strong>X mention bot</strong><small>Next integration</small></div>
+        <div><span id="storage-dot" class="dot"></span><strong>Private artwork storage</strong><small id="storage-status">Checking…</small></div><div><span class="dot pending"></span><strong>X mention bot</strong><small>Next integration</small></div>
       </div>
     </section>
 

@@ -32,7 +32,7 @@ photos.addEventListener('change',()=>{
   document.querySelector('#file-summary').textContent=selected.length?`${selected.length} photo${selected.length===1?'':'s'} selected`:'';
 });
 
-async function resizeFile(file,max=480){
+async function resizeFile(file,max=1400){
   const bitmap=await createImageBitmap(file);
   const scale=Math.min(1,max/Math.max(bitmap.width,bitmap.height));
   const w=Math.max(1,Math.round(bitmap.width*scale)),h=Math.max(1,Math.round(bitmap.height*scale));
@@ -63,16 +63,16 @@ form.addEventListener('submit',async e=>{
   try{
     const fd=new FormData();fd.append('style',styleSelect.value);fd.append('subject',document.querySelector('#subject').value);fd.append('notes',document.querySelector('#notes').value);
     for(let i=0;i<files.length;i++){button.textContent=`Preparing photo ${i+1}…`;fd.append(`image_${i}`,await resizeFile(files[i]));}
-    button.textContent='Creating your Recast…';
+    button.textContent='Creating and saving your Recast…';
     const res=await fetch('/api/transform',{method:'POST',body:fd});const data=await res.json();
     if(res.status===202&&data.reviewRequired) throw new Error('This request needs human review before generation. Try a more generic, original direction for now.');
     if(!res.ok) throw new Error(data.error||'Generation failed.');
-    await renderWatermark(data.image);document.querySelector('#preview-title').textContent=`${data.style} preview ready.`;document.querySelector('#request-id').textContent=`Artwork ID: ${data.requestId}`;
+    await renderWatermark(data.image);document.querySelector('#preview-title').textContent=`${data.style} preview ready.`;document.querySelector('#request-id').textContent=`Artwork ID: ${data.requestId}${data.persisted?' · saved privately':''}`;localStorage.setItem('recast_last_request',JSON.stringify({requestId:data.requestId,accessToken:data.accessToken,style:data.style}));
   }catch(err){alert(err.message);section.classList.add('hidden');}finally{loading.classList.add('hidden');button.disabled=false;button.textContent='Generate watermarked preview';}
 });
 
 async function status(){
-  try{const h=await fetch('/api/health').then(r=>r.json());document.querySelector('#ai-dot').classList.add(h.aiBinding?'ready':'error');document.querySelector('#ai-status').textContent=h.aiBinding?'Connected':'Missing binding';}catch{document.querySelector('#ai-dot').classList.add('error');document.querySelector('#ai-status').textContent='Unavailable';}
+  try{const h=await fetch('/api/health').then(r=>r.json());document.querySelector('#ai-dot').classList.add(h.aiBinding?'ready':'error');document.querySelector('#ai-status').textContent=h.aiBinding?'Connected':'Missing binding';document.querySelector('#storage-dot').classList.add(h.privateArtworkStorage?'ready':'error');document.querySelector('#storage-status').textContent=h.privateArtworkStorage?'Private storage ready':'R2 binding needed';}catch{document.querySelector('#ai-dot').classList.add('error');document.querySelector('#ai-status').textContent='Unavailable';}
   try{const p=await fetch('/api/printful-status').then(async r=>({ok:r.ok,data:await r.json()}));document.querySelector('#pf-dot').classList.add(p.ok&&p.data.connected?'ready':'error');document.querySelector('#pf-status').textContent=p.ok&&p.data.connected?`Connected · ${p.data.stores?.[0]?.name||'store ready'}`:'Needs token check';}catch{document.querySelector('#pf-dot').classList.add('error');document.querySelector('#pf-status').textContent='Unavailable';}
 }
 status();

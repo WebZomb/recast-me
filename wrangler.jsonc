@@ -6,6 +6,12 @@
   "ai": {
     "binding": "AI"
   },
+  "r2_buckets": [
+    {
+      "binding": "ARTWORK",
+      "bucket_name": "recast-me-artwork"
+    }
+  ],
   "assets": {
     "directory": "./public",
     "binding": "ASSETS",
