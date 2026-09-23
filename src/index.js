@@ -105,6 +105,12 @@ function normalizeBase64(value) {
     .replace(/\s+/g, "");
 }
 
+function randomHex(byteCount = 16) {
+  const bytes = new Uint8Array(byteCount);
+  crypto.getRandomValues(bytes);
+  return [...bytes].map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
 async function readMetadata(env, requestId) {
   if (!env.ARTWORK) return null;
   const object = await env.ARTWORK.get(requestKey(requestId, "request.json"));
@@ -141,20 +147,26 @@ async function storeRequest(env, { requestId, accessToken, styleId, subjectType,
       const file = inputs[i];
       await env.ARTWORK.put(requestKey(requestId, `input-${i}.jpg`), await file.arrayBuffer());
     }
-
-    // Store the AI preview as base64 text first. This avoids browser/worker
-    // decoding differences while preserving the exact generated preview.
     await env.ARTWORK.put(requestKey(requestId, "preview.b64"), normalizeBase64(imageBase64));
     await env.ARTWORK.put(requestKey(requestId, "request.json"), JSON.stringify(metadata));
-
     return { persisted: true, metadata, storageError: null };
   } catch (error) {
     console.error("R2 storage error", error);
-    return {
-      persisted: false,
-      metadata,
-      storageError: error?.message || "Unknown R2 storage error"
-    };
+    return { persisted: false, metadata, storageError: error?.message || String(error) || "Unknown R2 storage error" };
+  }
+}
+
+async function storageTest(env) {
+  if (!env.ARTWORK) return json({ ok: false, stage: "binding", error: "ARTWORK binding is missing." }, 503);
+  const key = `diagnostics/${Date.now()}-${randomHex(4)}.txt`;
+  try {
+    await env.ARTWORK.put(key, "recast-storage-ok");
+    const object = await env.ARTWORK.get(key);
+    const value = object ? await object.text() : null;
+    await env.ARTWORK.delete(key);
+    return json({ ok: value === "recast-storage-ok", keyFormat: "valid", write: true, read: Boolean(object), delete: true });
+  } catch (error) {
+    return json({ ok: false, stage: "r2", error: error?.message || String(error) }, 500);
   }
 }
 
@@ -171,65 +183,66 @@ async function runImage(form, env) {
 }
 
 async function transform(request, env) {
-  if (!env.AI) return json({ error: "Workers AI binding is not connected." }, 503);
-  const incoming = await request.formData();
-  const styleId = String(incoming.get("style") || "game");
-  const subjectType = String(incoming.get("subject") || "person");
-  const notes = String(incoming.get("notes") || "");
-  const requestText = `${styleId} ${subjectType} ${notes}`;
-  const safety = assess(requestText);
-  if (safety.status === "rejected") {
-    return json({ error: "This request is not a fit for Recast Me's good-will content policy.", safety }, 422);
-  }
-  if (safety.status === "review") {
-    return json({ reviewRequired: true, safety, message: "This request needs human approval before generation." }, 202);
-  }
+  let stage = "start";
+  try {
+    if (!env.AI) return json({ error: "Workers AI binding is not connected.", stage: "binding" }, 503);
+    stage = "parse-form";
+    const incoming = await request.formData();
+    const styleId = String(incoming.get("style") || "game");
+    const subjectType = String(incoming.get("subject") || "person");
+    const notes = String(incoming.get("notes") || "");
+    const requestText = `${styleId} ${subjectType} ${notes}`;
+    const safety = assess(requestText);
+    if (safety.status === "rejected") return json({ error: "This request is not a fit for Recast Me's good-will content policy.", safety, stage: "safety" }, 422);
+    if (safety.status === "review") return json({ reviewRequired: true, safety, message: "This request needs human approval before generation.", stage: "safety" }, 202);
 
-  const aiForm = new FormData();
-  aiForm.append("prompt", makePrompt(styleId, subjectType, notes));
-  aiForm.append("width", "512");
-  aiForm.append("height", "512");
+    stage = "prepare-ai";
+    const aiForm = new FormData();
+    aiForm.append("prompt", makePrompt(styleId, subjectType, notes));
+    aiForm.append("width", "512");
+    aiForm.append("height", "512");
 
-  const inputFiles = [];
-  for (let i = 0; i < 4; i++) {
-    const file = incoming.get(`image_${i}`);
-    if (file instanceof File && file.size > 0) {
-      if (!file.type.startsWith("image/")) return json({ error: "Uploads must be images." }, 400);
-      if (file.size > 2_000_000) return json({ error: "Each prepared image must be under 2 MB." }, 400);
-      aiForm.append(`input_image_${i}`, file, file.name || `reference-${i}.jpg`);
-      inputFiles.push(file);
+    const inputFiles = [];
+    for (let i = 0; i < 4; i++) {
+      const file = incoming.get(`image_${i}`);
+      if (file instanceof File && file.size > 0) {
+        if (!file.type.startsWith("image/")) return json({ error: "Uploads must be images.", stage: "validate-input" }, 400);
+        if (file.size > 2_000_000) return json({ error: "Each prepared image must be under 2 MB.", stage: "validate-input" }, 400);
+        aiForm.append(`input_image_${i}`, file, file.name || `reference-${i}.jpg`);
+        inputFiles.push(file);
+      }
     }
+    if (!inputFiles.length) return json({ error: "Upload at least one photo.", stage: "validate-input" }, 400);
+
+    stage = "ai-generation";
+    const rawImage = await runImage(aiForm, env);
+    const image = normalizeBase64(rawImage);
+    if (!image || image.length < 100) throw new Error("AI returned malformed image data.");
+
+    stage = "identifiers";
+    const requestId = `RC-${Date.now().toString(36).toUpperCase()}-${randomHex(3).toUpperCase()}`;
+    const accessToken = randomHex(32);
+
+    stage = "storage";
+    const stored = await storeRequest(env, { requestId, accessToken, styleId, subjectType, notes, inputs: inputFiles, imageBase64: image, safety });
+
+    stage = "response";
+    return json({
+      ok: true,
+      requestId,
+      accessToken,
+      style: STYLES[styleId]?.name || STYLES.game.name,
+      image: `data:image/jpeg;base64,${image}`,
+      imageLength: image.length,
+      persisted: stored.persisted,
+      storageReady: Boolean(env.ARTWORK),
+      storageError: stored.storageError || null,
+      debugStage: "complete"
+    });
+  } catch (error) {
+    console.error("Transform error", stage, error);
+    return json({ error: error?.message || String(error) || "Unexpected transform error.", stage }, 500);
   }
-  if (!inputFiles.length) return json({ error: "Upload at least one photo." }, 400);
-
-  const image = await runImage(aiForm, env);
-  const requestId = `RC-${Date.now().toString(36).toUpperCase()}-${crypto.randomUUID().slice(0, 6).toUpperCase()}`;
-  const accessToken = crypto.randomUUID().replaceAll("-", "") + crypto.randomUUID().replaceAll("-", "");
-
-  const stored = await storeRequest(env, {
-    requestId,
-    accessToken,
-    styleId,
-    subjectType,
-    notes,
-    inputs: inputFiles,
-    imageBase64: image,
-    safety
-  });
-
-  return json({
-    ok: true,
-    requestId,
-    accessToken,
-    style: STYLES[styleId]?.name || STYLES.game.name,
-    image: `data:image/jpeg;base64,${image}`,
-    persisted: stored.persisted,
-    storageReady: Boolean(env.ARTWORK),
-    storageError: stored.storageError || null,
-    notice: stored.persisted
-      ? "Preview and prepared source photos are stored privately for this Recast request. Paid checkout remains disabled until Shopify order sync and final-generation automation are connected."
-      : `Preview generated, but private storage needs attention: ${stored.storageError || "unknown storage error"}`
-  });
 }
 
 async function aiTest(env) {
@@ -290,6 +303,7 @@ export default {
           mode: "MVP"
         });
       }
+      if (url.pathname === "/api/storage-test" && request.method === "GET") return storageTest(env);
       if (url.pathname === "/api/ai-test" && request.method === "POST") return aiTest(env);
       if (url.pathname === "/api/transform" && request.method === "POST") return transform(request, env);
       if (url.pathname === "/api/printful-status" && request.method === "GET") return printfulStatus(env);
