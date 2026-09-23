@@ -300,6 +300,111 @@ async function aiTest(env) {
   return json({ ok: true, image: `data:image/jpeg;base64,${image}` });
 }
 
+
+let shopifyTokenCache = { token: null, expiresAt: 0 };
+
+function shopifyDomain(env) {
+  const raw = String(env.SHOPIFY_SHOP || "").trim().replace(/^https?:\/\//, "").replace(/\/$/, "");
+  if (!raw) return null;
+  return raw.endsWith(".myshopify.com") ? raw : `${raw}.myshopify.com`;
+}
+
+async function getShopifyToken(env) {
+  if (!env.SHOPIFY_CLIENT_ID || !env.SHOPIFY_CLIENT_SECRET || !env.SHOPIFY_SHOP) {
+    throw new Error("Shopify credentials are not fully configured in Cloudflare.");
+  }
+  if (shopifyTokenCache.token && shopifyTokenCache.expiresAt > Date.now() + 60_000) {
+    return shopifyTokenCache.token;
+  }
+  const domain = shopifyDomain(env);
+  const response = await fetch(`https://${domain}/admin/oauth/access_token`, {
+    method: "POST",
+    headers: { "content-type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({
+      grant_type: "client_credentials",
+      client_id: env.SHOPIFY_CLIENT_ID,
+      client_secret: env.SHOPIFY_CLIENT_SECRET
+    })
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok || !data.access_token) {
+    const detail = data?.error_description || data?.error || data?.errors || `HTTP ${response.status}`;
+    throw new Error(`Shopify token request failed: ${typeof detail === "string" ? detail : JSON.stringify(detail)}`);
+  }
+  const expiresIn = Number(data.expires_in || 86399);
+  shopifyTokenCache = {
+    token: data.access_token,
+    expiresAt: Date.now() + Math.max(60, expiresIn - 60) * 1000
+  };
+  return data.access_token;
+}
+
+async function shopifyGraphQL(env, query, variables = {}) {
+  const domain = shopifyDomain(env);
+  const token = await getShopifyToken(env);
+  const response = await fetch(`https://${domain}/admin/api/2026-07/graphql.json`, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      "x-shopify-access-token": token
+    },
+    body: JSON.stringify({ query, variables })
+  });
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(`Shopify GraphQL HTTP ${response.status}`);
+  if (payload.errors?.length) throw new Error(`Shopify GraphQL error: ${payload.errors.map((e) => e.message).join("; ")}`);
+  return payload.data;
+}
+
+async function shopifyStatus(env) {
+  try {
+    const data = await shopifyGraphQL(env, `
+      query RecastStatus {
+        shop { name myshopifyDomain }
+        products(first: 20, query: "vendor:'Recast Me'") {
+          nodes {
+            id
+            title
+            handle
+            status
+            variants(first: 20) { nodes { id title sku price } }
+          }
+        }
+        orders(first: 5, sortKey: CREATED_AT, reverse: true) {
+          nodes {
+            id
+            name
+            createdAt
+            displayFinancialStatus
+            lineItems(first: 20) {
+              nodes {
+                name
+                sku
+                quantity
+                customAttributes { key value }
+              }
+            }
+          }
+        }
+      }
+    `);
+    return json({
+      connected: true,
+      shop: data.shop,
+      recastProducts: data.products?.nodes || [],
+      recentOrders: data.orders?.nodes || [],
+      productCount: data.products?.nodes?.length || 0,
+      recentOrderCount: data.orders?.nodes?.length || 0
+    });
+  } catch (error) {
+    return json({
+      connected: false,
+      error: error?.message || String(error),
+      hint: "If the error says shop_not_permitted, this Shopify store is not in the same Dev Dashboard organization as the app; we will switch to the authorization-code flow instead."
+    }, 502);
+  }
+}
+
 async function printfulStatus(env) {
   if (!env.PRINTFUL_API_TOKEN) return json({ connected: false, error: "PRINTFUL_API_TOKEN secret is missing." }, 503);
   const response = await fetch("https://api.printful.com/stores", {
@@ -345,6 +450,7 @@ export default {
           aiBinding: Boolean(env.AI),
           printfulSecretConfigured: Boolean(env.PRINTFUL_API_TOKEN),
           privateArtworkStorage: Boolean(env.ARTWORK),
+          shopifyConfigured: Boolean(env.SHOPIFY_CLIENT_ID && env.SHOPIFY_CLIENT_SECRET && env.SHOPIFY_SHOP),
           mode: "MVP"
         });
       }
@@ -352,6 +458,7 @@ export default {
       if (url.pathname === "/api/ai-test" && request.method === "POST") return aiTest(env);
       if (url.pathname === "/api/transform" && request.method === "POST") return transform(request, env);
       if (url.pathname === "/api/printful-status" && request.method === "GET") return printfulStatus(env);
+      if (url.pathname === "/api/shopify-status" && request.method === "GET") return shopifyStatus(env);
 
       const requestMatch = url.pathname.match(/^\/api\/request\/([^/]+)$/);
       if (requestMatch && request.method === "GET") return requestStatus(request, env, requestMatch[1]);
