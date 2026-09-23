@@ -99,11 +99,10 @@ function requestKey(id, suffix) {
   return `requests/${id}/${suffix}`;
 }
 
-function bytesFromBase64(base64) {
-  const binary = atob(base64);
-  const bytes = new Uint8Array(binary.length);
-  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-  return bytes;
+function normalizeBase64(value) {
+  return String(value || "")
+    .replace(/^data:image\/[a-zA-Z0-9.+-]+;base64,/, "")
+    .replace(/\s+/g, "");
 }
 
 async function readMetadata(env, requestId) {
@@ -118,24 +117,9 @@ function tokenMatches(meta, token) {
 }
 
 async function storeRequest(env, { requestId, accessToken, styleId, subjectType, notes, inputs, imageBase64, safety }) {
-  if (!env.ARTWORK) return { persisted: false };
+  if (!env.ARTWORK) return { persisted: false, storageError: "ARTWORK binding is missing." };
 
   const createdAt = new Date().toISOString();
-  const previewBytes = bytesFromBase64(imageBase64);
-
-  for (let i = 0; i < inputs.length; i++) {
-    const file = inputs[i];
-    await env.ARTWORK.put(requestKey(requestId, `input-${i}.jpg`), await file.arrayBuffer(), {
-      httpMetadata: { contentType: "image/jpeg" },
-      customMetadata: { requestId, kind: "input", createdAt }
-    });
-  }
-
-  await env.ARTWORK.put(requestKey(requestId, "preview.jpg"), previewBytes, {
-    httpMetadata: { contentType: "image/jpeg" },
-    customMetadata: { requestId, kind: "preview", createdAt }
-  });
-
   const metadata = {
     requestId,
     accessToken,
@@ -152,12 +136,26 @@ async function storeRequest(env, { requestId, accessToken, styleId, subjectType,
     fulfillment: "not_started"
   };
 
-  await env.ARTWORK.put(requestKey(requestId, "request.json"), JSON.stringify(metadata), {
-    httpMetadata: { contentType: "application/json" },
-    customMetadata: { requestId, kind: "metadata", createdAt }
-  });
+  try {
+    for (let i = 0; i < inputs.length; i++) {
+      const file = inputs[i];
+      await env.ARTWORK.put(requestKey(requestId, `input-${i}.jpg`), await file.arrayBuffer());
+    }
 
-  return { persisted: true, metadata };
+    // Store the AI preview as base64 text first. This avoids browser/worker
+    // decoding differences while preserving the exact generated preview.
+    await env.ARTWORK.put(requestKey(requestId, "preview.b64"), normalizeBase64(imageBase64));
+    await env.ARTWORK.put(requestKey(requestId, "request.json"), JSON.stringify(metadata));
+
+    return { persisted: true, metadata, storageError: null };
+  } catch (error) {
+    console.error("R2 storage error", error);
+    return {
+      persisted: false,
+      metadata,
+      storageError: error?.message || "Unknown R2 storage error"
+    };
+  }
 }
 
 async function runImage(form, env) {
@@ -227,9 +225,10 @@ async function transform(request, env) {
     image: `data:image/jpeg;base64,${image}`,
     persisted: stored.persisted,
     storageReady: Boolean(env.ARTWORK),
+    storageError: stored.storageError || null,
     notice: stored.persisted
       ? "Preview and prepared source photos are stored privately for this Recast request. Paid checkout remains disabled until Shopify order sync and final-generation automation are connected."
-      : "Preview works, but secure request storage is not connected yet."
+      : `Preview generated, but private storage needs attention: ${stored.storageError || "unknown storage error"}`
   });
 }
 
@@ -271,14 +270,10 @@ async function requestPreview(request, env, requestId) {
   const meta = await readMetadata(env, requestId);
   if (!meta) return json({ error: "Request not found." }, 404);
   if (!tokenMatches(meta, token)) return json({ error: "Invalid request token." }, 403);
-  const object = await env.ARTWORK.get(requestKey(requestId, "preview.jpg"));
+  const object = await env.ARTWORK.get(requestKey(requestId, "preview.b64"));
   if (!object) return json({ error: "Preview not found." }, 404);
-  return new Response(object.body, {
-    headers: {
-      "content-type": object.httpMetadata?.contentType || "image/jpeg",
-      "cache-control": "private, no-store"
-    }
-  });
+  const base64 = (await object.text()).replace(/\s+/g, "");
+  return json({ ok: true, image: `data:image/jpeg;base64,${base64}` });
 }
 
 export default {

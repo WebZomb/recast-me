@@ -67,7 +67,7 @@ form.addEventListener('submit',async e=>{
     const res=await fetch('/api/transform',{method:'POST',body:fd});const data=await res.json();
     if(res.status===202&&data.reviewRequired) throw new Error('This request needs human review before generation. Try a more generic, original direction for now.');
     if(!res.ok) throw new Error(data.error||'Generation failed.');
-    await renderWatermark(data.image);document.querySelector('#preview-title').textContent=`${data.style} preview ready.`;document.querySelector('#request-id').textContent=`Artwork ID: ${data.requestId}${data.persisted?' · saved privately':''}`;localStorage.setItem('recast_last_request',JSON.stringify({requestId:data.requestId,accessToken:data.accessToken,style:data.style}));
+    await renderWatermark(data.image);document.querySelector('#preview-title').textContent=`${data.style} preview ready.`;document.querySelector('#request-id').textContent=`Artwork ID: ${data.requestId}${data.persisted?' · saved privately':' · preview generated; storage retry needed'}`;localStorage.setItem('recast_last_request',JSON.stringify({requestId:data.requestId,accessToken:data.accessToken,style:data.style}));if(data.storageError)console.warn('Recast storage warning:',data.storageError);
   }catch(err){alert(err.message);section.classList.add('hidden');}finally{loading.classList.add('hidden');button.disabled=false;button.textContent='Generate watermarked preview';}
 });
 
