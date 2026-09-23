@@ -34,3 +34,4 @@ Checkout is intentionally disabled until secure request/photo persistence is con
 4. Map exact Printful catalog variants.
 5. Add X mention ingestion/reply workflow.
 6. Finalize policies and run a test order.
+Cloudflare deployment connected.
