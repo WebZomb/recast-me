@@ -4,14 +4,14 @@ merchCss.href='/merch-v07.css';
 document.head.appendChild(merchCss);
 
 const STYLES = [
-  ["game","Game World","Cinematic city energy, dramatic light, bold illustrated realism.","/assets/style-game.svg"],
-  ["halloween","Halloween","Stylish costumes, moonlight, fog, pumpkins — playful, not grim.","/assets/style-halloween.svg"],
-  ["retro","Retro Time Machine","A vivid trip through analog color, film grain and 1980s atmosphere.","/assets/style-retro.svg"],
-  ["fantasy","Fantasy Warrior","Epic armor, ancient landscapes and cinematic fantasy light.","/assets/style-fantasy.svg"],
-  ["royal","Royal","Regal portraiture, palace textures, rich fabric and museum drama.","/assets/style-royal.svg"],
-  ["future","Future City","Neon reflections, rain haze and an original high-tech world.","/assets/style-future.svg"],
-  ["comic","Comic Hero","Original nonviolent comic-book energy, ink, halftone and motion.","/assets/style-comic.svg"],
-  ["space","Space Explorer","Original sci-fi portraiture, planets, spacecraft and epic scale.","/assets/style-space.svg"]
+  ["game","Game World","Cinematic city energy, dramatic light, bold illustrated realism.","/assets/style-game-v08.png"],
+  ["halloween","Halloween","Stylish costumes, moonlight, fog, pumpkins — playful, not grim.","/assets/style-halloween-v08.png"],
+  ["retro","Retro Time Machine","A vivid trip through analog color, film grain and 1980s atmosphere.","/assets/style-retro-v08.png"],
+  ["fantasy","Fantasy Warrior","Epic armor, ancient landscapes and cinematic fantasy light.","/assets/style-fantasy-v08.png"],
+  ["royal","Royal","Regal portraiture, palace textures, rich fabric and museum drama.","/assets/style-royal-v08.png"],
+  ["future","Future City","Neon reflections, rain haze and an original high-tech world.","/assets/style-future-v08.png"],
+  ["comic","Comic Hero","Original nonviolent comic-book energy, ink, halftone and motion.","/assets/style-comic-v08.png"],
+  ["space","Space Explorer","Original sci-fi portraiture, planets, spacecraft and epic scale.","/assets/style-space-v08.png"]
 ];
 
 const PRODUCT_CATALOG = [
@@ -126,7 +126,7 @@ photos.addEventListener('change',()=>{
   document.querySelector('#file-summary').textContent=selected.length?`${selected.length} photo${selected.length===1?'':'s'} selected`:'No photos selected';
 });
 
-async function resizeFile(file,max=480){
+async function resizeFile(file,max=768){
   const bitmap=await createImageBitmap(file);
   const scale=Math.min(1,max/Math.max(bitmap.width,bitmap.height));
   const w=Math.max(1,Math.round(bitmap.width*scale)),h=Math.max(1,Math.round(bitmap.height*scale));

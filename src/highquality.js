@@ -35,31 +35,42 @@ function safeNotes(text=""){
 }
 function makePrompt(styleId,subjectType,notes,inputCount){
   const style=STYLES[styleId]||STYLES.game;
+  const userDirection=safeNotes(notes||"").trim();
   const refs=inputCount>1
-    ? `There are ${inputCount} reference images. Treat each reference image as an identity/appearance anchor. Keep every subject distinct and do not merge faces, bodies, pet markings, or vehicle details.`
-    : "Use reference image 0 as the identity and appearance anchor.";
+    ? `There are ${inputCount} reference images. Treat every image only as a strict identity/appearance reference. Keep every subject distinct; never merge faces, bodies, pet markings, or vehicle details.`
+    : "Use reference image 0 only as the strict identity and appearance reference.";
+
   return [
+    "IMPORTANT: Follow the customer's written direction as the primary creative instruction.",
+    userDirection ? `CUSTOMER DIRECTION — execute this faithfully: ${userDirection}` : "",
     refs,
-    "This is an image-editing task, not a request to invent a replacement subject.",
-    "Preserve facial geometry, eye shape and spacing, nose, mouth, jawline, skin tone, hairline, age range, body proportions, pet coat pattern and markings, vehicle silhouette, and other defining traits.",
-    "The result should immediately read as the same person, pet, couple, or vehicle from the reference.",
+    "This is a transformation/editing task. Do NOT merely beautify, retouch, or recreate the original photograph.",
+    "Do NOT preserve the original background, wardrobe, pose, camera angle, or composition unless the customer explicitly asks to keep them.",
+    "Preserve the subject's identity while creating a visibly new scene that clearly belongs to the selected world.",
+    "Identity lock: preserve facial geometry, eye shape and spacing, eyebrows, nose, mouth, jawline, skin tone, hair color/hairline, age range, body proportions, pet breed, coat pattern and markings, and vehicle silhouette/details.",
+    "The person or pet must remain immediately recognizable as the same real subject from the references. Do not make them younger, older, thinner, heavier, more muscular, more glamorous, or generically attractive unless the customer explicitly asks for that.",
     `Subject type: ${subjectType||"person"}.`,
-    style.prompt+".",
-    safeNotes(notes||""),
-    "Change wardrobe, environment, lighting, props, palette, and atmosphere much more than identity.",
+    `SELECTED WORLD: ${style.name}. ${style.prompt}.`,
+    "Transform the environment, wardrobe/costume, lighting, color palette, props, atmosphere, and storytelling strongly enough that the result is obviously different from the source photo.",
+    "If the customer's direction conflicts with a generic style detail, honor the customer's direction first while keeping the broad selected-world aesthetic.",
     "Do not add third-party logos, trademarks, famous characters, copied franchise costumes, branded typography, or recognizable title treatments.",
-    "No text inside the artwork. Natural anatomy, believable hands, no duplicated features, premium commercial/editorial finish."
+    "No text inside the artwork unless the customer explicitly asks for text. Natural anatomy, believable hands, no duplicated features, premium commercial/editorial finish.",
+    "Final quality target: polished, professional campaign artwork suitable for a premium personalized-art brand."
   ].filter(Boolean).join(" ")
 }
-function safePrompt(styleId,subjectType,inputCount){
+function safePrompt(styleId,subjectType,inputCount,notes=""){
   const style=STYLES[styleId]||STYLES.game;
+  const userDirection=safeNotes(notes||"").trim();
   return [
     inputCount>1?`Preserve all ${inputCount} reference subjects distinctly.`:"Preserve the reference subject closely.",
+    userDirection?`Customer direction: ${userDirection}`:"",
     `Subject type: ${subjectType||"person"}.`,
     style.prompt+".",
+    "Create a clearly transformed scene, not a near-copy of the source photograph.",
+    "Keep identity recognizable; change environment, wardrobe, lighting, props, palette, and composition.",
     "Family-safe, friendly, nonviolent, no weapons, no injuries, no threatening gestures, no logos, no trademarks, no famous characters, no text.",
     "Premium editorial image with natural identity and anatomy."
-  ].join(" ")
+  ].filter(Boolean).join(" ")
 }
 
 async function runModel(form,env,model,steps){
@@ -123,7 +134,7 @@ export async function highQualityTransform(request,env){
     }catch(error){
       if(isModeration(error)){
         stage="ai-safe-retry";usedSafeRetry=true;
-        try{raw=await runModel(makeForm(safePrompt(styleId,subjectType,inputFiles.length)),env,primary,steps)}
+        try{raw=await runModel(makeForm(safePrompt(styleId,subjectType,inputFiles.length,notes)),env,primary,steps)}
         catch(retry){
           if(isModeration(retry))return json({error:"The image provider declined this photo/request combination. Try another photo or a simpler original direction.",stage:"ai-moderation",code:3030},422);
           throw retry
