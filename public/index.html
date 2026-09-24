@@ -4,8 +4,8 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="theme-color" content="#07070b" />
-  <meta name="description" content="Recast Me turns your photo into an original new world, then lets you put it on something worth keeping." />
-  <title>Recast Me — Your photo. Another world.</title>
+  <meta name="description" content="Recast Me turns your photo into original AI artwork, then puts it on something worth keeping." />
+  <title>Recast Me — Same you. A bolder reality.</title>
   <link rel="stylesheet" href="/styles.css" />
 </head>
 <body>
@@ -23,106 +23,175 @@
 
   <main>
     <section class="hero" id="home">
-      <div class="orb orb-a"></div><div class="orb orb-b"></div>
+      <div class="hero-glow hero-glow-a"></div>
+      <div class="hero-glow hero-glow-b"></div>
       <div class="hero-copy">
         <div class="eyebrow">YOUR PHOTO · ANOTHER WORLD</div>
         <h1>Recast<br><span>yourself.</span></h1>
-        <p>Turn yourself, your pet, your car, or the people you love into original cinematic artwork — then put it on something worth keeping.</p>
+        <p class="hero-lede">Turn yourself, your pet, your car, or the people you love into original high-fidelity artwork — then make it real.</p>
         <div class="hero-actions">
           <a class="button primary" href="#start">Start your Recast</a>
-          <a class="button ghost" href="#styles">Explore styles</a>
+          <a class="button ghost" href="#styles">See the worlds</a>
         </div>
-        <div class="trust-row"><span>Private uploads</span><span>Original styles</span><span>AI preview</span><span>Shopify checkout soon</span></div>
+        <div class="trust-row">
+          <span>Private uploads</span>
+          <span>High-fidelity AI</span>
+          <span>Watermarked preview</span>
+          <span>Made-to-order merch</span>
+        </div>
       </div>
-      <div class="hero-visual" aria-label="Recast Me transformation concept">
-        <div class="hero-card before"><div class="face-placeholder"></div><span>YOU</span></div>
-        <div class="transform-line"><span>RECAST</span></div>
-        <div class="hero-card after"><div class="face-placeholder future"></div><span>ANOTHER WORLD</span></div>
+
+      <div class="hero-demo" aria-label="Original to Recast example">
+        <div class="demo-card">
+          <img src="/assets/hero-before.svg" alt="Original person and pet example" />
+          <div class="demo-meta"><span>01</span><b>YOUR PHOTO</b></div>
+        </div>
+        <div class="recast-bridge"><span></span><b>RECAST</b><span></span></div>
+        <div class="demo-card demo-card-after">
+          <img src="/assets/hero-after.svg" alt="Stylized Recast person and pet example" />
+          <div class="demo-meta"><span>02</span><b>YOUR WORLD</b></div>
+        </div>
       </div>
     </section>
 
-    <section class="section" id="styles">
-      <div class="section-heading"><div class="eyebrow">PICK A WORLD</div><h2>What should we turn you into?</h2><p>Our styles capture a vibe without copying somebody else's characters, logos, or artwork.</p></div>
+    <section class="marquee-band" aria-label="Recast Me capabilities">
+      <div>PEOPLE</div><i>✦</i><div>PETS</div><i>✦</i><div>COUPLES</div><i>✦</i><div>CARS</div><i>✦</i><div>GIFTS</div><i>✦</i><div>WALL ART</div>
+    </section>
+
+    <section class="section worlds" id="styles">
+      <div class="section-kicker">
+        <div>
+          <div class="eyebrow">PICK A WORLD</div>
+          <h2>One photo.<br>Eight directions.</h2>
+        </div>
+        <p>Original aesthetics built around your subject — not copied characters, logos, title treatments, or franchise artwork.</p>
+      </div>
       <div class="style-grid" id="style-grid"></div>
+      <p class="style-note">These are visual direction cards. We’ll replace them with one consistent demo subject transformed through every style as we finish the launch creative set.</p>
     </section>
 
     <section class="section process" id="how">
-      <div class="section-heading"><div class="eyebrow">HOW IT WORKS</div><h2>From mention to merch.</h2></div>
+      <div class="section-heading">
+        <div class="eyebrow">HOW IT WORKS</div>
+        <h2>From photo to something real.</h2>
+      </div>
       <div class="steps">
-        <article><b>01</b><h3>Mention or start here</h3><p>Eventually, tag <strong>@RecastMeAI</strong> with what you want. For now, start directly on this page.</p></article>
-        <article><b>02</b><h3>Upload privately</h3><p>Your photo never needs to be posted publicly. We resize it on your device before AI processing.</p></article>
-        <article><b>03</b><h3>See the preview</h3><p>Cloudflare Workers AI creates a lower-resolution preview and Recast Me adds a visible preview watermark.</p></article>
-        <article><b>04</b><h3>Put it on something</h3><p>Hoodies, blankets, framed art, mugs, digital files and more. Checkout and fulfillment are the next production step.</p></article>
+        <article><b>01</b><div class="step-icon">↥</div><h3>Upload privately</h3><p>Add up to four clear photos. They’re prepared on your device before processing.</p></article>
+        <article><b>02</b><div class="step-icon">✦</div><h3>Choose your world</h3><p>Pick a style and tell Recast Me what you want changed — while keeping you recognizable.</p></article>
+        <article><b>03</b><div class="step-icon">◫</div><h3>See your preview</h3><p>Get a watermarked preview with a unique Artwork ID saved privately for your order.</p></article>
+        <article><b>04</b><div class="step-icon">▣</div><h3>Make it yours</h3><p>Choose digital art, apparel, drinkware, blankets, wall art, and more.</p></article>
       </div>
     </section>
 
     <section class="section create-section" id="start">
-      <div class="create-card">
-        <div class="section-heading compact"><div class="eyebrow">CREATE YOUR FIRST RECAST</div><h2>Upload. Pick a vibe. See what happens.</h2><p id="prefill-note"></p></div>
-        <form id="recast-form">
-          <div class="field-row">
-            <label>Subject type
-              <select name="subject" id="subject">
-                <option value="person">Person</option>
-                <option value="pet">Pet</option>
-                <option value="couple">Couple</option>
-                <option value="car">Car</option>
-                <option value="person and pet">You + your pet</option>
-                <option value="person and car">You + your car</option>
-              </select>
-            </label>
-            <label>Style
-              <select name="style" id="style"></select>
-            </label>
+      <div class="create-shell">
+        <div class="create-intro">
+          <div class="eyebrow">CREATE YOUR RECAST</div>
+          <h2>Show us the real thing.<br><span>We’ll change the world around it.</span></h2>
+          <p>Your face, pet markings, proportions, and defining features are treated as the identity anchor. The styling changes more than you do.</p>
+          <div class="privacy-card">
+            <strong>PRIVATE BY DESIGN</strong>
+            <p>Your prepared source photos and generated artwork are stored privately and tied to a unique Artwork ID.</p>
           </div>
-          <label>Your direction
-            <textarea name="notes" id="notes" placeholder="Example: Halloween me and my pup in funny matching vampire costumes"></textarea>
-          </label>
-          <label class="upload-zone" for="photos">
-            <input id="photos" type="file" accept="image/*" multiple hidden />
-            <span class="upload-icon">＋</span>
-            <strong>Add up to 4 photos</strong>
-            <small>Clear, well-lit photos work best. Images are resized on your device before processing.</small>
-            <span id="file-summary"></span>
-          </label>
-          <div class="consent"><input id="consent" type="checkbox" required><label for="consent">I have permission to use the uploaded photos and agree to the Recast Me AI/Image Policy.</label></div>
-          <button type="submit" class="button primary full" id="generate-button">Generate watermarked preview</button>
-          <p class="micro">MVP note: preview generation is live. Once private storage is bound, each request and its prepared source photos are saved privately for paid-order automation.</p>
-        </form>
-      </div>
-    </section>
+        </div>
 
-    <section class="section preview-section hidden" id="preview-section">
-      <div class="section-heading"><div class="eyebrow">YOUR RECAST</div><h2 id="preview-title">Your preview is ready.</h2><p id="request-id"></p></div>
-      <div class="preview-layout">
-        <div class="preview-frame"><canvas id="preview-canvas"></canvas><div class="loading hidden" id="loading"><span></span><p>Recasting your world…</p></div></div>
-        <div class="preview-info">
-          <div class="callout"><strong>PREVIEW</strong><p>This is intentionally lower-resolution and watermarked. The paid final will be generated at higher quality.</p></div>
-          <h3>Put your Recast on something worth keeping.</h3>
-          <div id="product-grid" class="product-grid"></div>
-          <div class="digital-downsell"><span>Just want the artwork?</span><strong>HD Digital Recast — $4.99</strong><p>Watermark-free final file after purchase. Coming online with checkout automation.</p></div>
+        <div class="create-card">
+          <form id="recast-form">
+            <div class="field-row">
+              <label>Subject
+                <select name="subject" id="subject">
+                  <option value="person">Person</option>
+                  <option value="pet">Pet</option>
+                  <option value="couple">Couple</option>
+                  <option value="car">Car</option>
+                  <option value="person and pet">You + your pet</option>
+                  <option value="person and car">You + your car</option>
+                </select>
+              </label>
+              <label>World
+                <select name="style" id="style"></select>
+              </label>
+            </div>
+            <label>Your direction
+              <textarea name="notes" id="notes" placeholder="Example: Me and my dog in matching stylish Halloween costumes, cinematic moonlight, fun not scary."></textarea>
+            </label>
+            <p id="prefill-note" class="prefill-note"></p>
+            <label class="upload-zone" for="photos">
+              <input id="photos" type="file" accept="image/*" multiple hidden />
+              <span class="upload-icon">＋</span>
+              <span class="upload-copy"><strong>Add up to 4 photos</strong><small>Clear, well-lit photos work best. Person + pet can use one photo together or separate references.</small></span>
+              <span id="file-summary" class="file-summary">No photos selected</span>
+            </label>
+            <div class="consent"><input id="consent" type="checkbox" required><label for="consent">I have permission to use these photos and agree to the Recast Me AI/Image Policy.</label></div>
+            <button type="submit" class="button primary full" id="generate-button">Create my preview</button>
+            <div class="quality-line"><span class="quality-dot"></span><span id="model-copy">High-fidelity image engine</span></div>
+          </form>
         </div>
       </div>
     </section>
 
-    <section class="section status-section">
+    <section class="section preview-section hidden" id="preview-section">
+      <div class="section-heading preview-heading">
+        <div class="eyebrow">YOUR RECAST</div>
+        <h2 id="preview-title">Your preview is ready.</h2>
+        <p id="request-id"></p>
+      </div>
+      <div class="preview-layout">
+        <div class="preview-frame">
+          <canvas id="preview-canvas"></canvas>
+          <div class="loading hidden" id="loading"><span></span><p>Recasting your world…</p><small>Higher quality takes a little longer.</small></div>
+        </div>
+        <div class="preview-info">
+          <div class="callout"><strong>WATERMARKED PREVIEW</strong><p>Your clean artwork stays private. Purchase options below stay tied to this exact Artwork ID.</p></div>
+          <h3>Put your Recast on something worth keeping.</h3>
+          <div id="product-grid" class="product-grid"></div>
+          <div class="digital-downsell"><img src="/assets/product-digital.svg" alt=""><div><span>Just want the artwork?</span><strong>HD Digital Recast — $4.99</strong><p>A clean digital version is part of the catalog and will unlock with checkout.</p></div></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section shop-showcase">
+      <div class="section-kicker">
+        <div><div class="eyebrow">MAKE IT REAL</div><h2>Not just another image in your camera roll.</h2></div>
+        <p>Every order carries the Artwork ID that connects your purchase to the private Recast you approved.</p>
+      </div>
+      <div id="catalog-preview" class="catalog-preview"></div>
+    </section>
+
+    <section class="section promise">
+      <div class="promise-card">
+        <div class="eyebrow">THE RECAST STANDARD</div>
+        <h2>Same you.<br>A bolder reality.</h2>
+        <div class="promise-grid">
+          <p><b>Identity first.</b><br>The subject should still look like the subject.</p>
+          <p><b>Original aesthetics.</b><br>No third-party logos, characters, or copied marketing art.</p>
+          <p><b>Private workflow.</b><br>Uploads and clean artwork stay out of the public feed.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section status-section debug-only hidden" id="debug-status">
       <div class="section-heading"><div class="eyebrow">SYSTEM STATUS</div><h2>Production connections.</h2></div>
       <div class="status-grid">
-        <div><span id="ai-dot" class="dot"></span><strong>Workers AI</strong><small id="ai-status">Checking…</small></div>
+        <div><span id="ai-dot" class="dot"></span><strong>Image engine</strong><small id="ai-status">Checking…</small></div>
         <div><span id="pf-dot" class="dot"></span><strong>Printful</strong><small id="pf-status">Checking…</small></div>
-        <div><span class="dot ready"></span><strong>Shopify catalog</strong><small>Draft catalog prepared</small></div>
-        <div><span id="storage-dot" class="dot"></span><strong>Private artwork storage</strong><small id="storage-status">Checking…</small></div><div><span class="dot pending"></span><strong>X mention bot</strong><small>Next integration</small></div>
+        <div><span class="dot ready"></span><strong>Shopify</strong><small>Connected</small></div>
+        <div><span id="storage-dot" class="dot"></span><strong>Private storage</strong><small id="storage-status">Checking…</small></div>
       </div>
     </section>
 
     <section class="section policies" id="policies">
-      <details><summary>Photo privacy</summary><p>Customer photos are for the requested transformation, support, and fulfillment only. Recast Me will not use customer photos in advertising without separate explicit opt-in. The production system will include deletion controls before launch.</p></details>
-      <details><summary>AI & image policy</summary><p>Results vary. Recast Me creates original aesthetic directions and does not intentionally reproduce protected logos, branded characters, signature title treatments, or third-party marketing artwork. Harmful or exploitative trend requests are rejected or sent to human review.</p></details>
-      <details><summary>Custom product / refund policy</summary><p>Personalized products cannot generally be restocked. Damaged, defective, or incorrectly produced items will be eligible for review and reprint/replacement. The full policy will be finalized before paid checkout goes live.</p></details>
+      <details><summary>Photo privacy</summary><p>Customer photos are used for the requested transformation, support, and fulfillment. Recast Me does not use customer photos in advertising without separate explicit opt-in.</p></details>
+      <details><summary>AI & image policy</summary><p>Results vary. Recast Me creates original aesthetic directions and does not intentionally reproduce protected logos, branded characters, signature title treatments, or third-party marketing artwork. Harmful or exploitative trend requests are rejected or routed to review.</p></details>
+      <details><summary>Custom product / refund policy</summary><p>Personalized products cannot generally be restocked. Damaged, defective, or incorrectly produced items are eligible for review and reprint/replacement. Final launch policy will be shown before paid checkout is enabled.</p></details>
     </section>
   </main>
 
-  <footer><div class="brand compact-brand"><span class="brand-mark"><span>R</span><span>M</span></span><span>RECAST ME</span></div><p>Same you. A bolder reality.</p><span>© 2026 Recast Me · MVP</span></footer>
+  <footer>
+    <div class="brand compact-brand"><span class="brand-mark"><span>R</span><span>M</span></span><span>RECAST ME</span></div>
+    <p>Same you. A bolder reality.</p>
+    <span>© 2026 Recast Me</span>
+  </footer>
 
   <script src="/app.js" type="module"></script>
 </body>
