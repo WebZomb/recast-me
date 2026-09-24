@@ -1,23 +1,41 @@
-# Recast Me v0.8 — Real Visuals + Prompt Obedience Fix
+# Recast Me v1.0 — upload instructions
 
-This corrects the problem where the live site still showed the old shape/SVG artwork.
+This ZIP is a full launch-candidate project, not a tiny patch.
 
-WHAT CHANGED
-- Replaced the two hero demo images with the approved real generated images:
-  - YOUR IMAGE
-  - YOUR WORLD
-- Replaced all 8 shape/SVG style cards with the approved full generated artwork.
-- Removed the old temporary "we'll replace these later" message.
-- Increased uploaded reference preparation from 480px to 768px to preserve more face/pet detail.
-- Rewrote the AI prompt hierarchy so the customer's written notes are the PRIMARY creative instruction.
-- Explicitly tells the model NOT to make a near-copy/retouch of the source photo.
-- Explicitly tells the model to change scene, wardrobe, lighting, props and composition while locking identity.
-- Prevents generic beautification/body/age changes unless the customer actually requests them.
-- Keeps the v0.7 merch-priority changes already in app.js / checkout.js / merch-v07.css.
+## GitHub
+1. Extract the ZIP first.
+2. In `WebZomb/recast-me`, upload the **contents** of the extracted folder to the repository root, preserving `public/`, `src/`, and `wrangler.jsonc`.
+3. Replace matching files when GitHub asks.
+4. Commit to `main`.
+5. Cloudflare's connected Worker should deploy automatically.
 
-UPLOAD
-Upload everything in this ZIP to the GitHub repo root, preserving folders, then commit to main.
-Cloudflare should auto-deploy.
+Do **not** upload only the ZIP — GitHub will not automatically unzip it into the repository.
 
-IMPORTANT
-The PNG files in public/assets are required. If they are skipped, the site will keep showing the old shape illustrations.
+## Immediate visual check
+After Cloudflare deploys, reload:
+`https://recast-me.sergz24.workers.dev/?v=10`
+
+You should see the new cinematic backgrounds and realistic product mockups.
+
+## Immediate AI check
+Use the same reference and exact direction:
+`Make me and my dog super heros`
+
+Expected behavior:
+- recognizably the same real subjects,
+- visibly transformed world / costume / composition,
+- no raw 3030 provider errors,
+- reasonable wait,
+- private Artwork ID returned.
+
+## New private dashboard
+After you create a Cloudflare Worker secret named `ADMIN_TOKEN`, open:
+`https://recast-me.sergz24.workers.dev/admin.html`
+
+## No accidental launch
+- Shopify products remain DRAFT.
+- order automation is OFF.
+- X bot is OFF.
+- trend scanner is OFF.
+- retention cleanup is OFF.
+- physical production requires explicit confirmation.

@@ -7,9 +7,16 @@
   "vars": {
     "SHOPIFY_CLIENT_ID": "34095311ef89068f873eb42bfba8e597",
     "SHOPIFY_SHOP": "b2wnfu-7g",
-    "IMAGE_MODEL_PRIMARY": "@cf/black-forest-labs/flux-2-dev",
+    "PRINTFUL_STORE_ID": "18798877",
+    "PUBLIC_APP_URL": "https://recast-me.sergz24.workers.dev",
+    "IMAGE_MODEL_PRIMARY": "@cf/black-forest-labs/flux-2-klein-9b",
     "IMAGE_MODEL_FALLBACK": "@cf/black-forest-labs/flux-2-klein-4b",
-    "IMAGE_PREVIEW_STEPS": "20"
+    "ORDER_SYNC_ENABLED": "false",
+    "X_BOT_ENABLED": "false",
+    "X_BOT_APPROVED": "false",
+    "TREND_SCANNER_ENABLED": "false",
+    "RETENTION_CLEANUP_ENABLED": "false",
+    "UNPAID_RETENTION_DAYS": "30"
   },
   "ai": {
     "binding": "AI"
@@ -20,10 +27,17 @@
       "bucket_name": "recast-me-artwork"
     }
   ],
+  "triggers": {
+    "crons": ["*/10 * * * *"]
+  },
   "assets": {
     "directory": "./public",
     "binding": "ASSETS",
     "not_found_handling": "single-page-application",
     "run_worker_first": ["/api/*"]
   }
+
+  // Add the Cloudflare Images binding only when you are ready to enable
+  // billable high-resolution print finishing:
+  // "images": { "binding": "IMAGES" }
 }
