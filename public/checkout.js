@@ -31,9 +31,10 @@ const PRODUCT_META = {
   "Recast Pack": {order:91,badge:"DIGITAL PACK",pitch:"The complete digital set with useful crops and formats.",tier:"digital",cta:"Get Recast Pack"}
 };
 
-function lastRequest(){try{return JSON.parse(localStorage.getItem("recast_last_request")||"null")}catch{return null}}
+function lastRequest(){try{return JSON.parse(localStorage.getItem("recast_last_request")||"null")||window.__recastActiveRequest}catch{return window.__recastActiveRequest||null}}
 function money(n){const value=Number(n);return Number.isFinite(value)?`$${value.toFixed(2)}`:n}
 function sleep(ms){return new Promise(resolve=>setTimeout(resolve,ms))}
+let checkoutLoadId=0;
 
 async function generateRealMockup({req,sku,card,button}){
   if(!sku)return;
@@ -70,15 +71,25 @@ async function generateRealMockup({req,sku,card,button}){
 }
 
 async function loadCheckout(){
+  const loadId=++checkoutLoadId;
   const req=lastRequest();
   if(!req?.requestId||!req?.accessToken||!grid)return;
+  grid.innerHTML='<p class="product-loading">Loading products for the selected Artwork ID…</p>';
 
-  const url=new URL("/api/checkout-options",location.origin);
-  url.searchParams.set("requestId",req.requestId);
-  url.searchParams.set("token",req.accessToken);
-  const response=await fetch(url);
-  const data=await response.json().catch(()=>({}));
-  if(!response.ok||!data.ok){console.warn("Checkout options unavailable",data);return}
+  let response,data;
+  try{
+    const url=new URL("/api/checkout-options",location.origin);
+    url.searchParams.set("requestId",req.requestId);
+    url.searchParams.set("token",req.accessToken);
+    response=await fetch(url);
+    data=await response.json().catch(()=>({}));
+  }catch(error){data={error:error?.message||'Connection interrupted.'}}
+  if(loadId!==checkoutLoadId)return;
+  if(!response?.ok||!data.ok){
+    grid.innerHTML='<p class="product-loading">Products are temporarily unavailable for this Recast. Your artwork is saved; please try again shortly.</p>';
+    console.warn("Checkout options unavailable",data);
+    return;
+  }
 
   const ordered=[...(data.products||[])]
     .filter(product=>PRODUCT_META[product.title])

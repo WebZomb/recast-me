@@ -132,7 +132,8 @@ document.querySelectorAll('[data-subject-pick]').forEach(button=>{
     const select=document.querySelector('#subject');
     if(select)select.value=button.dataset.subjectPick;
     updateSubjectQuickPicks();
-
+  });
+});
 document.querySelectorAll('[data-idea-subject]').forEach(card=>{
   card.addEventListener('click',()=>{
     const subject=document.querySelector('#subject');
@@ -147,9 +148,6 @@ document.querySelector('[data-desk-frame-start]')?.addEventListener('click',()=>
   const note=document.querySelector('#notes');
   if(note&&!note.value)note.value='Create a polished portrait that will look especially good in a small 8×10 black frame.';
   document.querySelector('#start')?.scrollIntoView({behavior:'smooth',block:'start'});
-});
-
-  });
 });
 document.querySelector('#pet-only-quickstart')?.addEventListener('click',()=>{
   const subject=document.querySelector('#subject');
@@ -168,32 +166,40 @@ updateSubjectQuickPicks();
 
 
 async function resizeFile(file,max=500){
-  const bitmap=await createImageBitmap(file);
-  const scale=Math.min(1,max/Math.max(bitmap.width,bitmap.height));
-  const w=Math.max(1,Math.round(bitmap.width*scale)),h=Math.max(1,Math.round(bitmap.height*scale));
+  let bitmap;
+  try{bitmap=await createImageBitmap(file)}catch{
+    const url=URL.createObjectURL(file);
+    try{bitmap=await new Promise((resolve,reject)=>{
+      const img=new Image();img.onload=()=>resolve(img);img.onerror=()=>reject(new Error('This photo could not be opened. Try a JPEG or PNG.'));img.src=url;
+    })}finally{URL.revokeObjectURL(url)}
+  }
+  const scale=Math.min(1,max/Math.max(bitmap.width||bitmap.naturalWidth,bitmap.height||bitmap.naturalHeight));
+  const w=Math.max(1,Math.round((bitmap.width||bitmap.naturalWidth)*scale)),h=Math.max(1,Math.round((bitmap.height||bitmap.naturalHeight)*scale));
   const canvas=document.createElement('canvas');canvas.width=w;canvas.height=h;
   canvas.getContext('2d').drawImage(bitmap,0,0,w,h);
-  bitmap.close();
+  bitmap.close?.();
   return new Promise((resolve,reject)=>canvas.toBlob(
-    blob=>blob?resolve(new File([blob],file.name.replace(/\.[^.]+$/,'.jpg'),{type:'image/jpeg'})):reject(new Error('Could not prepare image.')),
-    'image/jpeg',.94
+    blob=>blob?resolve(new File([blob],(file.name||'reference').replace(/\.[^.]+$/,'.jpg'),{type:'image/jpeg'})):reject(new Error('Could not prepare image.')),
+    'image/jpeg',.88
   ));
 }
 
 async function renderWatermark(dataUrl){
   const img=new Image();img.src=dataUrl;await img.decode();
-  const canvas=document.querySelector('#preview-canvas');canvas.width=img.naturalWidth;canvas.height=img.naturalHeight;
-  const ctx=canvas.getContext('2d');ctx.drawImage(img,0,0,canvas.width,canvas.height);
-  ctx.save();ctx.globalAlpha=.22;ctx.fillStyle='#ffffff';ctx.textAlign='center';ctx.font=`900 ${Math.max(16,canvas.width/24)}px system-ui`;
-  ctx.translate(canvas.width/2,canvas.height/2);ctx.rotate(-Math.PI/5);
-  const gap=canvas.width/2.1;
-  for(let y=-canvas.height*1.4;y<canvas.height*1.4;y+=gap*.65){
-    for(let x=-canvas.width*1.5;x<canvas.width*1.5;x+=gap){ctx.fillText('RECAST ME • PREVIEW',x,y)}
+  const preview=document.createElement('canvas');preview.width=img.naturalWidth;preview.height=img.naturalHeight;
+  const ctx=preview.getContext('2d');ctx.drawImage(img,0,0,preview.width,preview.height);
+  ctx.save();ctx.globalAlpha=.22;ctx.fillStyle='#ffffff';ctx.textAlign='center';ctx.font=`900 ${Math.max(16,preview.width/24)}px system-ui`;
+  ctx.translate(preview.width/2,preview.height/2);ctx.rotate(-Math.PI/5);
+  const gap=preview.width/2.1;
+  for(let y=-preview.height*1.4;y<preview.height*1.4;y+=gap*.65){
+    for(let x=-preview.width*1.5;x<preview.width*1.5;x+=gap){ctx.fillText('RECAST ME • PREVIEW',x,y)}
   }
   ctx.restore();
-  ctx.fillStyle='rgba(7,7,11,.75)';ctx.fillRect(0,canvas.height-46,canvas.width,46);
-  ctx.fillStyle='#fff';ctx.font=`800 ${Math.max(13,canvas.width/34)}px system-ui`;ctx.textAlign='center';
-  ctx.fillText('RECAST ME • PREVIEW',canvas.width/2,canvas.height-18);
+  ctx.fillStyle='rgba(7,7,11,.75)';ctx.fillRect(0,preview.height-46,preview.width,46);
+  ctx.fillStyle='#fff';ctx.font=`800 ${Math.max(13,preview.width/34)}px system-ui`;ctx.textAlign='center';
+  ctx.fillText('RECAST ME • PREVIEW',preview.width/2,preview.height-18);
+  const canvas=document.querySelector('#preview-canvas');canvas.width=preview.width;canvas.height=preview.height;
+  canvas.getContext('2d').drawImage(preview,0,0);
 }
 
 function inferSubject(subject,notes){
@@ -317,12 +323,14 @@ function showPreviewError(message,{diagnosticId='',retryable=true}={}){
   const copy=document.querySelector('#preview-error-message');
   const ref=document.querySelector('#preview-error-reference');
   const retry=document.querySelector('#retry-generation');
+  const switchMode=document.querySelector('#switch-quality-generation');
   if(copy)copy.textContent=message;
   if(ref){
     if(diagnosticId){ref.textContent=`Support reference: ${diagnosticId}`;ref.classList.remove('hidden')}
     else{ref.textContent='';ref.classList.add('hidden')}
   }
   if(retry)retry.classList.toggle('hidden',retryable===false);
+  if(switchMode)switchMode.classList.toggle('hidden',retryable===false);
   box?.classList.remove('hidden');
 }
 
@@ -331,9 +339,12 @@ let hasSuccessfulPreview=false;
 let generationInFlight=false;
 let currentClientAttemptId="";
 let lastSuccessfulPreviewMeta=null;
+let lastSuccessfulImage=null;
 let lastAttemptQuality='high';
 const RECENT_VERSIONS_KEY='recast_recent_versions_v12';
 let branchReference=null;
+const previewCache=new Map();
+function escapeHtml(value){return String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 
 function readRecentVersions(){
   try{
@@ -342,34 +353,43 @@ function readRecentVersions(){
   }catch{return[]}
 }
 function writeRecentVersions(rows){
-  localStorage.setItem(RECENT_VERSIONS_KEY,JSON.stringify(rows.slice(0,4)));
+  try{localStorage.setItem(RECENT_VERSIONS_KEY,JSON.stringify(rows.slice(0,4)))}catch{
+    showRecastError('This browser cannot keep recent versions after you close it. Your current preview is still available.');
+  }
 }
 function addRecentVersion(version){
   const rows=readRecentVersions().filter(x=>x?.requestId&&x.requestId!==version.requestId);
   rows.unshift(version);
   writeRecentVersions(rows.slice(0,4));
-  renderRecentVersions();
+  renderRecentVersions().catch(console.warn);
 }
 function activeRequestFromVersion(version){
-  localStorage.setItem('recast_last_request',JSON.stringify({
+  window.__recastActiveRequest={requestId:version.requestId,accessToken:version.accessToken};
+  try{localStorage.setItem('recast_last_request',JSON.stringify({
     requestId:version.requestId,
     accessToken:version.accessToken,
     style:version.styleName||version.style||'Recast',
     model:version.modelUsed||null,
     qualityMode:version.qualityMode||'high'
-  }));
+  }))}catch{showRecastError('Browser storage is unavailable. Keep this tab open to choose products.')}
 }
 async function fetchStoredPreview(version){
+  if(previewCache.has(version.requestId))return previewCache.get(version.requestId);
+  const pending=(async()=>{
   const url=new URL(`/api/request/${encodeURIComponent(version.requestId)}/preview`,location.origin);
   url.searchParams.set('token',version.accessToken);
   const response=await fetch(url);
   const data=await response.json().catch(()=>({}));
   if(!response.ok||!data.ok||!data.image)throw new Error(data.error||'This saved version is unavailable.');
   return data.image;
+  })();
+  previewCache.set(version.requestId,pending);
+  try{return await pending}catch(error){previewCache.delete(version.requestId);throw error}
 }
 async function activateRecentVersion(version,{scroll=true}={}){
   const image=await fetchStoredPreview(version);
   await renderWatermark(image);
+  lastSuccessfulImage=image;
   const section=document.querySelector('#preview-section');
   const previewInfo=document.querySelector('.preview-info');
   const title=`${version.styleName||'Recast'} preview ready.`;
@@ -391,7 +411,7 @@ async function activateRecentVersion(version,{scroll=true}={}){
     orderLink.href=`/order.html?requestId=${encodeURIComponent(version.requestId)}&token=${encodeURIComponent(version.accessToken)}`;
     orderLink.classList.remove('hidden');
   }
-  renderRecentVersions();
+  renderRecentVersions().catch(console.warn);
   if(scroll)section?.scrollIntoView({behavior:'smooth',block:'start'});
 }
 function setBranchReference(version){
@@ -433,13 +453,14 @@ async function renderRecentVersions(){
   const rows=readRecentVersions();
   shell.classList.toggle('hidden',rows.length===0);
   if(!rows.length){grid.innerHTML='';return}
-  const active=JSON.parse(localStorage.getItem('recast_last_request')||'null')?.requestId;
+  let active=null;
+  try{active=JSON.parse(localStorage.getItem('recast_last_request')||'null')?.requestId}catch{}
   grid.innerHTML=rows.map((v,i)=>`
     <article class="recent-version-card ${v.requestId===active?'active':''}" data-version-index="${i}">
-      <div class="recent-version-image"><div class="recent-version-loading">Loading…</div><img alt="${v.styleName||'Saved Recast'}"></div>
+      <div class="recent-version-image"><div class="recent-version-loading">Loading…</div><img alt="${escapeHtml(v.styleName||'Saved Recast')}"></div>
       <div class="recent-version-copy">
         <span>VERSION ${rows.length-i}</span>
-        <strong>${v.styleName||'Custom Recast'}</strong>
+        <strong>${escapeHtml(v.styleName||'Custom Recast')}</strong>
         <small>${v.qualityMode==='quick'?'Quick':'High-Quality'} · ${new Date(v.createdAt||Date.now()).toLocaleString([], {month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})}</small>
       </div>
       <div class="recent-version-actions">
@@ -453,7 +474,7 @@ async function renderRecentVersions(){
     try{
       const image=await fetchStoredPreview(v);
       const img=card?.querySelector('img');
-      if(img){img.src=image;img.onload=()=>card?.querySelector('.recent-version-loading')?.remove()}
+      if(img&&card?.isConnected){img.onload=()=>card?.querySelector('.recent-version-loading')?.remove();img.src=image}
     }catch{
       const loading=card?.querySelector('.recent-version-loading');
       if(loading)loading.textContent='Unavailable';
@@ -506,10 +527,11 @@ function forceVisibleFailure(message,diagnosticId=''){
     }
   }
 }
-function restoreLastPreview(){
+async function restoreLastPreview(){
   clearPreviewError();
   document.querySelector('#preview-emergency-error')?.remove();
   if(!hasSuccessfulPreview)return;
+  if(lastSuccessfulImage)await renderWatermark(lastSuccessfulImage);
   const section=document.querySelector('#preview-section');
   const previewInfo=document.querySelector('.preview-info');
   section?.classList.remove('hidden');
@@ -523,9 +545,11 @@ function restoreLastPreview(){
 const form=document.querySelector('#recast-form');
 form.addEventListener('submit',async e=>{
   e.preventDefault();
+  if(generationInFlight)return;
   const files=[...photos.files].slice(0,4);
   clearRecastError();
   if(!files.length&&!branchReference){showRecastError('Add at least one photo first, or choose “Refine this version” from a recent successful Recast.');document.querySelector('#start').scrollIntoView({behavior:'smooth'});return;}
+  if(branchReference&&files.length>3){showRecastError('Use up to 3 original photos when refining a saved version.');return;}
   if(styleSelect.value==='custom'&&!document.querySelector('#custom-world').value.trim()){
     showRecastError('Describe your custom world first, or choose one of the preset Worlds.');
     document.querySelector('#custom-world').focus();
@@ -573,12 +597,17 @@ form.addEventListener('submit',async e=>{
       button.textContent=`Preparing photo ${i+1}…`;
       fd.append(`image_${i}`,await resizeFile(files[i]));
     }
-    if(!files.length&&branchReference)button.textContent='Preparing saved version…';
+    if(branchReference){
+      button.textContent='Preparing saved version…';
+      const image=await fetchStoredPreview(branchReference);
+      const blob=await fetch(image).then(response=>response.blob());
+      fd.append('branchPreview',await resizeFile(new File([blob],'previous-recast.jpg',{type:blob.type||'image/jpeg'})));
+    }
 
     button.textContent=qualityMode==='quick'?'Creating Quick Preview…':'Creating High-Quality Preview…';
     startGenerationUI(qualityMode);
     const controller=new AbortController();
-    const timeout=setTimeout(()=>controller.abort(),qualityMode==='quick'?90000:210000);
+    const timeout=setTimeout(()=>controller.abort(),qualityMode==='quick'?135000:270000);
     let res,data;
     try{
       res=await fetch('/api/transform-v2',{method:'POST',body:fd,signal:controller.signal});
@@ -588,6 +617,10 @@ form.addEventListener('submit',async e=>{
     if(res.status===202&&data.reviewRequired) throw Object.assign(new Error(friendlyGenerationError(data)),{publicMessage:friendlyGenerationError(data),diagnosticId:data.diagnosticId||'',retryable:false});
     if(!res.ok) throw Object.assign(new Error(friendlyGenerationError(data)),{publicMessage:friendlyGenerationError(data),diagnosticId:data.diagnosticId||'',retryable:data.retryable!==false});
     if(typeof data.image!=='string'||!data.image.startsWith('data:image/')) throw Object.assign(new Error('invalid preview'),{publicMessage:'The image engine returned an incomplete preview. Please try again.',retryable:true});
+    if(!data.persisted)throw Object.assign(new Error('storage unavailable'),{
+      publicMessage:'The artwork was generated, but private storage did not save it. Your last saved version is still available. Please try again in a moment.',
+      diagnosticId:data.clientAttemptId||'',retryable:true
+    });
 
     try{await renderWatermark(data.image)}catch(error){throw Object.assign(new Error('preview display failed'),{publicMessage:'Your image was created, but the preview could not be displayed correctly. Please try once more.'})}
 
@@ -599,6 +632,8 @@ form.addEventListener('submit',async e=>{
     clearPreviewError();
     document.querySelector('#preview-emergency-error')?.remove();
     hasSuccessfulPreview=true;
+    lastSuccessfulImage=data.image;
+    previewCache.set(data.requestId,Promise.resolve(data.image));
     const successVersion={
       requestId:data.requestId,
       accessToken:data.accessToken,
@@ -612,19 +647,17 @@ form.addEventListener('submit',async e=>{
       createdAt:new Date().toISOString()
     };
     lastSuccessfulPreviewMeta={title:successTitle,requestText:successRequestText,requestId:data.requestId,accessToken:data.accessToken,qualityMode:successVersion.qualityMode};
-    addRecentVersion(successVersion);
     activeRequestFromVersion(successVersion);
+    addRecentVersion(successVersion);
     clearBranchReference();
     const orderLink=document.querySelector('#order-status-link');
     if(orderLink){orderLink.href=`/order.html?requestId=${encodeURIComponent(data.requestId)}&token=${encodeURIComponent(data.accessToken)}`;orderLink.classList.remove('hidden')}
-    if(data.storageError) console.warn('Recast storage warning:',data.storageError);
-    if(data.usedFastFallback) console.warn('Recast used the fallback image model for this preview.');
     stopGenerationUI(true);
   }catch(err){
     stopGenerationUI(false);
     const publicMessage=err.publicMessage||friendlyGenerationError(null,err);
     let diagnosticId=err.diagnosticId||'';
-    const logged=await logClientGenerationIssue('generation-catch',publicMessage,{
+    const logged=await logClientGenerationIssue('generation-catch',err?.message||publicMessage,{
       serverDiagnosticId:diagnosticId||null,
       hadPreviousPreview:hasSuccessfulPreview
     });
@@ -654,7 +687,6 @@ form.addEventListener('submit',async e=>{
     section.classList.remove('hidden');
     section.scrollIntoView({behavior:'smooth'});
   }finally{
-    generationInFlight=false;
     loading.classList.add('hidden');
     button.disabled=false;
     generationInFlight=false;
@@ -675,7 +707,7 @@ document.querySelector('#switch-quality-generation')?.addEventListener('click',(
   form.requestSubmit();
 });
 document.querySelector('#keep-last-preview')?.addEventListener('click',()=>{
-  restoreLastPreview();
+  restoreLastPreview().catch(()=>showRecastError('That saved preview could not be displayed. Select it from recent versions.'));
 });
 document.querySelector('#adjust-generation')?.addEventListener('click',()=>{
   document.querySelector('#start')?.scrollIntoView({behavior:'smooth'});
@@ -702,29 +734,22 @@ document.querySelector('#recent-versions-grid')?.addEventListener('click',async 
 async function restoreRecentVersionOnLoad(){
   const rows=readRecentVersions();
   if(!rows.length){renderRecentVersions();return}
-  renderRecentVersions();
+  renderRecentVersions().catch(console.warn);
   // Only restore the most recent successful art if no preview is already visible.
-  const existing=JSON.parse(localStorage.getItem('recast_last_request')||'null');
+  let existing=null;
+  try{existing=JSON.parse(localStorage.getItem('recast_last_request')||'null')}catch{}
   const candidate=rows.find(v=>v.requestId===existing?.requestId)||rows[0];
   try{await activateRecentVersion(candidate,{scroll:false})}catch{renderRecentVersions()}
 }
 
 window.addEventListener('error',async event=>{
   if(!generationInFlight)return;
-  const message='The page hit an unexpected display error while creating your preview.';
-  const logged=await logClientGenerationIssue('window-error',event?.message||message,{source:event?.filename||null,line:event?.lineno||null});
-  loading?.classList?.add?.('hidden');
-  generationInFlight=false;
-  forceVisibleFailure(message,logged?.diagnosticId||'');
+  await logClientGenerationIssue('window-error',event?.message||'Unexpected page error',{source:event?.filename||null,line:event?.lineno||null});
 });
 window.addEventListener('unhandledrejection',async event=>{
   if(!generationInFlight)return;
   const reason=event?.reason?.message||String(event?.reason||'Unhandled generation promise');
-  const message='The preview request was interrupted before it could finish displaying.';
-  const logged=await logClientGenerationIssue('unhandled-rejection',reason);
-  document.querySelector('#loading')?.classList.add('hidden');
-  generationInFlight=false;
-  forceVisibleFailure(message,logged?.diagnosticId||'');
+  await logClientGenerationIssue('unhandled-rejection',reason);
 });
 
 async function status(){
@@ -751,7 +776,6 @@ async function status(){
   }
 }
 updateQualityUI();
-renderRecentVersions();
 restoreRecentVersionOnLoad();
 status();
 setupTurnstile();
