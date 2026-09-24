@@ -157,29 +157,53 @@ function inferSubject(subject,notes){
   return subject;
 }
 
-const generationMessages=[
-  ['Locking identity…','Keeping the face, hair, body proportions, pet markings, and defining details recognizable.'],
-  ['Building the new world…','Changing the scene, wardrobe, lighting, props, and atmosphere around the subject.'],
-  ['Following your direction…','Using your written notes as the primary creative instruction.'],
-  ['Finishing the preview…','Cleaning up anatomy, detail, lighting, and composition for a polished result.']
+const generationMessagesHigh=[
+  ['Locking identity…','Preserving facial structure, hair, proportions, pet markings, and defining details.'],
+  ['Building the new world…','Rebuilding the scene, wardrobe, lighting, props, and atmosphere around the real subject.'],
+  ['Refining likeness…','Using the high-quality model for stronger identity and prompt accuracy.'],
+  ['Finishing the preview…','Polishing anatomy, detail, lighting, and composition before reveal.']
+];
+const generationMessagesQuick=[
+  ['Building a quick preview…','Keeping the subject recognizable while we test the idea fast.'],
+  ['Applying your world…','Changing the scene, wardrobe, lighting, and atmosphere.'],
+  ['Finishing the preview…','Cleaning up the fast concept preview for review.']
 ];
 let generationTimer=null;
-function startGenerationUI(){
+function selectedQuality(){
+  return document.querySelector('input[name="qualityMode"]:checked')?.value==='quick'?'quick':'high';
+}
+function qualityLabel(mode=selectedQuality()){
+  return mode==='quick'?'Quick Preview':'High-Quality Preview';
+}
+function updateQualityUI(){
+  const mode=selectedQuality();
+  document.querySelectorAll('[data-quality-card]').forEach(card=>card.classList.toggle('selected',card.dataset.qualityCard===mode));
+  const button=document.querySelector('#generate-button');
+  if(button&&!generationInFlight)button.textContent=mode==='quick'?'Create Quick Preview':'Create High-Quality Preview';
+  const copy=document.querySelector('#model-copy');
+  if(copy)copy.textContent=mode==='quick'
+    ? 'Quick Preview · faster, lower detail and likeness accuracy'
+    : 'High-Quality Preview · best likeness, prompt accuracy, and detail';
+}
+document.querySelectorAll('input[name="qualityMode"]').forEach(input=>input.addEventListener('change',updateQualityUI));
+
+function startGenerationUI(mode=selectedQuality()){
+  const messages=mode==='quick'?generationMessagesQuick:generationMessagesHigh;
   const status=document.querySelector('#generation-status');
   const detail=document.querySelector('#generation-detail');
   const progress=document.querySelector('#generation-progress');
-  let index=0, pct=12;
-  if(status) status.textContent=generationMessages[0][0];
-  if(detail) detail.textContent=generationMessages[0][1];
+  let index=0, pct=mode==='quick'?18:10;
+  if(status) status.textContent=messages[0][0];
+  if(detail) detail.textContent=messages[0][1];
   if(progress) progress.style.width=pct+'%';
   clearInterval(generationTimer);
   generationTimer=setInterval(()=>{
-    index=Math.min(generationMessages.length-1,index+1);
-    pct=Math.min(88,pct+22);
-    if(status) status.textContent=generationMessages[index][0];
-    if(detail) detail.textContent=generationMessages[index][1];
+    index=Math.min(messages.length-1,index+1);
+    pct=Math.min(90,pct+(mode==='quick'?30:22));
+    if(status) status.textContent=messages[index][0];
+    if(detail) detail.textContent=messages[index][1];
     if(progress) progress.style.width=pct+'%';
-  },12000);
+  },mode==='quick'?8000:15000);
 }
 function stopGenerationUI(success=false){
   clearInterval(generationTimer); generationTimer=null;
@@ -187,12 +211,14 @@ function stopGenerationUI(success=false){
   if(progress) progress.style.width=success?'100%':'0%';
 }
 function friendlyGenerationError(data,error){
-  if(error?.name==='AbortError') return 'This preview took too long, so we stopped the wait instead of leaving you hanging. Your photo is safe — tap Try again.';
+  const mode=data?.qualityMode||selectedQuality();
+  const label=qualityLabel(mode);
+  if(error?.name==='AbortError') return `${label} took too long this time. Your photo and settings are still here — try again or switch quality.`;
   if(data?.reviewRequired) return 'This request needs a quick human review before generation.';
-  if(data?.code===3036 || data?.reason==='quota') return 'Today’s free AI preview allowance has been used. The allowance resets daily. Your photo is safe, and nothing was charged.';
-  if(data?.code===3030 || data?.reason==='moderation') return 'The image engine would not complete that exact photo and wording combination. We already tried a safer version. Try the same idea with simpler wording or another reference photo.';
-  if(data?.reason==='capacity') return 'The image engine is temporarily busy. Your photo is safe — tap Try again in a moment.';
-  return data?.userMessage || 'We could not finish this preview. Your uploaded photo was not changed.';
+  if(data?.code===3036 || data?.reason==='quota') return 'Today’s free AI allowance has been used. Your photo and settings are still saved here, and nothing was charged.';
+  if(data?.code===3030 || data?.reason==='moderation') return `${label} could not complete that exact photo and wording combination. Try again, edit the direction, or switch quality.`;
+  if(data?.reason==='capacity') return `${label} is temporarily busy. Your photo and settings are still here — try again or switch quality.`;
+  return data?.userMessage || `${label} did not finish this time. Your photo and settings are still here.`;
 }
 
 
@@ -259,6 +285,7 @@ let hasSuccessfulPreview=false;
 let generationInFlight=false;
 let currentClientAttemptId="";
 let lastSuccessfulPreviewMeta=null;
+let lastAttemptQuality='high';
 
 function makeClientAttemptId(){
   return `WEB-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).slice(2,7).toUpperCase()}`;
@@ -350,6 +377,9 @@ form.addEventListener('submit',async e=>{
     fd.append('notes',document.querySelector('#notes').value);
     fd.append('source',params.get('source')||'site');
     fd.append('sourceTweet',params.get('tweet')||'');
+    const qualityMode=selectedQuality();
+    lastAttemptQuality=qualityMode;
+    fd.append('qualityMode',qualityMode);
     fd.append('clientAttemptId',currentClientAttemptId);
     if(turnstileToken)fd.append('turnstileToken',turnstileToken);
 
@@ -358,10 +388,10 @@ form.addEventListener('submit',async e=>{
       fd.append(`image_${i}`,await resizeFile(files[i]));
     }
 
-    button.textContent='Creating your Recast…';
-    startGenerationUI();
+    button.textContent=qualityMode==='quick'?'Creating Quick Preview…':'Creating High-Quality Preview…';
+    startGenerationUI(qualityMode);
     const controller=new AbortController();
-    const timeout=setTimeout(()=>controller.abort(),120000);
+    const timeout=setTimeout(()=>controller.abort(),qualityMode==='quick'?90000:210000);
     let res,data;
     try{
       res=await fetch('/api/transform-v2',{method:'POST',body:fd,signal:controller.signal});
@@ -382,9 +412,9 @@ form.addEventListener('submit',async e=>{
     clearPreviewError();
     document.querySelector('#preview-emergency-error')?.remove();
     hasSuccessfulPreview=true;
-    lastSuccessfulPreviewMeta={title:successTitle,requestText:successRequestText,requestId:data.requestId,accessToken:data.accessToken};
+    lastSuccessfulPreviewMeta={title:successTitle,requestText:successRequestText,requestId:data.requestId,accessToken:data.accessToken,qualityMode:data.qualityMode||lastAttemptQuality};
     localStorage.setItem('recast_last_request',JSON.stringify({
-      requestId:data.requestId,accessToken:data.accessToken,style:data.style,model:data.modelUsed
+      requestId:data.requestId,accessToken:data.accessToken,style:data.style,model:data.modelUsed,qualityMode:data.qualityMode||lastAttemptQuality
     }));
     const orderLink=document.querySelector('#order-status-link');
     if(orderLink){orderLink.href=`/order.html?requestId=${encodeURIComponent(data.requestId)}&token=${encodeURIComponent(data.accessToken)}`;orderLink.classList.remove('hidden')}
@@ -402,8 +432,12 @@ form.addEventListener('submit',async e=>{
     if(!diagnosticId)diagnosticId=logged?.diagnosticId||'';
 
     document.querySelector('#preview-title').textContent=hasSuccessfulPreview
-      ? 'That new version didn’t finish.'
-      : 'We couldn’t finish this preview.';
+      ? `That ${qualityLabel(lastAttemptQuality)} didn’t finish.`
+      : `${qualityLabel(lastAttemptQuality)} didn’t finish this time.`;
+    const retryButton=document.querySelector('#retry-generation');
+    const switchButton=document.querySelector('#switch-quality-generation');
+    if(retryButton)retryButton.textContent=lastAttemptQuality==='quick'?'Try Quick again':'Try High-Quality again';
+    if(switchButton)switchButton.textContent=lastAttemptQuality==='quick'?'Try High-Quality Preview':'Try Quick Preview';
     if(!hasSuccessfulPreview)document.querySelector('#request-id').textContent='';
 
     try{
@@ -424,12 +458,20 @@ form.addEventListener('submit',async e=>{
     generationInFlight=false;
     loading.classList.add('hidden');
     button.disabled=false;
-    button.textContent='Create my preview';
+    generationInFlight=false;
+    updateQualityUI();
     resetTurnstile();
   }
 });
 
 document.querySelector('#retry-generation')?.addEventListener('click',()=>{
+  clearPreviewError();
+  form.requestSubmit();
+});
+document.querySelector('#switch-quality-generation')?.addEventListener('click',()=>{
+  const next=lastAttemptQuality==='quick'?'high':'quick';
+  const radio=document.querySelector(`input[name="qualityMode"][value="${next}"]`);
+  if(radio){radio.checked=true;updateQualityUI();}
   clearPreviewError();
   form.requestSubmit();
 });
@@ -469,7 +511,10 @@ async function status(){
   }catch{}
   try{
     const m=await fetch('/api/model-status').then(r=>r.json());
-    if(m.ok && document.querySelector('#model-copy')) document.querySelector('#model-copy').textContent=`${m.label} · high fidelity`;
+    if(m.ok){
+      window.__recastModels=m;
+      updateQualityUI();
+    }
   }catch{}
   if(params.get('debug')==='1'){
     try{
@@ -479,5 +524,6 @@ async function status(){
     }catch{}
   }
 }
+updateQualityUI();
 status();
 setupTurnstile();

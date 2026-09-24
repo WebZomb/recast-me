@@ -6,9 +6,9 @@
   <meta name="theme-color" content="#07070b" />
   <meta name="description" content="Recast Me turns your photo into original AI artwork, then puts it on something worth keeping." />
   <title>Recast Me — Same you. A bolder reality.</title>
-  <link rel="stylesheet" href="/styles.css?v=102" />
-  <link rel="stylesheet" href="/merch-v07.css?v=102" />
-  <link rel="stylesheet" href="/site-v10.css?v=102" />
+  <link rel="stylesheet" href="/styles.css?v=110" />
+  <link rel="stylesheet" href="/merch-v07.css?v=110" />
+  <link rel="stylesheet" href="/site-v10.css?v=110" />
 </head>
 <body>
   <header class="site-header">
@@ -160,10 +160,31 @@
               <span id="file-summary" class="file-summary">No photos selected</span>
             </label>
             <div class="consent"><input id="consent" type="checkbox" required><label for="consent">I have permission to use these photos and agree to the Recast Me AI/Image Policy.</label></div>
+
+            <fieldset class="quality-picker" id="quality-picker">
+              <legend>Choose generation quality</legend>
+              <label class="quality-choice selected" data-quality-card="high">
+                <input type="radio" name="qualityMode" value="high" checked>
+                <span class="quality-radio"></span>
+                <span class="quality-choice-copy">
+                  <strong>High-Quality Preview <em>RECOMMENDED</em></strong>
+                  <small>Best likeness, prompt accuracy, and detail. Takes longer.</small>
+                </span>
+              </label>
+              <label class="quality-choice" data-quality-card="quick">
+                <input type="radio" name="qualityMode" value="quick">
+                <span class="quality-radio"></span>
+                <span class="quality-choice-copy">
+                  <strong>Quick Preview</strong>
+                  <small>Faster for trying ideas, with lower detail and likeness accuracy.</small>
+                </span>
+              </label>
+            </fieldset>
+
             <div id="turnstile-container" class="turnstile-container hidden"></div>
-            <button type="submit" class="button primary full" id="generate-button">Create my preview</button>
+            <button type="submit" class="button primary full" id="generate-button">Create High-Quality Preview</button>
             <div id="recast-error" class="recast-error hidden" role="alert"></div>
-            <div class="quality-line"><span class="quality-dot"></span><span id="model-copy">High-fidelity image engine</span></div>
+            <div class="quality-line"><span class="quality-dot"></span><span id="model-copy">High-Quality Preview · best likeness and accuracy</span></div>
           </form>
         </div>
       </div>
@@ -191,9 +212,10 @@
             <p id="preview-error-message">Your photo is still safe. Try again or adjust the direction.</p>
             <small id="preview-error-reference" class="preview-error-reference hidden"></small>
             <div class="preview-error-actions">
-              <button type="button" id="retry-generation" class="button primary">Try again</button>
+              <button type="button" id="retry-generation" class="button primary">Try High-Quality again</button>
+              <button type="button" id="switch-quality-generation" class="button ghost">Try Quick Preview</button>
               <button type="button" id="keep-last-preview" class="button ghost hidden">Keep last preview</button>
-              <button type="button" id="adjust-generation" class="button ghost">Adjust direction</button>
+              <button type="button" id="adjust-generation" class="button ghost">Edit direction</button>
             </div>
           </div>
         </div>
@@ -250,6 +272,6 @@
     <span>© 2026 Recast Me</span>
   </footer>
 
-  <script src="/app.js?v=102" type="module"></script>
+  <script src="/app.js?v=110" type="module"></script>
 </body>
 </html>
