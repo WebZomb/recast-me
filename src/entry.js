@@ -1,38 +1,38 @@
 import core from "./index.js";
 
-const FULFILLMENT = {
-  "RECAST-HOODIE-S":      { printfulVariantId: 10779, quantity: 1, baseCost: 27.84, product: "Hoodie", color: "Black" },
-  "RECAST-HOODIE-M":      { printfulVariantId: 10780, quantity: 1, baseCost: 27.84, product: "Hoodie", color: "Black" },
-  "RECAST-HOODIE-L":      { printfulVariantId: 10781, quantity: 1, baseCost: 27.84, product: "Hoodie", color: "Black" },
-  "RECAST-HOODIE-XL":     { printfulVariantId: 10782, quantity: 1, baseCost: 27.84, product: "Hoodie", color: "Black" },
-  "RECAST-HOODIE-2XL":    { printfulVariantId: 10783, quantity: 1, baseCost: 29.84, product: "Hoodie", color: "Black" },
+export const FULFILLMENT = {
+  "RECAST-HOODIE-S":      { printfulProductId: 380, printfulVariantId: 10779, preferredPlacement: "front", orderFileType: "front", quantity: 1, baseCost: 27.84, product: "Hoodie", color: "Black" },
+  "RECAST-HOODIE-M":      { printfulProductId: 380, printfulVariantId: 10780, preferredPlacement: "front", orderFileType: "front", quantity: 1, baseCost: 27.84, product: "Hoodie", color: "Black" },
+  "RECAST-HOODIE-L":      { printfulProductId: 380, printfulVariantId: 10781, preferredPlacement: "front", orderFileType: "front", quantity: 1, baseCost: 27.84, product: "Hoodie", color: "Black" },
+  "RECAST-HOODIE-XL":     { printfulProductId: 380, printfulVariantId: 10782, preferredPlacement: "front", orderFileType: "front", quantity: 1, baseCost: 27.84, product: "Hoodie", color: "Black" },
+  "RECAST-HOODIE-2XL":    { printfulProductId: 380, printfulVariantId: 10783, preferredPlacement: "front", orderFileType: "front", quantity: 1, baseCost: 29.84, product: "Hoodie", color: "Black" },
 
-  "RECAST-TEE-S":         { printfulVariantId: 4016, quantity: 1, baseCost: 11.92, product: "T-Shirt", color: "Black" },
-  "RECAST-TEE-M":         { printfulVariantId: 4017, quantity: 1, baseCost: 11.92, product: "T-Shirt", color: "Black" },
-  "RECAST-TEE-L":         { printfulVariantId: 4018, quantity: 1, baseCost: 11.92, product: "T-Shirt", color: "Black" },
-  "RECAST-TEE-XL":        { printfulVariantId: 4019, quantity: 1, baseCost: 11.92, product: "T-Shirt", color: "Black" },
-  "RECAST-TEE-2XL":       { printfulVariantId: 4020, quantity: 1, baseCost: 13.92, product: "T-Shirt", color: "Black" },
+  "RECAST-TEE-S":         { printfulProductId: 71, printfulVariantId: 4016, preferredPlacement: "front", orderFileType: "front", quantity: 1, baseCost: 11.92, product: "T-Shirt", color: "Black" },
+  "RECAST-TEE-M":         { printfulProductId: 71, printfulVariantId: 4017, preferredPlacement: "front", orderFileType: "front", quantity: 1, baseCost: 11.92, product: "T-Shirt", color: "Black" },
+  "RECAST-TEE-L":         { printfulProductId: 71, printfulVariantId: 4018, preferredPlacement: "front", orderFileType: "front", quantity: 1, baseCost: 11.92, product: "T-Shirt", color: "Black" },
+  "RECAST-TEE-XL":        { printfulProductId: 71, printfulVariantId: 4019, preferredPlacement: "front", orderFileType: "front", quantity: 1, baseCost: 11.92, product: "T-Shirt", color: "Black" },
+  "RECAST-TEE-2XL":       { printfulProductId: 71, printfulVariantId: 4020, preferredPlacement: "front", orderFileType: "front", quantity: 1, baseCost: 13.92, product: "T-Shirt", color: "Black" },
 
-  "RECAST-BLANKET-50X60": { printfulVariantId: 10986, quantity: 1, baseCost: 29.36, product: "Blanket" },
-  "RECAST-BLANKET-60X80": { printfulVariantId: 13222, quantity: 1, baseCost: 39.76, product: "Blanket" },
+  "RECAST-BLANKET-50X60": { printfulProductId: 395, printfulVariantId: 10986, preferredPlacement: "default", orderFileType: "default", quantity: 1, baseCost: 29.36, product: "Blanket" },
+  "RECAST-BLANKET-60X80": { printfulProductId: 395, printfulVariantId: 13222, preferredPlacement: "default", orderFileType: "default", quantity: 1, baseCost: 39.76, product: "Blanket" },
 
-  "RECAST-POSTER-12X16":  { printfulVariantId: 1349, quantity: 1, baseCost: 11.11, product: "Poster" },
-  "RECAST-POSTER-18X24":  { printfulVariantId: 1, quantity: 1, baseCost: 13.15, product: "Poster" },
-  "RECAST-POSTER-24X36":  { printfulVariantId: 2, quantity: 1, baseCost: 18.25, product: "Poster" },
+  "RECAST-POSTER-12X16":  { printfulProductId: 1, printfulVariantId: 1349, preferredPlacement: "default", orderFileType: "default", quantity: 1, baseCost: 11.11, product: "Poster" },
+  "RECAST-POSTER-18X24":  { printfulProductId: 1, printfulVariantId: 1, preferredPlacement: "default", orderFileType: "default", quantity: 1, baseCost: 13.15, product: "Poster" },
+  "RECAST-POSTER-24X36":  { printfulProductId: 1, printfulVariantId: 2, preferredPlacement: "default", orderFileType: "default", quantity: 1, baseCost: 18.25, product: "Poster" },
 
-  "RECAST-FRAME-12X16":   { printfulVariantId: 1350, quantity: 1, baseCost: 32.20, product: "Framed Poster", color: "Black" },
-  "RECAST-FRAME-18X24":   { printfulVariantId: 3, quantity: 1, baseCost: 46.30, product: "Framed Poster", color: "Black" },
+  "RECAST-FRAME-12X16":   { printfulProductId: 2, printfulVariantId: 1350, preferredPlacement: "default", orderFileType: "default", quantity: 1, baseCost: 32.20, product: "Framed Poster", color: "Black" },
+  "RECAST-FRAME-18X24":   { printfulProductId: 2, printfulVariantId: 3, preferredPlacement: "default", orderFileType: "default", quantity: 1, baseCost: 46.30, product: "Framed Poster", color: "Black" },
 
-  "RECAST-CANVAS-12X16":  { printfulVariantId: 5, quantity: 1, baseCost: 23.41, product: "Canvas" },
-  "RECAST-CANVAS-18X24":  { printfulVariantId: 7, quantity: 1, baseCost: 33.66, product: "Canvas" },
-  "RECAST-CANVAS-24X36":  { printfulVariantId: 825, quantity: 1, baseCost: 52.02, product: "Canvas" },
+  "RECAST-CANVAS-12X16":  { printfulProductId: 3, printfulVariantId: 5, preferredPlacement: "default", orderFileType: "default", quantity: 1, baseCost: 23.41, product: "Canvas" },
+  "RECAST-CANVAS-18X24":  { printfulProductId: 3, printfulVariantId: 7, preferredPlacement: "default", orderFileType: "default", quantity: 1, baseCost: 33.66, product: "Canvas" },
+  "RECAST-CANVAS-24X36":  { printfulProductId: 3, printfulVariantId: 825, preferredPlacement: "default", orderFileType: "default", quantity: 1, baseCost: 52.02, product: "Canvas" },
 
-  "RECAST-MUG-11OZ":      { printfulVariantId: 1320, quantity: 1, baseCost: 6.07, product: "Mug", color: "White" },
-  "RECAST-MUG-15OZ":      { printfulVariantId: 4830, quantity: 1, baseCost: 8.11, product: "Mug", color: "White" },
+  "RECAST-MUG-11OZ":      { printfulProductId: 19, printfulVariantId: 1320, preferredPlacement: "default", orderFileType: "default", quantity: 1, baseCost: 6.07, product: "Mug", color: "White" },
+  "RECAST-MUG-15OZ":      { printfulProductId: 19, printfulVariantId: 4830, preferredPlacement: "default", orderFileType: "default", quantity: 1, baseCost: 8.11, product: "Mug", color: "White" },
 
-  "RECAST-TUMBLER-20OZ":  { printfulVariantId: 23470, quantity: 1, baseCost: 24.97, product: "Tumbler", color: "White" },
-  "RECAST-MAGNET-SET":     { printfulVariantId: 16366, quantity: 3, baseCost: 3.39, product: "Magnet 3-Pack", color: "White" },
-  "RECAST-COASTER-SET":    { printfulVariantId: 15662, quantity: 4, baseCost: 5.55, product: "Coaster 4-Pack" },
+  "RECAST-TUMBLER-20OZ":  { printfulProductId: 909, printfulVariantId: 23470, preferredPlacement: "default", orderFileType: "default", quantity: 1, baseCost: 24.97, product: "Tumbler", color: "White" },
+  "RECAST-MAGNET-SET":     { printfulProductId: 656, printfulVariantId: 16366, preferredPlacement: "default", orderFileType: "default", quantity: 3, baseCost: 3.39, product: "Magnet 3-Pack", color: "White" },
+  "RECAST-COASTER-SET":    { printfulProductId: 611, printfulVariantId: 15662, preferredPlacement: "default", orderFileType: "default", quantity: 4, baseCost: 5.55, product: "Coaster 4-Pack" },
 
   "RECAST-DIGITAL-HD":     { digital: true, quantity: 1, baseCost: 0, product: "HD Digital Recast" },
   "RECAST-DIGITAL-PACK":   { digital: true, quantity: 1, baseCost: 0, product: "Recast Pack" }
