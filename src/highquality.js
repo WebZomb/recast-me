@@ -32,6 +32,17 @@ async function writeGenerationDiagnostic(env,payload){
   return diagnosticId
 }
 
+async function writeAttemptReceipt(env,attemptId,payload){
+  if(!env.ARTWORK||!attemptId)return;
+  try{
+    await env.ARTWORK.put(`diagnostics/attempts/${attemptId}.json`,JSON.stringify({
+      attemptId,
+      updatedAt:new Date().toISOString(),
+      ...payload
+    }),{httpMetadata:{contentType:"application/json"}});
+  }catch{}
+}
+
 async function verifyTurnstile(env,token,ip){
   if(!env.TURNSTILE_SECRET_KEY)return{success:true,disabled:true};
   if(!token)return{success:false,error:"missing-token"};
@@ -194,6 +205,8 @@ async function store(env,{requestId,accessToken,styleId,subjectType,notes,source
 
 export async function highQualityTransform(request,env){
   let stage="start";
+  let clientAttemptId="";
+  let attemptStartedAt=Date.now();
   try{
     if(!env.AI)return json({error:"ai_unavailable",userMessage:"The image engine is temporarily unavailable. Please try again shortly.",reason:"binding"},503);
     const incoming=await request.formData();stage="parse-form";
@@ -207,6 +220,9 @@ export async function highQualityTransform(request,env){
     const notes=String(incoming.get("notes")||"");
     const source=String(incoming.get("source")||"site");
     const sourceTweet=String(incoming.get("sourceTweet")||"");
+    clientAttemptId=String(incoming.get("clientAttemptId")||`SRV-${Date.now().toString(36).toUpperCase()}-${randomHex(2).toUpperCase()}`).replace(/[^a-zA-Z0-9._-]/g,"").slice(0,96);
+    attemptStartedAt=Date.now();
+    await writeAttemptReceipt(env,clientAttemptId,{status:"started",startedAt:new Date(attemptStartedAt).toISOString(),styleId,subjectType,source:source||"site"});
     const safety=assess(`${styleId} ${subjectType} ${notes}`);
     if(safety.status==="rejected")return json({error:"not_supported",userMessage:"That request is outside Recast Me's good-will image policy.",reason:"policy"},422);
     if(safety.status==="review")return json({reviewRequired:true,userMessage:"This request needs a quick human review before generation.",reason:"review"},202);
@@ -234,11 +250,13 @@ export async function highQualityTransform(request,env){
     const accessToken=randomHex(32);
     const stored=await store(env,{requestId,accessToken,styleId,subjectType,notes,source,sourceTweet,inputs:inputFiles,image,safety,modelUsed:generated.modelUsed,attemptKind:generated.attemptKind});
 
-    return json({ok:true,requestId,accessToken,style:STYLES[styleId]?.name||STYLES.game.name,image:`data:image/jpeg;base64,${image}`,persisted:stored.persisted,storageError:stored.storageError,modelUsed:generated.modelUsed,usedSafeRetry:generated.usedSafeRetry,usedFastFallback:generated.usedFallback,promptVersion:"v1.0.1"});
+    await writeAttemptReceipt(env,clientAttemptId,{status:"success",completedAt:new Date().toISOString(),durationMs:Date.now()-attemptStartedAt,requestId,modelUsed:generated.modelUsed,attemptKind:generated.attemptKind,persisted:stored.persisted});
+    return json({ok:true,requestId,accessToken,style:STYLES[styleId]?.name||STYLES.game.name,image:`data:image/jpeg;base64,${image}`,persisted:stored.persisted,storageError:stored.storageError,modelUsed:generated.modelUsed,usedSafeRetry:generated.usedSafeRetry,usedFastFallback:generated.usedFallback,promptVersion:"v1.0.2",clientAttemptId});
   }catch(error){
     const reason=error?.reason||"provider";
     const internal=error?.cause||error;
     const diagnosticId=await writeGenerationDiagnostic(env,{stage,reason,providerCode:providerCode(internal),providerMessage:String(internal?.message||internal||"").slice(0,500),primary:String(env.IMAGE_MODEL_PRIMARY||DEFAULT_PRIMARY),fallback:String(env.IMAGE_MODEL_FALLBACK||DEFAULT_FALLBACK)});
+    await writeAttemptReceipt(env,clientAttemptId,{status:"failed",failedAt:new Date().toISOString(),durationMs:Date.now()-attemptStartedAt,stage,reason,providerCode:providerCode(internal),diagnosticId});
     if(reason==="quota")return json({error:"daily_allowance_used",code:3036,reason:"quota",retryable:false,diagnosticId,userMessage:"Today’s free AI preview allowance has been used. The allowance resets daily. Your photo is safe, and nothing was charged."},429);
     if(reason==="moderation")return json({error:"generation_declined",code:3030,reason:"moderation",retryable:true,diagnosticId,userMessage:"The image engine would not complete that exact photo and wording combination. We already retried with a safer version. Try the same idea with simpler wording or another reference photo."},422);
     if(reason==="capacity")return json({error:"engine_busy",reason:"capacity",retryable:true,diagnosticId,userMessage:"The image engine is temporarily busy. Your photo is safe — tap Try again in a moment."},503);
@@ -250,5 +268,5 @@ export function modelStatus(env){
   const primary=String(env.IMAGE_MODEL_PRIMARY||DEFAULT_PRIMARY);
   const fallback=String(env.IMAGE_MODEL_FALLBACK||DEFAULT_FALLBACK);
   const label=primary.includes("flux-2-klein-9b")?"FLUX.2 Klein 9B":primary.includes("flux-2-klein-4b")?"FLUX.2 Klein 4B":primary;
-  return json({ok:true,primary,fallback,label,mode:"reliable-premium-preview-4x5",promptVersion:"v1.0.1"})
+  return json({ok:true,primary,fallback,label,mode:"reliable-premium-preview-4x5",promptVersion:"v1.0.2"})
 }

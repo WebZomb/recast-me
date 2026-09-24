@@ -269,11 +269,35 @@ export async function deleteUnpaidRecast(request,env,requestId){
   }catch(error){return json({ok:false,error:error.message},error.status||500)}
 }
 
+
+export async function clientDiagnostic(request,env){
+  try{
+    if(!env.ARTWORK)return json({ok:false,error:"diagnostics unavailable"},503);
+    const body=await request.json().catch(()=>({}));
+    const diagnosticId=`WEB-${Date.now().toString(36).toUpperCase()}-${randomHex(2).toUpperCase()}`;
+    const record={
+      diagnosticId,
+      createdAt:now(),
+      kind:String(body.kind||"client"),
+      message:String(body.message||"").slice(0,500),
+      clientAttemptId:String(body.clientAttemptId||"").slice(0,96)||null,
+      serverDiagnosticId:String(body.serverDiagnosticId||"").slice(0,96)||null,
+      hadPreviousPreview:Boolean(body.hadPreviousPreview),
+      page:String(body.page||"").slice(0,120),
+      userAgent:String(body.userAgent||"").slice(0,300),
+      source:String(body.source||"").slice(0,200)||null,
+      line:Number(body.line||0)||null
+    };
+    await putJson(env,`diagnostics/client/${diagnosticId}.json`,record);
+    return json({ok:true,diagnosticId});
+  }catch(error){return json({ok:false,error:error.message||String(error)},500)}
+}
+
 export async function adminStatus(request,env){
-  try{requireAdmin(request,env);const jobs=await listJson(env,"jobs/",100);const trends=await listJson(env,"trends/",100);const socials=await listJson(env,"social/x/",100);const genErrors=await listJson(env,"diagnostics/generation/",100);return json({ok:true,version:"1.0.1",jobs:{total:jobs.length,awaiting:jobs.filter(x=>!String(x.status).includes("completed")&&!String(x.status).includes("shipped")).length},trends:{total:trends.length,review:trends.filter(x=>x.status==="review").length},generationErrors:{total:genErrors.length,recent:genErrors.filter(x=>Date.now()-Date.parse(x.createdAt||0)<86400000).length},xRequests:socials.length,connections:{shopify:Boolean(env.SHOPIFY_CLIENT_ID&&env.SHOPIFY_CLIENT_SECRET),printful:Boolean(env.PRINTFUL_API_TOKEN),images:Boolean(env.IMAGES),x:Boolean(env.X_USER_ACCESS_TOKEN&&env.X_USER_ID),admin:true},automation:{orderSync:String(env.ORDER_SYNC_ENABLED||"false")==="true",xBot:String(env.X_BOT_ENABLED||"false")==="true",trendScanner:String(env.TREND_SCANNER_ENABLED||"false")==="true",retentionCleanup:String(env.RETENTION_CLEANUP_ENABLED||"false")==="true"}})}catch(error){return json({ok:false,error:error.message},error.status||500)}
+  try{requireAdmin(request,env);const jobs=await listJson(env,"jobs/",100);const trends=await listJson(env,"trends/",100);const socials=await listJson(env,"social/x/",100);const genErrors=await listJson(env,"diagnostics/generation/",100);const clientErrors=await listJson(env,"diagnostics/client/",100);const attempts=await listJson(env,"diagnostics/attempts/",100);return json({ok:true,version:"1.0.2",jobs:{total:jobs.length,awaiting:jobs.filter(x=>!String(x.status).includes("completed")&&!String(x.status).includes("shipped")).length},trends:{total:trends.length,review:trends.filter(x=>x.status==="review").length},generationErrors:{total:genErrors.length+clientErrors.length,recent:[...genErrors,...clientErrors].filter(x=>Date.now()-Date.parse(x.createdAt||0)<86400000).length,attempts:attempts.length},xRequests:socials.length,connections:{shopify:Boolean(env.SHOPIFY_CLIENT_ID&&env.SHOPIFY_CLIENT_SECRET),printful:Boolean(env.PRINTFUL_API_TOKEN),images:Boolean(env.IMAGES),x:Boolean(env.X_USER_ACCESS_TOKEN&&env.X_USER_ID),admin:true},automation:{orderSync:String(env.ORDER_SYNC_ENABLED||"false")==="true",xBot:String(env.X_BOT_ENABLED||"false")==="true",trendScanner:String(env.TREND_SCANNER_ENABLED||"false")==="true",retentionCleanup:String(env.RETENTION_CLEANUP_ENABLED||"false")==="true"}})}catch(error){return json({ok:false,error:error.message},error.status||500)}
 }
 export async function adminJobs(request,env){try{requireAdmin(request,env);const jobs=await listJson(env,"jobs/",100);jobs.sort((a,b)=>String(b.createdAt).localeCompare(String(a.createdAt)));return json({ok:true,jobs})}catch(error){return json({ok:false,error:error.message},error.status||500)}}
-export async function adminGenerationErrors(request,env){try{requireAdmin(request,env);const errors=await listJson(env,"diagnostics/generation/",100);errors.sort((a,b)=>String(b.createdAt).localeCompare(String(a.createdAt)));return json({ok:true,errors:errors.slice(0,50)})}catch(error){return json({ok:false,error:error.message},error.status||500)}}
+export async function adminGenerationErrors(request,env){try{requireAdmin(request,env);const server=await listJson(env,"diagnostics/generation/",100);const client=await listJson(env,"diagnostics/client/",100);const attempts=await listJson(env,"diagnostics/attempts/",100);const errors=[...server,...client,...attempts.filter(x=>x.status==="failed")];errors.sort((a,b)=>String(b.createdAt||b.failedAt||b.updatedAt).localeCompare(String(a.createdAt||a.failedAt||a.updatedAt)));return json({ok:true,errors:errors.slice(0,75)})}catch(error){return json({ok:false,error:error.message},error.status||500)}}
 export async function adminTrends(request,env){try{requireAdmin(request,env);const rows=await listJson(env,"trends/",100);rows.sort((a,b)=>String(b.createdAt).localeCompare(String(a.createdAt)));return json({ok:true,trends:rows})}catch(error){return json({ok:false,error:error.message},error.status||500)}}
 export async function adminSocial(request,env){try{requireAdmin(request,env);const rows=await listJson(env,"social/x/",100);const listed=await env.ARTWORK?.list({prefix:"requests/",limit:1000});const byTweet=new Map();for(const object of listed?.objects||[]){if(!object.key.endsWith("/request.json"))continue;const meta=await readJson(env,object.key);if(meta?.sourceTweet)byTweet.set(String(meta.sourceTweet),meta)}for(const row of rows){const meta=byTweet.get(String(row.tweetId));if(meta){row.recastRequestId=meta.requestId;row.converted=true;row.paid=Boolean(meta.paid)}}rows.sort((a,b)=>String(b.createdAt).localeCompare(String(a.createdAt)));return json({ok:true,requests:rows})}catch(error){return json({ok:false,error:error.message},error.status||500)}}
 export async function adminSyncOrders(request,env){try{requireAdmin(request,env);const orders=await syncPaidOrders(env);const printful=await syncPrintfulJobs(env);return json({ok:true,created:orders.created||0,seen:orders.seen||0,printfulUpdated:printful.updated||0})}catch(error){return json({ok:false,error:error.message},error.status||500)}}
@@ -409,6 +433,7 @@ export async function scheduledWorkflow(controller,env,ctx){
 
 export async function routeWorkflow(request,env,ctx){
   const url=new URL(request.url);const p=url.pathname;
+  if(p==="/api/client-diagnostic"&&request.method==="POST")return clientDiagnostic(request,env);
   if(p==="/api/mockup/create"&&request.method==="POST")return createMockup(request,env);
   if(p==="/api/mockup/status"&&request.method==="GET")return mockupStatus(request,env);
   let m=p.match(/^\/api\/print-source\/([^/]+)$/);if(m&&request.method==="GET")return servePrintSource(request,env,decodeURIComponent(m[1]));
