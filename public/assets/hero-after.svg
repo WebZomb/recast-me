@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" role="img">
+<defs>
+<linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#0a0a12"/><stop offset="1" stop-color="#19142e"/></linearGradient>
+<filter id="glow"><feGaussianBlur stdDeviation="12" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+
+</defs>
+<rect width="800" height="500" rx="28" fill="url(#bg)"/>
+
+<defs><linearGradient id="abg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#101943"/><stop offset=".48" stop-color="#552d91"/><stop offset="1" stop-color="#0d1427"/></linearGradient></defs>
+<rect x="18" y="18" width="764" height="464" rx="26" fill="url(#abg)"/>
+<circle cx="620" cy="102" r="88" fill="#dff7ff" opacity=".72"/><path d="M0 390 L150 244 L250 335 L390 170 L520 334 L650 238 L800 390 V500 H0Z" fill="#1b2c52"/>
+<circle cx="395" cy="155" r="85" fill="#c9b9aa" stroke="#6df0ff" stroke-width="5"/>
+<path d="M278 440 Q298 252 395 246 Q492 252 512 440 Z" fill="#172a56" stroke="#ff54d8" stroke-width="5"/>
+<path d="M325 124 Q395 48 465 124 Q445 78 395 72 Q345 78 325 124Z" fill="#161429"/>
+<path d="M305 305 Q395 330 485 305" stroke="#8cf8ff" stroke-width="8" fill="none"/>
+<g transform="translate(610 345)"><ellipse cx="0" cy="25" rx="72" ry="62" fill="#b98249" stroke="#ffcc69" stroke-width="5"/><circle cx="-36" cy="-20" r="34" fill="#c99558"/><circle cx="36" cy="-20" r="34" fill="#c99558"/><ellipse cx="0" cy="-6" rx="54" ry="48" fill="#c99558"/><circle cx="-20" cy="-15" r="5"/><circle cx="20" cy="-15" r="5"/><ellipse cx="0" cy="4" rx="10" ry="7" fill="#19171a"/><path d="M-55 40 Q0 78 55 40" stroke="#46e8ff" stroke-width="7" fill="none"/></g>
+<rect x="48" y="46" width="210" height="48" rx="24" fill="#0b0c12" opacity=".82"/><text x="153" y="78" fill="#fff" font-family="system-ui" font-size="19" text-anchor="middle" font-weight="700">RECAST RESULT</text>
+
+</svg>

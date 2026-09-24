@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" role="img">
+<defs>
+<linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#0a0a12"/><stop offset="1" stop-color="#19142e"/></linearGradient>
+<filter id="glow"><feGaussianBlur stdDeviation="12" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+
+</defs>
+<rect width="800" height="500" rx="28" fill="url(#bg)"/>
+
+<defs><linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#ff4fd8"/><stop offset=".48" stop-color="#6d51ff"/><stop offset="1" stop-color="#10152c"/></linearGradient></defs>
+<rect x="18" y="18" width="764" height="464" rx="26" fill="url(#sky)"/>
+<circle cx="400" cy="214" r="106" fill="#ffcc69"/><g stroke="#d33e90" stroke-width="7"><line x1="300" y1="190" x2="500" y2="190"/><line x1="295" y1="217" x2="505" y2="217"/><line x1="310" y1="244" x2="490" y2="244"/></g>
+<path d="M0 315 H800 V500 H0Z" fill="#080b19"/>
+<g stroke="#4eefff" opacity=".55"><line x1="400" y1="315" x2="400" y2="500"/><line x1="320" y1="315" x2="210" y2="500"/><line x1="480" y1="315" x2="590" y2="500"/><line x1="245" y1="315" x2="20" y2="500"/><line x1="555" y1="315" x2="780" y2="500"/><line x1="0" y1="350" x2="800" y2="350"/><line x1="0" y1="395" x2="800" y2="395"/><line x1="0" y1="450" x2="800" y2="450"/></g>
+<g fill="#0a0b17"><path d="M120 325 q25-75 55 0 q-20-33-27-82 q-8 48-28 82"/><rect x="145" y="286" width="8" height="78"/><path d="M665 330 q25-75 55 0 q-20-33-27-82 q-8 48-28 82"/><rect x="690" y="290" width="8" height="78"/></g>
+
+</svg>

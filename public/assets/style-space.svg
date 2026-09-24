@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" role="img">
+<defs>
+<linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#0a0a12"/><stop offset="1" stop-color="#19142e"/></linearGradient>
+<filter id="glow"><feGaussianBlur stdDeviation="12" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+
+</defs>
+<rect width="800" height="500" rx="28" fill="url(#bg)"/>
+
+<defs><radialGradient id="sp" cx=".3" cy=".2"><stop stop-color="#304177"/><stop offset=".5" stop-color="#121735"/><stop offset="1" stop-color="#060710"/></radialGradient></defs>
+<rect x="18" y="18" width="764" height="464" rx="26" fill="url(#sp)"/>
+<g fill="#fff" opacity=".7"><circle cx="100" cy="90" r="2"/><circle cx="190" cy="135" r="3"/><circle cx="300" cy="72" r="2"/><circle cx="570" cy="92" r="3"/><circle cx="700" cy="170" r="2"/><circle cx="635" cy="315" r="3"/><circle cx="110" cy="310" r="2"/></g>
+<circle cx="600" cy="350" r="145" fill="#5a49bb"/><ellipse cx="600" cy="350" rx="215" ry="36" fill="none" stroke="#e1c9ff" stroke-width="10" opacity=".75"/>
+<g transform="translate(245 282)"><circle cx="0" cy="-78" r="52" fill="#dfe7f7" stroke="#7a8eb5" stroke-width="8"/><ellipse cx="0" cy="-80" rx="35" ry="26" fill="#17284b"/><path d="M-62 -28 Q0-70 62-28 L78 110 H-78Z" fill="#e8eef8" stroke="#7a8eb5" stroke-width="8"/><rect x="-16" y="8" width="32" height="42" rx="8" fill="#9c6fff"/></g>
+
+</svg>
