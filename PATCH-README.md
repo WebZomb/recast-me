@@ -1,44 +1,35 @@
-# Recast Me v1.1 — High-Quality / Quick generation modes
+# Recast Me v1.3 — Gift Focus + 8×10 Desk Frame
 
-This patch implements the approved generation workflow.
+## Shopify / Printful
+- Added the 8×10 black Enhanced Matte Paper Framed Poster as a new Shopify variant.
+- Shopify SKU: `RECAST-FRAME-8X10`
+- Retail: `$44.99`
+- Printful product: `2`
+- Printful variant: `4651`
+- Current Printful base cost used in the internal margin map: `$20.76`
+- Existing product remains DRAFT.
+- Updated the framed-product Shopify image to the premium desk-frame mockup.
 
-## Customer choices
-- **High-Quality Preview — recommended**
-  - FLUX.2 Dev
-  - 18 inference steps by default
-  - stronger likeness / prompt-following / detail
-  - slower
-  - does NOT silently downgrade to the quick model if it fails
-- **Quick Preview**
-  - FLUX.2 Klein 9B
-  - fast fixed 4-step model
-  - lower detail / likeness accuracy
-  - may use Klein 4B only as a quick-mode fallback
+## Website focus
+Added a new Popular Recasts section centered on:
+- Just your pet
+- You + your pet
+- Couples
+- Parents / family gifts
 
-## Failure behavior
-- A failed generation stays on the preview screen.
-- Customer can retry the same quality.
-- Customer can switch High-Quality ↔ Quick directly from the error card.
-- Prompt, photos, subject, world, and consent stay in place.
-- A successful old preview is never erased before the replacement succeeds.
-- `Keep last preview` is available if a later attempt fails.
-- Browser/server diagnostics from v1.0.2 remain enabled.
+Added an 8×10 Desk Frame spotlight for office desks, shelves, nightstands, and gifts.
 
-## Mobile preview fix
-- Preview frame is locked to site width on mobile.
-- 4:5 generated artwork is contained inside a 4:5 frame.
-- Canvas can no longer overflow the page width.
+## Creation form
+- Added Parents / Family subject option.
+- Expanded quick subject picks to Pet, You + Pet, Couple, Parents/Family, and Just Me.
+- Popular Recast cards prefill useful direction text and jump directly into the creation workflow.
+- Keeps all v1.2 Custom World and Recent Versions features.
 
-## Cloudflare variables
-Added:
-- IMAGE_MODEL_HIGH_QUALITY=@cf/black-forest-labs/flux-2-dev
-- IMAGE_MODEL_QUICK=@cf/black-forest-labs/flux-2-klein-9b
-- IMAGE_MODEL_QUICK_FALLBACK=@cf/black-forest-labs/flux-2-klein-4b
-- IMAGE_HIGH_QUALITY_STEPS=18
-- IMAGE_HIGH_QUALITY_GUIDANCE=5
-- IMAGE_QUICK_GUIDANCE=4
-
-The GitHub-connected Cloudflare deploy should read these from wrangler.jsonc.
+## Product workflow
+- Static framed-product card now starts at `$44.99`.
+- Framed product preview image now uses the desk-frame mockup.
+- Checkout metadata calls out 8×10 desk size plus larger wall sizes.
+- Fulfillment map includes the new 8×10 Printful variant.
 
 ## Upload
-Extract the small patch ZIP and upload the contents to the root of `WebZomb/recast-me`, preserving `public/` and `src/`, then commit to `main`.
+Extract the small patch ZIP and upload its contents to `WebZomb/recast-me`, preserving `public/` and `src/`, then commit to `main`.
