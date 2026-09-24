@@ -1,27 +1,44 @@
-# Recast Me v1.0.1 — generation reliability fix
+# Recast Me v1.1 — High-Quality / Quick generation modes
 
-This patch fixes the preview that loaded and then disappeared.
+This patch implements the approved generation workflow.
 
-## What was wrong
-The frontend hid the entire preview section whenever generation failed. The form error element also had a CSS `display:none` rule but the JavaScript never added its required `.show` class, so the actual error became invisible.
+## Customer choices
+- **High-Quality Preview — recommended**
+  - FLUX.2 Dev
+  - 18 inference steps by default
+  - stronger likeness / prompt-following / detail
+  - slower
+  - does NOT silently downgrade to the quick model if it fails
+- **Quick Preview**
+  - FLUX.2 Klein 9B
+  - fast fixed 4-step model
+  - lower detail / likeness accuracy
+  - may use Klein 4B only as a quick-mode fallback
 
-## What changed
-- Failed previews stay visible in the preview area.
-- A branded error card shows the real friendly reason plus a support reference.
-- Retry happens in place; Adjust Direction returns to the form.
-- The preview title says `Creating your Recast…` during generation instead of `Your preview is ready.`
-- Product purchase cards remain hidden until a preview actually succeeds.
-- Cloudflare Workers AI error 3036 (daily free allocation exhausted) is detected separately.
-- Only ONE premium Klein 9B attempt is allowed per request; recovery uses the much cheaper Klein 4B model.
-- Premium preview output is 768×960 (4:5) for faster display; final paid physical art still uses the high-resolution finishing pipeline.
-- Generation failures are logged privately to R2 without storing customer photos in the diagnostic record.
-- Control Center now includes a Generation Errors tab showing provider code/reason/stage.
+## Failure behavior
+- A failed generation stays on the preview screen.
+- Customer can retry the same quality.
+- Customer can switch High-Quality ↔ Quick directly from the error card.
+- Prompt, photos, subject, world, and consent stay in place.
+- A successful old preview is never erased before the replacement succeeds.
+- `Keep last preview` is available if a later attempt fails.
+- Browser/server diagnostics from v1.0.2 remain enabled.
+
+## Mobile preview fix
+- Preview frame is locked to site width on mobile.
+- 4:5 generated artwork is contained inside a 4:5 frame.
+- Canvas can no longer overflow the page width.
+
+## Cloudflare variables
+Added:
+- IMAGE_MODEL_HIGH_QUALITY=@cf/black-forest-labs/flux-2-dev
+- IMAGE_MODEL_QUICK=@cf/black-forest-labs/flux-2-klein-9b
+- IMAGE_MODEL_QUICK_FALLBACK=@cf/black-forest-labs/flux-2-klein-4b
+- IMAGE_HIGH_QUALITY_STEPS=18
+- IMAGE_HIGH_QUALITY_GUIDANCE=5
+- IMAGE_QUICK_GUIDANCE=4
+
+The GitHub-connected Cloudflare deploy should read these from wrangler.jsonc.
 
 ## Upload
-This ZIP is a full project. Extract it first and replace the matching files in `WebZomb/recast-me`, preserving folders, then commit to `main`. Cloudflare should auto-deploy.
-
-## Test
-Use the same reference and exact direction:
-`Make me and my dog super heros`
-
-If the account has used its daily free Workers AI allocation, the site will now say so instead of disappearing. Cloudflare documents error 3036 for the 10,000-neuron daily free allocation.
+Extract the small patch ZIP and upload the contents to the root of `WebZomb/recast-me`, preserving `public/` and `src/`, then commit to `main`.
