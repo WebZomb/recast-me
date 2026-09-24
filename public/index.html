@@ -7,6 +7,8 @@
   <meta name="description" content="Recast Me turns your photo into original AI artwork, then puts it on something worth keeping." />
   <title>Recast Me — Same you. A bolder reality.</title>
   <link rel="stylesheet" href="/styles.css" />
+  <link rel="stylesheet" href="/merch-v07.css" />
+  <link rel="stylesheet" href="/site-v10.css" />
 </head>
 <body>
   <header class="site-header">
@@ -17,6 +19,7 @@
     <nav>
       <a href="#styles">Styles</a>
       <a href="#how">How it works</a>
+      <a href="#shop">Shop</a>
       <a href="#start" class="nav-cta">Start a Recast</a>
     </nav>
   </header>
@@ -25,6 +28,9 @@
     <section class="hero" id="home">
       <div class="hero-glow hero-glow-a"></div>
       <div class="hero-glow hero-glow-b"></div>
+      <div class="hero-gridlines" aria-hidden="true"></div>
+      <div class="hero-light-streak hero-light-streak-a" aria-hidden="true"></div>
+      <div class="hero-light-streak hero-light-streak-b" aria-hidden="true"></div>
       <div class="hero-copy">
         <div class="eyebrow">YOUR PHOTO · ANOTHER WORLD</div>
         <h1>Recast<br><span>yourself.</span></h1>
@@ -43,12 +49,12 @@
 
       <div class="hero-demo" aria-label="Original to Recast example">
         <div class="demo-card">
-          <img src="/assets/hero-your-image-v08.png" alt="Original person and pet example" />
+          <img src="/assets/hero-your-image-v08.webp" alt="Original person and pet example" />
           <div class="demo-meta"><span>01</span><b>YOUR PHOTO</b></div>
         </div>
         <div class="recast-bridge"><span></span><b>RECAST</b><span></span></div>
         <div class="demo-card demo-card-after">
-          <img src="/assets/hero-your-world-v08.png" alt="Stylized Recast person and pet example" />
+          <img src="/assets/hero-your-world-v08.webp" alt="Stylized Recast person and pet example" />
           <div class="demo-meta"><span>02</span><b>YOUR WORLD</b></div>
         </div>
       </div>
@@ -75,11 +81,42 @@
         <div class="eyebrow">HOW IT WORKS</div>
         <h2>From photo to something real.</h2>
       </div>
-      <div class="steps">
-        <article><b>01</b><div class="step-icon">↥</div><h3>Upload privately</h3><p>Add up to four clear photos. They’re prepared on your device before processing.</p></article>
-        <article><b>02</b><div class="step-icon">✦</div><h3>Choose your world</h3><p>Pick a style and tell Recast Me what you want changed — while keeping you recognizable.</p></article>
-        <article><b>03</b><div class="step-icon">◫</div><h3>See your preview</h3><p>Get a watermarked preview with a unique Artwork ID saved privately for your order.</p></article>
-        <article><b>04</b><div class="step-icon">▣</div><h3>Make it yours</h3><p>Choose digital art, apparel, drinkware, blankets, wall art, and more.</p></article>
+      <div class="steps premium-steps">
+        <article class="step-card">
+          <b>01</b>
+          <div class="step-visual upload-visual" aria-hidden="true">
+            <div class="mini-photo mini-photo-back"><img src="/assets/hero-your-image-v08.webp" alt=""></div>
+            <div class="mini-photo mini-photo-front"><img src="/assets/hero-your-image-v08.webp" alt=""></div>
+            <span class="mini-lock">PRIVATE</span>
+          </div>
+          <h3>Upload privately</h3>
+          <p>Add up to four clear photos. Your references stay private and become the identity anchor for the artwork.</p>
+        </article>
+        <article class="step-card">
+          <b>02</b>
+          <div class="step-visual world-visual" aria-hidden="true">
+            <img src="/assets/style-future-v08.webp" alt=""><img src="/assets/style-fantasy-v08.webp" alt=""><img src="/assets/style-retro-v08.webp" alt="">
+          </div>
+          <h3>Choose your world</h3>
+          <p>Pick a world and describe what you want. Your written direction is treated as the primary creative instruction.</p>
+        </article>
+        <article class="step-card">
+          <b>03</b>
+          <div class="step-visual preview-mini" aria-hidden="true">
+            <img src="/assets/hero-your-world-v08.webp" alt="">
+            <span>RECAST ME · PREVIEW</span>
+          </div>
+          <h3>See your preview</h3>
+          <p>Review a watermarked preview tied to a private Artwork ID before you decide what you want to order.</p>
+        </article>
+        <article class="step-card">
+          <b>04</b>
+          <div class="step-visual merch-mini" aria-hidden="true">
+            <img src="/assets/product-poster-v10.webp" alt=""><img src="/assets/product-hoodie-v10.webp" alt=""><img src="/assets/product-mug-v10.webp" alt="">
+          </div>
+          <h3>Make it real</h3>
+          <p>Turn the approved Recast into wall art, apparel, gifts, drinkware, or choose a digital file as the last option.</p>
+        </article>
       </div>
     </section>
 
@@ -123,7 +160,9 @@
               <span id="file-summary" class="file-summary">No photos selected</span>
             </label>
             <div class="consent"><input id="consent" type="checkbox" required><label for="consent">I have permission to use these photos and agree to the Recast Me AI/Image Policy.</label></div>
+            <div id="turnstile-container" class="turnstile-container hidden"></div>
             <button type="submit" class="button primary full" id="generate-button">Create my preview</button>
+            <div id="recast-error" class="recast-error hidden" role="alert"></div>
             <div class="quality-line"><span class="quality-dot"></span><span id="model-copy">High-fidelity image engine</span></div>
           </form>
         </div>
@@ -139,21 +178,28 @@
       <div class="preview-layout">
         <div class="preview-frame">
           <canvas id="preview-canvas"></canvas>
-          <div class="loading hidden" id="loading"><span></span><p>Recasting your world…</p><small>Higher quality takes a little longer.</small></div>
+          <div class="loading hidden" id="loading">
+            <div class="loader-orbit"><i></i><i></i><i></i></div>
+            <p id="generation-status">Building your Recast…</p>
+            <small id="generation-detail">Locking the subject identity to your reference photo.</small>
+            <div class="generation-track"><span id="generation-progress"></span></div>
+            <div class="generation-milestones"><span>IDENTITY</span><span>WORLD</span><span>DETAIL</span><span>PREVIEW</span></div>
+          </div>
         </div>
         <div class="preview-info">
           <div class="callout"><strong>WATERMARKED PREVIEW</strong><p>Your clean artwork stays private. Purchase options below stay tied to this exact Artwork ID.</p></div>
           <h3>Put your Recast on something worth keeping.</h3>
           <div id="product-grid" class="product-grid"></div>
-          <div class="digital-downsell"><img src="/assets/product-digital.svg" alt=""><div><span>Just want the artwork?</span><strong>HD Digital Recast — $4.99</strong><p>A clean digital version is part of the catalog and will unlock with checkout.</p></div></div>
+          <a id="order-status-link" class="button ghost order-status-link hidden" href="#">Track this Recast / downloads</a>
+
         </div>
       </div>
     </section>
 
-    <section class="section shop-showcase">
+    <section class="section shop-showcase" id="shop">
       <div class="section-kicker">
-        <div><div class="eyebrow">MAKE IT REAL</div><h2>Not just another image in your camera roll.</h2></div>
-        <p>Every order carries the Artwork ID that connects your purchase to the private Recast you approved.</p>
+        <div><div class="eyebrow">MAKE IT REAL</div><h2>Put your Recast on something worth keeping.</h2></div>
+        <p>Premium made-to-order pieces built around the exact Recast you approved. Physical products come first; digital stays at the end.</p>
       </div>
       <div id="catalog-preview" class="catalog-preview"></div>
     </section>
@@ -161,7 +207,7 @@
     <section class="section promise">
       <div class="promise-card">
         <div class="eyebrow">THE RECAST STANDARD</div>
-        <h2>Same you.<br>A bolder reality.</h2>
+        <h2>Same you.<br>A bigger world.</h2>
         <div class="promise-grid">
           <p><b>Identity first.</b><br>The subject should still look like the subject.</p>
           <p><b>Original aesthetics.</b><br>No third-party logos, characters, or copied marketing art.</p>

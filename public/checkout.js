@@ -2,10 +2,18 @@ const grid = document.querySelector("#product-grid");
 const requestLabel = document.querySelector("#request-id");
 
 const PRODUCT_ART = {
-  "Custom Recast Hoodie":"hoodie","Custom Recast T-Shirt":"tshirt","Custom Recast Blanket":"blanket",
-  "Custom Recast Framed Poster":"framed-poster","Custom Recast Poster":"poster","Custom Recast Canvas":"canvas",
-  "Custom Recast Mug":"mug","Custom Recast Tumbler":"tumbler","Custom Recast Magnet 3-Pack":"magnet",
-  "Custom Recast Coaster 4-Pack":"coaster"
+  "Custom Recast Poster":"/assets/product-poster-v10.webp",
+  "Custom Recast Hoodie":"/assets/product-hoodie-v10.webp",
+  "Custom Recast Framed Poster":"/assets/product-framed-poster-v10.webp",
+  "Custom Recast Canvas":"/assets/product-canvas-v10.webp",
+  "Custom Recast T-Shirt":"/assets/product-tshirt-v10.webp",
+  "Custom Recast Blanket":"/assets/product-blanket-v10.webp",
+  "Custom Recast Mug":"/assets/product-mug-v10.webp",
+  "Custom Recast Tumbler":"/assets/product-tumbler-v10.webp",
+  "Custom Recast Magnet 3-Pack":"/assets/product-magnet-v09.jpg",
+  "Custom Recast Coaster 4-Pack":"/assets/product-coaster-v09.jpg",
+  "HD Digital Recast":"/assets/product-digital-v09.jpg",
+  "Recast Pack":"/assets/product-pack-v09.jpg"
 };
 
 const PRODUCT_META = {
@@ -18,11 +26,48 @@ const PRODUCT_META = {
   "Custom Recast Mug": {order:7,badge:"GIFTABLE",pitch:"A personalized gift that gets used every day.",tier:"secondary",cta:"Shop Mug"},
   "Custom Recast Tumbler": {order:8,badge:"TAKE IT WITH YOU",pitch:"Your Recast on a 20 oz everyday tumbler.",tier:"secondary",cta:"Shop Tumbler"},
   "Custom Recast Magnet 3-Pack": {order:9,badge:"ADD-ON",pitch:"Three matching magnets for a smaller, easy add-on.",tier:"secondary",cta:"Shop Magnet Set"},
-  "Custom Recast Coaster 4-Pack": {order:10,badge:"ADD-ON",pitch:"Four matching cork-back coasters featuring your artwork.",tier:"secondary",cta:"Shop Coaster Set"}
+  "Custom Recast Coaster 4-Pack": {order:10,badge:"ADD-ON",pitch:"Four matching cork-back coasters featuring your artwork.",tier:"secondary",cta:"Shop Coaster Set"},
+  "HD Digital Recast": {order:90,badge:"DIGITAL ONLY",pitch:"Just want the clean artwork? Keep the high-resolution file without ordering merch.",tier:"digital",cta:"Get HD File"},
+  "Recast Pack": {order:91,badge:"DIGITAL PACK",pitch:"The complete digital set with useful crops and formats.",tier:"digital",cta:"Get Recast Pack"}
 };
 
 function lastRequest(){try{return JSON.parse(localStorage.getItem("recast_last_request")||"null")}catch{return null}}
 function money(n){const value=Number(n);return Number.isFinite(value)?`$${value.toFixed(2)}`:n}
+function sleep(ms){return new Promise(resolve=>setTimeout(resolve,ms))}
+
+async function generateRealMockup({req,sku,card,button}){
+  if(!sku)return;
+  const original=button.textContent;
+  button.disabled=true;button.textContent="Preparing real product preview…";
+  try{
+    let create=await fetch("/api/mockup/create",{
+      method:"POST",headers:{"content-type":"application/json"},
+      body:JSON.stringify({requestId:req.requestId,accessToken:req.accessToken,sku})
+    });
+    let data=await create.json().catch(()=>({}));
+    if(!create.ok||!data.ok)throw new Error(data.error||"Could not start the product preview.");
+
+    for(let attempt=0;attempt<10;attempt++){
+      button.textContent=`Building real mockup${attempt?"…":"…"}`;
+      await sleep(attempt===0?10000:8000);
+      const url=new URL("/api/mockup/status",location.origin);
+      url.searchParams.set("requestId",req.requestId);url.searchParams.set("token",req.accessToken);url.searchParams.set("sku",sku);
+      const response=await fetch(url);data=await response.json().catch(()=>({}));
+      if(response.ok&&data.status==="completed"&&data.images?.length){
+        const img=card.querySelector(".product-art img");
+        img.src=data.images[0].url;img.alt="Your Recast on the actual product mockup";
+        button.textContent="Real product preview ready ✓";
+        card.classList.add("real-mockup-ready");
+        return;
+      }
+      if(data.status==="failed"||(!response.ok&&response.status!==202))throw new Error(data.error||"Printful could not finish this mockup.");
+    }
+    throw new Error("The real product preview is still processing. Tap again in a moment.");
+  }catch(error){
+    button.disabled=false;button.textContent="Try real product preview again";
+    button.title=error?.message||String(error);
+  }
+}
 
 async function loadCheckout(){
   const req=lastRequest();
@@ -46,29 +91,50 @@ async function loadCheckout(){
     const min=prices.length?Math.min(...prices):0,max=prices.length?Math.max(...prices):min;
     const priceText=min===max?money(min):`from ${money(min)}`;
     const active=product.status==="ACTIVE";
-    const art=PRODUCT_ART[product.title]||"poster";
     const featured=meta.tier==="featured";
-    const classes=["product",featured?"featured-product":"secondary-product"].join(" ");
+    const digital=meta.tier==="digital";
+    const classes=["product",featured?"featured-product":"secondary-product",digital?"digital-product":""].filter(Boolean).join(" ");
     const select=variants.length>1
       ? `<select class="recast-variant" data-product="${index}">
           ${variants.map(v=>`<option value="${v.sku}">${v.variantTitle} · ${money(v.price)}</option>`).join("")}
          </select>`
       : `<input type="hidden" class="recast-variant" data-product="${index}" value="${first?.sku||""}">`;
+    const realPreview=digital?"":`<button class="product-preview-action" data-product="${index}" type="button">Preview my Recast on the real product</button><p class="product-mockup-note">Uses the mapped Printful product and your exact Artwork ID.</p>`;
 
-    return `<div class="${classes}" data-product-index="${index}">
-      <div class="product-art"><img src="/assets/product-${art}.svg" alt="${product.title}"></div>
+    return `<div class="${classes}" data-product-index="${index}" data-product-title="${product.title}">
+      <div class="product-art"><img src="${PRODUCT_ART[product.title]}" alt="${product.title}"></div>
       <div class="product-body">
         <span class="product-badge">${meta.badge}</span>
         <strong>${product.title.replace(/^Custom Recast /,"")}</strong>
         <p class="product-pitch">${meta.pitch}</p>
         <span class="price">${priceText}</span>
         ${select}
+        ${realPreview}
         <button class="recast-buy" data-product="${index}" ${active?"":"disabled"}>
-          ${active?meta.cta:"Catalog still in draft"}
+          ${active?meta.cta:"Checkout stays locked until launch"}
         </button>
       </div>
     </div>`;
   }).join("");
+
+  document.querySelectorAll(".product-preview-action").forEach(button=>{
+    button.addEventListener("click",async()=>{
+      const index=button.dataset.product;
+      const selector=document.querySelector(`.recast-variant[data-product="${index}"]`);
+      const card=document.querySelector(`[data-product-index="${index}"]`);
+      await generateRealMockup({req,sku:selector?.value,card,button});
+    });
+  });
+
+  document.querySelectorAll("select.recast-variant").forEach(select=>{
+    select.addEventListener("change",()=>{
+      const index=select.dataset.product;const card=document.querySelector(`[data-product-index="${index}"]`);
+      const title=card?.dataset.productTitle;const img=card?.querySelector(".product-art img");
+      if(img&&title)img.src=PRODUCT_ART[title];
+      card?.classList.remove("real-mockup-ready");
+      const preview=card?.querySelector(".product-preview-action");if(preview){preview.disabled=false;preview.textContent="Preview my Recast on the real product"}
+    });
+  });
 
   document.querySelectorAll(".recast-buy").forEach(button=>{
     button.addEventListener("click",async()=>{
@@ -81,7 +147,7 @@ async function loadCheckout(){
         const result=await res.json().catch(()=>({}));
         if(!res.ok||!result.ok||!result.checkoutUrl)throw new Error(result.error||"Checkout link could not be created.");
         location.href=result.checkoutUrl;
-      }catch(error){alert(error?.message||String(error));button.disabled=false;button.textContent=previous}
+      }catch(error){button.disabled=false;button.textContent=previous;console.warn(error)}
     })
   })
 }
