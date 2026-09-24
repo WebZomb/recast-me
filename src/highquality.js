@@ -1,5 +1,6 @@
-const DEFAULT_PRIMARY = "@cf/black-forest-labs/flux-2-klein-9b";
-const DEFAULT_FALLBACK = "@cf/black-forest-labs/flux-2-klein-4b";
+const DEFAULT_HIGH_QUALITY = "@cf/black-forest-labs/flux-2-dev";
+const DEFAULT_QUICK = "@cf/black-forest-labs/flux-2-klein-9b";
+const DEFAULT_QUICK_FALLBACK = "@cf/black-forest-labs/flux-2-klein-4b";
 
 const STYLES = {
   game:{name:"Game World",prompt:"premium original cinematic action-world key art, modern city scale, dramatic sunset and neon light, sophisticated realistic illustration, strong dynamic composition, no franchise references, no weapons"},
@@ -117,25 +118,25 @@ function safePrompt(styleId,subjectType,inputCount,notes=""){
   ].filter(Boolean).join(" ")
 }
 
-function makeForm(prompt,inputFiles,width=768,height=960){
+function makeForm(prompt,inputFiles,{width=768,height=960,guidance=4,steps=null}={}){
   const form=new FormData();
   form.append("prompt",prompt);
   form.append("width",String(width));
   form.append("height",String(height));
-  form.append("guidance","4");
+  form.append("guidance",String(guidance));
+  if(steps!==null&&steps!==undefined)form.append("steps",String(steps));
   inputFiles.forEach((file,i)=>form.append(`input_image_${i}`,file,file.name||`reference-${i}.jpg`));
   return form
 }
 
 async function runModel(form,env,model){
-  // FLUX.2 Klein 9B/4B use fixed 4-step inference. Do not attach a variable step count.
   const serialized=new Response(form);
   const result=await env.AI.run(model,{multipart:{body:serialized.body,contentType:serialized.headers.get("content-type")}});
   if(!result?.image)throw new Error("Image model returned no image.");
   return result.image
 }
 
-async function withAttemptTimeout(promise,ms=50000){
+async function withAttemptTimeout(promise,ms){
   let timer;
   try{
     return await Promise.race([
@@ -145,44 +146,70 @@ async function withAttemptTimeout(promise,ms=50000){
   }finally{clearTimeout(timer)}
 }
 
-async function tryGeneration(env,model,prompt,inputFiles,kind,timeoutMs=50000){
-  const image=await withAttemptTimeout(runModel(makeForm(prompt,inputFiles),env,model),timeoutMs);
-  return{image,modelUsed:model,attemptKind:kind,usedSafeRetry:kind.includes("safe"),usedFallback:kind.includes("fallback")}
+async function tryGeneration(env,model,prompt,inputFiles,kind,settings,timeoutMs){
+  const image=await withAttemptTimeout(
+    runModel(makeForm(prompt,inputFiles,settings),env,model),
+    timeoutMs
+  );
+  return{
+    image,
+    modelUsed:model,
+    attemptKind:kind,
+    usedSafeRetry:kind.includes("safe"),
+    usedFallback:kind.includes("fallback")
+  }
 }
 
-async function generateWithRecovery({env,primary,fallback,styleId,subjectType,notes,inputFiles}){
+async function generateHighQuality({env,model,styleId,subjectType,notes,inputFiles}){
   const main=makePrompt(styleId,subjectType,notes,inputFiles.length);
   const safe=safePrompt(styleId,subjectType,inputFiles.length,notes);
+  const steps=Math.max(8,Math.min(30,Number(env.IMAGE_HIGH_QUALITY_STEPS||18)));
+  const guidance=Math.max(1,Math.min(10,Number(env.IMAGE_HIGH_QUALITY_GUIDANCE||5)));
+  const settings={width:768,height:960,guidance,steps};
+
+  try{
+    return await tryGeneration(env,model,main,inputFiles,"high-primary",settings,125000)
+  }catch(firstError){
+    if(isQuota(firstError))throw Object.assign(new Error("quota"),{reason:"quota",code:3036,cause:firstError});
+    if(isModeration(firstError)){
+      try{
+        return await tryGeneration(env,model,safe,inputFiles,"high-safe",settings,125000)
+      }catch(last){
+        if(isQuota(last))throw Object.assign(new Error("quota"),{reason:"quota",code:3036,cause:last});
+        if(isModeration(last))throw Object.assign(new Error("moderation"),{reason:"moderation",code:3030,cause:last});
+        if(isTransient(last)||isCapacity(last))throw Object.assign(new Error("capacity"),{reason:"capacity",cause:last});
+        throw Object.assign(new Error("provider"),{reason:"provider",cause:last});
+      }
+    }
+    if(isTransient(firstError)||isCapacity(firstError))throw Object.assign(new Error("capacity"),{reason:"capacity",cause:firstError});
+    throw Object.assign(new Error("provider"),{reason:"provider",cause:firstError});
+  }
+}
+
+async function generateQuick({env,model,fallback,styleId,subjectType,notes,inputFiles}){
+  const main=makePrompt(styleId,subjectType,notes,inputFiles.length);
+  const safe=safePrompt(styleId,subjectType,inputFiles.length,notes);
+  const guidance=Math.max(1,Math.min(10,Number(env.IMAGE_QUICK_GUIDANCE||4)));
+  const settings={width:768,height:960,guidance,steps:null};
+
   let firstError;
   try{
-    // One premium 9B attempt per customer request. This protects the daily free allowance
-    // and avoids stacking multiple slow 9B jobs when the provider is busy.
-    return await tryGeneration(env,primary,main,inputFiles,"primary",60000)
+    return await tryGeneration(env,model,main,inputFiles,"quick-primary",settings,60000)
   }catch(error){firstError=error}
 
   if(isQuota(firstError))throw Object.assign(new Error("quota"),{reason:"quota",code:3036,cause:firstError});
 
-  // Any recovery attempt uses the much cheaper/faster 4B fallback.
-  if(fallback&&fallback!==primary){
-    const fallbackPrompt=isModeration(firstError)?safe:main;
-    try{return await tryGeneration(env,fallback,fallbackPrompt,inputFiles,isModeration(firstError)?"fallback-safe":"fallback",35000)}
-    catch(error){
-      if(isQuota(error))throw Object.assign(new Error("quota"),{reason:"quota",code:3036,cause:error});
-      if(isModeration(error)){
-        // If the first fallback used the full prompt, allow one cheap simplified 4B retry.
-        if(!isModeration(firstError)){
-          try{return await tryGeneration(env,fallback,safe,inputFiles,"fallback-safe",35000)}
-          catch(last){
-            if(isQuota(last))throw Object.assign(new Error("quota"),{reason:"quota",code:3036,cause:last});
-            if(isModeration(last))throw Object.assign(new Error("moderation"),{reason:"moderation",code:3030,cause:last});
-            if(isTransient(last)||isCapacity(last))throw Object.assign(new Error("capacity"),{reason:"capacity",cause:last});
-            throw Object.assign(new Error("provider"),{reason:"provider",cause:last});
-          }
-        }
-        throw Object.assign(new Error("moderation"),{reason:"moderation",code:3030,cause:error});
-      }
-      if(isTransient(error)||isCapacity(error))throw Object.assign(new Error("capacity"),{reason:"capacity",cause:error});
-      throw Object.assign(new Error("provider"),{reason:"provider",cause:error});
+  // Quick mode is the only mode allowed to silently use the ultra-fast 4B fallback.
+  // High-Quality mode never downgrades without the customer's explicit choice.
+  if(fallback&&fallback!==model){
+    const prompt=isModeration(firstError)?safe:main;
+    try{
+      return await tryGeneration(env,fallback,prompt,inputFiles,"quick-fallback",settings,45000)
+    }catch(last){
+      if(isQuota(last))throw Object.assign(new Error("quota"),{reason:"quota",code:3036,cause:last});
+      if(isModeration(last))throw Object.assign(new Error("moderation"),{reason:"moderation",code:3030,cause:last});
+      if(isTransient(last)||isCapacity(last))throw Object.assign(new Error("capacity"),{reason:"capacity",cause:last});
+      throw Object.assign(new Error("provider"),{reason:"provider",cause:last});
     }
   }
 
@@ -191,10 +218,10 @@ async function generateWithRecovery({env,primary,fallback,styleId,subjectType,no
   throw Object.assign(new Error("provider"),{reason:"provider",cause:firstError});
 }
 
-async function store(env,{requestId,accessToken,styleId,subjectType,notes,source,sourceTweet,inputs,image,safety,modelUsed,attemptKind}){
+async function store(env,{requestId,accessToken,styleId,subjectType,notes,source,sourceTweet,qualityMode,inputs,image,safety,modelUsed,attemptKind}){
   if(!env.ARTWORK)return{persisted:false,storageError:"ARTWORK binding is missing."};
   const now=new Date().toISOString();
-  const metadata={requestId,accessToken,styleId,styleName:STYLES[styleId]?.name||STYLES.game.name,subjectType,notes,source:source||"site",sourceTweet:sourceTweet||null,safety,status:"preview_ready",createdAt:now,updatedAt:now,inputCount:inputs.length,paid:false,fulfillment:"not_started",modelUsed,attemptKind,promptVersion:"v1.0.1"};
+  const metadata={requestId,accessToken,styleId,styleName:STYLES[styleId]?.name||STYLES.game.name,subjectType,notes,source:source||"site",sourceTweet:sourceTweet||null,safety,status:"preview_ready",createdAt:now,updatedAt:now,inputCount:inputs.length,paid:false,fulfillment:"not_started",modelUsed,attemptKind,qualityMode,promptVersion:"v1.1"};
   try{
     for(let i=0;i<inputs.length;i++)await env.ARTWORK.put(requestKey(requestId,`input-${i}.jpg`),await inputs[i].arrayBuffer());
     await env.ARTWORK.put(requestKey(requestId,"preview.b64"),image);
@@ -206,6 +233,7 @@ async function store(env,{requestId,accessToken,styleId,subjectType,notes,source
 export async function highQualityTransform(request,env){
   let stage="start";
   let clientAttemptId="";
+  let qualityMode="high";
   let attemptStartedAt=Date.now();
   try{
     if(!env.AI)return json({error:"ai_unavailable",userMessage:"The image engine is temporarily unavailable. Please try again shortly.",reason:"binding"},503);
@@ -220,9 +248,10 @@ export async function highQualityTransform(request,env){
     const notes=String(incoming.get("notes")||"");
     const source=String(incoming.get("source")||"site");
     const sourceTweet=String(incoming.get("sourceTweet")||"");
+    qualityMode=String(incoming.get("qualityMode")||"high")==="quick"?"quick":"high";
     clientAttemptId=String(incoming.get("clientAttemptId")||`SRV-${Date.now().toString(36).toUpperCase()}-${randomHex(2).toUpperCase()}`).replace(/[^a-zA-Z0-9._-]/g,"").slice(0,96);
     attemptStartedAt=Date.now();
-    await writeAttemptReceipt(env,clientAttemptId,{status:"started",startedAt:new Date(attemptStartedAt).toISOString(),styleId,subjectType,source:source||"site"});
+    await writeAttemptReceipt(env,clientAttemptId,{status:"started",startedAt:new Date(attemptStartedAt).toISOString(),styleId,subjectType,qualityMode,source:source||"site"});
     const safety=assess(`${styleId} ${subjectType} ${notes}`);
     if(safety.status==="rejected")return json({error:"not_supported",userMessage:"That request is outside Recast Me's good-will image policy.",reason:"policy"},422);
     if(safety.status==="review")return json({reviewRequired:true,userMessage:"This request needs a quick human review before generation.",reason:"review"},202);
@@ -238,35 +267,46 @@ export async function highQualityTransform(request,env){
     }
     if(!inputFiles.length)return json({error:"missing_upload",userMessage:"Add at least one photo first.",reason:"input"},400);
 
-    const primary=String(env.IMAGE_MODEL_PRIMARY||DEFAULT_PRIMARY);
-    const fallback=String(env.IMAGE_MODEL_FALLBACK||DEFAULT_FALLBACK);
+    const highQualityModel=String(env.IMAGE_MODEL_HIGH_QUALITY||DEFAULT_HIGH_QUALITY);
+    const quickModel=String(env.IMAGE_MODEL_QUICK||DEFAULT_QUICK);
+    const quickFallback=String(env.IMAGE_MODEL_QUICK_FALLBACK||DEFAULT_QUICK_FALLBACK);
     stage="ai-generation";
-    const generated=await generateWithRecovery({env,primary,fallback,styleId,subjectType,notes,inputFiles});
+    const generated=qualityMode==="quick"
+      ? await generateQuick({env,model:quickModel,fallback:quickFallback,styleId,subjectType,notes,inputFiles})
+      : await generateHighQuality({env,model:highQualityModel,styleId,subjectType,notes,inputFiles});
     const image=normalizeBase64(generated.image);
     if(!image||image.length<100)throw Object.assign(new Error("malformed"),{reason:"provider"});
 
     stage="storage";
     const requestId=`RC-${Date.now().toString(36).toUpperCase()}-${randomHex(3).toUpperCase()}`;
     const accessToken=randomHex(32);
-    const stored=await store(env,{requestId,accessToken,styleId,subjectType,notes,source,sourceTweet,inputs:inputFiles,image,safety,modelUsed:generated.modelUsed,attemptKind:generated.attemptKind});
+    const stored=await store(env,{requestId,accessToken,styleId,subjectType,notes,source,sourceTweet,qualityMode,inputs:inputFiles,image,safety,modelUsed:generated.modelUsed,attemptKind:generated.attemptKind});
 
-    await writeAttemptReceipt(env,clientAttemptId,{status:"success",completedAt:new Date().toISOString(),durationMs:Date.now()-attemptStartedAt,requestId,modelUsed:generated.modelUsed,attemptKind:generated.attemptKind,persisted:stored.persisted});
-    return json({ok:true,requestId,accessToken,style:STYLES[styleId]?.name||STYLES.game.name,image:`data:image/jpeg;base64,${image}`,persisted:stored.persisted,storageError:stored.storageError,modelUsed:generated.modelUsed,usedSafeRetry:generated.usedSafeRetry,usedFastFallback:generated.usedFallback,promptVersion:"v1.0.2",clientAttemptId});
+    await writeAttemptReceipt(env,clientAttemptId,{status:"success",completedAt:new Date().toISOString(),durationMs:Date.now()-attemptStartedAt,requestId,qualityMode,modelUsed:generated.modelUsed,attemptKind:generated.attemptKind,persisted:stored.persisted});
+    return json({ok:true,requestId,accessToken,style:STYLES[styleId]?.name||STYLES.game.name,image:`data:image/jpeg;base64,${image}`,persisted:stored.persisted,storageError:stored.storageError,qualityMode,qualityLabel:qualityMode==="quick"?"Quick Preview":"High-Quality Preview",modelUsed:generated.modelUsed,usedSafeRetry:generated.usedSafeRetry,usedFastFallback:generated.usedFallback,promptVersion:"v1.1",clientAttemptId});
   }catch(error){
     const reason=error?.reason||"provider";
     const internal=error?.cause||error;
-    const diagnosticId=await writeGenerationDiagnostic(env,{stage,reason,providerCode:providerCode(internal),providerMessage:String(internal?.message||internal||"").slice(0,500),primary:String(env.IMAGE_MODEL_PRIMARY||DEFAULT_PRIMARY),fallback:String(env.IMAGE_MODEL_FALLBACK||DEFAULT_FALLBACK)});
-    await writeAttemptReceipt(env,clientAttemptId,{status:"failed",failedAt:new Date().toISOString(),durationMs:Date.now()-attemptStartedAt,stage,reason,providerCode:providerCode(internal),diagnosticId});
-    if(reason==="quota")return json({error:"daily_allowance_used",code:3036,reason:"quota",retryable:false,diagnosticId,userMessage:"Today’s free AI preview allowance has been used. The allowance resets daily. Your photo is safe, and nothing was charged."},429);
-    if(reason==="moderation")return json({error:"generation_declined",code:3030,reason:"moderation",retryable:true,diagnosticId,userMessage:"The image engine would not complete that exact photo and wording combination. We already retried with a safer version. Try the same idea with simpler wording or another reference photo."},422);
-    if(reason==="capacity")return json({error:"engine_busy",reason:"capacity",retryable:true,diagnosticId,userMessage:"The image engine is temporarily busy. Your photo is safe — tap Try again in a moment."},503);
-    return json({error:"generation_failed",reason,retryable:true,diagnosticId,userMessage:"We could not finish this preview. Your uploaded photo was not changed."},500)
+    const diagnosticId=await writeGenerationDiagnostic(env,{stage,reason,providerCode:providerCode(internal),providerMessage:String(internal?.message||internal||"").slice(0,500),highQuality:String(env.IMAGE_MODEL_HIGH_QUALITY||DEFAULT_HIGH_QUALITY),quick:String(env.IMAGE_MODEL_QUICK||DEFAULT_QUICK),quickFallback:String(env.IMAGE_MODEL_QUICK_FALLBACK||DEFAULT_QUICK_FALLBACK)});
+    await writeAttemptReceipt(env,clientAttemptId,{status:"failed",failedAt:new Date().toISOString(),durationMs:Date.now()-attemptStartedAt,stage,reason,providerCode:providerCode(internal),diagnosticId,qualityMode});
+    if(reason==="quota")return json({error:"daily_allowance_used",code:3036,reason:"quota",retryable:false,diagnosticId,qualityMode,userMessage:"Today’s free AI preview allowance has been used. The allowance resets daily. Your photo is safe, and nothing was charged."},429);
+    if(reason==="moderation")return json({error:"generation_declined",code:3030,reason:"moderation",retryable:true,diagnosticId,qualityMode,userMessage:"The image engine would not complete that exact photo and wording combination. We already retried with a safer version. Try the same idea with simpler wording or another reference photo."},422);
+    if(reason==="capacity")return json({error:"engine_busy",reason:"capacity",retryable:true,diagnosticId,qualityMode,userMessage:"The image engine is temporarily busy. Your photo is safe — tap Try again in a moment."},503);
+    return json({error:"generation_failed",reason,retryable:true,diagnosticId,qualityMode,userMessage:"We could not finish this preview. Your uploaded photo was not changed."},500)
   }
 }
 
 export function modelStatus(env){
-  const primary=String(env.IMAGE_MODEL_PRIMARY||DEFAULT_PRIMARY);
-  const fallback=String(env.IMAGE_MODEL_FALLBACK||DEFAULT_FALLBACK);
-  const label=primary.includes("flux-2-klein-9b")?"FLUX.2 Klein 9B":primary.includes("flux-2-klein-4b")?"FLUX.2 Klein 4B":primary;
-  return json({ok:true,primary,fallback,label,mode:"reliable-premium-preview-4x5",promptVersion:"v1.0.2"})
+  const highQuality=String(env.IMAGE_MODEL_HIGH_QUALITY||DEFAULT_HIGH_QUALITY);
+  const quick=String(env.IMAGE_MODEL_QUICK||DEFAULT_QUICK);
+  const quickFallback=String(env.IMAGE_MODEL_QUICK_FALLBACK||DEFAULT_QUICK_FALLBACK);
+  return json({
+    ok:true,
+    modes:{
+      high:{label:"High-Quality Preview",model:highQuality,steps:Number(env.IMAGE_HIGH_QUALITY_STEPS||18),guidance:Number(env.IMAGE_HIGH_QUALITY_GUIDANCE||5)},
+      quick:{label:"Quick Preview",model:quick,fallback:quickFallback,guidance:Number(env.IMAGE_QUICK_GUIDANCE||4)}
+    },
+    defaultMode:"high",
+    promptVersion:"v1.1"
+  })
 }
