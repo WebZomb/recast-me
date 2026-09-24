@@ -98,7 +98,7 @@ export async function servePrintSource(request,env,requestId){
   const object=await env.ARTWORK?.get(requestKey(requestId,"preview.b64"));
   if(!object)return new Response("Not found",{status:404});
   const bytes=decodeBase64(await object.text());
-  return new Response(bytes,{headers:{"content-type":"image/jpeg","cache-control":"private, max-age=300","x-content-type-options":"nosniff"}})
+  return new Response(bytes,{headers:{"content-type":meta.previewMime||"image/jpeg","cache-control":"private, max-age=300","x-content-type-options":"nosniff"}})
 }
 
 export async function createMockup(request,env){
@@ -254,7 +254,9 @@ export async function digitalDownload(request,env,requestId){
     const object=await env.ARTWORK?.get(requestKey(requestId,"preview.b64"));
     if(!object)return new Response("Artwork unavailable",{status:404});
     const bytes=decodeBase64(await object.text());
-    return new Response(bytes,{headers:{"content-type":"image/jpeg","content-disposition":`attachment; filename=\"${requestId}-recast.jpg\"`,"cache-control":"private, no-store"}});
+    const mime=meta.previewMime||"image/jpeg";
+    const extension=mime==="image/png"?"png":mime==="image/webp"?"webp":"jpg";
+    return new Response(bytes,{headers:{"content-type":mime,"content-disposition":`attachment; filename=\"${requestId}-recast.${extension}\"`,"cache-control":"private, no-store"}});
   }catch(error){return new Response(error.message||"Download unavailable",{status:error.status||500})}
 }
 
@@ -310,7 +312,8 @@ async function finalizePrintArt(env,job){
   const preview=await env.ARTWORK?.get(requestKey(job.requestId,"preview.b64"));
   if(!preview)throw Object.assign(new Error("Source artwork is missing."),{status:404});
   const bytes=decodeBase64(await preview.text());
-  const stream=new Response(bytes,{headers:{"content-type":"image/jpeg"}}).body;
+  const sourceMeta=await requestMeta(env,job.requestId);
+  const stream=new Response(bytes,{headers:{"content-type":sourceMeta?.previewMime||"image/jpeg"}}).body;
   const optimized=await env.IMAGES.input(stream)
     .transform({width:4096,fit:"scale-up",upscale:"generate"})
     .output({format:"image/jpeg",quality:95});

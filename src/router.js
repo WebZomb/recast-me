@@ -6,7 +6,7 @@ export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
 
-    if (url.pathname === "/api/transform-v2" && request.method === "POST") {
+    if ((url.pathname === "/api/transform-v2" || url.pathname === "/api/transform") && request.method === "POST") {
       return highQualityTransform(request, env);
     }
     if (url.pathname === "/api/model-status" && request.method === "GET") {

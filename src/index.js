@@ -436,7 +436,7 @@ async function requestPreview(request, env, requestId) {
   const object = await env.ARTWORK.get(requestKey(requestId, "preview.b64"));
   if (!object) return json({ error: "Preview not found." }, 404);
   const base64 = (await object.text()).replace(/\s+/g, "");
-  return json({ ok: true, image: `data:image/jpeg;base64,${base64}` });
+  return json({ ok: true, image: `data:${["image/jpeg","image/png","image/webp"].includes(meta.previewMime)?meta.previewMime:"image/jpeg"};base64,${base64}` });
 }
 
 export default {
