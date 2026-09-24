@@ -12,6 +12,32 @@ const STYLES = {
   space:{name:"Space Explorer",prompt:"original premium cinematic space explorer portrait, elegant unbranded suit, planets and spacecraft environment, dramatic rim light, vast epic scale, sophisticated science-fiction realism, no logos"}
 };
 
+const SUBJECT_STYLING = {
+  game:"original action-adventure protagonist styling: a clearly visible custom costume or heroic pet harness, distinctive accessories and an active pose integrated into the cinematic world",
+  halloween:"an unmistakable playful original Halloween costume fitted to the subject, with characterful accessories and theatrical moonlit lighting",
+  retro:"a recognizable 1980s inspired wardrobe or pet accessory, period styling and a new expressive editorial pose",
+  fantasy:"original ornate fantasy armor or pet barding shaped naturally around the body, a heroic pose and enchanted light on the subject",
+  royal:"rich ceremonial clothing or a fitted regal pet cape and collar, a poised royal portrait stance and painterly light on the subject",
+  future:"sleek original futuristic clothing or fitted pet gear, futuristic details on the subject and neon light reflecting across them",
+  comic:"an original graphic-novel hero costume or fitted pet hero gear, expressive dynamic pose and inked color treatment on the subject",
+  space:"an original space-explorer suit or pet-safe fitted space harness, clear astronaut details and cinematic planet light on the subject"
+};
+
+function subjectTransformation(styleId,subjectType){
+  const subject=String(subjectType||"person").toLowerCase();
+  const isPet=subject.includes("pet");
+  const isCar=subject.includes("car");
+  const isPerson=subject.includes("person")||subject.includes("couple")||subject.includes("family");
+  const theme=SUBJECT_STYLING[styleId]||"an original costume, role and visual styling drawn directly from the customer's custom world";
+  return [
+    `VISIBLE SUBJECT TRANSFORMATION REQUIRED: ${theme}.`,
+    isPet?"For every pet, visibly transform the pet itself with a fitted, comfortable original costume, cape, collar, or themed gear, plus an expressive new pose and world-matched light on its fur. Keep its real face, exact coat colors and patches, breed, eye color and natural four-legged anatomy recognizable. The pet must belong in the story, never appear as an unchanged photo cutout pasted onto new scenery.":"",
+    isCar?"For the car, visibly restyle its paint, lighting and original unbranded trim to fit the world, while retaining its recognizable silhouette and defining features.":"",
+    isPerson?"For each person, visibly change their wardrobe, character role, pose and the lighting on their face while preserving their recognizable face, natural age and proportions.":"",
+    "Show the costume or themed details on the subject clearly in the finished image. Integrate subject and environment with consistent shadows, perspective, color and light."
+  ].filter(Boolean).join(" ");
+}
+
 const AUTO_REJECT=["war","invasion","airstrike","bombing","missile strike","battlefield","casualties","mass shooting","school shooting","murder","kidnapping","hostage","terrorism","suicide","self-harm","earthquake","wildfire","flood disaster","plane crash","funeral","obituary","genocide","hate crime"];
 const REVIEW_TERMS=["election","campaign","president","senate","congress","governor","protest","riot","boycott","pandemic","outbreak","public health emergency"];
 const IP_MARKERS=["gta","grand theft auto","rockstar games","disney","pixar","marvel","dc comics","pokemon","naruto","studio ghibli","star wars","harry potter","fortnite","minecraft","batman","superman","spider-man","spiderman","avengers"];
@@ -106,7 +132,8 @@ function makePrompt(styleId,subjectType,notes,inputCount,customWorld="",hasBranc
     "The result must immediately read as the same real subject. Do not make the subject younger, older, thinner, heavier, more muscular, more glamorous, or generically attractive unless the customer explicitly requests it.",
     style?`SELECTED WORLD: ${style.name}. ${style.prompt}.`:"SELECTED WORLD: an original world designed from the customer's description.",
     customWorld?`CUSTOM WORLD SETTING (customer's priority): ${safeNotes(customWorld)}.`:"",
-    "Change the background, wardrobe or costume, camera composition, lighting, props, atmosphere, palette, and storytelling substantially so the transformation is obvious.",
+    subjectTransformation(styleId,subjectType),
+    "Change the scene, camera composition, atmosphere and storytelling substantially. A new background alone is not a completed transformation.",
     "If the customer direction conflicts with a generic style detail, honor the customer's direction first while keeping the broad selected-world mood.",
     "No third-party logos, trademarks, copied famous characters, franchise costumes, branded typography, or recognizable title treatments.",
     "Natural anatomy, believable hands and paws, no duplicated limbs or facial features, no text unless explicitly requested, premium commercial/editorial finish.",
@@ -123,6 +150,7 @@ function safePrompt(styleId,subjectType,inputCount,notes="",customWorld="",hasBr
     `Subject type: ${subjectType||"person"}.`,
     style?`Create an original ${style.name} transformation: ${style.prompt}.`:"Create an original custom-world transformation.",
     customWorld?`Customer's custom setting: ${safeNotes(customWorld)}.`:"",
+    subjectTransformation(styleId,subjectType),
     "Create a visibly new scene instead of copying the source photo. Preserve identity while changing wardrobe, environment, lighting, composition, props, palette, and atmosphere.",
     "Friendly, nonviolent, unbranded, no weapons, no injuries, no threatening gestures, no logos, no trademarks, no famous characters, no copied costumes, no text.",
     "Premium editorial image with natural identity, anatomy, hands and paws."
@@ -229,7 +257,7 @@ async function generateQuick({env,model,styleId,subjectType,notes,customWorld,in
 async function store(env,{requestId,accessToken,styleId,subjectType,notes,customWorld,parentRequestId,source,sourceTweet,qualityMode,inputs,image,previewMime,safety,modelUsed,attemptKind}){
   if(!env.ARTWORK)return{persisted:false,storageError:"ARTWORK binding is missing."};
   const now=new Date().toISOString();
-  const metadata={requestId,accessToken,styleId,styleName:STYLES[styleId]?.name||"Custom World",subjectType,notes,customWorld,parentRequestId:parentRequestId||null,previewMime,source:source||"site",sourceTweet:sourceTweet||null,safety,status:"preview_ready",createdAt:now,updatedAt:now,inputCount:inputs.length,paid:false,fulfillment:"not_started",modelUsed,attemptKind,qualityMode,promptVersion:"v1.3"};
+  const metadata={requestId,accessToken,styleId,styleName:STYLES[styleId]?.name||"Custom World",subjectType,notes,customWorld,parentRequestId:parentRequestId||null,previewMime,source:source||"site",sourceTweet:sourceTweet||null,safety,status:"preview_ready",createdAt:now,updatedAt:now,inputCount:inputs.length,paid:false,fulfillment:"not_started",modelUsed,attemptKind,qualityMode,promptVersion:"v1.4"};
   try{
     for(let i=0;i<inputs.length;i++)await env.ARTWORK.put(requestKey(requestId,`input-${i}.jpg`),await inputs[i].arrayBuffer());
     await env.ARTWORK.put(requestKey(requestId,"preview.b64"),image);
@@ -254,7 +282,7 @@ export async function highQualityTransform(request,env){
     const styleId=String(incoming.get("style")||"game");
     const subjectType=String(incoming.get("subject")||"person").slice(0,80);
     const notes=String(incoming.get("notes")||"").trim().slice(0,1200);
-    const customWorld=String(incoming.get("customWorld")||"").trim().slice(0,800);
+    const customWorld=styleId==="custom"?String(incoming.get("customWorld")||"").trim().slice(0,800):"";
     if(styleId!=="custom"&&!STYLES[styleId])return json({error:"bad_style",userMessage:"Choose a valid World.",reason:"input"},400);
     if(styleId==="custom"&&!customWorld)return json({error:"missing_world",userMessage:"Describe your custom world first.",reason:"input"},400);
     const source=String(incoming.get("source")||"site");
@@ -315,13 +343,13 @@ export async function highQualityTransform(request,env){
     const stored=await store(env,{requestId,accessToken,styleId,subjectType,notes,customWorld,parentRequestId,source,sourceTweet,qualityMode,inputs:inputFiles,image,previewMime,safety,modelUsed:generated.modelUsed,attemptKind:generated.attemptKind});
 
     await writeAttemptReceipt(env,clientAttemptId,{status:"success",completedAt:new Date().toISOString(),durationMs:Date.now()-attemptStartedAt,requestId,qualityMode,modelUsed:generated.modelUsed,attemptKind:generated.attemptKind,persisted:stored.persisted});
-    return json({ok:true,requestId,accessToken,style:STYLES[styleId]?.name||"Custom World",image:`data:${previewMime};base64,${image}`,persisted:stored.persisted,storageError:stored.storageError,qualityMode,qualityLabel:qualityMode==="quick"?"Quick Preview":"High-Quality Preview",modelUsed:generated.modelUsed,usedSafeRetry:generated.usedSafeRetry,usedFastFallback:false,promptVersion:"v1.3",clientAttemptId});
+    return json({ok:true,requestId,accessToken,style:STYLES[styleId]?.name||"Custom World",image:`data:${previewMime};base64,${image}`,persisted:stored.persisted,storageError:stored.storageError,qualityMode,qualityLabel:qualityMode==="quick"?"Quick Preview":"High-Quality Preview",modelUsed:generated.modelUsed,usedSafeRetry:generated.usedSafeRetry,usedFastFallback:false,promptVersion:"v1.4",clientAttemptId});
   }catch(error){
     const reason=error?.reason||"provider";
     const internal=error?.cause||error;
     const diagnosticId=await writeGenerationDiagnostic(env,{stage,reason,providerCode:providerCode(internal),providerMessage:String(internal?.message||internal||"").slice(0,500),highQuality:String(env.IMAGE_MODEL_HIGH_QUALITY||DEFAULT_HIGH_QUALITY),quick:String(env.IMAGE_MODEL_QUICK||DEFAULT_QUICK)});
     await writeAttemptReceipt(env,clientAttemptId,{status:"failed",failedAt:new Date().toISOString(),durationMs:Date.now()-attemptStartedAt,stage,reason,providerCode:providerCode(internal),diagnosticId,qualityMode});
-    if(reason==="quota")return json({error:"daily_allowance_used",code:3036,reason:"quota",retryable:false,diagnosticId,qualityMode,userMessage:"Today’s free AI preview allowance has been used. The allowance resets daily. Your photo is safe, and nothing was charged."},429);
+    if(reason==="quota")return json({error:"shared_ai_capacity_used",code:3036,reason:"quota",retryable:false,diagnosticId,qualityMode,userMessage:"Recast Me has reached its shared AI capacity for today. This is a site-wide limit, not your personal render count. Your photo is safe, and nothing was charged."},429);
     if(reason==="moderation")return json({error:"generation_declined",code:3030,reason:"moderation",retryable:true,diagnosticId,qualityMode,userMessage:"The image engine would not complete that exact photo and wording combination. We already retried with a safer version. Try the same idea with simpler wording or another reference photo."},422);
     if(reason==="capacity")return json({error:"engine_busy",reason:"capacity",retryable:true,diagnosticId,qualityMode,userMessage:"The image engine is temporarily busy. Your photo is safe — tap Try again in a moment."},503);
     return json({error:"generation_failed",reason,retryable:true,diagnosticId,qualityMode,userMessage:"We could not finish this preview. Your uploaded photo was not changed."},500)
