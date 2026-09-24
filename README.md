@@ -1,4 +1,4 @@
-# Recast Me v1.0 Launch Candidate
+# Recast Me — generator update v1.3
 
 Recast Me turns private customer photo references into original cinematic artwork, then connects the approved Artwork ID to real products and fulfillment.
 
@@ -14,15 +14,18 @@ Recast Me turns private customer photo references into original cinematic artwor
 - Inline customer-friendly image-generation errors instead of raw provider errors.
 
 ### Image generation
-- Primary model: `@cf/black-forest-labs/flux-2-klein-9b`.
-- Fallback: `@cf/black-forest-labs/flux-2-klein-4b`.
+- High-Quality Preview uses FLUX.2 [dev] at 1024×1280 with 18 steps.
+- Quick Preview uses FLUX.2 [klein] 9B at 768×960. Neither mode silently switches to 4B.
 - Customer direction is the highest-priority creative instruction.
+- Custom World settings reach the image model and are saved with the Artwork ID.
 - Identity-lock prompt rules for people, pets and vehicles.
 - Automatic subject inference (`person` + dog/pet in notes becomes person + pet).
-- 4:5 master artwork (1024x1280) for stronger merch/poster composition.
-- Guidance 4 for stronger instruction following.
-- Safe retry/fallback logic and per-attempt timeout so customers are not left waiting for many minutes.
+- Up to four 500px JPEG references match Cloudflare's image-edit input limits. When refining a saved version, original reference photos anchor the subject and the previous render guides the variation.
+- A moderated prompt receives one simplified attempt on the same selected model. Capacity and quota errors remain visible and never cause an undisclosed quality downgrade.
+- The browser keeps the last four successfully saved Artwork IDs with their private access tokens. Select a version for products or refine it; storage failures cannot become orderable versions.
 - Clean art stays private in R2; watermark is added only to the browser preview.
+
+Run `npm test` for mocked generation, saved-version and error-path coverage. Run `npx wrangler deploy --dry-run` before a live push.
 
 ### Real-product preview
 After a Recast exists, each physical product card can call Printful's actual Mockup Generator using the exact mapped product/variant and the customer's exact Artwork ID.
