@@ -20,6 +20,7 @@ export const FULFILLMENT = {
   "RECAST-POSTER-18X24":  { printfulProductId: 1, printfulVariantId: 1, preferredPlacement: "default", orderFileType: "default", quantity: 1, baseCost: 13.15, product: "Poster" },
   "RECAST-POSTER-24X36":  { printfulProductId: 1, printfulVariantId: 2, preferredPlacement: "default", orderFileType: "default", quantity: 1, baseCost: 18.25, product: "Poster" },
 
+  "RECAST-FRAME-8X10":    { printfulProductId: 2, printfulVariantId: 4651, preferredPlacement: "default", orderFileType: "default", quantity: 1, baseCost: 20.76, product: "Framed Poster", color: "Black" },
   "RECAST-FRAME-12X16":   { printfulProductId: 2, printfulVariantId: 1350, preferredPlacement: "default", orderFileType: "default", quantity: 1, baseCost: 32.20, product: "Framed Poster", color: "Black" },
   "RECAST-FRAME-18X24":   { printfulProductId: 2, printfulVariantId: 3, preferredPlacement: "default", orderFileType: "default", quantity: 1, baseCost: 46.30, product: "Framed Poster", color: "Black" },
 
