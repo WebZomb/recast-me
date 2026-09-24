@@ -187,12 +187,14 @@ function stopGenerationUI(success=false){
   if(progress) progress.style.width=success?'100%':'0%';
 }
 function friendlyGenerationError(data,error){
-  if(error?.name==='AbortError') return 'This preview is taking too long. Please try again — we stopped the wait instead of leaving you hanging.';
+  if(error?.name==='AbortError') return 'This preview took too long, so we stopped the wait instead of leaving you hanging. Your photo is safe — tap Try again.';
   if(data?.reviewRequired) return 'This request needs a quick human review before generation.';
+  if(data?.code===3036 || data?.reason==='quota') return 'Today’s free AI preview allowance has been used. The allowance resets daily. Your photo is safe, and nothing was charged.';
   if(data?.code===3030 || data?.reason==='moderation') return 'The image engine would not complete that exact photo and wording combination. We already tried a safer version. Try the same idea with simpler wording or another reference photo.';
-  if(data?.reason==='capacity') return 'The image engine is temporarily busy. Please try again in a moment.';
-  return data?.userMessage || 'We could not finish this preview. Please try again — your uploaded photo was not changed.';
+  if(data?.reason==='capacity') return 'The image engine is temporarily busy. Your photo is safe — tap Try again in a moment.';
+  return data?.userMessage || 'We could not finish this preview. Your uploaded photo was not changed.';
 }
+
 
 let turnstileToken="";
 let turnstileWidgetId=null;
@@ -216,12 +218,40 @@ function resetTurnstile(){
 function showRecastError(message){
   const el=document.querySelector('#recast-error');
   if(!el)return;
-  el.textContent=message;el.classList.remove('hidden');
+  el.textContent=message;
+  el.classList.remove('hidden');
+  el.classList.add('show');
 }
 function clearRecastError(){
   const el=document.querySelector('#recast-error');
   if(!el)return;
-  el.textContent='';el.classList.add('hidden');
+  el.textContent='';
+  el.classList.remove('show');
+  el.classList.add('hidden');
+}
+function clearPreviewCanvas(){
+  const canvas=document.querySelector('#preview-canvas');
+  if(!canvas)return;
+  const ctx=canvas.getContext('2d');
+  if(ctx&&canvas.width&&canvas.height)ctx.clearRect(0,0,canvas.width,canvas.height);
+}
+function clearPreviewError(){
+  document.querySelector('#preview-error')?.classList.add('hidden');
+  const ref=document.querySelector('#preview-error-reference');
+  if(ref){ref.textContent='';ref.classList.add('hidden')}
+}
+function showPreviewError(message,{diagnosticId='',retryable=true}={}){
+  const box=document.querySelector('#preview-error');
+  const copy=document.querySelector('#preview-error-message');
+  const ref=document.querySelector('#preview-error-reference');
+  const retry=document.querySelector('#retry-generation');
+  if(copy)copy.textContent=message;
+  if(ref){
+    if(diagnosticId){ref.textContent=`Support reference: ${diagnosticId}`;ref.classList.remove('hidden')}
+    else{ref.textContent='';ref.classList.add('hidden')}
+  }
+  if(retry)retry.classList.toggle('hidden',retryable===false);
+  box?.classList.remove('hidden');
 }
 
 const form=document.querySelector('#recast-form');
@@ -231,6 +261,12 @@ form.addEventListener('submit',async e=>{
   clearRecastError();
   if(!files.length){showRecastError('Add at least one photo first.');document.querySelector('#start').scrollIntoView({behavior:'smooth'});return;}
   const button=document.querySelector('#generate-button'),loading=document.querySelector('#loading'),section=document.querySelector('#preview-section');
+  const previewInfo=document.querySelector('.preview-info');
+  clearPreviewError();
+  clearPreviewCanvas();
+  if(previewInfo)previewInfo.classList.add('hidden');
+  document.querySelector('#preview-title').textContent='Creating your Recast…';
+  document.querySelector('#request-id').textContent='';
   button.disabled=true;button.textContent='Preparing photos…';
   section.classList.remove('hidden');section.scrollIntoView({behavior:'smooth'});loading.classList.remove('hidden');
 
@@ -259,14 +295,16 @@ form.addEventListener('submit',async e=>{
       data=await res.json().catch(()=>({}));
     }finally{ clearTimeout(timeout); }
 
-    if(res.status===202&&data.reviewRequired) throw Object.assign(new Error(friendlyGenerationError(data)),{publicMessage:friendlyGenerationError(data)});
-    if(!res.ok) throw Object.assign(new Error(friendlyGenerationError(data)),{publicMessage:friendlyGenerationError(data)});
-    if(typeof data.image!=='string'||!data.image.startsWith('data:image/')) throw Object.assign(new Error('invalid preview'),{publicMessage:'The image engine returned an incomplete preview. Please try again.'});
+    if(res.status===202&&data.reviewRequired) throw Object.assign(new Error(friendlyGenerationError(data)),{publicMessage:friendlyGenerationError(data),diagnosticId:data.diagnosticId||'',retryable:false});
+    if(!res.ok) throw Object.assign(new Error(friendlyGenerationError(data)),{publicMessage:friendlyGenerationError(data),diagnosticId:data.diagnosticId||'',retryable:data.retryable!==false});
+    if(typeof data.image!=='string'||!data.image.startsWith('data:image/')) throw Object.assign(new Error('invalid preview'),{publicMessage:'The image engine returned an incomplete preview. Please try again.',retryable:true});
 
     try{await renderWatermark(data.image)}catch(error){throw Object.assign(new Error('preview display failed'),{publicMessage:'Your image was created, but the preview could not be displayed correctly. Please try once more.'})}
 
     document.querySelector('#preview-title').textContent=`${data.style} preview ready.`;
     document.querySelector('#request-id').textContent=`Artwork ID: ${data.requestId}${data.persisted?' · saved privately':' · preview generated; storage retry needed'}`;
+    if(previewInfo)previewInfo.classList.remove('hidden');
+    clearPreviewError();
     localStorage.setItem('recast_last_request',JSON.stringify({
       requestId:data.requestId,accessToken:data.accessToken,style:data.style,model:data.modelUsed
     }));
@@ -278,15 +316,27 @@ form.addEventListener('submit',async e=>{
   }catch(err){
     stopGenerationUI(false);
     const publicMessage=err.publicMessage||friendlyGenerationError(null,err);
+    document.querySelector('#preview-title').textContent='We couldn’t finish this preview.';
+    document.querySelector('#request-id').textContent='';
+    showPreviewError(publicMessage,{diagnosticId:err.diagnosticId||'',retryable:err.retryable!==false});
     showRecastError(publicMessage);
-    document.querySelector('#start').scrollIntoView({behavior:'smooth'});
-    section.classList.add('hidden');
+    if(previewInfo)previewInfo.classList.add('hidden');
+    section.classList.remove('hidden');
+    section.scrollIntoView({behavior:'smooth'});
   }finally{
     loading.classList.add('hidden');
     button.disabled=false;
     button.textContent='Create my preview';
     resetTurnstile();
   }
+});
+
+document.querySelector('#retry-generation')?.addEventListener('click',()=>{
+  clearPreviewError();
+  form.requestSubmit();
+});
+document.querySelector('#adjust-generation')?.addEventListener('click',()=>{
+  document.querySelector('#start')?.scrollIntoView({behavior:'smooth'});
 });
 
 async function status(){

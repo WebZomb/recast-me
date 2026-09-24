@@ -185,6 +185,16 @@
             <div class="generation-track"><span id="generation-progress"></span></div>
             <div class="generation-milestones"><span>IDENTITY</span><span>WORLD</span><span>DETAIL</span><span>PREVIEW</span></div>
           </div>
+          <div id="preview-error" class="preview-error hidden" role="alert">
+            <div class="preview-error-orb">!</div>
+            <h3 id="preview-error-title">We couldn't finish this preview.</h3>
+            <p id="preview-error-message">Your photo is still safe. Try again or adjust the direction.</p>
+            <small id="preview-error-reference" class="preview-error-reference hidden"></small>
+            <div class="preview-error-actions">
+              <button type="button" id="retry-generation" class="button primary">Try again</button>
+              <button type="button" id="adjust-generation" class="button ghost">Adjust direction</button>
+            </div>
+          </div>
         </div>
         <div class="preview-info">
           <div class="callout"><strong>WATERMARKED PREVIEW</strong><p>Your clean artwork stays private. Purchase options below stay tied to this exact Artwork ID.</p></div>

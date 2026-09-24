@@ -373,3 +373,15 @@ footer{background:#050611;max-width:none!important;padding-left:max(22px,calc((1
 .recast-error{margin-top:13px;padding:13px 15px;border-radius:14px;border:1px solid rgba(255,103,128,.35);background:linear-gradient(135deg,rgba(68,17,36,.78),rgba(25,12,28,.84));color:#ffc0ca;font-size:13px;line-height:1.48;box-shadow:0 12px 35px rgba(0,0,0,.18)}
 .order-status-link{margin-top:18px;width:100%}
 .turnstile-container{margin:13px 0 4px;min-height:65px;display:flex;justify-content:center}.turnstile-container.hidden{display:none!important}
+
+
+/* v1.0.1 — generation failure stays visible instead of disappearing */
+.preview-error{position:absolute;inset:0;z-index:4;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:32px;background:radial-gradient(circle at 50% 35%,rgba(255,77,190,.13),transparent 36%),radial-gradient(circle at 46% 42%,rgba(66,213,255,.10),transparent 45%),rgba(5,6,14,.97)}
+.preview-error.hidden{display:none!important}
+.preview-error-orb{width:62px;height:62px;border-radius:50%;display:grid;place-items:center;margin-bottom:18px;border:1px solid rgba(255,114,185,.42);background:linear-gradient(145deg,rgba(255,70,177,.15),rgba(78,57,255,.17));font-size:26px;font-weight:950;color:#ff8ec9;box-shadow:0 0 42px rgba(255,70,177,.16)}
+.preview-error h3{font-size:clamp(24px,3vw,34px);letter-spacing:-.04em;margin:0 0 10px}
+.preview-error p{max-width:520px;margin:0;color:#a7a8ba;line-height:1.58;font-size:14px}
+.preview-error-reference{display:block;margin-top:13px;color:#777a94;font-size:10px;letter-spacing:.08em}
+.preview-error-actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:22px}
+.preview-error-actions .button{min-width:155px}
+@media(max-width:580px){.preview-error{padding:24px 18px}.preview-error-actions{width:100%}.preview-error-actions .button{flex:1;min-width:0}.preview-frame{min-height:560px}}

@@ -29,7 +29,7 @@
 
     <section id="dashboard" class="hidden">
       <div class="dashboard-top">
-        <div><div class="eyebrow">RECAST ME V1.0</div><h1>Operations at a glance.</h1></div>
+        <div><div class="eyebrow">RECAST ME V1.0.1</div><h1>Operations at a glance.</h1></div>
         <div class="toolbar"><button id="refresh-all">Refresh</button><button id="lock-admin" class="ghost">Lock</button></div>
       </div>
 
@@ -38,12 +38,14 @@
         <article class="glass stat"><span>Trend review</span><strong id="stat-trends">—</strong><small>Needs a human decision</small></article>
         <article class="glass stat"><span>X requests</span><strong id="stat-x">—</strong><small id="stat-x-connection">Bot disabled until connected</small></article>
         <article class="glass stat"><span>Production</span><strong id="stat-printful">—</strong><small>Printful connection</small></article>
+        <article class="glass stat"><span>Generation errors</span><strong id="stat-generation">—</strong><small id="stat-generation-recent">— in the last 24h</small></article>
       </div>
 
       <nav class="admin-tabs" aria-label="Control center sections">
         <button class="active" data-tab="orders">Orders</button>
         <button data-tab="social">X Requests</button>
         <button data-tab="trends">Trend Review</button>
+        <button data-tab="errors">Generation Errors</button>
         <button data-tab="system">System</button>
       </nav>
 
@@ -60,6 +62,12 @@
       <section class="tab-panel" data-panel="trends">
         <div class="panel-heading"><div><div class="eyebrow">TREND SCANNER</div><h2>Ideas needing review</h2><p>Red/tragedy exploitation is discarded. Ambiguous IP, politics and current-event ideas stay here for human review.</p></div><button id="scan-trends">Scan trends now</button></div>
         <div id="trends-list" class="card-list"></div>
+      </section>
+
+
+      <section class="tab-panel" data-panel="errors">
+        <div class="panel-heading"><div><div class="eyebrow">AI DIAGNOSTICS</div><h2>Generation errors</h2><p>Private diagnostics for failed previews. Customer photos are not stored in this log; it only records model, stage, provider code, and failure reason.</p></div></div>
+        <div id="generation-errors-list" class="card-list"></div>
       </section>
 
       <section class="tab-panel" data-panel="system">

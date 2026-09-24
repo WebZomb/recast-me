@@ -22,8 +22,15 @@ function requestKey(id,suffix){return `requests/${id}/${suffix}`}
 function normalizeBase64(value){return String(value||"").replace(/^data:image\/[a-zA-Z0-9.+-]+;base64,/,"").replace(/\s+/g,"")}
 function errorText(error){return (error?.message||String(error)||"").toLowerCase()}
 function isModeration(error){const m=errorText(error);return m.includes("3030")||m.includes("flagged")||m.includes("moderation")}
-function isCapacity(error){const m=errorText(error);return m.includes("3040")||m.includes("out of capacity")||m.includes("429")||m.includes("busy")||m.includes("overload")}
+function isQuota(error){const m=errorText(error);return m.includes("3036")||m.includes("daily free allocation")||m.includes("free allocation")||m.includes("used up your daily")||m.includes("quota exceeded")}
+function isCapacity(error){const m=errorText(error);return m.includes("3040")||m.includes("out of capacity")||m.includes("capacity temporarily exceeded")||m.includes("busy")||m.includes("overload")}
 function isTransient(error){const m=errorText(error);return isCapacity(error)||m.includes("timeout")||m.includes("timed out")||m.includes("503")||m.includes("502")||m.includes("504")}
+function providerCode(error){const m=String(error?.message||error||"").match(/\b(3\d{3}|5\d{3})\b/);return m?Number(m[1]):null}
+async function writeGenerationDiagnostic(env,payload){
+  const diagnosticId=`GEN-${Date.now().toString(36).toUpperCase()}-${randomHex(2).toUpperCase()}`;
+  try{if(env.ARTWORK)await env.ARTWORK.put(`diagnostics/generation/${diagnosticId}.json`,JSON.stringify({diagnosticId,createdAt:new Date().toISOString(),...payload}),{httpMetadata:{contentType:"application/json"}})}catch{}
+  return diagnosticId
+}
 
 async function verifyTurnstile(env,token,ip){
   if(!env.TURNSTILE_SECRET_KEY)return{success:true,disabled:true};
@@ -99,7 +106,7 @@ function safePrompt(styleId,subjectType,inputCount,notes=""){
   ].filter(Boolean).join(" ")
 }
 
-function makeForm(prompt,inputFiles,width=1024,height=1280){
+function makeForm(prompt,inputFiles,width=768,height=960){
   const form=new FormData();
   form.append("prompt",prompt);
   form.append("width",String(width));
@@ -127,8 +134,8 @@ async function withAttemptTimeout(promise,ms=50000){
   }finally{clearTimeout(timer)}
 }
 
-async function tryGeneration(env,model,prompt,inputFiles,kind){
-  const image=await withAttemptTimeout(runModel(makeForm(prompt,inputFiles),env,model));
+async function tryGeneration(env,model,prompt,inputFiles,kind,timeoutMs=50000){
+  const image=await withAttemptTimeout(runModel(makeForm(prompt,inputFiles),env,model),timeoutMs);
   return{image,modelUsed:model,attemptKind:kind,usedSafeRetry:kind.includes("safe"),usedFallback:kind.includes("fallback")}
 }
 
@@ -137,43 +144,38 @@ async function generateWithRecovery({env,primary,fallback,styleId,subjectType,no
   const safe=safePrompt(styleId,subjectType,inputFiles.length,notes);
   let firstError;
   try{
-    return await tryGeneration(env,primary,main,inputFiles,"primary")
+    // One premium 9B attempt per customer request. This protects the daily free allowance
+    // and avoids stacking multiple slow 9B jobs when the provider is busy.
+    return await tryGeneration(env,primary,main,inputFiles,"primary",60000)
   }catch(error){firstError=error}
 
-  // Moderation gets one simplified attempt on the quality model first.
-  if(isModeration(firstError)){
-    try{return await tryGeneration(env,primary,safe,inputFiles,"primary-safe")}
+  if(isQuota(firstError))throw Object.assign(new Error("quota"),{reason:"quota",code:3036,cause:firstError});
+
+  // Any recovery attempt uses the much cheaper/faster 4B fallback.
+  if(fallback&&fallback!==primary){
+    const fallbackPrompt=isModeration(firstError)?safe:main;
+    try{return await tryGeneration(env,fallback,fallbackPrompt,inputFiles,isModeration(firstError)?"fallback-safe":"fallback",35000)}
     catch(error){
-      if(fallback&&fallback!==primary){
-        try{return await tryGeneration(env,fallback,safe,inputFiles,"fallback-safe")}
-        catch(last){
-          if(isModeration(last)||isModeration(error))throw Object.assign(new Error("moderation"),{reason:"moderation",code:3030,cause:last});
-          if(isTransient(last)||isCapacity(last))throw Object.assign(new Error("capacity"),{reason:"capacity",cause:last});
-          throw Object.assign(new Error("provider"),{reason:"provider",cause:last});
+      if(isQuota(error))throw Object.assign(new Error("quota"),{reason:"quota",code:3036,cause:error});
+      if(isModeration(error)){
+        // If the first fallback used the full prompt, allow one cheap simplified 4B retry.
+        if(!isModeration(firstError)){
+          try{return await tryGeneration(env,fallback,safe,inputFiles,"fallback-safe",35000)}
+          catch(last){
+            if(isQuota(last))throw Object.assign(new Error("quota"),{reason:"quota",code:3036,cause:last});
+            if(isModeration(last))throw Object.assign(new Error("moderation"),{reason:"moderation",code:3030,cause:last});
+            if(isTransient(last)||isCapacity(last))throw Object.assign(new Error("capacity"),{reason:"capacity",cause:last});
+            throw Object.assign(new Error("provider"),{reason:"provider",cause:last});
+          }
         }
+        throw Object.assign(new Error("moderation"),{reason:"moderation",code:3030,cause:error});
       }
-      if(isModeration(error))throw Object.assign(new Error("moderation"),{reason:"moderation",code:3030,cause:error});
       if(isTransient(error)||isCapacity(error))throw Object.assign(new Error("capacity"),{reason:"capacity",cause:error});
       throw Object.assign(new Error("provider"),{reason:"provider",cause:error});
     }
   }
 
-  // Capacity/provider failure skips another slow attempt on the same model and moves to the fast fallback.
-  if(fallback&&fallback!==primary){
-    try{return await tryGeneration(env,fallback,main,inputFiles,"fallback")}
-    catch(error){
-      if(isModeration(error)){
-        try{return await tryGeneration(env,fallback,safe,inputFiles,"fallback-safe")}
-        catch(last){
-          if(isModeration(last))throw Object.assign(new Error("moderation"),{reason:"moderation",code:3030,cause:last});
-          if(isTransient(last)||isCapacity(last))throw Object.assign(new Error("capacity"),{reason:"capacity",cause:last});
-          throw Object.assign(new Error("provider"),{reason:"provider",cause:last});
-        }
-      }
-      if(isTransient(error)||isCapacity(error))throw Object.assign(new Error("capacity"),{reason:"capacity",cause:error});
-      throw Object.assign(new Error("provider"),{reason:"provider",cause:error});
-    }
-  }
+  if(isModeration(firstError))throw Object.assign(new Error("moderation"),{reason:"moderation",code:3030,cause:firstError});
   if(isTransient(firstError)||isCapacity(firstError))throw Object.assign(new Error("capacity"),{reason:"capacity",cause:firstError});
   throw Object.assign(new Error("provider"),{reason:"provider",cause:firstError});
 }
@@ -181,7 +183,7 @@ async function generateWithRecovery({env,primary,fallback,styleId,subjectType,no
 async function store(env,{requestId,accessToken,styleId,subjectType,notes,source,sourceTweet,inputs,image,safety,modelUsed,attemptKind}){
   if(!env.ARTWORK)return{persisted:false,storageError:"ARTWORK binding is missing."};
   const now=new Date().toISOString();
-  const metadata={requestId,accessToken,styleId,styleName:STYLES[styleId]?.name||STYLES.game.name,subjectType,notes,source:source||"site",sourceTweet:sourceTweet||null,safety,status:"preview_ready",createdAt:now,updatedAt:now,inputCount:inputs.length,paid:false,fulfillment:"not_started",modelUsed,attemptKind,promptVersion:"v1.0"};
+  const metadata={requestId,accessToken,styleId,styleName:STYLES[styleId]?.name||STYLES.game.name,subjectType,notes,source:source||"site",sourceTweet:sourceTweet||null,safety,status:"preview_ready",createdAt:now,updatedAt:now,inputCount:inputs.length,paid:false,fulfillment:"not_started",modelUsed,attemptKind,promptVersion:"v1.0.1"};
   try{
     for(let i=0;i<inputs.length;i++)await env.ARTWORK.put(requestKey(requestId,`input-${i}.jpg`),await inputs[i].arrayBuffer());
     await env.ARTWORK.put(requestKey(requestId,"preview.b64"),image);
@@ -232,12 +234,15 @@ export async function highQualityTransform(request,env){
     const accessToken=randomHex(32);
     const stored=await store(env,{requestId,accessToken,styleId,subjectType,notes,source,sourceTweet,inputs:inputFiles,image,safety,modelUsed:generated.modelUsed,attemptKind:generated.attemptKind});
 
-    return json({ok:true,requestId,accessToken,style:STYLES[styleId]?.name||STYLES.game.name,image:`data:image/jpeg;base64,${image}`,persisted:stored.persisted,storageError:stored.storageError,modelUsed:generated.modelUsed,usedSafeRetry:generated.usedSafeRetry,usedFastFallback:generated.usedFallback,promptVersion:"v1.0"});
+    return json({ok:true,requestId,accessToken,style:STYLES[styleId]?.name||STYLES.game.name,image:`data:image/jpeg;base64,${image}`,persisted:stored.persisted,storageError:stored.storageError,modelUsed:generated.modelUsed,usedSafeRetry:generated.usedSafeRetry,usedFastFallback:generated.usedFallback,promptVersion:"v1.0.1"});
   }catch(error){
     const reason=error?.reason||"provider";
-    if(reason==="moderation")return json({error:"generation_declined",code:3030,reason:"moderation",userMessage:"The image engine would not complete that exact photo and wording combination. We already retried with a safer version. Try the same idea with simpler wording or another reference photo."},422);
-    if(reason==="capacity")return json({error:"engine_busy",reason:"capacity",userMessage:"The image engine is temporarily busy. Please try again in a moment."},503);
-    return json({error:"generation_failed",reason,userMessage:"We could not finish this preview. Please try again — your uploaded photo was not changed."},500)
+    const internal=error?.cause||error;
+    const diagnosticId=await writeGenerationDiagnostic(env,{stage,reason,providerCode:providerCode(internal),providerMessage:String(internal?.message||internal||"").slice(0,500),primary:String(env.IMAGE_MODEL_PRIMARY||DEFAULT_PRIMARY),fallback:String(env.IMAGE_MODEL_FALLBACK||DEFAULT_FALLBACK)});
+    if(reason==="quota")return json({error:"daily_allowance_used",code:3036,reason:"quota",retryable:false,diagnosticId,userMessage:"Today’s free AI preview allowance has been used. The allowance resets daily. Your photo is safe, and nothing was charged."},429);
+    if(reason==="moderation")return json({error:"generation_declined",code:3030,reason:"moderation",retryable:true,diagnosticId,userMessage:"The image engine would not complete that exact photo and wording combination. We already retried with a safer version. Try the same idea with simpler wording or another reference photo."},422);
+    if(reason==="capacity")return json({error:"engine_busy",reason:"capacity",retryable:true,diagnosticId,userMessage:"The image engine is temporarily busy. Your photo is safe — tap Try again in a moment."},503);
+    return json({error:"generation_failed",reason,retryable:true,diagnosticId,userMessage:"We could not finish this preview. Your uploaded photo was not changed."},500)
   }
 }
 
@@ -245,5 +250,5 @@ export function modelStatus(env){
   const primary=String(env.IMAGE_MODEL_PRIMARY||DEFAULT_PRIMARY);
   const fallback=String(env.IMAGE_MODEL_FALLBACK||DEFAULT_FALLBACK);
   const label=primary.includes("flux-2-klein-9b")?"FLUX.2 Klein 9B":primary.includes("flux-2-klein-4b")?"FLUX.2 Klein 4B":primary;
-  return json({ok:true,primary,fallback,label,mode:"fast-quality-preview-4x5",promptVersion:"v1.0"})
+  return json({ok:true,primary,fallback,label,mode:"reliable-premium-preview-4x5",promptVersion:"v1.0.1"})
 }
