@@ -4,7 +4,7 @@ const requestLabel = document.querySelector("#request-id");
 const PRODUCT_ART = {
   "Custom Recast Poster":"/assets/product-poster-v10.webp",
   "Custom Recast Hoodie":"/assets/product-hoodie-v10.webp",
-  "Custom Recast Framed Poster":"/assets/product-framed-poster-v10.webp",
+  "Custom Recast Framed Poster":"/assets/product-desk-frame-v13.webp",
   "Custom Recast Canvas":"/assets/product-canvas-v10.webp",
   "Custom Recast T-Shirt":"/assets/product-tshirt-v10.webp",
   "Custom Recast Blanket":"/assets/product-blanket-v10.webp",
@@ -19,7 +19,7 @@ const PRODUCT_ART = {
 const PRODUCT_META = {
   "Custom Recast Poster": {order:1,badge:"MOST POPULAR",pitch:"The easiest way to turn your Recast into wall art.",tier:"featured",cta:"Shop Poster"},
   "Custom Recast Hoodie": {order:2,badge:"FAN FAVORITE",pitch:"Wear your Recast as a premium statement piece.",tier:"featured",cta:"Customize Hoodie"},
-  "Custom Recast Framed Poster": {order:3,badge:"PREMIUM PICK",pitch:"Display-ready artwork with a finished, giftable feel.",tier:"featured",cta:"Shop Framed Print"},
+  "Custom Recast Framed Poster": {order:3,badge:"DESK + WALL",pitch:"Choose an 8×10 desk frame or larger framed wall art.",tier:"featured",cta:"Shop Framed Print"},
   "Custom Recast Canvas": {order:4,badge:"GALLERY PICK",pitch:"A bold upgrade for artwork that deserves more presence.",tier:"featured",cta:"Shop Canvas"},
   "Custom Recast T-Shirt": {order:5,badge:"WEAR IT",pitch:"An easy everyday way to show off your Recast.",tier:"secondary",cta:"Shop T-Shirt"},
   "Custom Recast Blanket": {order:6,badge:"COZY PICK",pitch:"Big, soft, personal — especially good for pets and gifts.",tier:"secondary",cta:"Shop Blanket"},

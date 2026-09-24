@@ -6,9 +6,9 @@
   <meta name="theme-color" content="#07070b" />
   <meta name="description" content="Recast Me turns your photo into original AI artwork, then puts it on something worth keeping." />
   <title>Recast Me — Same you. A bolder reality.</title>
-  <link rel="stylesheet" href="/styles.css?v=110" />
-  <link rel="stylesheet" href="/merch-v07.css?v=110" />
-  <link rel="stylesheet" href="/site-v10.css?v=110" />
+  <link rel="stylesheet" href="/styles.css?v=130" />
+  <link rel="stylesheet" href="/merch-v07.css?v=130" />
+  <link rel="stylesheet" href="/site-v10.css?v=130" />
 </head>
 <body>
   <header class="site-header">
@@ -34,7 +34,7 @@
       <div class="hero-copy">
         <div class="eyebrow">YOUR PHOTO · ANOTHER WORLD</div>
         <h1>Recast<br><span>yourself.</span></h1>
-        <p class="hero-lede">Turn yourself, your pet, your car, or the people you love into original high-fidelity artwork — then make it real.</p>
+        <p class="hero-lede">Turn yourself, just your pet, you + your pet, your car, or the people you love into original high-fidelity artwork — then make it real.</p>
         <div class="hero-actions">
           <a class="button primary" href="#start">Start your Recast</a>
           <a class="button ghost" href="#styles">See the worlds</a>
@@ -120,6 +120,61 @@
       </div>
     </section>
 
+    <section class="section idea-section" id="ideas">
+      <div class="section-kicker idea-heading">
+        <div>
+          <div class="eyebrow">POPULAR RECASTS</div>
+          <h2>Start with who matters.</h2>
+        </div>
+        <p>Some of the strongest Recasts are the simplest: your pet, you together, a couple, or a gift for Mom and Dad.</p>
+      </div>
+
+      <div class="idea-layout">
+        <div class="idea-grid">
+          <button type="button" class="idea-card" data-idea-subject="pet" data-idea-note="Keep my pet’s exact face, coat markings, eye color, proportions, and personality recognizable. Make my pet the star of the artwork.">
+            <span>PET FAVORITE</span>
+            <strong>Just your pet</strong>
+            <p>Royal portraits, fantasy heroes, space captains, Halloween looks, and worlds built entirely around them.</p>
+            <em>Start a pet Recast →</em>
+          </button>
+
+          <button type="button" class="idea-card" data-idea-subject="person and pet" data-idea-note="Keep both me and my pet clearly recognizable and make us feel connected in the same world.">
+            <span>TOGETHER</span>
+            <strong>You + your pet</strong>
+            <p>Matching worlds, cinematic adventures, holiday looks, or an everyday photo turned into something bigger.</p>
+            <em>Recast us together →</em>
+          </button>
+
+          <button type="button" class="idea-card" data-idea-subject="couple" data-idea-note="Keep both people clearly recognizable and create a polished cinematic portrait that feels meaningful, natural, and premium.">
+            <span>COUPLES</span>
+            <strong>Turn a favorite photo into a world</strong>
+            <p>Anniversaries, engagements, weddings, date-night photos, or just a picture you both love.</p>
+            <em>Create a couple Recast →</em>
+          </button>
+
+          <button type="button" class="idea-card" data-idea-subject="family" data-idea-note="Keep everyone recognizable and create an elegant, flattering family portrait that feels gift-worthy and timeless.">
+            <span>GIFT IDEA</span>
+            <strong>Mom, Dad, or the whole family</strong>
+            <p>A personal gift for birthdays, anniversaries, holidays, or the parents who already have everything.</p>
+            <em>Create a family Recast →</em>
+          </button>
+        </div>
+
+        <article class="desk-frame-spotlight">
+          <div class="desk-frame-art">
+            <img src="/assets/product-desk-frame-v13.webp" alt="Recast Me 8 by 10 framed print shown on a desk">
+          </div>
+          <div class="desk-frame-copy">
+            <span>NEW · GIFT READY</span>
+            <h3>8×10 Desk Frame</h3>
+            <p>A smaller framed Recast for a desk, shelf, nightstand, or office — especially strong for pet portraits and family gifts.</p>
+            <strong>$44.99</strong>
+            <a href="#start" data-desk-frame-start>Make one →</a>
+          </div>
+        </article>
+      </div>
+    </section>
+
     <section class="section create-section" id="start">
       <div class="create-shell">
         <div class="create-intro">
@@ -134,12 +189,30 @@
 
         <div class="create-card">
           <form id="recast-form">
+            <div class="pet-spotlight">
+              <div>
+                <span>PET FAVORITE</span>
+                <strong>Your pet can be the whole story.</strong>
+                <p>Turn just your dog, cat, or other pet into a royal portrait, space explorer, fantasy hero, Halloween character, or a world you invent.</p>
+              </div>
+              <button type="button" id="pet-only-quickstart">Start with just my pet</button>
+            </div>
+
+            <div class="subject-quick-picks" aria-label="Quick subject choices">
+              <button type="button" data-subject-pick="pet">Just my pet</button>
+              <button type="button" data-subject-pick="person and pet">Me + my pet</button>
+              <button type="button" data-subject-pick="couple">Couple</button>
+              <button type="button" data-subject-pick="family">Parents / family</button>
+              <button type="button" data-subject-pick="person">Just me</button>
+            </div>
+
             <div class="field-row">
               <label>Subject
                 <select name="subject" id="subject">
                   <option value="person">Person</option>
                   <option value="pet">Pet</option>
                   <option value="couple">Couple</option>
+                  <option value="family">Parents / Family</option>
                   <option value="car">Car</option>
                   <option value="person and pet">You + your pet</option>
                   <option value="person and car">You + your car</option>
@@ -149,10 +222,17 @@
                 <select name="style" id="style"></select>
               </label>
             </div>
+            <label class="custom-world-field">Custom world <span class="optional-label">OPTIONAL</span>
+              <textarea name="customWorld" id="custom-world" placeholder="Example: A glowing floating city above waterfalls at sunset, cinematic and realistic."></textarea>
+              <small>Use a preset World above, describe your own world here, or combine both.</small>
+            </label>
+
             <label>Your direction
-              <textarea name="notes" id="notes" placeholder="Example: Me and my dog in matching stylish Halloween costumes, cinematic moonlight, fun not scary."></textarea>
+              <textarea name="notes" id="notes" placeholder="Example: Make my dog the captain, give her a tiny cape, keep her markings exact, dramatic but friendly."></textarea>
+              <small>Describe the outfit, pose, mood, props, or anything specific you want to happen.</small>
             </label>
             <p id="prefill-note" class="prefill-note"></p>
+            <div id="branch-note" class="branch-note hidden"></div>
             <label class="upload-zone" for="photos">
               <input id="photos" type="file" accept="image/*" multiple hidden />
               <span class="upload-icon">＋</span>
@@ -227,12 +307,24 @@
 
         </div>
       </div>
+
+      <section id="recent-versions-shell" class="recent-versions-shell hidden" aria-live="polite">
+        <div class="recent-versions-heading">
+          <div>
+            <div class="eyebrow">RECENT VERSIONS</div>
+            <h3>Pick the one you love.</h3>
+            <p>Your last 4 successful Recasts stay available on this browser. Switch versions anytime before choosing products.</p>
+          </div>
+          <span>SUCCESSFUL RENDERS ONLY</span>
+        </div>
+        <div id="recent-versions-grid" class="recent-versions-grid"></div>
+      </section>
     </section>
 
     <section class="section shop-showcase" id="shop">
       <div class="section-kicker">
         <div><div class="eyebrow">MAKE IT REAL</div><h2>Put your Recast on something worth keeping.</h2></div>
-        <p>Premium made-to-order pieces built around the exact Recast you approved. Physical products come first; digital stays at the end.</p>
+        <p>Premium made-to-order pieces built around the exact Recast you approved — from an 8×10 desk frame to wall art, apparel, gifts, and more. Digital stays at the end.</p>
       </div>
       <div id="catalog-preview" class="catalog-preview"></div>
     </section>
@@ -272,6 +364,6 @@
     <span>© 2026 Recast Me</span>
   </footer>
 
-  <script src="/app.js?v=110" type="module"></script>
+  <script src="/app.js?v=130" type="module"></script>
 </body>
 </html>

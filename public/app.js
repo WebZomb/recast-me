@@ -12,7 +12,7 @@ const STYLES = [
 const PRODUCT_CATALOG = [
   {name:"Poster",price:"from $29.99",asset:"poster",image:"/assets/product-poster-v10.webp",badge:"MOST POPULAR",pitch:"The easiest way to turn your Recast into wall art.",tier:"featured"},
   {name:"Hoodie",price:"from $59.99",asset:"hoodie",image:"/assets/product-hoodie-v10.webp",badge:"FAN FAVORITE",pitch:"Wear your Recast as a premium statement piece.",tier:"featured"},
-  {name:"Framed Poster",price:"from $59.99",asset:"framed-poster",image:"/assets/product-framed-poster-v10.webp",badge:"PREMIUM PICK",pitch:"Display-ready artwork with a finished, giftable feel.",tier:"featured"},
+  {name:"Framed Poster",price:"from $44.99",asset:"framed-poster",image:"/assets/product-desk-frame-v13.webp",badge:"DESK + WALL",pitch:"8×10 desk size or larger framed wall art — ready to display and gift.",tier:"featured"},
   {name:"Canvas",price:"from $69.99",asset:"canvas",image:"/assets/product-canvas-v10.webp",badge:"GALLERY PICK",pitch:"A bold upgrade for artwork that deserves more presence.",tier:"featured"},
 
   {name:"T-Shirt",price:"from $34.99",asset:"tshirt",image:"/assets/product-tshirt-v10.webp",badge:"WEAR IT",pitch:"An easy everyday way to show off your Recast.",tier:"secondary"},
@@ -40,7 +40,8 @@ styleGrid.innerHTML = STYLES.map(([id,name,copy,image],i)=>`
     </div>
   </article>`).join('');
 
-styleSelect.innerHTML = STYLES.map(([id,name])=>`<option value="${id}">${name}</option>`).join('');
+styleSelect.innerHTML = STYLES.map(([id,name])=>`<option value="${id}">${name}</option>`).join('')
+  + '<option value="custom">Custom World — describe your own</option>';
 
 function chooseStyle(card){
   styleSelect.value=card.dataset.style;
@@ -113,13 +114,58 @@ if (params.get('request')) {
   document.querySelector('#notes').value = params.get('request');
   document.querySelector('#prefill-note').textContent = `Loaded from your social request: “${params.get('request')}”`;
 }
-if (params.get('style') && STYLES.some(x=>x[0]===params.get('style'))) styleSelect.value=params.get('style');
+if (params.get('style') && (STYLES.some(x=>x[0]===params.get('style')) || params.get('style')==='custom')) styleSelect.value=params.get('style');
 
 const photos = document.querySelector('#photos');
 photos.addEventListener('change',()=>{
   const selected=[...photos.files].slice(0,4);
   document.querySelector('#file-summary').textContent=selected.length?`${selected.length} photo${selected.length===1?'':'s'} selected`:'No photos selected';
 });
+
+function updateSubjectQuickPicks(){
+  const value=document.querySelector('#subject')?.value;
+  document.querySelectorAll('[data-subject-pick]').forEach(btn=>btn.classList.toggle('selected',btn.dataset.subjectPick===value));
+}
+document.querySelector('#subject')?.addEventListener('change',updateSubjectQuickPicks);
+document.querySelectorAll('[data-subject-pick]').forEach(button=>{
+  button.addEventListener('click',()=>{
+    const select=document.querySelector('#subject');
+    if(select)select.value=button.dataset.subjectPick;
+    updateSubjectQuickPicks();
+
+document.querySelectorAll('[data-idea-subject]').forEach(card=>{
+  card.addEventListener('click',()=>{
+    const subject=document.querySelector('#subject');
+    if(subject)subject.value=card.dataset.ideaSubject||'person';
+    updateSubjectQuickPicks();
+    const note=document.querySelector('#notes');
+    if(note)note.value=card.dataset.ideaNote||'';
+    document.querySelector('#start')?.scrollIntoView({behavior:'smooth',block:'start'});
+  });
+});
+document.querySelector('[data-desk-frame-start]')?.addEventListener('click',()=>{
+  const note=document.querySelector('#notes');
+  if(note&&!note.value)note.value='Create a polished portrait that will look especially good in a small 8×10 black frame.';
+  document.querySelector('#start')?.scrollIntoView({behavior:'smooth',block:'start'});
+});
+
+  });
+});
+document.querySelector('#pet-only-quickstart')?.addEventListener('click',()=>{
+  const subject=document.querySelector('#subject');
+  if(subject)subject.value='pet';
+  updateSubjectQuickPicks();
+  if(!document.querySelector('#notes').value){
+    document.querySelector('#notes').value='Keep my pet’s exact face, coat markings, eye color, proportions, and personality recognizable.';
+  }
+  document.querySelector('#start')?.scrollIntoView({behavior:'smooth',block:'start'});
+});
+styleSelect.addEventListener('change',()=>{
+  const custom=document.querySelector('#custom-world');
+  if(styleSelect.value==='custom'&&custom&&!custom.value)custom.focus({preventScroll:true});
+});
+updateSubjectQuickPicks();
+
 
 async function resizeFile(file,max=500){
   const bitmap=await createImageBitmap(file);
@@ -286,6 +332,135 @@ let generationInFlight=false;
 let currentClientAttemptId="";
 let lastSuccessfulPreviewMeta=null;
 let lastAttemptQuality='high';
+const RECENT_VERSIONS_KEY='recast_recent_versions_v12';
+let branchReference=null;
+
+function readRecentVersions(){
+  try{
+    const rows=JSON.parse(localStorage.getItem(RECENT_VERSIONS_KEY)||'[]');
+    return Array.isArray(rows)?rows.slice(0,4):[];
+  }catch{return[]}
+}
+function writeRecentVersions(rows){
+  localStorage.setItem(RECENT_VERSIONS_KEY,JSON.stringify(rows.slice(0,4)));
+}
+function addRecentVersion(version){
+  const rows=readRecentVersions().filter(x=>x?.requestId&&x.requestId!==version.requestId);
+  rows.unshift(version);
+  writeRecentVersions(rows.slice(0,4));
+  renderRecentVersions();
+}
+function activeRequestFromVersion(version){
+  localStorage.setItem('recast_last_request',JSON.stringify({
+    requestId:version.requestId,
+    accessToken:version.accessToken,
+    style:version.styleName||version.style||'Recast',
+    model:version.modelUsed||null,
+    qualityMode:version.qualityMode||'high'
+  }));
+}
+async function fetchStoredPreview(version){
+  const url=new URL(`/api/request/${encodeURIComponent(version.requestId)}/preview`,location.origin);
+  url.searchParams.set('token',version.accessToken);
+  const response=await fetch(url);
+  const data=await response.json().catch(()=>({}));
+  if(!response.ok||!data.ok||!data.image)throw new Error(data.error||'This saved version is unavailable.');
+  return data.image;
+}
+async function activateRecentVersion(version,{scroll=true}={}){
+  const image=await fetchStoredPreview(version);
+  await renderWatermark(image);
+  const section=document.querySelector('#preview-section');
+  const previewInfo=document.querySelector('.preview-info');
+  const title=`${version.styleName||'Recast'} preview ready.`;
+  const requestText=`Artwork ID: ${version.requestId} · selected from recent versions`;
+  document.querySelector('#preview-title').textContent=title;
+  document.querySelector('#request-id').textContent=requestText;
+  section?.classList.remove('hidden');
+  previewInfo?.classList.remove('hidden');
+  clearPreviewError();
+  document.querySelector('#preview-emergency-error')?.remove();
+  hasSuccessfulPreview=true;
+  lastSuccessfulPreviewMeta={
+    title,requestText,requestId:version.requestId,accessToken:version.accessToken,
+    qualityMode:version.qualityMode||'high'
+  };
+  activeRequestFromVersion(version);
+  const orderLink=document.querySelector('#order-status-link');
+  if(orderLink){
+    orderLink.href=`/order.html?requestId=${encodeURIComponent(version.requestId)}&token=${encodeURIComponent(version.accessToken)}`;
+    orderLink.classList.remove('hidden');
+  }
+  renderRecentVersions();
+  if(scroll)section?.scrollIntoView({behavior:'smooth',block:'start'});
+}
+function setBranchReference(version){
+  branchReference={
+    requestId:version.requestId,
+    accessToken:version.accessToken,
+    styleId:version.styleId||'custom',
+    styleName:version.styleName||'Recast',
+    subjectType:version.subjectType||'person',
+    customWorld:version.customWorld||'',
+    notes:version.notes||'',
+    qualityMode:version.qualityMode||'high'
+  };
+  const subject=document.querySelector('#subject');
+  if(subject&&[...subject.options].some(o=>o.value===branchReference.subjectType))subject.value=branchReference.subjectType;
+  if([...[styleSelect.options]].some(o=>o.value===branchReference.styleId))styleSelect.value=branchReference.styleId;
+  document.querySelector('#custom-world').value=branchReference.customWorld;
+  document.querySelector('#notes').value=branchReference.notes;
+  const radio=document.querySelector(`input[name="qualityMode"][value="${branchReference.qualityMode}"]`);
+  if(radio){radio.checked=true;updateQualityUI()}
+  updateSubjectQuickPicks();
+  const note=document.querySelector('#branch-note');
+  if(note){
+    note.innerHTML=`<strong>Refining ${branchReference.styleName}</strong><span>We’ll use this successful Recast as a visual reference. Keep or re-add the original photo for the strongest likeness.</span><button type="button" id="clear-branch-reference">Clear</button>`;
+    note.classList.remove('hidden');
+    note.querySelector('#clear-branch-reference')?.addEventListener('click',clearBranchReference,{once:true});
+  }
+  document.querySelector('#start')?.scrollIntoView({behavior:'smooth',block:'start'});
+}
+function clearBranchReference(){
+  branchReference=null;
+  const note=document.querySelector('#branch-note');
+  if(note){note.textContent='';note.classList.add('hidden')}
+}
+async function renderRecentVersions(){
+  const shell=document.querySelector('#recent-versions-shell');
+  const grid=document.querySelector('#recent-versions-grid');
+  if(!shell||!grid)return;
+  const rows=readRecentVersions();
+  shell.classList.toggle('hidden',rows.length===0);
+  if(!rows.length){grid.innerHTML='';return}
+  const active=JSON.parse(localStorage.getItem('recast_last_request')||'null')?.requestId;
+  grid.innerHTML=rows.map((v,i)=>`
+    <article class="recent-version-card ${v.requestId===active?'active':''}" data-version-index="${i}">
+      <div class="recent-version-image"><div class="recent-version-loading">Loading…</div><img alt="${v.styleName||'Saved Recast'}"></div>
+      <div class="recent-version-copy">
+        <span>VERSION ${rows.length-i}</span>
+        <strong>${v.styleName||'Custom Recast'}</strong>
+        <small>${v.qualityMode==='quick'?'Quick':'High-Quality'} · ${new Date(v.createdAt||Date.now()).toLocaleString([], {month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})}</small>
+      </div>
+      <div class="recent-version-actions">
+        <button type="button" data-history-action="use">Use this version</button>
+        <button type="button" data-history-action="refine">Refine this version</button>
+      </div>
+    </article>`).join('');
+
+  rows.forEach(async(v,i)=>{
+    const card=grid.querySelector(`[data-version-index="${i}"]`);
+    try{
+      const image=await fetchStoredPreview(v);
+      const img=card?.querySelector('img');
+      if(img){img.src=image;img.onload=()=>card?.querySelector('.recent-version-loading')?.remove()}
+    }catch{
+      const loading=card?.querySelector('.recent-version-loading');
+      if(loading)loading.textContent='Unavailable';
+    }
+  });
+}
+
 
 function makeClientAttemptId(){
   return `WEB-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).slice(2,7).toUpperCase()}`;
@@ -350,7 +525,12 @@ form.addEventListener('submit',async e=>{
   e.preventDefault();
   const files=[...photos.files].slice(0,4);
   clearRecastError();
-  if(!files.length){showRecastError('Add at least one photo first.');document.querySelector('#start').scrollIntoView({behavior:'smooth'});return;}
+  if(!files.length&&!branchReference){showRecastError('Add at least one photo first, or choose “Refine this version” from a recent successful Recast.');document.querySelector('#start').scrollIntoView({behavior:'smooth'});return;}
+  if(styleSelect.value==='custom'&&!document.querySelector('#custom-world').value.trim()){
+    showRecastError('Describe your custom world first, or choose one of the preset Worlds.');
+    document.querySelector('#custom-world').focus();
+    return;
+  }
   const button=document.querySelector('#generate-button'),loading=document.querySelector('#loading'),section=document.querySelector('#preview-section');
   const previewInfo=document.querySelector('.preview-info');
   currentClientAttemptId=makeClientAttemptId();
@@ -372,9 +552,15 @@ form.addEventListener('submit',async e=>{
   try{
     const fd=new FormData();
     fd.append('style',styleSelect.value);
-    const submittedSubject=inferSubject(document.querySelector('#subject').value,document.querySelector('#notes').value);
+    const customWorld=document.querySelector('#custom-world').value.trim();
+    const submittedSubject=inferSubject(document.querySelector('#subject').value,`${customWorld} ${document.querySelector('#notes').value}`);
     fd.append('subject',submittedSubject);
+    fd.append('customWorld',customWorld);
     fd.append('notes',document.querySelector('#notes').value);
+    if(branchReference){
+      fd.append('branchRequestId',branchReference.requestId);
+      fd.append('branchAccessToken',branchReference.accessToken);
+    }
     fd.append('source',params.get('source')||'site');
     fd.append('sourceTweet',params.get('tweet')||'');
     const qualityMode=selectedQuality();
@@ -387,6 +573,7 @@ form.addEventListener('submit',async e=>{
       button.textContent=`Preparing photo ${i+1}…`;
       fd.append(`image_${i}`,await resizeFile(files[i]));
     }
+    if(!files.length&&branchReference)button.textContent='Preparing saved version…';
 
     button.textContent=qualityMode==='quick'?'Creating Quick Preview…':'Creating High-Quality Preview…';
     startGenerationUI(qualityMode);
@@ -412,10 +599,22 @@ form.addEventListener('submit',async e=>{
     clearPreviewError();
     document.querySelector('#preview-emergency-error')?.remove();
     hasSuccessfulPreview=true;
-    lastSuccessfulPreviewMeta={title:successTitle,requestText:successRequestText,requestId:data.requestId,accessToken:data.accessToken,qualityMode:data.qualityMode||lastAttemptQuality};
-    localStorage.setItem('recast_last_request',JSON.stringify({
-      requestId:data.requestId,accessToken:data.accessToken,style:data.style,model:data.modelUsed,qualityMode:data.qualityMode||lastAttemptQuality
-    }));
+    const successVersion={
+      requestId:data.requestId,
+      accessToken:data.accessToken,
+      styleName:data.style,
+      styleId:styleSelect.value,
+      subjectType:submittedSubject,
+      customWorld,
+      notes:document.querySelector('#notes').value,
+      qualityMode:data.qualityMode||lastAttemptQuality,
+      modelUsed:data.modelUsed||null,
+      createdAt:new Date().toISOString()
+    };
+    lastSuccessfulPreviewMeta={title:successTitle,requestText:successRequestText,requestId:data.requestId,accessToken:data.accessToken,qualityMode:successVersion.qualityMode};
+    addRecentVersion(successVersion);
+    activeRequestFromVersion(successVersion);
+    clearBranchReference();
     const orderLink=document.querySelector('#order-status-link');
     if(orderLink){orderLink.href=`/order.html?requestId=${encodeURIComponent(data.requestId)}&token=${encodeURIComponent(data.accessToken)}`;orderLink.classList.remove('hidden')}
     if(data.storageError) console.warn('Recast storage warning:',data.storageError);
@@ -483,6 +682,33 @@ document.querySelector('#adjust-generation')?.addEventListener('click',()=>{
 });
 
 
+
+document.querySelector('#recent-versions-grid')?.addEventListener('click',async event=>{
+  const button=event.target.closest('[data-history-action]');
+  if(!button)return;
+  const card=button.closest('[data-version-index]');
+  const rows=readRecentVersions();
+  const version=rows[Number(card?.dataset.versionIndex)];
+  if(!version)return;
+  button.disabled=true;
+  try{
+    if(button.dataset.historyAction==='use')await activateRecentVersion(version);
+    if(button.dataset.historyAction==='refine')setBranchReference(version);
+  }catch(error){
+    showRecastError(error?.message||'That saved version could not be loaded.');
+  }finally{button.disabled=false}
+});
+
+async function restoreRecentVersionOnLoad(){
+  const rows=readRecentVersions();
+  if(!rows.length){renderRecentVersions();return}
+  renderRecentVersions();
+  // Only restore the most recent successful art if no preview is already visible.
+  const existing=JSON.parse(localStorage.getItem('recast_last_request')||'null');
+  const candidate=rows.find(v=>v.requestId===existing?.requestId)||rows[0];
+  try{await activateRecentVersion(candidate,{scroll:false})}catch{renderRecentVersions()}
+}
+
 window.addEventListener('error',async event=>{
   if(!generationInFlight)return;
   const message='The page hit an unexpected display error while creating your preview.';
@@ -525,5 +751,7 @@ async function status(){
   }
 }
 updateQualityUI();
+renderRecentVersions();
+restoreRecentVersionOnLoad();
 status();
 setupTurnstile();
