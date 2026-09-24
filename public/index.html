@@ -8,7 +8,7 @@
   <title>Recast Me — Same you. A bolder reality.</title>
   <link rel="stylesheet" href="/styles.css?v=130" />
   <link rel="stylesheet" href="/merch-v07.css?v=130" />
-  <link rel="stylesheet" href="/site-v10.css?v=130" />
+  <link rel="stylesheet" href="/site-v10.css?v=140" />
 </head>
 <body>
   <header class="site-header">
@@ -179,8 +179,8 @@
       <div class="create-shell">
         <div class="create-intro">
           <div class="eyebrow">CREATE YOUR RECAST</div>
-          <h2>Show us the real thing.<br><span>We’ll change the world around it.</span></h2>
-          <p>Your face, pet markings, proportions, and defining features are treated as the identity anchor. The styling changes more than you do.</p>
+          <h2>Show us the real thing.<br><span>See them become the character.</span></h2>
+          <p>We keep the face, pet markings, and defining features recognizable while changing the costume, pose, lighting, and world.</p>
           <div class="privacy-card">
             <strong>PRIVATE BY DESIGN</strong>
             <p>Your prepared source photos and generated artwork are stored privately and tied to a unique Artwork ID.</p>
@@ -222,14 +222,14 @@
                 <select name="style" id="style"></select>
               </label>
             </div>
-            <label class="custom-world-field">Custom world <span class="optional-label">OPTIONAL</span>
+            <label class="custom-world-field" id="custom-world-field" hidden>Describe your custom world
               <textarea name="customWorld" id="custom-world" maxlength="800" placeholder="Example: A glowing floating city above waterfalls at sunset, cinematic and realistic."></textarea>
-              <small>Use a preset World above, describe your own world here, or combine both.</small>
+              <small>Where does your Recast take place? Describe the setting here.</small>
             </label>
 
-            <label>Your direction
-              <textarea name="notes" id="notes" maxlength="1200" placeholder="Example: Make my dog the captain, give her a tiny cape, keep her markings exact, dramatic but friendly."></textarea>
-              <small>Describe the outfit, pose, mood, props, or anything specific you want to happen.</small>
+            <label>Change my subject <span class="optional-label">OPTIONAL</span>
+              <textarea name="notes" id="notes" maxlength="1200" placeholder="Example: Make my dog the captain with a heroic cape and custom gear. Keep her exact face and markings."></textarea>
+              <small>What should happen to your person, pet, or car? Add an outfit, role, pose, or effect. The selected world sets the scene.</small>
             </label>
             <p id="prefill-note" class="prefill-note"></p>
             <div id="branch-note" class="branch-note hidden"></div>
@@ -364,6 +364,6 @@
     <span>© 2026 Recast Me</span>
   </footer>
 
-  <script src="/app.js?v=131" type="module"></script>
+  <script src="/app.js?v=140" type="module"></script>
 </body>
 </html>

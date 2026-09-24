@@ -45,6 +45,7 @@ styleSelect.innerHTML = STYLES.map(([id,name])=>`<option value="${id}">${name}</
 
 function chooseStyle(card){
   styleSelect.value=card.dataset.style;
+  updateWorldFields();
   document.querySelectorAll('.style-card').forEach(c=>c.classList.toggle('selected',c===card));
   document.querySelector('#start').scrollIntoView({behavior:'smooth'});
 }
@@ -115,6 +116,16 @@ if (params.get('request')) {
   document.querySelector('#prefill-note').textContent = `Loaded from your social request: “${params.get('request')}”`;
 }
 if (params.get('style') && (STYLES.some(x=>x[0]===params.get('style')) || params.get('style')==='custom')) styleSelect.value=params.get('style');
+function updateWorldFields(){
+  const isCustom=styleSelect.value==='custom';
+  const field=document.querySelector('#custom-world-field');
+  const input=document.querySelector('#custom-world');
+  field.hidden=!isCustom;
+  input.disabled=!isCustom;
+  input.required=isCustom;
+  document.querySelectorAll('.style-card').forEach(card=>card.classList.toggle('selected',card.dataset.style===styleSelect.value));
+}
+updateWorldFields();
 
 const photos = document.querySelector('#photos');
 photos.addEventListener('change',()=>{
@@ -154,11 +165,12 @@ document.querySelector('#pet-only-quickstart')?.addEventListener('click',()=>{
   if(subject)subject.value='pet';
   updateSubjectQuickPicks();
   if(!document.querySelector('#notes').value){
-    document.querySelector('#notes').value='Keep my pet’s exact face, coat markings, eye color, proportions, and personality recognizable.';
+    document.querySelector('#notes').value='Turn my pet into a character in this world with a visible, original costume or gear, a new pose, and dramatic lighting. Keep the exact face, coat markings, eye color, and proportions recognizable.';
   }
   document.querySelector('#start')?.scrollIntoView({behavior:'smooth',block:'start'});
 });
 styleSelect.addEventListener('change',()=>{
+  updateWorldFields();
   const custom=document.querySelector('#custom-world');
   if(styleSelect.value==='custom'&&custom&&!custom.value)custom.focus({preventScroll:true});
 });
@@ -267,7 +279,7 @@ function friendlyGenerationError(data,error){
   const label=qualityLabel(mode);
   if(error?.name==='AbortError') return `${label} took too long this time. Your photo and settings are still here — try again or switch quality.`;
   if(data?.reviewRequired) return 'This request needs a quick human review before generation.';
-  if(data?.code===3036 || data?.reason==='quota') return 'Today’s free AI allowance has been used. Your photo and settings are still saved here, and nothing was charged.';
+  if(data?.code===3036 || data?.reason==='quota') return 'Recast Me has reached its shared AI capacity for today. This is a site-wide limit, not your personal render count. Your photo and settings are still here; nothing was charged.';
   if(data?.code===3030 || data?.reason==='moderation') return `${label} could not complete that exact photo and wording combination. Try again, edit the direction, or switch quality.`;
   if(data?.reason==='capacity') return `${label} is temporarily busy. Your photo and settings are still here — try again or switch quality.`;
   return data?.userMessage || `${label} did not finish this time. Your photo and settings are still here.`;
@@ -429,6 +441,7 @@ function setBranchReference(version){
   if(subject&&[...subject.options].some(o=>o.value===branchReference.subjectType))subject.value=branchReference.subjectType;
   if([...[styleSelect.options]].some(o=>o.value===branchReference.styleId))styleSelect.value=branchReference.styleId;
   document.querySelector('#custom-world').value=branchReference.customWorld;
+  updateWorldFields();
   document.querySelector('#notes').value=branchReference.notes;
   const radio=document.querySelector(`input[name="qualityMode"][value="${branchReference.qualityMode}"]`);
   if(radio){radio.checked=true;updateQualityUI()}
@@ -576,7 +589,7 @@ form.addEventListener('submit',async e=>{
   try{
     const fd=new FormData();
     fd.append('style',styleSelect.value);
-    const customWorld=document.querySelector('#custom-world').value.trim();
+    const customWorld=styleSelect.value==='custom'?document.querySelector('#custom-world').value.trim():'';
     const submittedSubject=inferSubject(document.querySelector('#subject').value,`${customWorld} ${document.querySelector('#notes').value}`);
     fd.append('subject',submittedSubject);
     fd.append('customWorld',customWorld);
