@@ -1,3 +1,8 @@
+const merchCss=document.createElement('link');
+merchCss.rel='stylesheet';
+merchCss.href='/merch-v07.css';
+document.head.appendChild(merchCss);
+
 const STYLES = [
   ["game","Game World","Cinematic city energy, dramatic light, bold illustrated realism.","/assets/style-game.svg"],
   ["halloween","Halloween","Stylish costumes, moonlight, fog, pumpkins — playful, not grim.","/assets/style-halloween.svg"],
@@ -9,11 +14,21 @@ const STYLES = [
   ["space","Space Explorer","Original sci-fi portraiture, planets, spacecraft and epic scale.","/assets/style-space.svg"]
 ];
 
-const PRODUCTS = [
-  ["Hoodie","from $59.99","hoodie"],["T-Shirt","from $34.99","tshirt"],["Blanket","from $74.99","blanket"],
-  ["Framed Poster","from $59.99","framed-poster"],["Poster","from $29.99","poster"],["Canvas","from $69.99","canvas"],
-  ["Mug","from $24.99","mug"],["Tumbler","$49.99","tumbler"],["Magnet 3-Pack","$24.99","magnet"],
-  ["Coaster 4-Pack","$39.99","coaster"],["HD Digital","$4.99","digital"],["Recast Pack","$9.99","pack"]
+const PRODUCT_CATALOG = [
+  {name:"Poster",price:"from $29.99",asset:"poster",badge:"MOST POPULAR",pitch:"The easiest way to turn your Recast into wall art.",tier:"featured"},
+  {name:"Hoodie",price:"from $59.99",asset:"hoodie",badge:"FAN FAVORITE",pitch:"Wear your Recast as a premium statement piece.",tier:"featured"},
+  {name:"Framed Poster",price:"from $59.99",asset:"framed-poster",badge:"PREMIUM PICK",pitch:"Display-ready artwork with a finished, giftable feel.",tier:"featured"},
+  {name:"Canvas",price:"from $69.99",asset:"canvas",badge:"GALLERY PICK",pitch:"A bold upgrade for artwork that deserves more presence.",tier:"featured"},
+
+  {name:"T-Shirt",price:"from $34.99",asset:"tshirt",badge:"WEAR IT",pitch:"An easy everyday way to show off your Recast.",tier:"secondary"},
+  {name:"Blanket",price:"from $74.99",asset:"blanket",badge:"COZY PICK",pitch:"Big, soft, personal — especially good for pets and gifts.",tier:"secondary"},
+  {name:"Mug",price:"from $24.99",asset:"mug",badge:"GIFTABLE",pitch:"A personalized gift that gets used every day.",tier:"secondary"},
+  {name:"Tumbler",price:"$49.99",asset:"tumbler",badge:"TAKE IT WITH YOU",pitch:"Your Recast on a 20 oz everyday tumbler.",tier:"secondary"},
+  {name:"Magnet 3-Pack",price:"$24.99",asset:"magnet",badge:"ADD-ON",pitch:"Three matching magnets for a smaller, easy add-on.",tier:"secondary"},
+  {name:"Coaster 4-Pack",price:"$39.99",asset:"coaster",badge:"ADD-ON",pitch:"Four matching cork-back coasters featuring your artwork.",tier:"secondary"},
+
+  {name:"HD Digital Recast",price:"$4.99",asset:"digital",badge:"DIGITAL ONLY",pitch:"Just want the clean artwork? Keep the high-resolution file without ordering merch.",tier:"digital"},
+  {name:"Recast Pack",price:"$9.99",asset:"pack",badge:"DIGITAL PACK",pitch:"The complete digital set with high-resolution art plus useful crops and formats.",tier:"digital"}
 ];
 
 const styleGrid = document.querySelector('#style-grid');
@@ -42,20 +57,60 @@ document.querySelectorAll('.style-card').forEach(card=>{
   card.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();chooseStyle(card)}})
 });
 
-function staticProductCards(){
-  return PRODUCTS.map(([name,price,asset])=>`
-    <div class="product">
-      <div class="product-art"><img src="/assets/product-${asset}.svg" alt="${name}"></div>
-      <div class="product-body">
-        <small>RECAST MERCH</small>
-        <strong>${name}</strong>
-        <span class="price">${price}</span>
-        <button disabled>Create a Recast to shop</button>
-      </div>
-    </div>`).join('');
+function merchCard(item,{featured=false,preview=false}={}){
+  const classes=['product',featured?'featured-product':'secondary-product'].filter(Boolean).join(' ');
+  return `<div class="${classes}">
+    <div class="product-art"><img src="/assets/product-${item.asset}.svg" alt="${item.name}"></div>
+    <div class="product-body">
+      <span class="product-badge">${item.badge}</span>
+      <strong>${item.name}</strong>
+      <p class="product-pitch">${item.pitch}</p>
+      <span class="price">${item.price}</span>
+      ${preview
+        ? '<button disabled>Create a Recast to order</button>'
+        : '<a class="shop-card-cta" href="#start">Create yours <span>→</span></a>'}
+    </div>
+  </div>`;
 }
-document.querySelector('#product-grid').innerHTML = staticProductCards();
-document.querySelector('#catalog-preview').innerHTML = staticProductCards();
+
+function renderStaticMerch(){
+  const featured=PRODUCT_CATALOG.filter(x=>x.tier==='featured');
+  const secondary=PRODUCT_CATALOG.filter(x=>x.tier==='secondary');
+  const digital=PRODUCT_CATALOG.filter(x=>x.tier==='digital');
+
+  const catalog=document.querySelector('#catalog-preview');
+  if(catalog){
+    catalog.classList.add('merch-catalog-shell');
+    catalog.innerHTML=`
+      <div class="merch-featured-grid">
+        ${featured.map(x=>merchCard(x,{featured:true})).join('')}
+      </div>
+      <div class="merch-subhead">
+        <div><span>MORE WAYS TO MAKE IT YOURS</span><h3>Wear it. Gift it. Live with it.</h3></div>
+        <p>Made to order — no mass-produced inventory and no generic artwork swap.</p>
+      </div>
+      <div class="merch-secondary-grid">
+        ${secondary.map(x=>merchCard(x)).join('')}
+      </div>
+      <div class="merch-digital-last">
+        <div class="merch-digital-copy">
+          <span>LAST OPTION</span>
+          <strong>Just want the artwork?</strong>
+          <p>The physical products come first. If you only want the file, the digital choices stay here at the end.</p>
+        </div>
+        <div class="merch-digital-grid">
+          ${digital.map(x=>merchCard(x)).join('')}
+        </div>
+      </div>`;
+  }
+
+  const preview=document.querySelector('#product-grid');
+  if(preview){
+    preview.innerHTML=[...featured,...secondary]
+      .map(x=>merchCard(x,{featured:x.tier==='featured',preview:true})).join('');
+  }
+}
+renderStaticMerch();
 
 const params = new URLSearchParams(location.search);
 if (params.get('debug')==='1') document.querySelector('#debug-status')?.classList.remove('hidden');

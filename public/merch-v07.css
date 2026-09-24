@@ -1,0 +1,89 @@
+/* Recast Me v0.7 — product hierarchy and larger merch cards */
+#catalog-preview.merch-catalog-shell{display:block}
+.merch-featured-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;margin-bottom:46px}
+.merch-secondary-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.merch-subhead{display:grid;grid-template-columns:1fr .72fr;gap:30px;align-items:end;margin:18px 0 20px;padding-top:30px;border-top:1px solid rgba(255,255,255,.08)}
+.merch-subhead span{display:block;color:#9e96ff;font-size:10px;font-weight:900;letter-spacing:.18em;margin-bottom:8px}
+.merch-subhead h3{font-size:31px;letter-spacing:-.045em;margin:0}
+.merch-subhead p{color:#8f8fa1;line-height:1.55;margin:0}
+
+.product{position:relative;border:1px solid #303143;border-radius:20px;padding:0;background:linear-gradient(150deg,#11121b,#0b0c12);overflow:hidden;transition:transform .2s ease,border-color .2s ease,box-shadow .2s ease}
+.product:hover{transform:translateY(-3px);border-color:#4c4a65;box-shadow:0 26px 70px rgba(0,0,0,.26)}
+.product-art{height:166px;background:radial-gradient(circle at 50% 28%,rgba(126,97,255,.14),transparent 48%),#10111a;border-bottom:1px solid #28293a;display:grid;place-items:center;overflow:hidden}
+.product-art img{width:100%;height:100%;object-fit:cover;transition:transform .25s ease}
+.product:hover .product-art img{transform:scale(1.025)}
+.product-body{padding:17px}
+.product-badge{display:inline-flex;align-items:center;min-height:25px;padding:0 9px;border:1px solid #3d3c55;border-radius:999px;background:#11121b;color:#bcb8d7;font-size:8px;font-weight:950;letter-spacing:.14em}
+.product strong{display:block;font-size:21px;letter-spacing:-.03em;margin:10px 0 5px}
+.product-pitch{min-height:42px;color:#9292a4;font-size:12px;line-height:1.45;margin:0 0 11px}
+.product .price{display:block;color:#fff;font-size:18px;font-weight:850;letter-spacing:-.02em}
+.product button,.shop-card-cta{margin-top:13px;width:100%;min-height:44px;padding:0 13px;border-radius:12px;border:1px solid #3c3d51;background:#171823;color:#b4b4c4;font-weight:850;text-decoration:none;display:flex;align-items:center;justify-content:space-between}
+.shop-card-cta{background:#f5f4ff;color:#0b0b10;border-color:#f5f4ff}
+.shop-card-cta span{font-size:18px}
+.product button:not(:disabled){background:#fff;color:#09090e;border-color:#fff;cursor:pointer}
+
+.featured-product{border-color:#484064;background:radial-gradient(circle at 82% 0,rgba(255,79,216,.10),transparent 35%),radial-gradient(circle at 15% 100%,rgba(36,220,255,.10),transparent 34%),linear-gradient(145deg,#151622,#0c0d14)}
+.featured-product .product-art{height:255px}
+.featured-product .product-body{padding:21px}
+.featured-product .product-badge{border-color:#695a92;background:rgba(89,61,139,.18);color:#d8cfff}
+.featured-product strong{font-size:28px}
+.featured-product .product-pitch{font-size:13px;min-height:38px;max-width:460px}
+.featured-product .price{font-size:23px}
+.featured-product .shop-card-cta,.featured-product button{min-height:50px;font-size:14px}
+
+.merch-digital-last{margin-top:44px;padding:24px;border:1px solid #362d4a;border-radius:24px;background:linear-gradient(135deg,rgba(31,21,48,.72),rgba(13,13,20,.92));display:grid;grid-template-columns:.72fr 1.28fr;gap:22px;align-items:stretch}
+.merch-digital-copy{display:flex;flex-direction:column;justify-content:center;padding:10px}
+.merch-digital-copy>span{color:#9188ad;font-size:9px;font-weight:950;letter-spacing:.2em;margin-bottom:8px}
+.merch-digital-copy>strong{font-size:27px;letter-spacing:-.04em}
+.merch-digital-copy p{color:#858599;line-height:1.55;font-size:13px}
+.merch-digital-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.merch-digital-grid .product{border-color:#43345b;background:#111019}
+.merch-digital-grid .product-art{height:125px}
+.merch-digital-grid .product-pitch{min-height:36px}
+
+/* Product choices shown after a Recast */
+.preview-info .product-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}
+.preview-info .featured-product{grid-column:span 2;display:grid;grid-template-columns:42% 58%;min-height:225px}
+.preview-info .featured-product .product-art{height:100%;min-height:225px;border-bottom:0;border-right:1px solid #2f3042}
+.preview-info .featured-product .product-body{display:flex;flex-direction:column;justify-content:center}
+.preview-info .featured-product strong{font-size:24px}
+.preview-info .featured-product .price{font-size:21px}
+.preview-info .secondary-product .product-art{height:130px}
+.preview-info .recast-variant{margin-top:10px}
+
+/* The existing digital-downsell remains physically last under the paid merch choices. */
+.preview-info .digital-downsell{margin-top:22px;border-color:#3e3451;opacity:.93}
+
+@media(max-width:980px){
+  .merch-secondary-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .merch-subhead{grid-template-columns:1fr}
+}
+@media(max-width:580px){
+  .merch-featured-grid{grid-template-columns:1fr;gap:15px;margin-bottom:38px}
+  .featured-product .product-art{height:225px}
+  .featured-product strong{font-size:26px}
+  .merch-secondary-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}
+  .merch-secondary-grid .product-art{height:130px}
+  .merch-secondary-grid .product-body{padding:14px}
+  .merch-secondary-grid .product strong{font-size:17px}
+  .merch-secondary-grid .product-pitch{font-size:11px;min-height:48px}
+  .merch-secondary-grid .product .price{font-size:16px}
+  .merch-digital-last{grid-template-columns:1fr;padding:18px;margin-top:34px}
+  .merch-digital-grid{grid-template-columns:1fr 1fr;gap:10px}
+  .merch-digital-grid .product-art{height:105px}
+  .merch-digital-grid .product-body{padding:13px}
+  .merch-digital-grid .product strong{font-size:16px}
+  .merch-digital-grid .product-pitch{font-size:10px}
+  .merch-subhead h3{font-size:27px}
+
+  .preview-info .product-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}
+  .preview-info .featured-product{grid-column:span 2;grid-template-columns:41% 59%;min-height:205px}
+  .preview-info .featured-product .product-art{min-height:205px}
+  .preview-info .featured-product .product-body{padding:16px}
+  .preview-info .featured-product strong{font-size:21px}
+  .preview-info .featured-product .product-pitch{font-size:11px}
+  .preview-info .secondary-product .product-art{height:112px}
+  .preview-info .secondary-product .product-body{padding:12px}
+  .preview-info .secondary-product strong{font-size:16px}
+  .preview-info .secondary-product .product-pitch{font-size:10px;min-height:44px}
+}
