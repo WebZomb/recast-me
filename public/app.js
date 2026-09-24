@@ -254,6 +254,70 @@ function showPreviewError(message,{diagnosticId='',retryable=true}={}){
   box?.classList.remove('hidden');
 }
 
+
+let hasSuccessfulPreview=false;
+let generationInFlight=false;
+let currentClientAttemptId="";
+let lastSuccessfulPreviewMeta=null;
+
+function makeClientAttemptId(){
+  return `WEB-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).slice(2,7).toUpperCase()}`;
+}
+async function logClientGenerationIssue(kind,message,extra={}){
+  try{
+    const response=await fetch('/api/client-diagnostic',{
+      method:'POST',
+      headers:{'content-type':'application/json'},
+      body:JSON.stringify({
+        kind,
+        message:String(message||'').slice(0,500),
+        clientAttemptId:currentClientAttemptId||null,
+        page:location.pathname,
+        userAgent:navigator.userAgent.slice(0,300),
+        ...extra
+      })
+    });
+    return await response.json().catch(()=>({}));
+  }catch{return{}}
+}
+function forceVisibleFailure(message,diagnosticId=''){
+  const section=document.querySelector('#preview-section');
+  const frame=document.querySelector('.preview-frame');
+  section?.classList.remove('hidden');
+  try{
+    showPreviewError(message,{diagnosticId,retryable:true});
+  }catch(error){
+    // Last-resort DOM fallback. Even if styling/JS around the normal card breaks,
+    // the customer will still see a usable failure state instead of a blank section.
+    if(frame){
+      let fallback=document.querySelector('#preview-emergency-error');
+      if(!fallback){
+        fallback=document.createElement('div');
+        fallback.id='preview-emergency-error';
+        fallback.className='preview-emergency-error';
+        frame.appendChild(fallback);
+      }
+      fallback.innerHTML=`<strong>We couldn’t finish this preview.</strong><p>${String(message||'Please try again.').replaceAll('<','&lt;').replaceAll('>','&gt;')}</p><button type="button" id="preview-emergency-retry">Try again</button>`;
+      fallback.querySelector('#preview-emergency-retry')?.addEventListener('click',()=>form.requestSubmit(),{once:true});
+    }else{
+      alert(message||'We could not finish this preview. Please try again.');
+    }
+  }
+}
+function restoreLastPreview(){
+  clearPreviewError();
+  document.querySelector('#preview-emergency-error')?.remove();
+  if(!hasSuccessfulPreview)return;
+  const section=document.querySelector('#preview-section');
+  const previewInfo=document.querySelector('.preview-info');
+  section?.classList.remove('hidden');
+  previewInfo?.classList.remove('hidden');
+  if(lastSuccessfulPreviewMeta){
+    document.querySelector('#preview-title').textContent=lastSuccessfulPreviewMeta.title||'Your last Recast is still here.';
+    document.querySelector('#request-id').textContent=lastSuccessfulPreviewMeta.requestText||'';
+  }
+}
+
 const form=document.querySelector('#recast-form');
 form.addEventListener('submit',async e=>{
   e.preventDefault();
@@ -262,11 +326,19 @@ form.addEventListener('submit',async e=>{
   if(!files.length){showRecastError('Add at least one photo first.');document.querySelector('#start').scrollIntoView({behavior:'smooth'});return;}
   const button=document.querySelector('#generate-button'),loading=document.querySelector('#loading'),section=document.querySelector('#preview-section');
   const previewInfo=document.querySelector('.preview-info');
+  currentClientAttemptId=makeClientAttemptId();
+  generationInFlight=true;
   clearPreviewError();
-  clearPreviewCanvas();
-  if(previewInfo)previewInfo.classList.add('hidden');
-  document.querySelector('#preview-title').textContent='Creating your Recast…';
-  document.querySelector('#request-id').textContent='';
+  document.querySelector('#preview-emergency-error')?.remove();
+
+  // Critical v1.0.2 behavior:
+  // never erase a successful Recast until the replacement has also succeeded.
+  if(!hasSuccessfulPreview){
+    clearPreviewCanvas();
+    if(previewInfo)previewInfo.classList.add('hidden');
+    document.querySelector('#request-id').textContent='';
+  }
+  document.querySelector('#preview-title').textContent=hasSuccessfulPreview?'Creating another version…':'Creating your Recast…';
   button.disabled=true;button.textContent='Preparing photos…';
   section.classList.remove('hidden');section.scrollIntoView({behavior:'smooth'});loading.classList.remove('hidden');
 
@@ -278,6 +350,7 @@ form.addEventListener('submit',async e=>{
     fd.append('notes',document.querySelector('#notes').value);
     fd.append('source',params.get('source')||'site');
     fd.append('sourceTweet',params.get('tweet')||'');
+    fd.append('clientAttemptId',currentClientAttemptId);
     if(turnstileToken)fd.append('turnstileToken',turnstileToken);
 
     for(let i=0;i<files.length;i++){
@@ -301,10 +374,15 @@ form.addEventListener('submit',async e=>{
 
     try{await renderWatermark(data.image)}catch(error){throw Object.assign(new Error('preview display failed'),{publicMessage:'Your image was created, but the preview could not be displayed correctly. Please try once more.'})}
 
-    document.querySelector('#preview-title').textContent=`${data.style} preview ready.`;
-    document.querySelector('#request-id').textContent=`Artwork ID: ${data.requestId}${data.persisted?' · saved privately':' · preview generated; storage retry needed'}`;
+    const successTitle=`${data.style} preview ready.`;
+    const successRequestText=`Artwork ID: ${data.requestId}${data.persisted?' · saved privately':' · preview generated; storage retry needed'}`;
+    document.querySelector('#preview-title').textContent=successTitle;
+    document.querySelector('#request-id').textContent=successRequestText;
     if(previewInfo)previewInfo.classList.remove('hidden');
     clearPreviewError();
+    document.querySelector('#preview-emergency-error')?.remove();
+    hasSuccessfulPreview=true;
+    lastSuccessfulPreviewMeta={title:successTitle,requestText:successRequestText,requestId:data.requestId,accessToken:data.accessToken};
     localStorage.setItem('recast_last_request',JSON.stringify({
       requestId:data.requestId,accessToken:data.accessToken,style:data.style,model:data.modelUsed
     }));
@@ -316,14 +394,34 @@ form.addEventListener('submit',async e=>{
   }catch(err){
     stopGenerationUI(false);
     const publicMessage=err.publicMessage||friendlyGenerationError(null,err);
-    document.querySelector('#preview-title').textContent='We couldn’t finish this preview.';
-    document.querySelector('#request-id').textContent='';
-    showPreviewError(publicMessage,{diagnosticId:err.diagnosticId||'',retryable:err.retryable!==false});
+    let diagnosticId=err.diagnosticId||'';
+    const logged=await logClientGenerationIssue('generation-catch',publicMessage,{
+      serverDiagnosticId:diagnosticId||null,
+      hadPreviousPreview:hasSuccessfulPreview
+    });
+    if(!diagnosticId)diagnosticId=logged?.diagnosticId||'';
+
+    document.querySelector('#preview-title').textContent=hasSuccessfulPreview
+      ? 'That new version didn’t finish.'
+      : 'We couldn’t finish this preview.';
+    if(!hasSuccessfulPreview)document.querySelector('#request-id').textContent='';
+
+    try{
+      showPreviewError(publicMessage,{diagnosticId,retryable:err.retryable!==false});
+      const keep=document.querySelector('#keep-last-preview');
+      if(keep)keep.classList.toggle('hidden',!hasSuccessfulPreview);
+    }catch{
+      forceVisibleFailure(publicMessage,diagnosticId);
+    }
     showRecastError(publicMessage);
-    if(previewInfo)previewInfo.classList.add('hidden');
+
+    // If this was a second attempt, the old successful canvas and product choices remain
+    // underneath the error card and can be restored with one tap.
+    if(previewInfo)previewInfo.classList.toggle('hidden',!hasSuccessfulPreview);
     section.classList.remove('hidden');
     section.scrollIntoView({behavior:'smooth'});
   }finally{
+    generationInFlight=false;
     loading.classList.add('hidden');
     button.disabled=false;
     button.textContent='Create my preview';
@@ -335,8 +433,30 @@ document.querySelector('#retry-generation')?.addEventListener('click',()=>{
   clearPreviewError();
   form.requestSubmit();
 });
+document.querySelector('#keep-last-preview')?.addEventListener('click',()=>{
+  restoreLastPreview();
+});
 document.querySelector('#adjust-generation')?.addEventListener('click',()=>{
   document.querySelector('#start')?.scrollIntoView({behavior:'smooth'});
+});
+
+
+window.addEventListener('error',async event=>{
+  if(!generationInFlight)return;
+  const message='The page hit an unexpected display error while creating your preview.';
+  const logged=await logClientGenerationIssue('window-error',event?.message||message,{source:event?.filename||null,line:event?.lineno||null});
+  loading?.classList?.add?.('hidden');
+  generationInFlight=false;
+  forceVisibleFailure(message,logged?.diagnosticId||'');
+});
+window.addEventListener('unhandledrejection',async event=>{
+  if(!generationInFlight)return;
+  const reason=event?.reason?.message||String(event?.reason||'Unhandled generation promise');
+  const message='The preview request was interrupted before it could finish displaying.';
+  const logged=await logClientGenerationIssue('unhandled-rejection',reason);
+  document.querySelector('#loading')?.classList.add('hidden');
+  generationInFlight=false;
+  forceVisibleFailure(message,logged?.diagnosticId||'');
 });
 
 async function status(){
