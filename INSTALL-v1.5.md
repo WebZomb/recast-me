@@ -24,12 +24,12 @@ The X image-reply workflow is built, but installation does not connect an X acco
 Required account setup:
 
 - A funded X API app with OAuth 2.0 user authorization for the Recast account. Scopes: `tweet.read`, `users.read`, `tweet.write`, `media.write`, `offline.access`.
-- Cloudflare secrets `X_USER_ACCESS_TOKEN`, `X_REFRESH_TOKEN`, and `X_CLIENT_SECRET` for a confidential OAuth client. Add `X_CLIENT_ID`, numeric `X_USER_ID`, and `X_USERNAME=recastaime` as Worker variables. These must identify the same authorized account. Do not put secrets in GitHub.
+- Cloudflare secrets `X_USER_ACCESS_TOKEN`, `X_REFRESH_TOKEN`, and `X_CLIENT_SECRET` for a confidential OAuth client. Add `X_CLIENT_ID`, numeric `X_USER_ID`, and `X_USERNAME=recastmeai` as Worker variables. These must identify the same authorized account. Do not put secrets in GitHub.
 - An Images binding named `IMAGES`, for reference resizing and the public watermark. Add `"images": {"binding":"IMAGES"}` to the top level of `wrangler.jsonc` once Images billing is ready, so future deploys retain the binding.
 - Workers AI paid capacity, private `ARTWORK` R2 and `ASSETS` bindings, plus existing Shopify catalog setup. Products must be ACTIVE for the public purchase page to offer them.
 - X's prior written approval for an AI reply bot. Once received and the connection is ready, set `X_BOT_APPROVED=true` and `X_BOT_ENABLED=true` in deployment configuration. Both remain false in this package.
 
-Test from another X account with your own attached person-and-dog photo and an explicit tag: `@recastaime make me and my dog ready for Halloween`. The worker saves a job, renders, posts a watermarked picture, and links to `/recast.html?share=...`. The reply offers the clean high-resolution picture, poster, and mug. The public link cannot open the original uploads, expose the private clean-art token, or delete the artwork.
+Test from another X account with your own attached person-and-dog photo and an explicit tag: `@recastmeai make me and my dog ready for Halloween`. The worker saves a job, renders, posts a watermarked picture, and links to `/recast.html?share=...`. The reply offers the clean high-resolution picture, poster, and mug. The public link cannot open the original uploads, expose the private clean-art token, or delete the artwork.
 
 Use Control Center → X Requests to inspect `queued`, `generating`, `awaiting_capacity`, `replied`, `needs_review`, or `delivery_unknown`. If delivery is unknown, check the X thread before manually intervening. The bot intentionally does not resend an uncertain POST. No-photo requests receive an upload link; private website uploads are not automatically made public on X.
 
