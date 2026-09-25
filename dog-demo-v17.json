@@ -1,0 +1,39 @@
+{
+  "generator": "Built-in image generation",
+  "source": "Natural-looking tricolor beagle seated in a backyard, no costume, same reference supplied to all eight edits.",
+  "commonInstructions": "Preserve exact beagle facial blaze, ears, eyes, muzzle proportions and markings. Transform the outfit and environment, portrait 4:5, no products, logos or text.",
+  "styles": [
+    [
+      "game",
+      "bold cinematic illustrated video-game adventurer wearing a fitted blue explorer vest in a colorful fantastical city"
+    ],
+    [
+      "halloween",
+      "playful wizard costume, midnight purple cape and small crooked hat, moonlit pumpkin village"
+    ],
+    [
+      "retro",
+      "1980s retro adventurer with colorful bomber vest, sunset palm boulevard and analog film colors"
+    ],
+    [
+      "fantasy",
+      "epic ornate emerald and silver pet barding, enchanted forest and ancient castle"
+    ],
+    [
+      "royal",
+      "luxurious burgundy royal cape and gold collar, small crown, majestic palace, rich warm museum portrait lighting"
+    ],
+    [
+      "future",
+      "sleek cyan glowing fitted pet harness in a rainy neon future city"
+    ],
+    [
+      "comic",
+      "original comic superhero dog with red cape and blue fitted costume, dramatic ink outlines halftone and city skyline"
+    ],
+    [
+      "space",
+      "fitted white astronaut suit with face unobstructed, lavender moon landscape and planets"
+    ]
+  ]
+}

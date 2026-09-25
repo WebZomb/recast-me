@@ -594,3 +594,12 @@ footer{background:#050611;max-width:none!important;padding-left:max(22px,calc((1
 @keyframes recast-pulse{50%{opacity:.25}}
 @media(prefers-reduced-motion:reduce){.loading .generation-track span{animation:none}}
 @media(max-width:600px){.creative-step{padding:18px 14px}.creative-step legend{font-size:20px}.hero h1{font-size:clamp(42px,10vw,64px)}}
+
+/* v1.7: readable before/after and honest product examples */
+section[id]{scroll-margin-top:110px}
+.hero-demo .demo-card img{aspect-ratio:4/5;object-fit:cover}
+.demo-card:first-child img{filter:none}
+.product-art{position:relative}
+.example-design-label{position:absolute;left:10px;bottom:10px;padding:5px 8px;border-radius:7px;background:rgba(8,9,20,.82);color:#fff;font-size:10px;line-height:1.3}
+@media(max-width:600px){section[id]{scroll-margin-top:95px}.demo-meta{padding:10px 3px}.demo-meta b{font-size:10px}}
+.hero-demo-note{grid-column:1/-1;color:#bbb6cd;font-size:11px;line-height:1.5;text-align:center;margin:12px 0 0}

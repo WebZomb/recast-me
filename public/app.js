@@ -1,12 +1,12 @@
 const STYLES = [
-  ["game","Game World","Cinematic city energy, dramatic light, bold illustrated realism.","/assets/style-game-v08.webp"],
-  ["halloween","Halloween","Stylish costumes, moonlight, fog, pumpkins — playful, not grim.","/assets/style-halloween-v08.webp"],
-  ["retro","Retro Time Machine","A vivid trip through analog color, film grain and 1980s atmosphere.","/assets/style-retro-v08.webp"],
-  ["fantasy","Fantasy Warrior","Epic armor, ancient landscapes and cinematic fantasy light.","/assets/style-fantasy-v08.webp"],
-  ["royal","Royal","Regal portraiture, palace textures, rich fabric and museum drama.","/assets/style-royal-v08.webp"],
-  ["future","Future City","Neon reflections, rain haze and an original high-tech world.","/assets/style-future-v08.webp"],
-  ["comic","Comic Hero","Original nonviolent comic-book energy, ink, halftone and motion.","/assets/style-comic-v08.webp"],
-  ["space","Space Explorer","Original sci-fi portraiture, planets, spacecraft and epic scale.","/assets/style-space-v08.webp"]
+  ["game","Game World","Cinematic city energy, dramatic light, bold illustrated realism.","/assets/dog-game-v17.webp"],
+  ["halloween","Halloween","Stylish costumes, moonlight, fog, pumpkins — playful, not grim.","/assets/dog-halloween-v17.webp"],
+  ["retro","Retro Time Machine","A vivid trip through analog color, film grain and 1980s atmosphere.","/assets/dog-retro-v17.webp"],
+  ["fantasy","Fantasy Warrior","Epic armor, ancient landscapes and cinematic fantasy light.","/assets/dog-fantasy-v17.webp"],
+  ["royal","Royal","Regal portraiture, palace textures, rich fabric and museum drama.","/assets/dog-royal-v17-fixed.webp"],
+  ["future","Future City","Neon reflections, rain haze and an original high-tech world.","/assets/dog-future-v17.webp"],
+  ["comic","Comic Hero","Original nonviolent comic-book energy, ink, halftone and motion.","/assets/dog-comic-v17.webp"],
+  ["space","Space Explorer","Original sci-fi portraiture, planets, spacecraft and epic scale.","/assets/dog-space-v17.webp"]
 ];
 
 const PRODUCT_CATALOG = [
@@ -31,7 +31,7 @@ const styleSelect = document.querySelector('#style');
 
 styleGrid.innerHTML = STYLES.map(([id,name,copy,image],i)=>`
   <article class="style-card" data-style="${id}" tabindex="0" role="button" aria-label="Choose ${name}">
-    <div class="style-art"><img src="${image}" alt="${name} visual direction"></div>
+    <div class="style-art"><img src="${image}" alt="The same beagle transformed into ${name}" loading="lazy"></div>
     <span class="style-pick">CHOOSE</span>
     <div class="style-copy">
       <small>STYLE ${String(i+1).padStart(2,'0')}</small>

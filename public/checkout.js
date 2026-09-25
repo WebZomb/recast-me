@@ -57,6 +57,8 @@ async function generateRealMockup({req,sku,card,button}){
       if(response.ok&&data.status==="completed"&&data.images?.length){
         const img=card.querySelector(".product-art img");
         img.src=data.images[0].url;img.alt="Your Recast on the actual product mockup";
+        const caption=card.querySelector('.example-design-label');
+        if(caption)caption.textContent='Your artwork · product preview';
         button.textContent="Real product preview ready ✓";
         card.classList.add("real-mockup-ready");
         return;
@@ -113,7 +115,7 @@ async function loadCheckout(){
     const realPreview=digital?"":`<button class="product-preview-action" data-product="${index}" type="button">Preview my Recast on the real product</button><p class="product-mockup-note">Uses the mapped Printful product and your exact Artwork ID.</p>`;
 
     return `<div class="${classes}" data-product-index="${index}" data-product-title="${product.title}">
-      <div class="product-art"><img src="${PRODUCT_ART[product.title]}" alt="${product.title}"></div>
+      <div class="product-art"><img src="${PRODUCT_ART[product.title]}" alt="Example design on ${product.title}" loading="lazy"><span class="example-design-label">Example design</span></div>
       <div class="product-body">
         <span class="product-badge">${meta.badge}</span>
         <strong>${product.title.replace(/^Custom Recast /,"")}</strong>
@@ -143,6 +145,8 @@ async function loadCheckout(){
       const title=card?.dataset.productTitle;const img=card?.querySelector(".product-art img");
       if(img&&title)img.src=PRODUCT_ART[title];
       card?.classList.remove("real-mockup-ready");
+      const caption=card?.querySelector('.example-design-label');
+      if(caption)caption.textContent='Example design';
       const preview=card?.querySelector(".product-preview-action");if(preview){preview.disabled=false;preview.textContent="Preview my Recast on the real product"}
     });
   });
