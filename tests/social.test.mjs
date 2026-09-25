@@ -11,11 +11,11 @@ class Bucket {
   async delete(key){this.items.delete(key);}
   async list({prefix,limit=100}){return {objects:[...this.items.keys()].filter(k=>k.startsWith(prefix)).sort().slice(0,limit).map(key=>({key}))};}
 }
-const tweet={id:'1234',author_id:'5678',text:'@recastaime make me and my dog ready for Halloween',attachments:{media_keys:['photo1']}};
+const tweet={id:'1234',author_id:'5678',text:'@recastmeai make me and my dog ready for Halloween',attachments:{media_keys:['photo1']}};
 const media={media_key:'photo1',type:'photo',url:'https://pbs.twimg.com/media/photo.jpg'};
 function setup(t,{quota=false,ambiguous=false}={}){
   const calls={ai:0,uploads:0,replies:[],mentions:[]};
-  const env={PUBLIC_APP_URL:'https://recast.test',X_USER_ID:'999',X_USERNAME:'recastaime',X_USER_ACCESS_TOKEN:'test',X_BOT_ENABLED:'true',X_BOT_APPROVED:'true',ARTWORK:new Bucket(),TURNSTILE_SECRET_KEY:'enabled',AI:{run:async()=>{calls.ai++;if(quota)throw new Error('3036 daily free allocation');return {image:jpeg.toString('base64')};}},ASSETS:{fetch:async()=>new Response('watermark')},IMAGES:{input:()=>{let drawn=false;const chain={transform:()=>chain,draw:()=>{drawn=true;return chain;},output:async()=>({response:()=>new Response(drawn?'watermarked-public-preview':jpeg)})};return chain;}}};
+  const env={PUBLIC_APP_URL:'https://recast.test',X_USER_ID:'999',X_USERNAME:'recastmeai',X_USER_ACCESS_TOKEN:'test',X_BOT_ENABLED:'true',X_BOT_APPROVED:'true',ARTWORK:new Bucket(),TURNSTILE_SECRET_KEY:'enabled',AI:{run:async()=>{calls.ai++;if(quota)throw new Error('3036 daily free allocation');return {image:jpeg.toString('base64')};}},ASSETS:{fetch:async()=>new Response('watermark')},IMAGES:{input:()=>{let drawn=false;const chain={transform:()=>chain,draw:()=>{drawn=true;return chain;},output:async()=>({response:()=>new Response(drawn?'watermarked-public-preview':jpeg)})};return chain;}}};
   t.mock.method(globalThis,'fetch',async(raw,options={})=>{
     const url=new URL(raw instanceof Request?raw.url:String(raw));
     if(url.pathname.endsWith('/mentions')){calls.mentions.push(url);return Response.json({data:[tweet],includes:{media:[media]}});}
@@ -35,7 +35,7 @@ function setup(t,{quota=false,ambiguous=false}={}){
 }
 
 test('Halloween request includes both subjects and only uses photos attached to the requesting post',()=>{
-  const d=directionFromMention(tweet.text,'recastaime');assert.equal(d.style,'halloween');assert.equal(d.subject,'person and pet');
+  const d=directionFromMention(tweet.text,'recastmeai');assert.equal(d.style,'halloween');assert.equal(d.subject,'person and pet');
   assert.deepEqual(attachedPhotos(tweet,[media,{media_key:'other',type:'photo',url:'https://pbs.twimg.com/media/stranger.jpg'}]),[media.url]);
   assert.deepEqual(attachedPhotos(tweet,[{...media,url:'https://internal.example/media/photo.jpg'}]),[]);
 });
@@ -83,13 +83,13 @@ test('overlapping cron runs respect the R2 lease',async t=>{
 
 test('missing photo requests get a private upload link and never fabricate a likeness',async t=>{
   const {env,calls}=setup(t);
-  const job={tweetId:'1234',authorId:'5678',direction:directionFromMention(tweet.text,'recastaime'),requestText:'make me and my dog ready for Halloween',photos:[],replyStatus:'queued',createdAt:new Date().toISOString()};
+  const job={tweetId:'1234',authorId:'5678',direction:directionFromMention(tweet.text,'recastmeai'),requestText:'make me and my dog ready for Halloween',photos:[],replyStatus:'queued',createdAt:new Date().toISOString()};
   await env.ARTWORK.put('social/x/1234.json',JSON.stringify(job));await env.ARTWORK.put('social/pending/1234.json',JSON.stringify({tweetId:'1234'}));
   await runSocialPipeline(env);assert.equal(calls.ai,0);assert.equal(calls.uploads,0);assert.match(calls.replies[0].text,/upload it privately/);
 });
 
 test('mention pagination retains the prior cursor until every page is ingested',async t=>{
-  const env={ARTWORK:new Bucket(),X_USER_ID:'999',X_USERNAME:'recastaime',X_USER_ACCESS_TOKEN:'test'};
+  const env={ARTWORK:new Bucket(),X_USER_ID:'999',X_USERNAME:'recastmeai',X_USER_ACCESS_TOKEN:'test'};
   await env.ARTWORK.put('system/x-state.json',JSON.stringify({sinceId:'100'}));let count=0;
   t.mock.method(globalThis,'fetch',async raw=>{
     const u=new URL(String(raw));assert.equal(u.searchParams.get('since_id'),'100');count++;
@@ -102,7 +102,7 @@ test('mention pagination retains the prior cursor until every page is ingested',
 });
 
 test('OAuth refresh persists rotated credentials privately and uses the refreshed access token',async t=>{
-  const env={ARTWORK:new Bucket(),X_USER_ID:'999',X_USERNAME:'recastaime',X_REFRESH_TOKEN:'old-refresh',X_CLIENT_ID:'client'};let refreshes=0;
+  const env={ARTWORK:new Bucket(),X_USER_ID:'999',X_USERNAME:'recastmeai',X_REFRESH_TOKEN:'old-refresh',X_CLIENT_ID:'client'};let refreshes=0;
   t.mock.method(globalThis,'fetch',async(raw,options)=>{
     if(String(raw).endsWith('/oauth2/token')){refreshes++;assert.equal(options.body.get('refresh_token'),'old-refresh');return Response.json({access_token:'new-access',refresh_token:'new-refresh',expires_in:7200});}
     assert.equal(options.headers.Authorization,'Bearer new-access');return Response.json({data:[]});
