@@ -527,7 +527,7 @@ footer{background:#050611;max-width:none!important;padding-left:max(22px,calc((1
     linear-gradient(180deg,#070812,#080917 58%,#070811);
 }
 .idea-heading{margin-bottom:24px}
-.idea-layout{display:grid;grid-template-columns:1.1fr .9fr;gap:18px;align-items:stretch}
+.idea-layout{display:grid;grid-template-columns:1fr;gap:18px;align-items:stretch}
 .idea-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
 .idea-card{
   appearance:none;text-align:left;color:#fff;border:1px solid rgba(139,124,220,.25);

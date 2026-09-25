@@ -149,11 +149,6 @@ document.querySelectorAll('[data-idea-subject]').forEach(card=>{
     document.querySelector('#start')?.scrollIntoView({behavior:'smooth',block:'start'});
   });
 });
-document.querySelector('[data-desk-frame-start]')?.addEventListener('click',()=>{
-  const note=document.querySelector('#notes');
-  if(note&&!note.value)note.value='Create a polished portrait that will look especially good in a small 8×10 black frame.';
-  document.querySelector('#start')?.scrollIntoView({behavior:'smooth',block:'start'});
-});
 styleSelect.addEventListener('change',()=>{
   updateWorldFields();
   const custom=document.querySelector('#custom-world');
