@@ -1,12 +1,12 @@
 const STYLES = [
-  ["game","Game World","Cinematic city energy, dramatic light, bold illustrated realism.","/assets/dog-game-v17.webp"],
-  ["halloween","Halloween","Stylish costumes, moonlight, fog, pumpkins — playful, not grim.","/assets/dog-halloween-v17.webp"],
-  ["retro","Retro Time Machine","A vivid trip through analog color, film grain and 1980s atmosphere.","/assets/dog-retro-v17.webp"],
-  ["fantasy","Fantasy Warrior","Epic armor, ancient landscapes and cinematic fantasy light.","/assets/dog-fantasy-v17.webp"],
-  ["royal","Royal","Regal portraiture, palace textures, rich fabric and museum drama.","/assets/dog-royal-v17-fixed.webp"],
-  ["future","Future City","Neon reflections, rain haze and an original high-tech world.","/assets/dog-future-v17.webp"],
-  ["comic","Comic Hero","Original nonviolent comic-book energy, ink, halftone and motion.","/assets/dog-comic-v17.webp"],
-  ["space","Space Explorer","Original sci-fi portraiture, planets, spacecraft and epic scale.","/assets/dog-space-v17.webp"]
+  ["game","Game World","Cinematic city energy, dramatic light, bold illustrated realism.","/assets/world-game-card-v181.webp","Jack Russell in an adventure vest"],
+  ["halloween","Halloween","Stylish costumes, moonlight, fog, pumpkins — playful, not grim.","/assets/world-halloween-v18.webp","Jack Russell in a Halloween cape"],
+  ["retro","Retro Time Machine","A vivid trip through analog color, film grain and 1980s atmosphere.","/assets/world-retro-v18.webp","Couple in a retro sunset"],
+  ["fantasy","Fantasy Warrior","Epic armor, ancient landscapes and cinematic fantasy light.","/assets/world-fantasy-v18.webp","Woman and terrier on a fantasy adventure"],
+  ["royal","Royal","Regal portraiture, palace textures, rich fabric and museum drama.","/assets/world-royal-v18.webp","Family in a royal portrait"],
+  ["future","Future City","Neon reflections, rain haze and an original high-tech world.","/assets/world-future-v18.webp","Sports car in a future city"],
+  ["comic","Comic Hero","Original nonviolent comic-book energy, ink, halftone and motion.","/assets/world-comic-v18.webp","Woman as an original comic hero"],
+  ["space","Space Explorer","Original sci-fi portraiture, planets, spacecraft and epic scale.","/assets/world-space-v18.webp","Couple and dog exploring space"]
 ];
 
 const PRODUCT_CATALOG = [
@@ -29,9 +29,9 @@ const PRODUCT_CATALOG = [
 const styleGrid = document.querySelector('#style-grid');
 const styleSelect = document.querySelector('#style');
 
-styleGrid.innerHTML = STYLES.map(([id,name,copy,image],i)=>`
+styleGrid.innerHTML = STYLES.map(([id,name,copy,image,subject],i)=>`
   <article class="style-card" data-style="${id}" tabindex="0" role="button" aria-label="Choose ${name}">
-    <div class="style-art"><img src="${image}" alt="The same beagle transformed into ${name}" loading="lazy"></div>
+    <div class="style-art"><img src="${image}" alt="${subject}" loading="lazy"></div>
     <span class="style-pick">CHOOSE</span>
     <div class="style-copy">
       <small>STYLE ${String(i+1).padStart(2,'0')}</small>
