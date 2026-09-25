@@ -134,23 +134,10 @@ photos.addEventListener('change',()=>{
   document.querySelector('#file-summary').textContent=selected.length?`${selected.length} photo${selected.length===1?'':'s'} selected`:'No photos selected';
 });
 
-function updateSubjectQuickPicks(){
-  const value=document.querySelector('#subject')?.value;
-  document.querySelectorAll('[data-subject-pick]').forEach(btn=>btn.classList.toggle('selected',btn.dataset.subjectPick===value));
-}
-document.querySelector('#subject')?.addEventListener('change',updateSubjectQuickPicks);
-document.querySelectorAll('[data-subject-pick]').forEach(button=>{
-  button.addEventListener('click',()=>{
-    const select=document.querySelector('#subject');
-    if(select)select.value=button.dataset.subjectPick;
-    updateSubjectQuickPicks();
-  });
-});
 document.querySelectorAll('[data-idea-subject]').forEach(card=>{
   card.addEventListener('click',()=>{
     const subject=document.querySelector('#subject');
     if(subject)subject.value=card.dataset.ideaSubject||'person';
-    updateSubjectQuickPicks();
     const note=document.querySelector('#notes');
     if(note)note.value=card.dataset.ideaNote||'';
     document.querySelector('#start')?.scrollIntoView({behavior:'smooth',block:'start'});
@@ -161,21 +148,11 @@ document.querySelector('[data-desk-frame-start]')?.addEventListener('click',()=>
   if(note&&!note.value)note.value='Create a polished portrait that will look especially good in a small 8×10 black frame.';
   document.querySelector('#start')?.scrollIntoView({behavior:'smooth',block:'start'});
 });
-document.querySelector('#pet-only-quickstart')?.addEventListener('click',()=>{
-  const subject=document.querySelector('#subject');
-  if(subject)subject.value='pet';
-  updateSubjectQuickPicks();
-  if(!document.querySelector('#notes').value){
-    document.querySelector('#notes').value='Turn my pet into a character in this world with a visible, original costume or gear, a new pose, and dramatic lighting. Keep the exact face, coat markings, eye color, and proportions recognizable.';
-  }
-  document.querySelector('#start')?.scrollIntoView({behavior:'smooth',block:'start'});
-});
 styleSelect.addEventListener('change',()=>{
   updateWorldFields();
   const custom=document.querySelector('#custom-world');
   if(styleSelect.value==='custom'&&custom&&!custom.value)custom.focus({preventScroll:true});
 });
-updateSubjectQuickPicks();
 
 
 async function resizeFile(file,max=500){
@@ -458,7 +435,6 @@ function setBranchReference(version){
   document.querySelector('#notes').value=branchReference.notes;
   const radio=document.querySelector(`input[name="qualityMode"][value="${branchReference.qualityMode}"]`);
   if(radio){radio.checked=true;updateQualityUI()}
-  updateSubjectQuickPicks();
   const note=document.querySelector('#branch-note');
   if(note){
     note.innerHTML=`<strong>Refining ${branchReference.styleName}</strong><span>We’ll use this successful Recast as a visual reference. Keep or re-add the original photo for the strongest likeness.</span><button type="button" id="clear-branch-reference">Clear</button>`;

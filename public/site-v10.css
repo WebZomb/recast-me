@@ -462,31 +462,6 @@ footer{background:#050611;max-width:none!important;padding-left:max(22px,calc((1
 
 
 /* v1.2 — pets, custom worlds, and recent versions */
-.pet-spotlight{
-  display:grid;grid-template-columns:1fr auto;gap:18px;align-items:center;
-  margin:0 0 16px;padding:18px;border:1px solid rgba(77,211,255,.28);border-radius:20px;
-  background:
-    radial-gradient(circle at 90% 20%,rgba(255,77,207,.12),transparent 30%),
-    radial-gradient(circle at 10% 80%,rgba(39,212,255,.11),transparent 35%),
-    linear-gradient(145deg,rgba(17,18,39,.96),rgba(9,10,21,.98));
-  box-shadow:0 16px 46px rgba(0,0,0,.22)
-}
-.pet-spotlight span{display:block;color:#6fe5ff;font-size:9px;font-weight:950;letter-spacing:.18em;margin-bottom:6px}
-.pet-spotlight strong{display:block;font-size:20px;letter-spacing:-.03em;margin-bottom:5px}
-.pet-spotlight p{margin:0;color:#9a9bb0;font-size:12px;line-height:1.5}
-.pet-spotlight button{
-  min-height:44px;padding:0 15px;border:0;border-radius:13px;color:#fff;font-weight:900;
-  background:linear-gradient(90deg,#a744ff,#5b61ff,#2bd2fa);white-space:nowrap
-}
-.subject-quick-picks{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 14px}
-.subject-quick-picks button{
-  border:1px solid rgba(137,128,190,.34);background:#0c0d18;color:#a9aabd;border-radius:999px;
-  padding:8px 11px;font-size:10px;font-weight:850
-}
-.subject-quick-picks button.selected{
-  color:#fff;border-color:rgba(62,216,255,.63);
-  box-shadow:0 0 18px rgba(48,204,255,.10) inset;background:rgba(34,46,88,.52)
-}
 .custom-world-field{margin-top:12px}
 .custom-world-field[hidden]{display:none!important}
 .custom-world-field small,#recast-form>label>small{color:#808195;font-size:10px;font-weight:500;line-height:1.45}
@@ -532,8 +507,6 @@ footer{background:#050611;max-width:none!important;padding-left:max(22px,calc((1
   .recent-versions-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
 @media(max-width:580px){
-  .pet-spotlight{grid-template-columns:1fr}
-  .pet-spotlight button{width:100%}
   .recent-versions-shell{padding:16px 13px;margin-top:20px}
   .recent-versions-heading{display:block}
   .recent-versions-heading>span{display:block;margin-top:10px}
