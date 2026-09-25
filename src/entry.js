@@ -256,7 +256,7 @@ async function injectCheckoutScript(response) {
   if (!contentType.includes("text/html")) return response;
   const html = await response.text();
   if (html.includes("/checkout.js")) return new Response(html, response);
-  const next = html.replace("</body>", '  <script src="/checkout.js?v=131" type="module"></script>\n</body>');
+  const next = html.replace("</body>", '  <script src="/checkout.js?v=160" type="module"></script>\n</body>');
   return new Response(next, {
     status: response.status,
     headers: response.headers
