@@ -17,6 +17,7 @@
     "ORDER_SYNC_ENABLED": "false",
     "X_BOT_ENABLED": "false",
     "X_BOT_APPROVED": "false",
+    "X_RENDER_BATCH_SIZE": "2",
     "TREND_SCANNER_ENABLED": "false",
     "RETENTION_CLEANUP_ENABLED": "false",
     "UNPAID_RETENTION_DAYS": "30"
@@ -31,7 +32,7 @@
     }
   ],
   "triggers": {
-    "crons": ["*/10 * * * *"]
+    "crons": ["* * * * *", "*/10 * * * *"]
   },
   "assets": {
     "directory": "./public",

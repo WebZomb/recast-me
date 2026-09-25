@@ -1,10 +1,13 @@
 import app from "./entry.js";
 import { highQualityTransform, modelStatus } from "./highquality.js";
 import { routeWorkflow, scheduledWorkflow } from "./workflow.js";
+import { socialRoutes } from './social.js';
 
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
+    const socialResponse=await socialRoutes(request,env,ctx);
+    if(socialResponse)return socialResponse;
 
     if ((url.pathname === "/api/transform-v2" || url.pathname === "/api/transform") && request.method === "POST") {
       return highQualityTransform(request, env);

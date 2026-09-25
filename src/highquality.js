@@ -1,3 +1,4 @@
+import { renderHealth, recordRenderHealth } from './render-health.js';
 const DEFAULT_HIGH_QUALITY = "@cf/black-forest-labs/flux-2-dev";
 const DEFAULT_QUICK = "@cf/black-forest-labs/flux-2-klein-9b";
 
@@ -220,7 +221,16 @@ async function generateHighQuality({env,model,styleId,subjectType,notes,customWo
         throw Object.assign(new Error("provider"),{reason:"provider",cause:last});
       }
     }
-    if(isTransient(firstError)||isCapacity(firstError))throw Object.assign(new Error("capacity"),{reason:"capacity",cause:firstError});
+    if(isCapacity(firstError)){
+      // Retry only a definitive busy rejection, never an ambiguous timed-out render.
+      try { return await tryGeneration(env,model,main,inputFiles,"high-busy-retry",settings,125000); }
+      catch(last){
+        if(isQuota(last))throw Object.assign(new Error("quota"),{reason:"quota",code:3036,cause:last});
+        const reason=isModeration(last)?'moderation':isTransient(last)?'capacity':'provider';
+        throw Object.assign(new Error(reason),{reason,cause:last});
+      }
+    }
+    if(isTransient(firstError))throw Object.assign(new Error("capacity"),{reason:"capacity",cause:firstError});
     throw Object.assign(new Error("provider"),{reason:"provider",cause:firstError});
   }
 }
@@ -266,7 +276,7 @@ async function store(env,{requestId,accessToken,styleId,subjectType,notes,custom
   }catch(error){return{persisted:false,storageError:error?.message||String(error)}}
 }
 
-export async function highQualityTransform(request,env){
+export async function highQualityTransform(request,env,{trustedSocialJob=false}={}){
   let stage="start";
   let clientAttemptId="";
   let qualityMode="high";
@@ -274,7 +284,7 @@ export async function highQualityTransform(request,env){
   try{
     if(!env.AI)return json({error:"ai_unavailable",userMessage:"The image engine is temporarily unavailable. Please try again shortly.",reason:"binding"},503);
     const incoming=await request.formData();stage="parse-form";
-    if(env.TURNSTILE_SECRET_KEY){
+    if(env.TURNSTILE_SECRET_KEY&&!trustedSocialJob){
       stage="human-check";
       const verification=await verifyTurnstile(env,String(incoming.get("turnstileToken")||""),request.headers.get("CF-Connecting-IP")||"");
       if(!verification.success)return json({error:"human_check_failed",userMessage:"Please complete the security check and try again.",reason:"turnstile"},403);
@@ -327,6 +337,11 @@ export async function highQualityTransform(request,env){
     }
     if(!inputFiles.length)return json({error:"missing_upload",userMessage:"Add at least one photo first.",reason:"input"},400);
 
+    const health=await renderHealth(env);
+    if(health.state==='paused'){
+      await writeAttemptReceipt(env,clientAttemptId,{status:'failed',failedAt:new Date().toISOString(),reason:'quota',stage:'capacity-preflight',qualityMode});
+      return json({error:'shared_ai_capacity_used',code:3036,reason:'quota',retryable:false,retryAt:health.retryAt,userMessage:'Image creation is temporarily unavailable. Your settings are still here. Please check again shortly.'},429);
+    }
     const highQualityModel=String(env.IMAGE_MODEL_HIGH_QUALITY||DEFAULT_HIGH_QUALITY);
     const quickModel=String(env.IMAGE_MODEL_QUICK||DEFAULT_QUICK);
     stage="ai-generation";
@@ -337,6 +352,7 @@ export async function highQualityTransform(request,env){
     if(!image||image.length<100)throw Object.assign(new Error("malformed"),{reason:"provider"});
     const previewMime=imageMime(image);
 
+    await recordRenderHealth(env,'success');
     stage="storage";
     const requestId=`RC-${Date.now().toString(36).toUpperCase()}-${randomHex(3).toUpperCase()}`;
     const accessToken=randomHex(32);
@@ -346,6 +362,7 @@ export async function highQualityTransform(request,env){
     return json({ok:true,requestId,accessToken,style:STYLES[styleId]?.name||"Custom World",image:`data:${previewMime};base64,${image}`,persisted:stored.persisted,storageError:stored.storageError,qualityMode,qualityLabel:qualityMode==="quick"?"Quick Preview":"High-Quality Preview",modelUsed:generated.modelUsed,usedSafeRetry:generated.usedSafeRetry,usedFastFallback:false,promptVersion:"v1.4",clientAttemptId});
   }catch(error){
     const reason=error?.reason||"provider";
+    await recordRenderHealth(env,'failed',reason);
     const internal=error?.cause||error;
     const diagnosticId=await writeGenerationDiagnostic(env,{stage,reason,providerCode:providerCode(internal),providerMessage:String(internal?.message||internal||"").slice(0,500),highQuality:String(env.IMAGE_MODEL_HIGH_QUALITY||DEFAULT_HIGH_QUALITY),quick:String(env.IMAGE_MODEL_QUICK||DEFAULT_QUICK)});
     await writeAttemptReceipt(env,clientAttemptId,{status:"failed",failedAt:new Date().toISOString(),durationMs:Date.now()-attemptStartedAt,stage,reason,providerCode:providerCode(internal),diagnosticId,qualityMode});
@@ -356,7 +373,7 @@ export async function highQualityTransform(request,env){
   }
 }
 
-export function modelStatus(env){
+export async function modelStatus(env){
   const highQuality=String(env.IMAGE_MODEL_HIGH_QUALITY||DEFAULT_HIGH_QUALITY);
   const quick=String(env.IMAGE_MODEL_QUICK||DEFAULT_QUICK);
   return json({
@@ -366,6 +383,8 @@ export function modelStatus(env){
       quick:{label:"Quick Preview",model:quick,guidance:Number(env.IMAGE_QUICK_GUIDANCE||4)}
     },
     defaultMode:"high",
-    promptVersion:"v1.3"
+    version:"v1.5",
+    promptVersion:"v1.4",
+    availability:await renderHealth(env)
   })
 }

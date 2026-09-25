@@ -116,6 +116,7 @@ if (params.get('request')) {
   document.querySelector('#prefill-note').textContent = `Loaded from your social request: “${params.get('request')}”`;
 }
 if (params.get('style') && (STYLES.some(x=>x[0]===params.get('style')) || params.get('style')==='custom')) styleSelect.value=params.get('style');
+if(params.get('source')==='x'&&styleSelect.value==='custom')document.querySelector('#custom-world').value=params.get('request')||'';
 function updateWorldFields(){
   const isCustom=styleSelect.value==='custom';
   const field=document.querySelector('#custom-world-field');
@@ -283,6 +284,18 @@ function friendlyGenerationError(data,error){
   if(data?.code===3030 || data?.reason==='moderation') return `${label} could not complete that exact photo and wording combination. Try again, edit the direction, or switch quality.`;
   if(data?.reason==='capacity') return `${label} is temporarily busy. Your photo and settings are still here — try again or switch quality.`;
   return data?.userMessage || `${label} did not finish this time. Your photo and settings are still here.`;
+}
+
+async function refreshRenderAvailability(){
+  try{
+    const response=await fetch('/api/model-status',{signal:AbortSignal.timeout(5000)});
+    if(!response.ok)return true;
+    const data=await response.json();
+    const paused=['paused','unconfigured'].includes(data.availability?.state);
+    const notice=document.querySelector('#render-availability');
+    if(notice){notice.hidden=!paused;notice.textContent=paused?'Image creation is temporarily unavailable. Your settings are safe. Please check again shortly.':'';}
+    return !paused;
+  }catch{return true;}
 }
 
 
@@ -568,6 +581,10 @@ form.addEventListener('submit',async e=>{
     document.querySelector('#custom-world').focus();
     return;
   }
+  generationInFlight=true;
+  const available=await refreshRenderAvailability();
+  generationInFlight=false;
+  if(!available){showRecastError('Image creation is temporarily unavailable. Your settings and last successful preview are still here. Please check again shortly.');return;}
   const button=document.querySelector('#generate-button'),loading=document.querySelector('#loading'),section=document.querySelector('#preview-section');
   const previewInfo=document.querySelector('.preview-info');
   currentClientAttemptId=makeClientAttemptId();
@@ -792,3 +809,4 @@ updateQualityUI();
 restoreRecentVersionOnLoad();
 status();
 setupTurnstile();
+refreshRenderAvailability();

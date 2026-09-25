@@ -1,4 +1,6 @@
 import { FULFILLMENT } from "./entry.js";
+import { runSocialPipeline, socialReadiness } from './social.js';
+import { renderHealth } from './render-health.js';
 
 const X_API = "https://api.x.com/2";
 const PRINTFUL_API = "https://api.printful.com";
@@ -361,23 +363,7 @@ export async function adminJobAction(request,env,id,action){
 
 function cleanMention(text,username){return String(text||"").replace(new RegExp(`@${String(username||"").replace(/[.*+?^${}()|[\]\\]/g,"\\$&")}`,"ig"),"").replace(/\s+/g," ").trim()}
 export async function pollXMentions(env){
-  if(String(env.X_BOT_ENABLED||"false")!=="true")return{ok:true,disabled:true};
-  if(String(env.X_BOT_APPROVED||"false")!=="true")return{ok:false,disabled:true,error:"X bot is not marked approved for AI-generated automated replies."};
-  if(!env.X_USER_ID||!env.X_USER_ACCESS_TOKEN||!env.X_USERNAME)return{ok:false,error:"X credentials are incomplete."};
-  const state=await readJson(env,"system/x-state.json")||{};
-  const params=new URLSearchParams({max_results:"20","tweet.fields":"created_at,author_id,conversation_id"});if(state.sinceId)params.set("since_id",state.sinceId);
-  const response=await fetch(`${X_API}/users/${encodeURIComponent(env.X_USER_ID)}/mentions?${params}`,{headers:{Authorization:`Bearer ${env.X_USER_ACCESS_TOKEN}`}});
-  const data=await response.json().catch(()=>({}));if(!response.ok)throw new Error(data?.detail||data?.title||`X mentions HTTP ${response.status}`);
-  const tweets=[...(data.data||[])].sort((a,b)=>BigInt(a.id)<BigInt(b.id)?-1:1);let replied=0,last=state.sinceId||null;
-  for(const tweet of tweets){
-    last=tweet.id;const requestText=cleanMention(tweet.text,env.X_USERNAME);if(!requestText)continue;
-    const link=`${String(env.PUBLIC_APP_URL||"").replace(/\/$/,"")}/?source=x&tweet=${encodeURIComponent(tweet.id)}&request=${encodeURIComponent(requestText)}`;
-    const replyText=`Your Recast request is ready to start ✨ Upload your photo privately here: ${link}`;
-    const post=await fetch(`${X_API}/tweets`,{method:"POST",headers:{Authorization:`Bearer ${env.X_USER_ACCESS_TOKEN}`,"content-type":"application/json"},body:JSON.stringify({text:replyText,reply:{in_reply_to_tweet_id:tweet.id}})});
-    const posted=await post.json().catch(()=>({}));
-    const record={tweetId:tweet.id,authorId:tweet.author_id,requestText,link,createdAt:now(),replyStatus:post.ok?"replied":"failed",replyPostId:posted?.data?.id||null,error:post.ok?null:(posted?.detail||posted?.title||`HTTP ${post.status}`)};await putJson(env,socialKey(tweet.id),record);if(post.ok)replied++;
-  }
-  if(last)await putJson(env,"system/x-state.json",{sinceId:last,lastRun:now(),replied});return{ok:true,found:tweets.length,replied,sinceId:last}
+  return runSocialPipeline(env);
 }
 
 const TREND_REJECT=["war","invasion","airstrike","bombing","shooting","murder","killed","death","dead","funeral","earthquake","wildfire","flood","hurricane","tornado","hostage","terror","genocide","hate crime"];
@@ -426,9 +412,9 @@ export async function cleanupExpiredUnpaid(env){
 }
 
 export async function scheduledWorkflow(controller,env,ctx){
+  if(controller.cron==='* * * * *')return pollXMentions(env);
   const tasks=[];
   if(String(env.ORDER_SYNC_ENABLED||"false")==="true"){tasks.push(syncPaidOrders(env));tasks.push(syncPrintfulJobs(env));}
-  if(String(env.X_BOT_ENABLED||"false")==="true")tasks.push(pollXMentions(env));
   if(String(env.TREND_SCANNER_ENABLED||"false")==="true")tasks.push(scanTrends(env));
   if(String(env.RETENTION_CLEANUP_ENABLED||"false")==="true")tasks.push(cleanupExpiredUnpaid(env));
   const results=await Promise.allSettled(tasks);return results
@@ -445,6 +431,10 @@ export async function routeWorkflow(request,env,ctx){
   m=p.match(/^\/api\/digital-download\/([^/]+)$/);if(m&&request.method==="GET")return digitalDownload(request,env,decodeURIComponent(m[1]));
   m=p.match(/^\/api\/recast\/([^/]+)$/);if(m&&request.method==="DELETE")return deleteUnpaidRecast(request,env,decodeURIComponent(m[1]));
   if(p==="/api/admin/status"&&request.method==="GET")return adminStatus(request,env);
+  if(p==='/api/admin/render-readiness'&&request.method==='GET'){
+    try{requireAdmin(request,env);return json({ok:true,render:await renderHealth(env),social:socialReadiness(env),quotaAction:'Cloudflare error 3036 requires Workers Paid billing. A code update cannot increase the shared free allowance.'});}
+    catch(error){return json({ok:false,error:error.message},error.status||500);}
+  }
   if(p==="/api/admin/jobs"&&request.method==="GET")return adminJobs(request,env);
   if(p==="/api/admin/generation-errors"&&request.method==="GET")return adminGenerationErrors(request,env);
   if(p==="/api/admin/trends"&&request.method==="GET")return adminTrends(request,env);

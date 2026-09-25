@@ -1,4 +1,4 @@
-# Recast Me — generator update v1.4
+# Recast Me — rendering and X update v1.5
 
 Recast Me turns private customer photo references into original cinematic artwork, then connects the approved Artwork ID to real products and fulfillment.
 
@@ -27,6 +27,8 @@ Recast Me turns private customer photo references into original cinematic artwor
 - Clean art stays private in R2; watermark is added only to the browser preview.
 
 Run `npm test` for mocked generation, saved-version and error-path coverage. Run `npx wrangler deploy --dry-run` before a live push.
+
+v1.5 also records the last real generation outcome. The form checks recent provider failures before starting a lengthy render, and the Control Center explains the action needed for error 3036. A definitive high-quality capacity rejection receives one retry on the same model. Timeouts do not trigger an automatic second billable call. These changes improve recovery; they do not buy AI capacity or verify the quality of actual generated pictures.
 
 ### Render capacity and cost
 Cloudflare Workers AI Free provides **10,000 neurons per account per day**, shared by all site visitors. Cloudflare error 3036 means that provider allowance has run out; there is no 20-per-visitor setting in this app that can raise it. The customer message now says this clearly. To offer around 20 renders a day to each interested customer, the Cloudflare account owner must activate **Workers Paid** for usage beyond that shared free allocation. This is a billing change, not a deployment or code toggle.
@@ -71,15 +73,20 @@ Tabs:
 
 Trend review has Approve / Reject actions. Physical production never auto-confirms by default.
 
-### X / Twitter bot scaffold
-Built but intentionally disabled until the Recast Me X developer app/account is connected.
+### X / Twitter image replies
+Implemented and tested with mocked provider responses; disabled until account setup and a live test are complete. See `INSTALL-v1.5.md`.
 
 When enabled:
-1. Poll mentions for the connected Recast account.
-2. Extract the customer's request.
-3. Reply with a personalized private-upload URL.
-4. Store the X request in R2.
-5. Track when that tweet later creates a Recast / paid order.
+1. Poll requested mentions with attached media, preserving pagination state.
+2. Store the request in a durable R2 queue; an R2 conditional lease prevents overlapping runs.
+3. Use only photos attached to the customer's requesting post. Resize privately and generate a high-quality Recast. Missing photos receive a private-upload link instead of an invented likeness.
+4. Save the successful Artwork ID before publishing. Prepare a separately watermarked social preview using the Images binding.
+5. Upload the preview to X and reply with the image and a public purchase link for that exact artwork.
+6. The purchase page displays the watermarked preview and active Shopify variants, including poster, mug and digital products. It never sends private source-image or clean-art access tokens to visitors.
+7. Provider quota holds jobs for retry; other transient failures have bounded retries. An ambiguous POST response is marked `delivery_unknown` for manual checking, preventing blind duplicate replies. Explicit opt-outs stop future automated replies.
+8. OAuth refresh-token rotation is supported when configured with `offline.access` credentials. Tokens remain in private storage.
+
+The one-minute X schedule processes at most two queued jobs per run, with a lease across runs. This is a bounded launch queue, not a claim of unlimited concurrent throughput. The other automations retain their ten-minute cadence. X API billing/rate limits are separate from AI inference. Only enable `X_BOT_APPROVED` once X's required written approval exists; this flag does not obtain approval.
 
 ### Trend scanner scaffold
 Built but intentionally disabled.
