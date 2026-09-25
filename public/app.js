@@ -10,20 +10,20 @@ const STYLES = [
 ];
 
 const PRODUCT_CATALOG = [
-  {name:"Poster",price:"from $29.99",asset:"poster",image:"/assets/product-poster-v10.webp",badge:"MOST POPULAR",pitch:"The easiest way to turn your Recast into wall art.",tier:"featured"},
-  {name:"Hoodie",price:"from $59.99",asset:"hoodie",image:"/assets/product-hoodie-v10.webp",badge:"FAN FAVORITE",pitch:"Wear your Recast as a premium statement piece.",tier:"featured"},
-  {name:"Framed Poster",price:"from $44.99",asset:"framed-poster",image:"/assets/product-desk-frame-v13.webp",badge:"DESK + WALL",pitch:"8×10 desk size or larger framed wall art — ready to display and gift.",tier:"featured"},
-  {name:"Canvas",price:"from $69.99",asset:"canvas",image:"/assets/product-canvas-v10.webp",badge:"GALLERY PICK",pitch:"A bold upgrade for artwork that deserves more presence.",tier:"featured"},
+  {name:"Poster",price:"from $29.99",asset:"poster",image:"/assets/product-poster-v16.webp",badge:"MOST POPULAR",pitch:"The easiest way to turn your Recast into wall art.",tier:"featured"},
+  {name:"Hoodie",price:"from $59.99",asset:"hoodie",image:"/assets/product-hoodie-v16.webp",badge:"FAN FAVORITE",pitch:"Wear your Recast as a premium statement piece.",tier:"featured"},
+  {name:"Framed Poster",price:"from $44.99",asset:"framed-poster",image:"/assets/product-desk-frame-v16.webp",badge:"DESK + WALL",pitch:"8×10 desk size or larger framed wall art — ready to display and gift.",tier:"featured"},
+  {name:"Canvas",price:"from $69.99",asset:"canvas",image:"/assets/product-canvas-v16.webp",badge:"GALLERY PICK",pitch:"A bold upgrade for artwork that deserves more presence.",tier:"featured"},
 
-  {name:"T-Shirt",price:"from $34.99",asset:"tshirt",image:"/assets/product-tshirt-v10.webp",badge:"WEAR IT",pitch:"An easy everyday way to show off your Recast.",tier:"secondary"},
-  {name:"Blanket",price:"from $74.99",asset:"blanket",image:"/assets/product-blanket-v10.webp",badge:"COZY PICK",pitch:"Big, soft, personal — especially good for pets and gifts.",tier:"secondary"},
-  {name:"Mug",price:"from $24.99",asset:"mug",image:"/assets/product-mug-v10.webp",badge:"GIFTABLE",pitch:"A personalized gift that gets used every day.",tier:"secondary"},
-  {name:"Tumbler",price:"$49.99",asset:"tumbler",image:"/assets/product-tumbler-v10.webp",badge:"TAKE IT WITH YOU",pitch:"Your Recast on a 20 oz everyday tumbler.",tier:"secondary"},
-  {name:"Magnet 3-Pack",price:"$24.99",asset:"magnet",image:"/assets/product-magnet-v09.jpg",badge:"ADD-ON",pitch:"Three matching magnets for a smaller, easy add-on.",tier:"secondary"},
-  {name:"Coaster 4-Pack",price:"$39.99",asset:"coaster",image:"/assets/product-coaster-v09.jpg",badge:"ADD-ON",pitch:"Four matching cork-back coasters featuring your artwork.",tier:"secondary"},
+  {name:"T-Shirt",price:"from $34.99",asset:"tshirt",image:"/assets/product-tshirt-v16.webp",badge:"WEAR IT",pitch:"An easy everyday way to show off your Recast.",tier:"secondary"},
+  {name:"Blanket",price:"from $74.99",asset:"blanket",image:"/assets/product-blanket-v16.webp",badge:"COZY PICK",pitch:"Big, soft, personal — especially good for pets and gifts.",tier:"secondary"},
+  {name:"Mug",price:"from $24.99",asset:"mug",image:"/assets/product-mug-v16.webp",badge:"GIFTABLE",pitch:"A personalized gift that gets used every day.",tier:"secondary"},
+  {name:"Tumbler",price:"$49.99",asset:"tumbler",image:"/assets/product-tumbler-v16.webp",badge:"TAKE IT WITH YOU",pitch:"Your Recast on a 20 oz everyday tumbler.",tier:"secondary"},
+  {name:"Magnet 3-Pack",price:"$24.99",asset:"magnet",image:"/assets/product-magnet-v16.webp",badge:"ADD-ON",pitch:"Three matching magnets for a smaller, easy add-on.",tier:"secondary"},
+  {name:"Coaster 4-Pack",price:"$39.99",asset:"coaster",image:"/assets/product-coaster-v16.webp",badge:"ADD-ON",pitch:"Four matching cork-back coasters featuring your artwork.",tier:"secondary"},
 
-  {name:"HD Digital Recast",price:"$4.99",asset:"digital",image:"/assets/product-digital-v09.jpg",badge:"DIGITAL ONLY",pitch:"Just want the clean artwork? Keep the high-resolution file without ordering merch.",tier:"digital"},
-  {name:"Recast Pack",price:"$9.99",asset:"pack",image:"/assets/product-pack-v09.jpg",badge:"DIGITAL PACK",pitch:"The complete digital set with high-resolution art plus useful crops and formats.",tier:"digital"}
+  {name:"HD Digital Recast",price:"$4.99",asset:"digital",image:"/assets/product-digital-v16.webp",badge:"DIGITAL ONLY",pitch:"Just want the clean artwork? Keep the high-resolution file without ordering merch.",tier:"digital"},
+  {name:"Recast Pack",price:"$9.99",asset:"pack",image:"/assets/product-pack-v16.webp",badge:"DIGITAL PACK",pitch:"The complete digital set with high-resolution art plus useful crops and formats.",tier:"digital"}
 ];
 
 const styleGrid = document.querySelector('#style-grid');
@@ -41,7 +41,8 @@ styleGrid.innerHTML = STYLES.map(([id,name,copy,image],i)=>`
   </article>`).join('');
 
 styleSelect.innerHTML = STYLES.map(([id,name])=>`<option value="${id}">${name}</option>`).join('')
-  + '<option value="custom">Custom World — describe your own</option>';
+  + '<option value="custom">My own environment</option>';
+styleSelect.value='royal';
 
 function chooseStyle(card){
   styleSelect.value=card.dataset.style;
@@ -91,9 +92,9 @@ function renderStaticMerch(){
       </div>
       <div class="merch-digital-last">
         <div class="merch-digital-copy">
-          <span>LAST OPTION</span>
+          <span>DIGITAL ARTWORK</span>
           <strong>Just want the artwork?</strong>
-          <p>The physical products come first. If you only want the file, the digital choices stay here at the end.</p>
+          <p>Keep the clean artwork for your screen or your own creative projects.</p>
         </div>
         <div class="merch-digital-grid">
           ${digital.map(x=>merchCard(x)).join('')}
@@ -121,12 +122,17 @@ function updateWorldFields(){
   const isCustom=styleSelect.value==='custom';
   const field=document.querySelector('#custom-world-field');
   const input=document.querySelector('#custom-world');
-  field.hidden=!isCustom;
-  input.disabled=!isCustom;
+  field.hidden=false;
+  input.disabled=false;
   input.required=isCustom;
+  if(!isCustom)input.value=STYLES.find(s=>s[0]===styleSelect.value)?.[2]||'';
   document.querySelectorAll('.style-card').forEach(card=>card.classList.toggle('selected',card.dataset.style===styleSelect.value));
 }
 updateWorldFields();
+document.querySelector('#custom-world').addEventListener('input',()=>{
+  styleSelect.value='custom';
+  updateWorldFields();
+});
 
 const photos = document.querySelector('#photos');
 photos.addEventListener('change',()=>{
@@ -199,17 +205,6 @@ function inferSubject(subject,notes){
   return subject;
 }
 
-const generationMessagesHigh=[
-  ['Locking identity…','Preserving facial structure, hair, proportions, pet markings, and defining details.'],
-  ['Building the new world…','Rebuilding the scene, wardrobe, lighting, props, and atmosphere around the real subject.'],
-  ['Refining likeness…','Using the high-quality model for stronger identity and prompt accuracy.'],
-  ['Finishing the preview…','Polishing anatomy, detail, lighting, and composition before reveal.']
-];
-const generationMessagesQuick=[
-  ['Building a quick preview…','Keeping the subject recognizable while we test the idea fast.'],
-  ['Applying your world…','Changing the scene, wardrobe, lighting, and atmosphere.'],
-  ['Finishing the preview…','Cleaning up the fast concept preview for review.']
-];
 let generationTimer=null;
 function selectedQuality(){
   return document.querySelector('input[name="qualityMode"]:checked')?.value==='quick'?'quick':'high';
@@ -230,22 +225,18 @@ function updateQualityUI(){
 document.querySelectorAll('input[name="qualityMode"]').forEach(input=>input.addEventListener('change',updateQualityUI));
 
 function startGenerationUI(mode=selectedQuality()){
-  const messages=mode==='quick'?generationMessagesQuick:generationMessagesHigh;
   const status=document.querySelector('#generation-status');
   const detail=document.querySelector('#generation-detail');
   const progress=document.querySelector('#generation-progress');
-  let index=0, pct=mode==='quick'?18:10;
-  if(status) status.textContent=messages[0][0];
-  if(detail) detail.textContent=messages[0][1];
-  if(progress) progress.style.width=pct+'%';
+  const started=Date.now();
+  if(status) status.textContent='Creating your '+qualityLabel(mode)+'…';
+  if(detail) detail.textContent='High-quality artwork can take a few minutes. Keep this page open.';
+  if(progress) progress.style.width='100%';
   clearInterval(generationTimer);
   generationTimer=setInterval(()=>{
-    index=Math.min(messages.length-1,index+1);
-    pct=Math.min(90,pct+(mode==='quick'?30:22));
-    if(status) status.textContent=messages[index][0];
-    if(detail) detail.textContent=messages[index][1];
-    if(progress) progress.style.width=pct+'%';
-  },mode==='quick'?8000:15000);
+    const seconds=Math.floor((Date.now()-started)/1000);
+    if(detail) detail.textContent=`${Math.floor(seconds/60)}:${String(seconds%60).padStart(2,'0')} elapsed · Waiting for your artwork. Keep this page open.`;
+  },1000);
 }
 function stopGenerationUI(success=false){
   clearInterval(generationTimer); generationTimer=null;

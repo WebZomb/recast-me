@@ -4,11 +4,11 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="theme-color" content="#07070b" />
-  <meta name="description" content="Recast Me turns your photo into original AI artwork, then puts it on something worth keeping." />
-  <title>Recast Me — Same you. A bolder reality.</title>
+  <meta name="description" content="Create amazing AI portraits of your pet or you together. Turn your favorite into personalized mugs, clothing, wall art, and gifts." />
+  <title>Recast Me — Your pet. A whole new world.</title>
   <link rel="stylesheet" href="/styles.css?v=130" />
   <link rel="stylesheet" href="/merch-v07.css?v=130" />
-  <link rel="stylesheet" href="/site-v10.css?v=151" />
+  <link rel="stylesheet" href="/site-v10.css?v=160" />
 </head>
 <body>
   <header class="site-header">
@@ -33,10 +33,10 @@
       <div class="hero-light-streak hero-light-streak-b" aria-hidden="true"></div>
       <div class="hero-copy">
         <div class="eyebrow">YOUR PHOTO · ANOTHER WORLD</div>
-        <h1>Recast<br><span>yourself.</span></h1>
-        <p class="hero-lede">Turn yourself, just your pet, you + your pet, your car, or the people you love into original high-fidelity artwork — then make it real.</p>
+        <h1>Your pet.<br><span>A whole new world.</span></h1>
+        <p class="hero-lede">Make an amazing AI picture of your dog, cat, or you together. Love the result? Put it on a mug, hoodie, or wall art. Couples, families, and cars are welcome too.</p>
         <div class="hero-actions">
-          <a class="button primary" href="#start">Start your Recast</a>
+          <a class="button primary" href="#start">Recast my pet</a>
           <a class="button ghost" href="#styles">See the worlds</a>
         </div>
         <div class="trust-row">
@@ -47,15 +47,15 @@
         </div>
       </div>
 
-      <div class="hero-demo" aria-label="Original to Recast example">
+      <div class="hero-demo" aria-label="Pet artwork and merchandise examples">
         <div class="demo-card">
-          <img src="/assets/hero-your-image-v08.webp" alt="Original person and pet example" />
-          <div class="demo-meta"><span>01</span><b>YOUR PHOTO</b></div>
+          <img src="/assets/product-poster-v16.webp" alt="Royal dog poster example" />
+          <div class="demo-meta"><span>01</span><b>YOUR PET</b></div>
         </div>
         <div class="recast-bridge"><span></span><b>RECAST</b><span></span></div>
         <div class="demo-card demo-card-after">
-          <img src="/assets/hero-your-world-v08.webp" alt="Stylized Recast person and pet example" />
-          <div class="demo-meta"><span>02</span><b>YOUR WORLD</b></div>
+          <img src="/assets/product-mug-v16.webp" alt="Halloween dog mug example" />
+          <div class="demo-meta"><span>02</span><b>YOUR KEEPSAKE</b></div>
         </div>
       </div>
     </section>
@@ -85,8 +85,8 @@
         <article class="step-card">
           <b>01</b>
           <div class="step-visual upload-visual" aria-hidden="true">
-            <div class="mini-photo mini-photo-back"><img src="/assets/hero-your-image-v08.webp" alt=""></div>
-            <div class="mini-photo mini-photo-front"><img src="/assets/hero-your-image-v08.webp" alt=""></div>
+            <div class="mini-photo mini-photo-back"><img src="/assets/product-poster-v16.webp" alt=""></div>
+            <div class="mini-photo mini-photo-front"><img src="/assets/product-poster-v16.webp" alt=""></div>
             <span class="mini-lock">PRIVATE</span>
           </div>
           <h3>Upload privately</h3>
@@ -103,7 +103,7 @@
         <article class="step-card">
           <b>03</b>
           <div class="step-visual preview-mini" aria-hidden="true">
-            <img src="/assets/hero-your-world-v08.webp" alt="">
+            <img src="/assets/product-mug-v16.webp" alt="">
             <span>RECAST ME · PREVIEW</span>
           </div>
           <h3>See your preview</h3>
@@ -112,10 +112,10 @@
         <article class="step-card">
           <b>04</b>
           <div class="step-visual merch-mini" aria-hidden="true">
-            <img src="/assets/product-poster-v10.webp" alt=""><img src="/assets/product-hoodie-v10.webp" alt=""><img src="/assets/product-mug-v10.webp" alt="">
+            <img src="/assets/product-poster-v16.webp" alt=""><img src="/assets/product-hoodie-v16.webp" alt=""><img src="/assets/product-mug-v16.webp" alt="">
           </div>
           <h3>Make it real</h3>
-          <p>Turn the approved Recast into wall art, apparel, gifts, drinkware, or choose a digital file as the last option.</p>
+          <p>Turn the approved Recast into wall art, apparel, gifts, drinkware, or keep the digital artwork.</p>
         </article>
       </div>
     </section>
@@ -162,7 +162,7 @@
 
         <article class="desk-frame-spotlight">
           <div class="desk-frame-art">
-            <img src="/assets/product-desk-frame-v13.webp" alt="Recast Me 8 by 10 framed print shown on a desk">
+            <img src="/assets/product-desk-frame-v16.webp" alt="Recast Me 8 by 10 framed print shown on a desk">
           </div>
           <div class="desk-frame-copy">
             <span>NEW · GIFT READY</span>
@@ -190,31 +190,38 @@
         <div class="create-card">
           <form id="recast-form">
             <p id="render-availability" class="prefill-note" role="status" hidden></p>
-            <div class="field-row">
-              <label>Subject
+            <fieldset class="creative-step">
+              <legend><span>01</span> Who’s in the picture?</legend>
+              <p>Your pet, you together, or anyone you love.</p>
+              <label>Subject suggestions
                 <select name="subject" id="subject">
                   <option value="person">Person</option>
-                  <option value="pet">Pet</option>
+                  <option value="pet" selected>My dog / cat / pet</option>
                   <option value="couple">Couple</option>
                   <option value="family">Parents / Family</option>
                   <option value="car">Car</option>
                   <option value="person and pet">You + your pet</option>
+                  <option value="couple and pet">Couple + pet</option>
                   <option value="person and car">You + your car</option>
+                  <option value="custom">Something else — describe below</option>
                 </select>
               </label>
-              <label>World
+              <label>Describe who and their look <span class="optional-label">OPTIONAL</span>
+                <textarea name="notes" id="notes" maxlength="1200" placeholder="My dog in a little wizard costume. Or: me, my girlfriend, and our dog in matching space suits."></textarea>
+                <small>Add everyone you want included, plus outfits, poses, or effects. Your description guides the picture.</small>
+              </label>
+            </fieldset>
+            <fieldset class="creative-step environment-step">
+              <legend><span>02</span> Where’s the adventure?</legend>
+              <p>Pick a starting idea, then make the setting your own.</p>
+              <label>World / environment suggestions
                 <select name="style" id="style"></select>
               </label>
-            </div>
-            <label class="custom-world-field" id="custom-world-field" hidden>Describe your custom world
-              <textarea name="customWorld" id="custom-world" maxlength="800" placeholder="Example: A glowing floating city above waterfalls at sunset, cinematic and realistic."></textarea>
-              <small>Where does your Recast take place? Describe the setting here.</small>
-            </label>
-
-            <label>Change my subject <span class="optional-label">OPTIONAL</span>
-              <textarea name="notes" id="notes" maxlength="1200" placeholder="Example: Make my dog the captain with a heroic cape and custom gear. Keep her exact face and markings."></textarea>
-              <small>What should happen to your person, pet, or car? Add an outfit, role, pose, or effect. The selected world sets the scene.</small>
-            </label>
+              <label class="custom-world-field" id="custom-world-field">Describe the world or environment
+                <textarea name="customWorld" id="custom-world" maxlength="800" placeholder="A magical pumpkin village at sunset, with glowing lanterns and a starry sky."></textarea>
+                <small>Describe the place, mood, and lighting. Editing this makes it your custom setting.</small>
+              </label>
+            </fieldset>
             <p id="prefill-note" class="prefill-note"></p>
             <div id="branch-note" class="branch-note hidden"></div>
             <label class="upload-zone" for="photos">
@@ -308,7 +315,7 @@
     <section class="section shop-showcase" id="shop">
       <div class="section-kicker">
         <div><div class="eyebrow">MAKE IT REAL</div><h2>Put your Recast on something worth keeping.</h2></div>
-        <p>Premium made-to-order pieces built around the exact Recast you approved — from an 8×10 desk frame to wall art, apparel, gifts, and more. Digital stays at the end.</p>
+        <p>Your dog as royalty. You together in space. A family adventure. Find an idea you love, then make it yours. Images are illustrative product mockups; final placement and colors vary by product.</p>
       </div>
       <div id="catalog-preview" class="catalog-preview"></div>
     </section>
@@ -348,6 +355,6 @@
     <span>© 2026 Recast Me</span>
   </footer>
 
-  <script src="/app.js?v=151" type="module"></script>
+  <script src="/app.js?v=160" type="module"></script>
 </body>
 </html>

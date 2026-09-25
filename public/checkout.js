@@ -2,18 +2,18 @@ const grid = document.querySelector("#product-grid");
 const requestLabel = document.querySelector("#request-id");
 
 const PRODUCT_ART = {
-  "Custom Recast Poster":"/assets/product-poster-v10.webp",
-  "Custom Recast Hoodie":"/assets/product-hoodie-v10.webp",
-  "Custom Recast Framed Poster":"/assets/product-desk-frame-v13.webp",
-  "Custom Recast Canvas":"/assets/product-canvas-v10.webp",
-  "Custom Recast T-Shirt":"/assets/product-tshirt-v10.webp",
-  "Custom Recast Blanket":"/assets/product-blanket-v10.webp",
-  "Custom Recast Mug":"/assets/product-mug-v10.webp",
-  "Custom Recast Tumbler":"/assets/product-tumbler-v10.webp",
-  "Custom Recast Magnet 3-Pack":"/assets/product-magnet-v09.jpg",
-  "Custom Recast Coaster 4-Pack":"/assets/product-coaster-v09.jpg",
-  "HD Digital Recast":"/assets/product-digital-v09.jpg",
-  "Recast Pack":"/assets/product-pack-v09.jpg"
+  "Custom Recast Poster":"/assets/product-poster-v16.webp",
+  "Custom Recast Hoodie":"/assets/product-hoodie-v16.webp",
+  "Custom Recast Framed Poster":"/assets/product-desk-frame-v16.webp",
+  "Custom Recast Canvas":"/assets/product-canvas-v16.webp",
+  "Custom Recast T-Shirt":"/assets/product-tshirt-v16.webp",
+  "Custom Recast Blanket":"/assets/product-blanket-v16.webp",
+  "Custom Recast Mug":"/assets/product-mug-v16.webp",
+  "Custom Recast Tumbler":"/assets/product-tumbler-v16.webp",
+  "Custom Recast Magnet 3-Pack":"/assets/product-magnet-v16.webp",
+  "Custom Recast Coaster 4-Pack":"/assets/product-coaster-v16.webp",
+  "HD Digital Recast":"/assets/product-digital-v16.webp",
+  "Recast Pack":"/assets/product-pack-v16.webp"
 };
 
 const PRODUCT_META = {
