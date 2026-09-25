@@ -1,0 +1,66 @@
+{
+  "mode": "built-in image generation",
+  "purpose": "Illustrative product mockups; actual order previews use Printful",
+  "prompts": [
+    {
+      "name": "poster",
+      "subject": "one unframed vertical paper art poster on a warm cream wall, printed portrait of a golden retriever wearing an ornate royal cape in a palace",
+      "style": "Photorealistic ecommerce product photograph, realistic print placement, minimal setting, no logos or text"
+    },
+    {
+      "name": "hoodie",
+      "subject": "one black pullover hoodie folded neatly on a bench, a realistic rectangular chest print showing a corgi astronaut on a lavender moon",
+      "style": "Photorealistic ecommerce product photograph, realistic print placement, minimal setting, no logos or text"
+    },
+    {
+      "name": "desk-frame",
+      "subject": "one small black 8x10 frame on a desk, portrait print of a smiling young adult woman and her terrier in matching explorer outfits in an enchanted forest",
+      "style": "Photorealistic ecommerce product photograph, realistic print placement, minimal setting, no logos or text"
+    },
+    {
+      "name": "canvas",
+      "subject": "one stretched canvas hanging above a sofa, printed cinematic portrait of a couple with their beagle wearing elegant fantasy outfits in a floating garden",
+      "style": "Photorealistic ecommerce product photograph, realistic print placement, minimal setting, no logos or text"
+    },
+    {
+      "name": "tshirt",
+      "subject": "one cream t-shirt hanging naturally, rectangular chest print of a tabby cat wearing a playful Halloween wizard costume in a pumpkin village",
+      "style": "Photorealistic ecommerce product photograph, realistic print placement, minimal setting, no logos or text"
+    },
+    {
+      "name": "blanket",
+      "subject": "one fleece blanket draped on a sofa, printed portrait of a husky in a winter explorer outfit under aurora skies",
+      "style": "Photorealistic ecommerce product photograph, realistic print placement, minimal setting, no logos or text"
+    },
+    {
+      "name": "mug",
+      "subject": "one white ceramic mug on a kitchen counter, wrapped print of a dachshund in a pumpkin costume in a whimsical Halloween garden",
+      "style": "Photorealistic ecommerce product photograph, realistic print placement, minimal setting, no logos or text"
+    },
+    {
+      "name": "tumbler",
+      "subject": "one stainless steel 20 oz tumbler with lid, printed artwork of a smiling adult couple in a vivid retro sunset world",
+      "style": "Photorealistic ecommerce product photograph, realistic print placement, minimal setting, no logos or text"
+    },
+    {
+      "name": "magnet",
+      "subject": "exactly three matching rectangular magnets on a fridge, each printed with the same cinematic family portrait of two parents and two children in a magical garden",
+      "style": "Photorealistic ecommerce product photograph, realistic print placement, minimal setting, no logos or text"
+    },
+    {
+      "name": "coaster",
+      "subject": "exactly four matching square cork back coasters on a table, each printed with the same red classic car in a neon futuristic city",
+      "style": "Photorealistic ecommerce product photograph, realistic print placement, minimal setting, no logos or text"
+    },
+    {
+      "name": "digital",
+      "subject": "a tablet on a desk displaying a cinematic portrait of an adult woman as an original space explorer on a distant planet",
+      "style": "Photorealistic ecommerce product photograph, realistic print placement, minimal setting, no logos or text"
+    },
+    {
+      "name": "pack",
+      "subject": "a desktop monitor displaying a cinematic portrait of an adult man beside his blue sports car on a futuristic neon boulevard",
+      "style": "Photorealistic ecommerce product photograph, realistic print placement, minimal setting, no logos or text"
+    }
+  ]
+}
