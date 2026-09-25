@@ -55,7 +55,7 @@ document.querySelectorAll('.style-card').forEach(card=>{
   card.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();chooseStyle(card)}})
 });
 
-function merchCard(item,{featured=false,preview=false}={}){
+function merchCard(item,{featured=false}={}){
   const classes=['product',featured?'featured-product':'secondary-product'].filter(Boolean).join(' ');
   return `<div class="${classes}">
     <div class="product-art"><img src="${item.image || `/assets/product-${item.asset}-v09.jpg`}" alt="${item.name}"></div>
@@ -64,9 +64,7 @@ function merchCard(item,{featured=false,preview=false}={}){
       <strong>${item.name}</strong>
       <p class="product-pitch">${item.pitch}</p>
       <span class="price">${item.price}</span>
-      ${preview
-        ? '<button disabled>Create a Recast to order</button>'
-        : '<a class="shop-card-cta" href="#start">Create yours <span>→</span></a>'}
+      <a class="shop-card-cta" href="#start">Create yours <span>→</span></a>
     </div>
   </div>`;
 }
@@ -76,7 +74,7 @@ function renderStaticMerch(){
   const secondary=PRODUCT_CATALOG.filter(x=>x.tier==='secondary');
   const digital=PRODUCT_CATALOG.filter(x=>x.tier==='digital');
 
-  const catalog=document.querySelector('#catalog-preview');
+  const catalog=document.querySelector('#product-grid');
   if(catalog){
     catalog.classList.add('merch-catalog-shell');
     catalog.innerHTML=`
@@ -102,11 +100,7 @@ function renderStaticMerch(){
       </div>`;
   }
 
-  const preview=document.querySelector('#product-grid');
-  if(preview){
-    preview.innerHTML=[...featured,...secondary]
-      .map(x=>merchCard(x,{featured:x.tier==='featured',preview:true})).join('');
-  }
+
 }
 renderStaticMerch();
 
