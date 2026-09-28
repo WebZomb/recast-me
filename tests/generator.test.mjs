@@ -147,3 +147,15 @@ test('a recent quota failure blocks repeat paid calls briefly, then permits a fr
   env.AI.run=async()=>{calls++;return {image};};
   assert.equal((await highQualityTransform(submission(),env)).status,200);assert.equal(calls,2);
 });
+
+test('owner comparison rejects missing authorization before any inference',async()=>{
+ let calls=0;const env={...envFor(async()=>{calls++;return {image}}),ADMIN_TOKEN:'private-test'};
+ const res=await router.fetch(new Request('https://recast.test/api/admin/model-test?model=klein4',{method:'POST',body:new FormData()}),env,{});
+ assert.equal(res.status,401);assert.equal(calls,0);
+});
+test('owner comparison runs allowlisted klein4 without changing public engine config',async()=>{
+ const calls=[];const env={...envFor(async model=>{calls.push(model);return {image}}),ADMIN_TOKEN:'private-test',IMAGE_MODEL_QUICK:'@cf/black-forest-labs/flux-2-klein-9b'};
+ const req=new Request('https://recast.test/api/admin/model-test?model=klein4',{method:'POST',headers:{Authorization:'Bearer private-test'},body:await submission().formData()});
+ const res=await router.fetch(req,env,{});assert.equal(res.status,200);assert.deepEqual(calls,['@cf/black-forest-labs/flux-2-klein-4b']);assert.equal(env.IMAGE_MODEL_QUICK,'@cf/black-forest-labs/flux-2-klein-9b');
+ const bad=await router.fetch(new Request('https://recast.test/api/admin/model-test?model=unapproved',{method:'POST',headers:{Authorization:'Bearer private-test'},body:new FormData()}),env,{});assert.equal(bad.status,400);assert.equal(calls.length,1);
+});
