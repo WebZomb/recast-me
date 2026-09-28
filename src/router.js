@@ -1,11 +1,22 @@
 import app from "./entry.js";
 import { highQualityTransform, modelStatus } from "./highquality.js";
-import { routeWorkflow, scheduledWorkflow } from "./workflow.js";
+import { routeWorkflow, scheduledWorkflow, requireAdmin } from "./workflow.js";
 import { socialRoutes } from './social.js';
 
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
+    if(url.pathname === '/api/admin/model-test' && request.method === 'POST'){
+      try{
+        requireAdmin(request,env);
+        const models={dev:'@cf/black-forest-labs/flux-2-dev',klein9:'@cf/black-forest-labs/flux-2-klein-9b',klein4:'@cf/black-forest-labs/flux-2-klein-4b'};
+        const choice=url.searchParams.get('model');
+        if(!Object.hasOwn(models,choice))return Response.json({error:'Choose a supported test model.'},{status:400});
+        const form=await request.formData();form.set('qualityMode',choice==='dev'?'high':'quick');form.set('source','owner-model-test');
+        const testRequest=new Request(request.url,{method:'POST',body:form});
+        return highQualityTransform(testRequest,{...env,IMAGE_MODEL_HIGH_QUALITY:models.dev,IMAGE_MODEL_QUICK:models[choice]}, {trustedSocialJob:true});
+      }catch(error){return Response.json({error:error.message},{status:error.status||500});}
+    }
     const socialResponse=await socialRoutes(request,env,ctx);
     if(socialResponse)return socialResponse;
 

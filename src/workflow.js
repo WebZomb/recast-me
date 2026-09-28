@@ -48,7 +48,7 @@ function safeEqual(a,b){
   a=String(a||"");b=String(b||"");if(!a||a.length!==b.length)return false;
   let diff=0;for(let i=0;i<a.length;i++)diff|=a.charCodeAt(i)^b.charCodeAt(i);return diff===0;
 }
-function requireAdmin(request,env){
+export function requireAdmin(request,env){
   if(!env.ADMIN_TOKEN)throw Object.assign(new Error("Admin access is not configured yet."),{status:503});
   if(!safeEqual(bearer(request),env.ADMIN_TOKEN))throw Object.assign(new Error("Admin authorization required."),{status:401});
 }
