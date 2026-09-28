@@ -619,3 +619,25 @@ section[id]{scroll-margin-top:110px}
 /* World thumbnails preserve the complete composition on every screen. */
 .style-card .style-art{aspect-ratio:4/3!important}
 .style-card .style-art img{object-fit:contain!important;object-position:center;transform:none!important}
+
+/* v1.9: complete images and a simpler creation flow. */
+html{scroll-padding-top:100px}
+section[id]{scroll-margin-top:100px}
+.hero-demo .demo-card img,.preview-mini img,.world-visual img,.mini-photo img,.merch-mini img,.recent-version-image img{object-fit:contain!important;background:#090a17}
+.preview-mini{padding:12px 12px 46px}
+#shop .product-art{height:auto!important;aspect-ratio:4/3}
+#shop .product-art img{object-fit:contain!important;transform:none!important}
+.photo-input{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden}
+.upload-zone:focus-within{outline:3px solid #64dafa;outline-offset:4px}
+.photo-thumbnails{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:12px 0 24px}
+.photo-thumbnail{min-width:0;border:1px solid #46405d;border-radius:12px;overflow:hidden;background:#0c0c19}
+.photo-thumbnail img{width:100%;height:90px;object-fit:contain;display:block}
+.photo-thumbnail button{width:100%;border:0;padding:10px 4px;color:#eee;background:#252139;cursor:pointer}
+#surprise-world{margin-top:10px;min-height:44px}
+#world-choice-feedback{display:block;margin-top:8px;color:#91dfeb}
+:focus-visible{outline:3px solid #62dafa;outline-offset:4px}
+@media(max-width:580px){.merch-secondary-grid,.merch-digital-grid{grid-template-columns:1fr!important}.photo-thumbnails{grid-template-columns:repeat(2,minmax(0,1fr))}.quality-choice{min-height:64px}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto!important}*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+
+.world-visual img,.merch-mini img{height:auto!important;aspect-ratio:4/3}
+@media(max-width:580px){.create-intro{padding:24px!important}.create-intro h2{font-size:38px!important}.create-intro .privacy-card{margin-top:18px;padding-top:0}.create-intro .privacy-card p{font-size:13px}.photo-thumbnail img{height:110px}}

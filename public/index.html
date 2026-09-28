@@ -8,7 +8,7 @@
   <title>Recast Me — Your pet. A whole new world.</title>
   <link rel="stylesheet" href="/styles.css?v=130" />
   <link rel="stylesheet" href="/merch-v07.css?v=130" />
-  <link rel="stylesheet" href="/site-v10.css?v=181" />
+  <link rel="stylesheet" href="/site-v10.css?v=190" />
 </head>
 <body>
   <header class="site-header">
@@ -104,7 +104,7 @@
         <article class="step-card">
           <b>03</b>
           <div class="step-visual preview-mini" aria-hidden="true">
-            <img src="/assets/world-game-v18.webp" alt="">
+            <img src="/assets/world-game-card-v181.webp" alt="">
             <span>RECAST ME · PREVIEW</span>
           </div>
           <h3>See your preview</h3>
@@ -168,8 +168,8 @@
       <div class="create-shell">
         <div class="create-intro">
           <div class="eyebrow">CREATE YOUR RECAST</div>
-          <h2>Show us the real thing.<br><span>See them become the character.</span></h2>
-          <p>We keep the face, pet markings, and defining features recognizable while changing the costume, pose, lighting, and world.</p>
+          <h2>Make it<br><span>yours.</span></h2>
+          <p>Add a clear photo, pick an adventure, and tell us your idea. Preview it before you buy.</p>
           <div class="privacy-card">
             <strong>PRIVATE BY DESIGN</strong>
             <p>Your prepared source photos and generated artwork are stored privately and tied to a unique Artwork ID.</p>
@@ -179,8 +179,16 @@
         <div class="create-card">
           <form id="recast-form">
             <p id="render-availability" class="prefill-note" role="status" hidden></p>
+            <label class="upload-zone" for="photos">
+              <input id="photos" type="file" accept="image/*" multiple class="photo-input" />
+              <span class="upload-icon" aria-hidden="true">+</span>
+              <span class="upload-copy"><strong>1. Add your photos</strong><small>Clear, well-lit photos work best. Person + pet can use one photo together or separate references.</small></span>
+              <span id="file-summary" class="file-summary" role="status">No photos selected</span>
+            </label>
+            <div id="photo-thumbnails" class="photo-thumbnails" aria-label="Selected photos"></div>
+
             <fieldset class="creative-step">
-              <legend><span>01</span> Who’s in the picture?</legend>
+              <legend><span>02</span> Who’s in the picture?</legend>
               <p>Your pet, you together, or anyone you love.</p>
               <label>Subject suggestions
                 <select name="subject" id="subject">
@@ -201,10 +209,12 @@
               </label>
             </fieldset>
             <fieldset class="creative-step environment-step">
-              <legend><span>02</span> Where’s the adventure?</legend>
+              <legend><span>03</span> Where’s the adventure?</legend>
               <p>Pick a starting idea, then make the setting your own.</p>
               <label>World / environment suggestions
                 <select name="style" id="style"></select>
+                <button type="button" id="surprise-world" class="button ghost">Surprise me ✦</button>
+                <small id="world-choice-feedback" role="status"></small>
               </label>
               <label class="custom-world-field" id="custom-world-field">Describe the world or environment
                 <textarea name="customWorld" id="custom-world" maxlength="800" placeholder="A magical pumpkin village at sunset, with glowing lanterns and a starry sky."></textarea>
@@ -213,12 +223,6 @@
             </fieldset>
             <p id="prefill-note" class="prefill-note"></p>
             <div id="branch-note" class="branch-note hidden"></div>
-            <label class="upload-zone" for="photos">
-              <input id="photos" type="file" accept="image/*" multiple hidden />
-              <span class="upload-icon">＋</span>
-              <span class="upload-copy"><strong>Add up to 4 photos</strong><small>Clear, well-lit photos work best. Person + pet can use one photo together or separate references.</small></span>
-              <span id="file-summary" class="file-summary">No photos selected</span>
-            </label>
             <div class="consent"><input id="consent" type="checkbox" required><label for="consent">I have permission to use these photos and agree to the Recast Me AI/Image Policy.</label></div>
 
             <fieldset class="quality-picker" id="quality-picker">
@@ -343,6 +347,6 @@
     <span>© 2026 Recast Me</span>
   </footer>
 
-  <script src="/app.js?v=181" type="module"></script>
+  <script src="/app.js?v=190" type="module"></script>
 </body>
 </html>

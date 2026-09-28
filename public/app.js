@@ -129,9 +129,27 @@ document.querySelector('#custom-world').addEventListener('input',()=>{
 });
 
 const photos = document.querySelector('#photos');
+let photoURLs=[];
+function showSelectedPhotos(message=''){
+  photoURLs.forEach(url=>URL.revokeObjectURL(url));photoURLs=[];
+  const selected=[...photos.files];
+  document.querySelector('#file-summary').textContent=message||(selected.length?`${selected.length} of 4 photos ready`:'No photos selected');
+  const root=document.querySelector('#photo-thumbnails');root.replaceChildren();
+  selected.forEach((file,index)=>{
+    const tile=document.createElement('div');tile.className='photo-thumbnail';
+    const img=document.createElement('img');const url=URL.createObjectURL(file);photoURLs.push(url);img.src=url;img.alt=`Selected photo ${index+1}`;
+    const button=document.createElement('button');button.type='button';button.textContent='Remove';button.setAttribute('aria-label',`Remove photo ${index+1}`);
+    button.addEventListener('click',()=>{const transfer=new DataTransfer();[...photos.files].filter((_,i)=>i!==index).forEach(f=>transfer.items.add(f));photos.files=transfer.files;showSelectedPhotos();});
+    tile.append(img,button);root.append(tile);
+  });
+}
 photos.addEventListener('change',()=>{
-  const selected=[...photos.files].slice(0,4);
-  document.querySelector('#file-summary').textContent=selected.length?`${selected.length} photo${selected.length===1?'':'s'} selected`:'No photos selected';
+  const original=[...photos.files];const transfer=new DataTransfer();original.slice(0,4).forEach(f=>transfer.items.add(f));photos.files=transfer.files;
+  showSelectedPhotos(original.length>4?'Using the first 4 photos. Remove or replace any below.':'');
+});
+document.querySelector('#surprise-world').addEventListener('click',()=>{
+  const choices=STYLES.filter(s=>s[0]!==styleSelect.value);const pick=choices[Math.floor(Math.random()*choices.length)];styleSelect.value=pick[0];updateWorldFields();
+  document.querySelector('#world-choice-feedback').textContent=`Let’s try ${pick[1]}! Your subject description stays the same.`;
 });
 
 document.querySelectorAll('[data-idea-subject]').forEach(card=>{
