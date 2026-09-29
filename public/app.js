@@ -219,7 +219,7 @@ function updateQualityUI(){
     ? 'Quick Preview · faster, lower detail and likeness accuracy'
     : 'High-Quality Preview · best likeness, prompt accuracy, and detail';
 }
-document.querySelectorAll('input[name="qualityMode"]').forEach(input=>input.addEventListener('change',updateQualityUI));
+document.querySelectorAll('input[name="qualityMode"]').forEach(input=>input.addEventListener('change',()=>{updateQualityUI();applyReadiness();refreshRenderAvailability();}));
 
 function startGenerationUI(mode=selectedQuality()){
   const status=document.querySelector('#generation-status');
@@ -251,16 +251,32 @@ function friendlyGenerationError(data,error){
   return data?.userMessage || `${label} did not finish this time. Your photo and settings are still here.`;
 }
 
+let readinessSnapshot=null;
+function readinessFor(mode=selectedQuality()){return readinessSnapshot?.modes?.[mode]||null}
+function readinessMessage(mode=selectedQuality()){
+  const health=readinessFor(mode);
+  if(!readinessSnapshot?.local?.ready)return 'Image creation is unavailable while Recast Me checks its required services.';
+  if(!health)return 'Checking render readiness…';
+  if(health.ready)return `${qualityLabel(mode)} · Ready`;
+  if(health.reason==='quota')return `${qualityLabel(mode)} · Shared capacity paused`;
+  if(health.reason==='capacity')return `${qualityLabel(mode)} · Temporarily busy — cooling down`;
+  return `${qualityLabel(mode)} · Unavailable`;
+}
+function applyReadiness(){
+  const mode=selectedQuality(),health=readinessFor(mode),button=document.querySelector('#generate-button'),notice=document.querySelector('#render-availability');
+  const ready=Boolean(readinessSnapshot?.local?.ready&&health?.ready);
+  if(button&&!generationInFlight){button.disabled=!ready;button.textContent=ready?(mode==='quick'?'Create Quick Preview':'Create High-Quality Preview'):'Checking availability…';}
+  const copy=document.querySelector('#model-copy');if(copy)copy.textContent=readinessMessage(mode);
+  if(notice){notice.hidden=ready;notice.textContent=ready?'':readinessMessage(mode)+' Your photo and settings stay here.';}
+  return ready;
+}
 async function refreshRenderAvailability(){
   try{
-    const response=await fetch('/api/model-status',{signal:AbortSignal.timeout(5000)});
-    if(!response.ok)return true;
+    const response=await fetch('/api/render-readiness',{cache:'no-store',signal:AbortSignal.timeout(5000)});
     const data=await response.json();
-    const paused=['paused','unconfigured'].includes(data.availability?.state);
-    const notice=document.querySelector('#render-availability');
-    if(notice){notice.hidden=!paused;notice.textContent=paused?'Image creation is temporarily unavailable. Your settings are safe. Please check again shortly.':'';}
-    return !paused;
-  }catch{return true;}
+    if(!data?.modes)throw new Error('invalid readiness response');
+    readinessSnapshot=data;return applyReadiness();
+  }catch{readinessSnapshot=null;applyReadiness();return false;}
 }
 
 
@@ -685,6 +701,7 @@ form.addEventListener('submit',async e=>{
     button.disabled=false;
     generationInFlight=false;
     updateQualityUI();
+    await refreshRenderAvailability();
     resetTurnstile();
   }
 });
@@ -774,3 +791,4 @@ restoreRecentVersionOnLoad();
 status();
 setupTurnstile();
 refreshRenderAvailability();
+setInterval(()=>{if(!generationInFlight)refreshRenderAvailability()},30000);

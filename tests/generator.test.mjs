@@ -149,7 +149,7 @@ test('a recent quota failure blocks repeat paid calls briefly, then permits a fr
   await highQualityTransform(submission(),env);
   assert.equal((await highQualityTransform(submission(),env)).status,429);
   assert.equal(calls,1);
-  env.ARTWORK.objects.set('system/render-health.json',JSON.stringify({status:'failed',reason:'quota',retryAt:'2000-01-01'}));
+  env.ARTWORK.objects.set('system/render-health-high.json',JSON.stringify({mode:'high',status:'failed',reason:'quota',retryAt:'2000-01-01'}));
   env.AI.run=async()=>{calls++;return {image};};
   assert.equal((await highQualityTransform(submission(),env)).status,200);assert.equal(calls,2);
 });

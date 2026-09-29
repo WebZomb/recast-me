@@ -3,6 +3,7 @@ import { highQualityTransform, modelStatus } from "./highquality.js";
 import { routeWorkflow, scheduledWorkflow, requireAdmin } from "./workflow.js";
 import { socialRoutes } from './social.js';
 import { secureApplication } from './preview-security.js';
+import { readinessSnapshot } from './render-health.js';
 
 const application = {
   async fetch(request, env, ctx) {
@@ -26,6 +27,10 @@ const application = {
     }
     if (url.pathname === "/api/model-status" && request.method === "GET") {
       return modelStatus(env);
+    }
+    if (url.pathname === "/api/render-readiness" && request.method === "GET") {
+      const snapshot=await readinessSnapshot(env);
+      return new Response(JSON.stringify(snapshot),{status:snapshot.ok?200:503,headers:{"content-type":"application/json; charset=utf-8","cache-control":"no-store"}});
     }
     if (url.pathname === "/api/public-config" && request.method === "GET") {
       return new Response(JSON.stringify({turnstileSiteKey: env.TURNSTILE_SITE_KEY || null}), {headers:{"content-type":"application/json; charset=utf-8","cache-control":"no-store"}});

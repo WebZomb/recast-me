@@ -1,4 +1,4 @@
-import { renderHealth, recordRenderHealth } from './render-health.js';
+import { assertRenderReady, readinessSnapshot, recordRenderHealth } from './render-health.js';
 const DEFAULT_HIGH_QUALITY = "@cf/black-forest-labs/flux-2-dev";
 const DEFAULT_QUICK = "@cf/black-forest-labs/flux-2-klein-9b";
 
@@ -338,10 +338,12 @@ export async function highQualityTransform(request,env,{trustedSocialJob=false}=
     }
     if(!inputFiles.length)return json({error:"missing_upload",userMessage:"Add at least one photo first.",reason:"input"},400);
 
-    const health=await renderHealth(env);
-    if(health.state==='paused'){
-      await writeAttemptReceipt(env,clientAttemptId,{status:'failed',failedAt:new Date().toISOString(),reason:'quota',stage:'capacity-preflight',qualityMode});
-      return json({error:'shared_ai_capacity_used',code:3036,reason:'quota',retryable:false,retryAt:health.retryAt,userMessage:'Image creation is temporarily unavailable. Your settings are still here. Please check again shortly.'},429);
+    stage="readiness-preflight";
+    try{await assertRenderReady(env,qualityMode)}
+    catch(gate){
+      await writeAttemptReceipt(env,clientAttemptId,{status:'blocked',blockedAt:new Date().toISOString(),reason:gate.reason,stage,qualityMode,retryAt:gate.retryAt||null});
+      const quota=gate.reason==='quota';
+      return json({error:quota?'shared_ai_capacity_used':'render_not_ready',reason:gate.reason,retryable:false,retryAt:gate.retryAt||null,qualityMode,userMessage:gate.reason==='configuration'?'Image creation is unavailable while Recast Me checks its required services. Your photo and settings are safe.':quota?'Recast Me has reached its shared AI capacity. Your settings are safe; try again after the cooldown.':qualityMode==='quick'?'Quick Preview is cooling down after a busy response. Wait for Ready before trying again.':'High-Quality Preview is cooling down after a busy response. Wait for Ready before trying again.'},gate.status||503);
     }
     const highQualityModel=String(env.IMAGE_MODEL_HIGH_QUALITY||DEFAULT_HIGH_QUALITY);
     const quickModel=String(env.IMAGE_MODEL_QUICK||DEFAULT_QUICK);
@@ -353,7 +355,7 @@ export async function highQualityTransform(request,env,{trustedSocialJob=false}=
     if(!image||image.length<100)throw Object.assign(new Error("malformed"),{reason:"provider"});
     const previewMime=imageMime(image);
 
-    await recordRenderHealth(env,'success');
+    await recordRenderHealth(env,qualityMode,'success');
     stage="storage";
     const requestId=`RC-${Date.now().toString(36).toUpperCase()}-${randomHex(3).toUpperCase()}`;
     const accessToken=randomHex(32);
@@ -363,7 +365,7 @@ export async function highQualityTransform(request,env,{trustedSocialJob=false}=
     return json({ok:true,requestId,accessToken,style:STYLES[styleId]?.name||"Custom World",image:`data:${previewMime};base64,${image}`,persisted:stored.persisted,storageError:stored.storageError,qualityMode,qualityLabel:qualityMode==="quick"?"Quick Preview":"High-Quality Preview",modelUsed:generated.modelUsed,usedSafeRetry:generated.usedSafeRetry,usedFastFallback:false,promptVersion:"v1.4",clientAttemptId});
   }catch(error){
     const reason=error?.reason||"provider";
-    await recordRenderHealth(env,'failed',reason);
+    if(['capacity','quota'].includes(reason))await recordRenderHealth(env,qualityMode,'failed',reason);
     const internal=error?.cause||error;
     const diagnosticId=await writeGenerationDiagnostic(env,{stage,reason,providerCode:providerCode(internal),providerMessage:String(internal?.message||internal||"").slice(0,500),highQuality:String(env.IMAGE_MODEL_HIGH_QUALITY||DEFAULT_HIGH_QUALITY),quick:String(env.IMAGE_MODEL_QUICK||DEFAULT_QUICK)});
     await writeAttemptReceipt(env,clientAttemptId,{status:"failed",failedAt:new Date().toISOString(),durationMs:Date.now()-attemptStartedAt,stage,reason,providerCode:providerCode(internal),diagnosticId,qualityMode});
@@ -386,6 +388,6 @@ export async function modelStatus(env){
     defaultMode:"high",
     version:"v1.5",
     promptVersion:"v1.4",
-    availability:await renderHealth(env)
+    availability:await readinessSnapshot(env)
   })
 }
