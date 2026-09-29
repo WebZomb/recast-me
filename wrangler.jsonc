@@ -29,7 +29,16 @@
   "previews": {
     "ai": {
       "binding": "AI"
-    }
+    },
+    "images": {
+      "binding": "IMAGES"
+    },
+    "r2_buckets": [
+      {
+        "binding": "ARTWORK",
+        "bucket_name": "recast-me-artwork"
+      }
+    ]
   },
   "r2_buckets": [
     {
@@ -47,7 +56,6 @@
     "run_worker_first": ["/api/*"]
   }
 
-  // Add the Cloudflare Images binding only when you are ready to enable
-  // billable high-resolution print finishing:
-  // "images": { "binding": "IMAGES" }
+  // Production IMAGES remains intentionally unconfigured while the secure
+  // preview flow is validated. Worker Previews use previews.images above.
 }
