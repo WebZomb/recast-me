@@ -188,21 +188,11 @@ async function resizeFile(file,max=500){
 }
 
 async function renderWatermark(dataUrl){
+  // Server output is already flattened with @RecastMeAi • PREVIEW.
+  // Display those same protected pixels everywhere; never rely on a canvas-only mark.
   const img=new Image();img.src=dataUrl;await img.decode();
-  const preview=document.createElement('canvas');preview.width=img.naturalWidth;preview.height=img.naturalHeight;
-  const ctx=preview.getContext('2d');ctx.drawImage(img,0,0,preview.width,preview.height);
-  ctx.save();ctx.globalAlpha=.22;ctx.fillStyle='#ffffff';ctx.textAlign='center';ctx.font=`900 ${Math.max(16,preview.width/24)}px system-ui`;
-  ctx.translate(preview.width/2,preview.height/2);ctx.rotate(-Math.PI/5);
-  const gap=preview.width/2.1;
-  for(let y=-preview.height*1.4;y<preview.height*1.4;y+=gap*.65){
-    for(let x=-preview.width*1.5;x<preview.width*1.5;x+=gap){ctx.fillText('RECAST ME • PREVIEW',x,y)}
-  }
-  ctx.restore();
-  ctx.fillStyle='rgba(7,7,11,.75)';ctx.fillRect(0,preview.height-46,preview.width,46);
-  ctx.fillStyle='#fff';ctx.font=`800 ${Math.max(13,preview.width/34)}px system-ui`;ctx.textAlign='center';
-  ctx.fillText('RECAST ME • PREVIEW',preview.width/2,preview.height-18);
-  const canvas=document.querySelector('#preview-canvas');canvas.width=preview.width;canvas.height=preview.height;
-  canvas.getContext('2d').drawImage(preview,0,0);
+  const canvas=document.querySelector('#preview-canvas');canvas.width=img.naturalWidth;canvas.height=img.naturalHeight;
+  canvas.getContext('2d').drawImage(img,0,0);
 }
 
 function inferSubject(subject,notes){

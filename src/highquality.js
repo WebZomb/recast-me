@@ -26,13 +26,13 @@ const SUBJECT_STYLING = {
 
 function subjectTransformation(styleId,subjectType){
   const subject=String(subjectType||"person").toLowerCase();
-  const isPet=subject.includes("pet");
+  const isPet=subject.includes("pet")||subject.includes("dog")||subject.includes("cat")||subject.includes("puppy")||subject.includes("kitten");
   const isCar=subject.includes("car");
   const isPerson=subject.includes("person")||subject.includes("couple")||subject.includes("family");
   const theme=SUBJECT_STYLING[styleId]||"an original costume, role and visual styling drawn directly from the customer's custom world";
   return [
     `VISIBLE SUBJECT TRANSFORMATION REQUIRED: ${theme}.`,
-    isPet?"For every pet, visibly transform the pet itself with a fitted, comfortable original costume, cape, collar, or themed gear, plus an expressive new pose and world-matched light on its fur. Keep its real face, exact coat colors and patches, breed, eye color and natural four-legged anatomy recognizable. The pet must belong in the story, never appear as an unchanged photo cutout pasted onto new scenery.":"",
+    isPet?"PET IDENTITY IS NON-NEGOTIABLE: costume and environment may change, but the animal itself must not be redesigned. Preserve the exact head and muzzle shape, ear size/shape/angle, eye size/spacing/color, nose, expression character, breed/body proportions, leg length, fur length/texture, and the exact boundaries and placement of every coat-color patch and facial marking from the reference. Do not widen or shorten the muzzle, enlarge the eyes, round the skull, change ear proportions, invent spots, or turn the pet into a generic/cuter/cartoon version. Fit costume around the real anatomy without hiding the defining face or markings. The finished pet should be identifiable from the face and coat even if the costume/background are removed.":"",
     isCar?"For the car, visibly restyle its paint, lighting and original unbranded trim to fit the world, while retaining its recognizable silhouette and defining features.":"",
     isPerson?"For each person, visibly change their wardrobe, character role, pose and the lighting on their face while preserving their recognizable face, natural age and proportions.":"",
     "Show the costume or themed details on the subject clearly in the finished image. Integrate subject and environment with consistent shadows, perspective, color and light."
@@ -124,12 +124,13 @@ function makePrompt(styleId,subjectType,notes,inputCount,customWorld="",hasBranc
     : "Use input image 0 as the strict identity and appearance reference.";
 
   return [
-    "PRIORITY 1: faithfully execute the customer's written direction.",
+    "PRIORITY 1: preserve the exact identity of every real person and pet in the reference images. Identity accuracy outranks costume, pose, style, drama, cuteness, and customer world details.",
+    "PRIORITY 2: faithfully execute the customer's written direction without changing who the subject is.",
     userDirection?`CUSTOMER DIRECTION: ${userDirection}.`:"",
     refs,
     `Subject type: ${subjectType||"person"}.`,
     "This is a transformation, not a retouch. Create a clearly new scene rather than recreating the source photograph.",
-    "IDENTITY LOCK: preserve facial geometry, eye shape and spacing, eyebrows, nose, mouth, jawline, skin tone, natural age, hair color and hairline, body proportions, pet breed and coat markings, and vehicle silhouette/details.",
+    "IDENTITY LOCK: preserve facial geometry, eye shape and spacing, eyebrows, nose, mouth, jawline, skin tone, natural age, hair color and hairline, body proportions, pet breed, exact pet head/muzzle/ear proportions and exact coat-marking boundaries, and vehicle silhouette/details. Never use a generic breed template in place of the referenced animal.",
     "The result must immediately read as the same real subject. Do not make the subject younger, older, thinner, heavier, more muscular, more glamorous, or generically attractive unless the customer explicitly requests it.",
     style?`SELECTED WORLD: ${style.name}. ${style.prompt}.`:"SELECTED WORLD: an original world designed from the customer's description.",
     customWorld?`CUSTOM WORLD SETTING (customer's priority): ${safeNotes(customWorld)}.`:"",
@@ -146,7 +147,7 @@ function safePrompt(styleId,subjectType,inputCount,notes="",customWorld="",hasBr
   const style=styleId==="custom"?null:(STYLES[styleId]||STYLES.game);
   const userDirection=safeNotes(notes);
   return [
-    hasBranch?"Use the last image as the previous artwork, and earlier images for the real subject's identity.":inputCount>1?`Preserve all ${inputCount} reference subjects as separate recognizable subjects.`:"Preserve the reference subject closely and recognizably.",
+    hasBranch?"Use the last image as the previous artwork, and earlier images for the real subject's identity.":inputCount>1?`Preserve all ${inputCount} reference subjects as separate recognizable subjects.`:"Preserve the reference subject exactly and recognizably; for pets lock head/muzzle/ear proportions, eye placement and exact coat markings before applying any style.",
     userDirection?`Customer direction, simplified but still important: ${userDirection}.`:"",
     `Subject type: ${subjectType||"person"}.`,
     style?`Create an original ${style.name} transformation: ${style.prompt}.`:"Create an original custom-world transformation.",

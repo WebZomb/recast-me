@@ -1,5 +1,5 @@
 import test from 'node:test';import assert from 'node:assert/strict';
-import {secureApplication,watermarkBytes,SECURITY_VERSION} from '../src/preview-security.js';
+import {secureApplication,watermarkBytes,SECURITY_VERSION,WATERMARK_LABEL} from '../src/preview-security.js';
 import {CLEAN,MARKED,ID,TOKEN,PRINT,setup,imageMock,submission,fakeApplication} from './security-helpers.mjs';
 const get=(path)=>new Request(`https://recast.test${path}`);
 const noCore={fetch(){throw Error('Upstream route should not run')}};
@@ -106,3 +106,5 @@ test('control status accurately says there is no configured allowance or monetar
 test('watermark transform preserves aspect ratio and draws repeated branding plus footer',async()=>{
  const env=await setup();await watermarkBytes(env,CLEAN);const operations=env.IMAGES.operations;assert.deepEqual(operations[0],['transform',{width:768,height:960,fit:'scale-down'}]);assert.equal(operations.filter(x=>x[0]==='draw').length,2);assert.equal(operations.find(x=>x[0]==='draw')[1].repeat,true);
 });
+
+test('preview branding uses the public handle on every server-flattened derivative',()=>{assert.equal(WATERMARK_LABEL,'@RecastMeAi • PREVIEW');assert.equal(SECURITY_VERSION,'rm-preview-3')});

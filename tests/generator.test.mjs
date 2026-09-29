@@ -114,6 +114,9 @@ test('preset pet renders restyle the pet and ignore stale custom world text',asy
   });
   const result=await (await highQualityTransform(submission({style:'game',world:'A floating garden with glowing waterfalls',notes:''}),env)).json();
   assert.match(prompt,/heroic pet harness/i);
+  assert.match(prompt,/PET IDENTITY IS NON-NEGOTIABLE/i);
+  assert.match(prompt,/exact head and muzzle shape/i);
+  assert.match(prompt,/Do not widen or shorten the muzzle/i);
   assert.match(prompt,/never appear as an unchanged photo cutout/i);
   assert.doesNotMatch(prompt,/floating garden/i);
   const saved=JSON.parse(String(env.ARTWORK.objects.get(`requests/${result.requestId}/request.json`)));
