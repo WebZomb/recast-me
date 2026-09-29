@@ -641,3 +641,9 @@ section[id]{scroll-margin-top:100px}
 
 .world-visual img,.merch-mini img{height:auto!important;aspect-ratio:4/3}
 @media(max-width:580px){.create-intro{padding:24px!important}.create-intro h2{font-size:38px!important}.create-intro .privacy-card{margin-top:18px;padding-top:0}.create-intro .privacy-card p{font-size:13px}.photo-thumbnail img{height:110px}}
+
+
+/* RM-010 render readiness status */
+.quality-dot[data-state="ready"]{background:#5ee58c!important;box-shadow:0 0 12px rgba(94,229,140,.55)!important}
+.quality-dot[data-state="waiting"]{background:#ffb84d!important;box-shadow:0 0 12px rgba(255,184,77,.55)!important}
+.quality-dot[data-state="error"]{background:#ff5575!important;box-shadow:0 0 12px rgba(255,85,117,.55)!important}

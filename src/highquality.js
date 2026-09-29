@@ -59,7 +59,8 @@ function errorText(error){return (error?.message||String(error)||"").toLowerCase
 function isModeration(error){const m=errorText(error);return m.includes("3030")||m.includes("flagged")||m.includes("moderation")}
 function isQuota(error){const m=errorText(error);return m.includes("3036")||m.includes("daily free allocation")||m.includes("free allocation")||m.includes("used up your daily")||m.includes("quota exceeded")}
 function isCapacity(error){const m=errorText(error);return m.includes("3040")||m.includes("out of capacity")||m.includes("capacity temporarily exceeded")||m.includes("busy")||m.includes("overload")}
-function isTransient(error){const m=errorText(error);return isCapacity(error)||m.includes("timeout")||m.includes("timed out")||m.includes("503")||m.includes("502")||m.includes("504")}
+function isTimeout(error){const m=errorText(error);return error?.reason==="timeout"||error?.name==="TimeoutError"||m.includes("timeout")||m.includes("timed out")}
+function isTemporaryUnavailable(error){const m=errorText(error);return m.includes("503")||m.includes("502")||m.includes("504")||m.includes("service unavailable")||m.includes("upstream unavailable")}
 function providerCode(error){const m=String(error?.message||error||"").match(/\b(3\d{3}|5\d{3})\b/);return m?Number(m[1]):null}
 async function writeGenerationDiagnostic(env,payload){
   const diagnosticId=`GEN-${Date.now().toString(36).toUpperCase()}-${randomHex(2).toUpperCase()}`;
@@ -181,21 +182,12 @@ async function runModel(form,env,model){
   return result.image
 }
 
-async function withAttemptTimeout(promise,ms){
-  let timer;
-  try{
-    return await Promise.race([
-      promise,
-      new Promise((_,reject)=>{timer=setTimeout(()=>reject(Object.assign(new Error("attempt timeout"),{reason:"capacity"})),ms)})
-    ])
-  }finally{clearTimeout(timer)}
-}
-
-async function tryGeneration(env,model,prompt,inputFiles,kind,settings,timeoutMs){
-  const image=await withAttemptTimeout(
-    runModel(makeForm(prompt,inputFiles,settings),env,model),
-    timeoutMs
-  );
+async function tryGeneration(env,model,prompt,inputFiles,kind,settings){
+  // Do not race AI.run against a local timer. Promise.race does not cancel the
+  // provider call, so the old 125s/60s timers could discard a late successful
+  // result while the inference continued. Capacity is handled by rejectIfBusy;
+  // genuine provider timeouts are classified from the provider error itself.
+  const image=await runModel(makeForm(prompt,inputFiles,settings),env,model);
   return{
     image,
     modelUsed:model,
@@ -213,25 +205,28 @@ async function generateHighQuality({env,model,styleId,subjectType,notes,customWo
   const settings={width:1024,height:1280,guidance,steps};
 
   try{
-    return await tryGeneration(env,model,main,inputFiles,"high-primary",settings,125000)
+    return await tryGeneration(env,model,main,inputFiles,"high-primary",settings)
   }catch(firstError){
     if(isQuota(firstError))throw Object.assign(new Error("quota"),{reason:"quota",code:3036,cause:firstError});
     if(isModeration(firstError)){
       try{
-        return await tryGeneration(env,model,safe,inputFiles,"high-safe",settings,125000)
+        return await tryGeneration(env,model,safe,inputFiles,"high-safe",settings)
       }catch(last){
         if(isQuota(last))throw Object.assign(new Error("quota"),{reason:"quota",code:3036,cause:last});
         if(isModeration(last))throw Object.assign(new Error("moderation"),{reason:"moderation",code:3030,cause:last});
-        if(isTransient(last)||isCapacity(last))throw Object.assign(new Error("capacity"),{reason:"capacity",cause:last});
+        if(isTimeout(last))throw Object.assign(new Error("timeout"),{reason:"timeout",cause:last});
+        if(isCapacity(last))throw Object.assign(new Error("capacity"),{reason:"capacity",cause:last});
+        if(isTemporaryUnavailable(last))throw Object.assign(new Error("unavailable"),{reason:"unavailable",cause:last});
         throw Object.assign(new Error("provider"),{reason:"provider",cause:last});
       }
     }
+    if(isTimeout(firstError))throw Object.assign(new Error("timeout"),{reason:"timeout",cause:firstError});
     if(isCapacity(firstError)){
       // Capacity is not a quality failure and should not trigger a second
       // automatic provider submission. The UI can invite a deliberate retry.
       throw Object.assign(new Error("capacity"),{reason:"capacity",cause:firstError});
     }
-    if(isTransient(firstError))throw Object.assign(new Error("capacity"),{reason:"capacity",cause:firstError});
+    if(isTemporaryUnavailable(firstError))throw Object.assign(new Error("unavailable"),{reason:"unavailable",cause:firstError});
     throw Object.assign(new Error("provider"),{reason:"provider",cause:firstError});
   }
 }
@@ -244,7 +239,7 @@ async function generateQuick({env,model,styleId,subjectType,notes,customWorld,in
 
   let firstError;
   try{
-    return await tryGeneration(env,model,main,inputFiles,"quick-primary",settings,60000)
+    return await tryGeneration(env,model,main,inputFiles,"quick-primary",settings)
   }catch(error){firstError=error}
 
   if(isQuota(firstError))throw Object.assign(new Error("quota"),{reason:"quota",code:3036,cause:firstError});
@@ -252,16 +247,20 @@ async function generateQuick({env,model,styleId,subjectType,notes,customWorld,in
   // A moderated prompt can be simplified once. Never substitute the low-fidelity 4B model.
   if(isModeration(firstError)){
     try{
-      return await tryGeneration(env,model,safe,inputFiles,"quick-safe",settings,60000)
+      return await tryGeneration(env,model,safe,inputFiles,"quick-safe",settings)
     }catch(last){
       if(isQuota(last))throw Object.assign(new Error("quota"),{reason:"quota",code:3036,cause:last});
       if(isModeration(last))throw Object.assign(new Error("moderation"),{reason:"moderation",code:3030,cause:last});
-      if(isTransient(last)||isCapacity(last))throw Object.assign(new Error("capacity"),{reason:"capacity",cause:last});
+      if(isTimeout(last))throw Object.assign(new Error("timeout"),{reason:"timeout",cause:last});
+      if(isCapacity(last))throw Object.assign(new Error("capacity"),{reason:"capacity",cause:last});
+      if(isTemporaryUnavailable(last))throw Object.assign(new Error("unavailable"),{reason:"unavailable",cause:last});
       throw Object.assign(new Error("provider"),{reason:"provider",cause:last});
     }
   }
 
-  if(isTransient(firstError)||isCapacity(firstError))throw Object.assign(new Error("capacity"),{reason:"capacity",cause:firstError});
+  if(isTimeout(firstError))throw Object.assign(new Error("timeout"),{reason:"timeout",cause:firstError});
+  if(isCapacity(firstError))throw Object.assign(new Error("capacity"),{reason:"capacity",cause:firstError});
+  if(isTemporaryUnavailable(firstError))throw Object.assign(new Error("unavailable"),{reason:"unavailable",cause:firstError});
   throw Object.assign(new Error("provider"),{reason:"provider",cause:firstError});
 }
 
@@ -343,7 +342,17 @@ export async function highQualityTransform(request,env,{trustedSocialJob=false}=
     catch(gate){
       await writeAttemptReceipt(env,clientAttemptId,{status:'blocked',blockedAt:new Date().toISOString(),reason:gate.reason,stage,qualityMode,retryAt:gate.retryAt||null});
       const quota=gate.reason==='quota';
-      return json({error:quota?'shared_ai_capacity_used':'render_not_ready',reason:gate.reason,retryable:false,retryAt:gate.retryAt||null,qualityMode,userMessage:gate.reason==='configuration'?'Image creation is unavailable while Recast Me checks its required services. Your photo and settings are safe.':quota?'Recast Me has reached its shared AI capacity. Your settings are safe; try again after the cooldown.':qualityMode==='quick'?'Quick Preview is cooling down after a busy response. Wait for Ready before trying again.':'High-Quality Preview is cooling down after a busy response. Wait for Ready before trying again.'},gate.status||503);
+      const label=qualityMode==='quick'?'Quick Preview':'High-Quality Preview';
+      const userMessage=gate.reason==='configuration'
+        ?'Image creation is unavailable while Recast Me checks its required services. Your photo and settings are safe.'
+        :quota
+        ?'Recast Me has reached its shared AI capacity. Your settings are safe; try again after the cooldown.'
+        :gate.reason==='timeout'
+        ?`${label} is cooling down after a timeout. Your settings are safe; wait for Ready before trying again.`
+        :gate.reason==='unavailable'
+        ?`${label} is cooling down after a temporary provider error. Your settings are safe; wait for Ready before trying again.`
+        :`${label} is cooling down after a confirmed busy response. Your settings are safe; wait for Ready before trying again.`;
+      return json({error:quota?'shared_ai_capacity_used':'render_not_ready',reason:gate.reason,retryable:false,retryAt:gate.retryAt||null,qualityMode,userMessage},gate.status||503);
     }
     const highQualityModel=String(env.IMAGE_MODEL_HIGH_QUALITY||DEFAULT_HIGH_QUALITY);
     const quickModel=String(env.IMAGE_MODEL_QUICK||DEFAULT_QUICK);
@@ -365,13 +374,15 @@ export async function highQualityTransform(request,env,{trustedSocialJob=false}=
     return json({ok:true,requestId,accessToken,style:STYLES[styleId]?.name||"Custom World",image:`data:${previewMime};base64,${image}`,persisted:stored.persisted,storageError:stored.storageError,qualityMode,qualityLabel:qualityMode==="quick"?"Quick Preview":"High-Quality Preview",modelUsed:generated.modelUsed,usedSafeRetry:generated.usedSafeRetry,usedFastFallback:false,promptVersion:"v1.4",clientAttemptId});
   }catch(error){
     const reason=error?.reason||"provider";
-    if(['capacity','quota'].includes(reason))await recordRenderHealth(env,qualityMode,'failed',reason);
+    if(['capacity','quota','timeout','unavailable'].includes(reason))await recordRenderHealth(env,qualityMode,'failed',reason);
     const internal=error?.cause||error;
     const diagnosticId=await writeGenerationDiagnostic(env,{stage,reason,providerCode:providerCode(internal),providerMessage:String(internal?.message||internal||"").slice(0,500),highQuality:String(env.IMAGE_MODEL_HIGH_QUALITY||DEFAULT_HIGH_QUALITY),quick:String(env.IMAGE_MODEL_QUICK||DEFAULT_QUICK)});
     await writeAttemptReceipt(env,clientAttemptId,{status:"failed",failedAt:new Date().toISOString(),durationMs:Date.now()-attemptStartedAt,stage,reason,providerCode:providerCode(internal),diagnosticId,qualityMode});
     if(reason==="quota")return json({error:"shared_ai_capacity_used",code:3036,reason:"quota",retryable:false,diagnosticId,qualityMode,userMessage:"Recast Me has reached its shared AI capacity for today. This is a site-wide limit, not your personal render count. Your photo is safe, and nothing was charged."},429);
     if(reason==="moderation")return json({error:"generation_declined",code:3030,reason:"moderation",retryable:true,diagnosticId,qualityMode,userMessage:"The image engine would not complete that exact photo and wording combination. We already retried with a safer version. Try the same idea with simpler wording or another reference photo."},422);
-    if(reason==="capacity")return json({error:"engine_busy",reason:"capacity",retryable:true,diagnosticId,qualityMode,userMessage:"The image engine is temporarily busy. Your photo is safe — tap Try again in a moment."},503);
+    if(reason==="capacity")return json({error:"engine_busy",reason:"capacity",retryable:true,diagnosticId,qualityMode,userMessage:"The image engine returned a confirmed busy response. Your photo and settings are safe; wait for Ready before trying again."},503);
+    if(reason==="timeout")return json({error:"engine_timeout",reason:"timeout",retryable:true,diagnosticId,qualityMode,userMessage:"The image provider timed out before returning the artwork. Your photo and settings are safe; wait for Ready before trying again."},504);
+    if(reason==="unavailable")return json({error:"engine_unavailable",reason:"unavailable",retryable:true,diagnosticId,qualityMode,userMessage:"The image provider is temporarily unavailable. Your photo and settings are safe; wait for Ready before trying again."},503);
     return json({error:"generation_failed",reason,retryable:true,diagnosticId,qualityMode,userMessage:"We could not finish this preview. Your uploaded photo was not changed."},500)
   }
 }
@@ -386,7 +397,7 @@ export async function modelStatus(env){
       quick:{label:"Quick Preview",model:quick,guidance:Number(env.IMAGE_QUICK_GUIDANCE||4)}
     },
     defaultMode:"high",
-    version:"v1.5",
+    version:"v1.6",
     promptVersion:"v1.4",
     availability:await readinessSnapshot(env)
   })

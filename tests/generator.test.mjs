@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
 import { highQualityTransform } from '../src/highquality.js';
 import core from '../src/index.js';
 import router from '../src/router.js';
@@ -141,6 +142,20 @@ test('high-quality busy rejection does not automatically spend a second provider
   const result=await response.json();
   assert.equal(result.reason,'capacity');
   assert.deepEqual(models,['@cf/black-forest-labs/flux-2-dev']);
+});
+
+test('provider timeout is distinct from capacity and does not auto-retry',async()=>{
+  let calls=0;const env=envFor(async()=>{calls++;throw new Error('upstream request timed out')});
+  const response=await highQualityTransform(submission(),env);assert.equal(response.status,504);
+  const result=await response.json();assert.equal(result.reason,'timeout');assert.equal(calls,1);
+  assert.match(result.userMessage,/timed out/i);
+});
+
+test('generation source has no local Promise.race attempt timer',()=>{
+  const source=readFileSync(new URL('../src/highquality.js',import.meta.url),'utf8');
+  assert.doesNotMatch(source,/function\s+withAttemptTimeout/);
+  assert.doesNotMatch(source,/new Error\(["']attempt timeout/);
+  assert.doesNotMatch(source,/return\s+await\s+Promise\.race/);
 });
 
 test('a recent quota failure blocks repeat paid calls briefly, then permits a fresh attempt',async()=>{

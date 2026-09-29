@@ -243,11 +243,13 @@ function stopGenerationUI(success=false){
 function friendlyGenerationError(data,error){
   const mode=data?.qualityMode||selectedQuality();
   const label=qualityLabel(mode);
-  if(error?.name==='AbortError') return `${label} took too long this time. Your photo and settings are still here — try again or switch quality.`;
+  if(error?.name==='AbortError') return `${label} was still processing after several minutes, so this page stopped waiting. Keep this page open briefly and check Recent Versions before starting another attempt.`;
   if(data?.reviewRequired) return 'This request needs a quick human review before generation.';
   if(data?.code===3036 || data?.reason==='quota') return 'Recast Me has reached its shared AI capacity for today. This is a site-wide limit, not your personal render count. Your photo and settings are still here; nothing was charged.';
   if(data?.code===3030 || data?.reason==='moderation') return `${label} could not complete that exact photo and wording combination. Try again, edit the direction, or switch quality.`;
-  if(data?.reason==='capacity') return `${label} is temporarily busy. Your photo and settings are still here — try again or switch quality.`;
+  if(data?.reason==='timeout') return `${label} timed out before the provider returned the artwork. Your photo and settings are still here — wait for Ready before trying again.`;
+  if(data?.reason==='capacity') return `${label} received a confirmed busy response. Your photo and settings are still here — wait for Ready or choose another ready quality.`;
+  if(data?.reason==='unavailable') return `${label} is temporarily unavailable. Your photo and settings are still here — wait for Ready before trying again.`;
   return data?.userMessage || `${label} did not finish this time. Your photo and settings are still here.`;
 }
 
@@ -259,7 +261,9 @@ function readinessMessage(mode=selectedQuality()){
   if(!health)return 'Checking render readiness…';
   if(health.ready)return `${qualityLabel(mode)} · Ready`;
   if(health.reason==='quota')return `${qualityLabel(mode)} · Shared capacity paused`;
-  if(health.reason==='capacity')return `${qualityLabel(mode)} · Temporarily busy — cooling down`;
+  if(health.reason==='timeout')return `${qualityLabel(mode)} · Previous attempt timed out — cooling down`;
+  if(health.reason==='capacity')return `${qualityLabel(mode)} · Confirmed busy — cooling down`;
+  if(health.reason==='unavailable')return `${qualityLabel(mode)} · Provider temporarily unavailable`;
   return `${qualityLabel(mode)} · Unavailable`;
 }
 function applyReadiness(){
@@ -267,6 +271,7 @@ function applyReadiness(){
   const ready=Boolean(readinessSnapshot?.local?.ready&&health?.ready);
   if(button&&!generationInFlight){button.disabled=!ready;button.textContent=ready?(mode==='quick'?'Create Quick Preview':'Create High-Quality Preview'):'Checking availability…';}
   const copy=document.querySelector('#model-copy');if(copy)copy.textContent=readinessMessage(mode);
+  const dot=document.querySelector('.quality-dot');if(dot)dot.dataset.state=ready?'ready':readinessSnapshot?.local?.ready?'waiting':'error';
   if(notice){notice.hidden=ready;notice.textContent=ready?'':readinessMessage(mode)+' Your photo and settings stay here.';}
   return ready;
 }
@@ -288,9 +293,14 @@ function syncRetryControls(){
   if(retry&&!retry.classList.contains('hidden')){
     const ready=Boolean(readinessSnapshot?.local?.ready&&failed?.ready);
     retry.disabled=!ready;
-    retry.textContent=ready
-      ?(lastAttemptQuality==='quick'?'Try Quick again':'Try High-Quality again')
-      :(lastAttemptQuality==='quick'?'Quick temporarily busy — checking…':'High Quality temporarily busy — checking…');
+    const waitText=failed?.reason==='timeout'
+      ?`${qualityLabel(lastAttemptQuality)} timed out — checking readiness…`
+      :failed?.reason==='unavailable'
+      ?`${qualityLabel(lastAttemptQuality)} unavailable — checking…`
+      :failed?.reason==='capacity'
+      ?`${qualityLabel(lastAttemptQuality)} busy — checking…`
+      :`${qualityLabel(lastAttemptQuality)} unavailable — checking…`;
+    retry.textContent=ready?(lastAttemptQuality==='quick'?'Try Quick again':'Try High-Quality again'):waitText;
   }
   if(switchMode&&!switchMode.classList.contains('hidden')){
     const next=lastAttemptQuality==='quick'?'high':'quick',alternate=readinessFor(next);

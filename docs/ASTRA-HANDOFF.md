@@ -20,3 +20,5 @@ For each future session, record baseline/head commits, changed files, reasons, t
 Astra should independently inspect the diff, rerun tests, and decide accept/revise/reject/insufficient evidence for each change. Passing mocked tests does not establish live provider quality, browser behavior, purchase success or total security.
 
 - [RM-006: capacity handling](ASTRA-SESSION-RM-006.md). After real Preview capacity failure GEN-MUN2W8Y9-A1E7, automatic same-model busy retry was removed and Workers AI calls now use rejectIfBusy so capacity rejection is immediate and a later retry is deliberate.
+
+- [RM-010: timeout classification and wait-policy correction](ASTRA-SESSION-RM-010.md). R2 diagnostic `GEN-MUN9XZCT-7231` proved the prior “capacity” result was Recast Me’s own 125-second timer; the artificial timer is removed and timeout/busy/unavailable states are now distinct.
