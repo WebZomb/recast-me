@@ -44,9 +44,12 @@ jobs:
         run: npx --no-install wrangler deploy --dry-run --outdir /tmp/recast-rm010-bundle
       - name: Remove one-time patch machinery and commit validated result
         run: |
+          rm -rf node_modules
           rm -f scripts/apply_rm010_timeout_fix.py .github/workflows/apply-rm010.yml
+          test ! -e node_modules
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add -A
+          git status --short
           git commit -m 'fix: remove false capacity timeout and classify render failures'
           git push origin HEAD:recast/secure-previews-2026-09-29
