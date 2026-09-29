@@ -24,3 +24,7 @@ Rationale: an automatic second 3040 retry can add unnecessary provider attempts 
 Complete repository CI must pass before the owner retries. The generator regression test was updated to expect one provider call on busy rather than two, and a new test asserts that the binding receives `rejectIfBusy:true`. This does not prove provider capacity has returned and does not prove the next render's likeness.
 
 No paid render was intentionally started while making this change. No engine/provider switch, purchase, Printful action or X post was performed.
+
+## CI correction
+
+At commit `4dc8fcecc6263d6f112fb2805cd26e28089cb44b`, CI failed one newly edited test because the test still asserted HTTP 200 after a mocked 3040 capacity rejection. The implementation correctly returned HTTP 503/capacity after exactly one provider call. The follow-up changes only the test expectation to 503 + reason=capacity and keeps the one-call assertion. No application code is changed by this correction. Rerun complete CI before the next owner render.

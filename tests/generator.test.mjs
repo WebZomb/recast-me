@@ -137,7 +137,9 @@ test('high-quality busy rejection does not automatically spend a second provider
   const models=[];
   const env=envFor(async model=>{models.push(model);if(models.length===1)throw new Error('3040 out of capacity');return {image};});
   const response=await highQualityTransform(submission(),env);
-  assert.equal(response.status,200);
+  assert.equal(response.status,503);
+  const result=await response.json();
+  assert.equal(result.reason,'capacity');
   assert.deepEqual(models,['@cf/black-forest-labs/flux-2-dev']);
 });
 
