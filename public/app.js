@@ -275,8 +275,31 @@ async function refreshRenderAvailability(){
     const response=await fetch('/api/render-readiness',{cache:'no-store',signal:AbortSignal.timeout(5000)});
     const data=await response.json();
     if(!data?.modes)throw new Error('invalid readiness response');
-    readinessSnapshot=data;return applyReadiness();
-  }catch{readinessSnapshot=null;applyReadiness();return false;}
+    readinessSnapshot=data;
+    const ready=applyReadiness();
+    syncRetryControls();
+    return ready;
+  }catch{readinessSnapshot=null;applyReadiness();syncRetryControls();return false;}
+}
+function syncRetryControls(){
+  const retry=document.querySelector('#retry-generation');
+  const switchMode=document.querySelector('#switch-quality-generation');
+  const failed=readinessFor(lastAttemptQuality);
+  if(retry&&!retry.classList.contains('hidden')){
+    const ready=Boolean(readinessSnapshot?.local?.ready&&failed?.ready);
+    retry.disabled=!ready;
+    retry.textContent=ready
+      ?(lastAttemptQuality==='quick'?'Try Quick again':'Try High-Quality again')
+      :(lastAttemptQuality==='quick'?'Quick temporarily busy — checking…':'High Quality temporarily busy — checking…');
+  }
+  if(switchMode&&!switchMode.classList.contains('hidden')){
+    const next=lastAttemptQuality==='quick'?'high':'quick',alternate=readinessFor(next);
+    const ready=Boolean(readinessSnapshot?.local?.ready&&alternate?.ready);
+    switchMode.disabled=!ready;
+    switchMode.textContent=ready
+      ?(next==='quick'?'Try Quick Preview':'Try High-Quality Preview')
+      :(next==='quick'?'Quick Preview unavailable':'High Quality unavailable');
+  }
 }
 
 
@@ -335,7 +358,7 @@ function showPreviewError(message,{diagnosticId='',retryable=true}={}){
     if(diagnosticId){ref.textContent=`Support reference: ${diagnosticId}`;ref.classList.remove('hidden')}
     else{ref.textContent='';ref.classList.add('hidden')}
   }
-  if(retry)retry.classList.toggle('hidden',retryable===false);
+  if(retry){retry.classList.toggle('hidden',retryable===false);retry.disabled=retryable===false;}
   if(switchMode)switchMode.classList.toggle('hidden',retryable===false);
   box?.classList.remove('hidden');
 }
@@ -680,6 +703,7 @@ form.addEventListener('submit',async e=>{
     const switchButton=document.querySelector('#switch-quality-generation');
     if(retryButton)retryButton.textContent=lastAttemptQuality==='quick'?'Try Quick again':'Try High-Quality again';
     if(switchButton)switchButton.textContent=lastAttemptQuality==='quick'?'Try High-Quality Preview':'Try Quick Preview';
+    await refreshRenderAvailability();
     if(!hasSuccessfulPreview)document.querySelector('#request-id').textContent='';
 
     try{
@@ -706,16 +730,20 @@ form.addEventListener('submit',async e=>{
   }
 });
 
-document.querySelector('#retry-generation')?.addEventListener('click',()=>{
-  clearPreviewError();
-  form.requestSubmit();
+document.querySelector('#retry-generation')?.addEventListener('click',async event=>{
+  const button=event.currentTarget;if(button.disabled)return;
+  const available=await refreshRenderAvailability();
+  if(!available||!readinessFor(lastAttemptQuality)?.ready){syncRetryControls();return;}
+  clearPreviewError();form.requestSubmit();
 });
-document.querySelector('#switch-quality-generation')?.addEventListener('click',()=>{
+document.querySelector('#switch-quality-generation')?.addEventListener('click',async event=>{
+  const button=event.currentTarget;if(button.disabled)return;
   const next=lastAttemptQuality==='quick'?'high':'quick';
+  await refreshRenderAvailability();
+  if(!readinessFor(next)?.ready){syncRetryControls();return;}
   const radio=document.querySelector(`input[name="qualityMode"][value="${next}"]`);
-  if(radio){radio.checked=true;updateQualityUI();}
-  clearPreviewError();
-  form.requestSubmit();
+  if(radio){radio.checked=true;updateQualityUI();applyReadiness();}
+  clearPreviewError();form.requestSubmit();
 });
 document.querySelector('#keep-last-preview')?.addEventListener('click',()=>{
   restoreLastPreview().catch(()=>showRecastError('That saved preview could not be displayed. Select it from recent versions.'));
