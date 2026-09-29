@@ -28,3 +28,7 @@ Tests are being rerun after this commit. Prompt tests can prove the identity ins
 Also inspect the large preview and all four Recent Versions on mobile: every delivered artwork image should visibly contain `@RecastMeAi • PREVIEW`. Attempt saving/opening a history thumbnail to confirm the pixels themselves remain marked.
 
 No engine/provider switch, purchase, production order, X post or automatic model change is part of RM-004.
+
+## CI follow-up
+
+GitHub Actions at RM-004 commit `b7cf42fa2fabe39052d3c002d1790ccea7686652` ran 74 tests: 73 passed and 1 failed. The failure was the existing generator assertion requiring the phrase/behavior that a transformed pet must not be an unchanged photo cutout. The new stricter identity wording had accidentally removed that sentence while replacing the older pet paragraph. This was a test-detected prompt regression, not a provider call or clean-image leak. The next commit restores that transformation constraint alongside the stricter identity lock; rerun the complete suite before any live A/B render.
