@@ -2,8 +2,9 @@ import app from "./entry.js";
 import { highQualityTransform, modelStatus } from "./highquality.js";
 import { routeWorkflow, scheduledWorkflow, requireAdmin } from "./workflow.js";
 import { socialRoutes } from './social.js';
+import { secureApplication } from './preview-security.js';
 
-export default {
+const application = {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
     if(url.pathname === '/api/admin/model-test' && request.method === 'POST'){
@@ -40,3 +41,6 @@ export default {
     return scheduledWorkflow(controller, env, ctx);
   }
 };
+
+// All external API responses cross this boundary. Internal artwork stays private.
+export default secureApplication(application);

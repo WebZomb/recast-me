@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { highQualityTransform } from '../src/highquality.js';
 import core from '../src/index.js';
 import router from '../src/router.js';
+import { imageMock } from './security-helpers.mjs';
 
 // A stub carrying the JPEG signature; provider output is only passed through by these tests.
 const image=Buffer.concat([Buffer.from([0xff,0xd8,0xff]),Buffer.alloc(240,0x54),Buffer.from([0xff,0xd9])]).toString('base64');
@@ -21,7 +22,7 @@ class ArtworkBucket {
     };
   }
 }
-function envFor(run){return {ARTWORK:new ArtworkBucket(),AI:{run}}}
+function envFor(run){return {ARTWORK:new ArtworkBucket(),AI:{run},IMAGES:imageMock()}}
 function submission({style='custom',world='A floating garden with glowing waterfalls',notes='Make my pet the captain',quality='high',photo=original,branch=null}={}){
   const form=new FormData();
   form.set('style',style);form.set('subject','pet');form.set('customWorld',world);
