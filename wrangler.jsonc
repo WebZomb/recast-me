@@ -26,6 +26,11 @@
   "ai": {
     "binding": "AI"
   },
+  "previews": {
+    "ai": {
+      "binding": "AI"
+    }
+  },
   "r2_buckets": [
     {
       "binding": "ARTWORK",
