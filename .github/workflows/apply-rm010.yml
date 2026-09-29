@@ -1,0 +1,38 @@
+name: Apply RM-010 timeout correction
+on:
+  push:
+    branches: [recast/secure-previews-2026-09-29]
+    paths:
+      - '.github/workflows/apply-rm010.yml'
+      - 'scripts/apply_rm010_timeout_fix.py'
+permissions:
+  contents: write
+jobs:
+  apply-and-validate:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      CI: 'true'
+      WRANGLER_SEND_METRICS: 'false'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: recast/secure-previews-2026-09-29
+          fetch-depth: 0
+      - name: Apply exact RM-010 patch
+        run: python3 scripts/apply_rm010_timeout_fix.py
+      - name: Install locked dependencies
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Run complete mocked suite
+        run: npm test
+      - name: Bundle only — never deploy
+        run: npx --no-install wrangler deploy --dry-run --outdir /tmp/recast-rm010-bundle
+      - name: Remove one-time patch machinery and commit validated result
+        run: |
+          rm -f scripts/apply_rm010_timeout_fix.py .github/workflows/apply-rm010.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'fix: remove false capacity timeout and classify render failures'
+          git push origin HEAD:recast/secure-previews-2026-09-29
