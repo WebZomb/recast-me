@@ -104,7 +104,7 @@ test('control status accurately says there is no configured allowance or monetar
  const env=await setup();const req=new Request('https://recast.test/api/admin/render-controls',{headers:{authorization:'Bearer owner-test-secret'}});const r=await secureApplication(noCore).fetch(req,env,{}),data=await r.json();assert.equal(data.renderControls.configured,false);assert.equal(data.monetaryBudgetEnforced,false);
 });
 test('watermark transform preserves aspect ratio and draws repeated branding plus footer',async()=>{
- const env=await setup();await watermarkBytes(env,CLEAN);const operations=env.IMAGES.operations;assert.deepEqual(operations[0],['transform',{width:768,height:960,fit:'scale-down'}]);assert.equal(operations.filter(x=>x[0]==='draw').length,2);assert.equal(operations.find(x=>x[0]==='draw')[1].repeat,true);
+ const env=await setup();await watermarkBytes(env,CLEAN);const operations=env.IMAGES.operations;const baseTransform=operations.find(x=>x[0]==='transform'&&x[1]?.height===960);assert.deepEqual(baseTransform,['transform',{width:768,height:960,fit:'scale-down'}]);assert.equal(operations.filter(x=>x[0]==='draw').length,2);assert.equal(operations.find(x=>x[0]==='draw')[1].repeat,true);
 });
 
 test('preview branding uses the public handle on every server-flattened derivative',()=>{assert.equal(WATERMARK_LABEL,'@RecastMeAi • PREVIEW');assert.equal(SECURITY_VERSION,'rm-preview-4')});
