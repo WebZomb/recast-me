@@ -172,7 +172,11 @@ function makeForm(prompt,inputFiles,{width=768,height=960,guidance=4,steps=null}
 
 async function runModel(form,env,model){
   const serialized=new Response(form);
-  const result=await env.AI.run(model,{multipart:{body:serialized.body,contentType:serialized.headers.get("content-type")}});
+  // Reject a request before inference when the model is currently saturated.
+  // Cloudflare documents 3040 as a temporary capacity rejection. Do not
+  // automatically resubmit it: preserve the user's last result and let a
+  // deliberate later action create the next attempt.
+  const result=await env.AI.run(model,{multipart:{body:serialized.body,contentType:serialized.headers.get("content-type")}}, {rejectIfBusy:true});
   if(!result?.image)throw new Error("Image model returned no image.");
   return result.image
 }
@@ -223,13 +227,9 @@ async function generateHighQuality({env,model,styleId,subjectType,notes,customWo
       }
     }
     if(isCapacity(firstError)){
-      // Retry only a definitive busy rejection, never an ambiguous timed-out render.
-      try { return await tryGeneration(env,model,main,inputFiles,"high-busy-retry",settings,125000); }
-      catch(last){
-        if(isQuota(last))throw Object.assign(new Error("quota"),{reason:"quota",code:3036,cause:last});
-        const reason=isModeration(last)?'moderation':isTransient(last)?'capacity':'provider';
-        throw Object.assign(new Error(reason),{reason,cause:last});
-      }
+      // Capacity is not a quality failure and should not trigger a second
+      // automatic provider submission. The UI can invite a deliberate retry.
+      throw Object.assign(new Error("capacity"),{reason:"capacity",cause:firstError});
     }
     if(isTransient(firstError))throw Object.assign(new Error("capacity"),{reason:"capacity",cause:firstError});
     throw Object.assign(new Error("provider"),{reason:"provider",cause:firstError});

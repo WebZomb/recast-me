@@ -133,12 +133,12 @@ test('provider-wide free allowance is reported as shared capacity, not a visitor
   assert.match(result.userMessage,/site-wide limit, not your personal render count/i);
 });
 
-test('high-quality busy rejection retries once on the same model and preserves quality',async()=>{
+test('high-quality busy rejection does not automatically spend a second provider submission',async()=>{
   const models=[];
   const env=envFor(async model=>{models.push(model);if(models.length===1)throw new Error('3040 out of capacity');return {image};});
   const response=await highQualityTransform(submission(),env);
   assert.equal(response.status,200);
-  assert.deepEqual(models,['@cf/black-forest-labs/flux-2-dev','@cf/black-forest-labs/flux-2-dev']);
+  assert.deepEqual(models,['@cf/black-forest-labs/flux-2-dev']);
 });
 
 test('a recent quota failure blocks repeat paid calls briefly, then permits a fresh attempt',async()=>{
@@ -162,4 +162,10 @@ test('owner comparison runs allowlisted klein4 without changing public engine co
  const req=new Request('https://recast.test/api/admin/model-test?model=klein4',{method:'POST',headers:{Authorization:'Bearer private-test'},body:await submission().formData()});
  const res=await router.fetch(req,env,{});assert.equal(res.status,200);assert.deepEqual(calls,['@cf/black-forest-labs/flux-2-klein-4b']);assert.equal(env.IMAGE_MODEL_QUICK,'@cf/black-forest-labs/flux-2-klein-9b');
  const bad=await router.fetch(new Request('https://recast.test/api/admin/model-test?model=unapproved',{method:'POST',headers:{Authorization:'Bearer private-test'},body:new FormData()}),env,{});assert.equal(bad.status,400);assert.equal(calls.length,1);
+});
+
+test('Workers AI calls request immediate busy rejection instead of entering a capacity queue',async()=>{
+  const options=[];const env=envFor(async(_model,_input,runOptions)=>{options.push(runOptions);return {image}});
+  const response=await highQualityTransform(submission(),env);assert.equal(response.status,200);
+  assert.deepEqual(options,[{rejectIfBusy:true}]);
 });

@@ -18,3 +18,5 @@ Do not confuse uploaded code, GitHub dry-run validation, or a Cloudflare PR Prev
 For each future session, record baseline/head commits, changed files, reasons, tests actually run and their evidence, failures, costs, deployment state, unresolved items and rollback. Preserve older entries; correct claims with a dated correction. Keep secrets, customer photos, access tokens and private transcripts out of this public repository.
 
 Astra should independently inspect the diff, rerun tests, and decide accept/revise/reject/insufficient evidence for each change. Passing mocked tests does not establish live provider quality, browser behavior, purchase success or total security.
+
+- [RM-006: capacity handling](ASTRA-SESSION-RM-006.md). After real Preview capacity failure GEN-MUN2W8Y9-A1E7, automatic same-model busy retry was removed and Workers AI calls now use rejectIfBusy so capacity rejection is immediate and a later retry is deliberate.
