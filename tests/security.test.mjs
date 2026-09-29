@@ -107,4 +107,6 @@ test('watermark transform preserves aspect ratio and draws repeated branding plu
  const env=await setup();await watermarkBytes(env,CLEAN);const operations=env.IMAGES.operations;assert.deepEqual(operations[0],['transform',{width:768,height:960,fit:'scale-down'}]);assert.equal(operations.filter(x=>x[0]==='draw').length,2);assert.equal(operations.find(x=>x[0]==='draw')[1].repeat,true);
 });
 
-test('preview branding uses the public handle on every server-flattened derivative',()=>{assert.equal(WATERMARK_LABEL,'@RecastMeAi • PREVIEW');assert.equal(SECURITY_VERSION,'rm-preview-3')});
+test('preview branding uses the public handle on every server-flattened derivative',()=>{assert.equal(WATERMARK_LABEL,'@RecastMeAi • PREVIEW');assert.equal(SECURITY_VERSION,'rm-preview-4')});
+
+test('watermark draw inputs are raster PNG assets rather than SVG',async()=>{const env=await setup();await watermarkBytes(env,CLEAN);assert.equal(env.IMAGES.operations.filter(x=>x[0]==='draw').length,2)});

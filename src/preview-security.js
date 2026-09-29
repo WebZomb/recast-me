@@ -1,6 +1,7 @@
+import { WATERMARK_TILE_BASE64, WATERMARK_FOOTER_BASE64 } from './watermark-tile.js';
 import { digest, guardedEnvironment, renderControlStatus, submissionFingerprint } from './render-controls.js';
 
-export const SECURITY_VERSION = 'rm-preview-3';
+export const SECURITY_VERSION = 'rm-preview-4';
 export const WATERMARK_LABEL = '@RecastMeAi • PREVIEW';
 const IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
 const PRIVATE_HEADERS = { 'cache-control': 'private, no-store', 'x-content-type-options': 'nosniff', 'referrer-policy': 'no-referrer' };
@@ -68,17 +69,16 @@ export async function watermarkBytes(env, source) {
   const scale = Math.min(1, 768 / info.width, 960 / info.height);
   const width = Math.max(1, Math.round(info.width * scale));
   const height = Math.max(1, Math.round(info.height * scale));
-  // SVG overlays are flattened server-side into the delivered JPEG. They are
-  // generated here so every size (large preview, history card, mockup/social)
-  // carries the same brand mark and no clean preview URL reaches the browser.
-  const escapeXml = value => String(value).replace(/[&<>"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch]));
-  const label = escapeXml(WATERMARK_LABEL);
-  const tileSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="520" height="150"><text x="260" y="86" text-anchor="middle" font-family="Arial,sans-serif" font-size="38" font-weight="800" fill="white">${label}</text></svg>`;
-  const footerSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="70"><rect width="100%" height="100%" fill="rgba(7,7,11,.78)"/><text x="50%" y="44" text-anchor="middle" font-family="Arial,sans-serif" font-size="30" font-weight="800" fill="white">${label}</text></svg>`;
-  const output = await env.IMAGES.input(new Blob([source]).stream())
+  // Cloudflare Images does not reliably accept an SVG Blob as a draw source
+  // in Worker Preview (real error 9412). Use the already-rasterized PNG brand
+  // assets instead. The PNGs contain @RecastMeAi • PREVIEW and are flattened
+  // into the JPEG returned to every unpaid preview surface.
+  const tile=env.IMAGES.input(new Blob([from64(WATERMARK_TILE_BASE64)],{type:'image/png'}).stream());
+  const footer=env.IMAGES.input(new Blob([from64(WATERMARK_FOOTER_BASE64)],{type:'image/png'}).stream()).transform({width,fit:'scale-down'});
+  const output = await env.IMAGES.input(new Blob([source],{type:'image/jpeg'}).stream())
     .transform({ width, height, fit: 'scale-down' })
-    .draw(env.IMAGES.input(new Blob([tileSvg], {type:'image/svg+xml'}).stream()), { repeat: true, opacity: 0.30, top: 0, left: 0 })
-    .draw(env.IMAGES.input(new Blob([footerSvg], {type:'image/svg+xml'}).stream()), { bottom: 0, left: 0 })
+    .draw(tile, { repeat: true, opacity: 0.27, top: 0, left: 0 })
+    .draw(footer, { bottom: 0, left: 0 })
     .output({ format: 'image/jpeg', quality: 85 });
   const response = output.response();
   if (!response.ok || !response.headers.get('content-type')?.startsWith('image/jpeg')) throw error('watermark_failed', 'A protected preview could not be prepared.');
