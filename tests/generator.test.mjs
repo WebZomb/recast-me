@@ -80,13 +80,13 @@ test('refining a saved version includes original pet image and the previous rend
   assert.equal(calls.length,2);
 });
 
-test('quick mode reports provider capacity instead of downgrading to a weaker model',async()=>{
+test('standard mode reports provider capacity without changing away from FLUX.2 dev',async()=>{
   const models=[];
   const env=envFor(async model=>{models.push(model);throw new Error('3040 out of capacity')});
   const response=await highQualityTransform(submission({quality:'quick'}),env);
   assert.equal(response.status,503);
   assert.equal((await response.json()).reason,'capacity');
-  assert.deepEqual(models,['@cf/black-forest-labs/flux-2-klein-9b']);
+  assert.deepEqual(models,['@cf/black-forest-labs/flux-2-dev']);
 });
 
 test('generated image is not reported saved when R2 fails',async()=>{
