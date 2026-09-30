@@ -216,7 +216,7 @@ function updateQualityUI(){
   if(button&&!generationInFlight)button.textContent=mode==='quick'?'Create Standard Preview':'Create High-Quality Preview';
   const copy=document.querySelector('#model-copy');
   if(copy)copy.textContent=mode==='quick'
-    ? 'Standard Preview · faster, lower detail and likeness accuracy'
+    ? 'Standard Preview · 12-step Flux, lower cost with strong likeness target'
     : 'High-Quality Preview · best likeness, prompt accuracy, and detail';
 }
 document.querySelectorAll('input[name="qualityMode"]').forEach(input=>input.addEventListener('change',()=>{updateQualityUI();applyReadiness();refreshRenderAvailability();}));
@@ -649,13 +649,12 @@ form.addEventListener('submit',async e=>{
 
     button.textContent=qualityMode==='quick'?'Creating Standard Preview…':'Creating High-Quality Preview…';
     startGenerationUI(qualityMode);
-    const controller=new AbortController();
-    const timeout=setTimeout(()=>controller.abort(),qualityMode==='quick'?135000:270000);
+    // Do not locally abort an in-flight image generation request. A browser timer
+    // cannot cancel Workers AI and can create an orphaned paid render whose result
+    // is discarded. Let the provider/Worker return the authoritative outcome.
     let res,data;
-    try{
-      res=await fetch('/api/transform-v2',{method:'POST',body:fd,signal:controller.signal});
-      data=await res.json().catch(()=>({}));
-    }finally{ clearTimeout(timeout); }
+    res=await fetch('/api/transform-v2',{method:'POST',body:fd});
+    data=await res.json().catch(()=>({}));
 
     if(res.status===202&&data.reviewRequired) throw Object.assign(new Error(friendlyGenerationError(data)),{publicMessage:friendlyGenerationError(data),diagnosticId:data.diagnosticId||'',retryable:false});
     if(!res.ok) throw Object.assign(new Error(friendlyGenerationError(data)),{publicMessage:friendlyGenerationError(data),diagnosticId:data.diagnosticId||'',retryable:data.retryable!==false});

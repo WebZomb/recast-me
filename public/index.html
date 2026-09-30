@@ -227,28 +227,28 @@
 
             <fieldset class="quality-picker" id="quality-picker">
               <legend>Choose generation quality</legend>
-              <label class="quality-choice selected" data-quality-card="high">
-                <input type="radio" name="qualityMode" value="high" checked>
+              <label class="quality-choice" data-quality-card="high">
+                <input type="radio" name="qualityMode" value="high">
                 <span class="quality-radio"></span>
                 <span class="quality-choice-copy">
-                  <strong>High-Quality Preview <em>RECOMMENDED</em></strong>
+                  <strong>High-Quality Preview</strong>
                   <small>Best likeness, prompt accuracy, and detail. Takes longer.</small>
                 </span>
               </label>
-              <label class="quality-choice" data-quality-card="quick">
-                <input type="radio" name="qualityMode" value="quick">
+              <label class="quality-choice selected" data-quality-card="quick">
+                <input type="radio" name="qualityMode" value="quick" checked>
                 <span class="quality-radio"></span>
                 <span class="quality-choice-copy">
-                  <strong>Standard Preview</strong>
+                  <strong>Standard Preview <em>RECOMMENDED</em></strong>
                   <small>Lower-cost Flux preview tuned for strong likeness and prompt accuracy.</small>
                 </span>
               </label>
             </fieldset>
 
             <div id="turnstile-container" class="turnstile-container hidden"></div>
-            <button type="submit" class="button primary full" id="generate-button">Create High-Quality Preview</button>
+            <button type="submit" class="button primary full" id="generate-button">Create Standard Preview</button>
             <div id="recast-error" class="recast-error hidden" role="alert"></div>
-            <div class="quality-line"><span class="quality-dot"></span><span id="model-copy">High-Quality Preview · best likeness and accuracy</span></div>
+            <div class="quality-line"><span class="quality-dot"></span><span id="model-copy">Standard Preview · 12-step Flux, lower-cost identity-first preview</span></div>
           </form>
         </div>
       </div>

@@ -343,7 +343,7 @@ export async function highQualityTransform(request,env,{trustedSocialJob=false}=
     catch(gate){
       await writeAttemptReceipt(env,clientAttemptId,{status:'blocked',blockedAt:new Date().toISOString(),reason:gate.reason,stage,qualityMode,retryAt:gate.retryAt||null});
       const quota=gate.reason==='quota';
-      const label=qualityMode==='quick'?'Quick Preview':'High-Quality Preview';
+      const label=qualityMode==='quick'?'Standard Preview':'High-Quality Preview';
       const userMessage=gate.reason==='configuration'
         ?'Image creation is unavailable while Recast Me checks its required services. Your photo and settings are safe.'
         :quota
@@ -372,7 +372,7 @@ export async function highQualityTransform(request,env,{trustedSocialJob=false}=
     const stored=await store(env,{requestId,accessToken,styleId,subjectType,notes,customWorld,parentRequestId,source,sourceTweet,qualityMode,inputs:inputFiles,image,previewMime,safety,modelUsed:generated.modelUsed,attemptKind:generated.attemptKind});
 
     await writeAttemptReceipt(env,clientAttemptId,{status:"success",completedAt:new Date().toISOString(),durationMs:Date.now()-attemptStartedAt,requestId,qualityMode,modelUsed:generated.modelUsed,attemptKind:generated.attemptKind,persisted:stored.persisted});
-    return json({ok:true,requestId,accessToken,style:STYLES[styleId]?.name||"Custom World",image:`data:${previewMime};base64,${image}`,persisted:stored.persisted,storageError:stored.storageError,qualityMode,qualityLabel:qualityMode==="quick"?"Quick Preview":"High-Quality Preview",modelUsed:generated.modelUsed,usedSafeRetry:generated.usedSafeRetry,usedFastFallback:false,promptVersion:"v1.4",clientAttemptId});
+    return json({ok:true,requestId,accessToken,style:STYLES[styleId]?.name||"Custom World",image:`data:${previewMime};base64,${image}`,persisted:stored.persisted,storageError:stored.storageError,qualityMode,qualityLabel:qualityMode==="quick"?"Standard Preview":"High-Quality Preview",modelUsed:generated.modelUsed,usedSafeRetry:generated.usedSafeRetry,usedFastFallback:false,promptVersion:"v1.4",clientAttemptId});
   }catch(error){
     const reason=error?.reason||"provider";
     if(['capacity','quota','timeout','unavailable'].includes(reason))await recordRenderHealth(env,qualityMode,'failed',reason);
@@ -397,7 +397,7 @@ export async function modelStatus(env){
       high:{label:"High-Quality Preview",model:highQuality,steps:Number(env.IMAGE_HIGH_QUALITY_STEPS||18),guidance:Number(env.IMAGE_HIGH_QUALITY_GUIDANCE||5)},
       quick:{label:"Standard Preview",model:quick,steps:Number(env.IMAGE_QUICK_STEPS||12),guidance:Number(env.IMAGE_QUICK_GUIDANCE||5)}
     },
-    defaultMode:"high",
+    defaultMode:"quick",
     version:"v1.6",
     promptVersion:"v1.4",
     availability:await readinessSnapshot(env)

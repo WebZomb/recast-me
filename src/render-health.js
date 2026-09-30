@@ -5,7 +5,7 @@ function seconds(env,name,fallback,min,max){return Math.max(min,Math.min(max,Num
 function cooldown(env,reason){
   if(reason==='capacity')return seconds(env,'RENDER_CAPACITY_COOLDOWN_SECONDS',90,15,900);
   if(reason==='quota')return seconds(env,'RENDER_QUOTA_COOLDOWN_SECONDS',300,60,86400);
-  if(reason==='timeout')return seconds(env,'RENDER_TIMEOUT_COOLDOWN_SECONDS',45,15,900);
+  if(reason==='timeout')return seconds(env,'RENDER_TIMEOUT_COOLDOWN_SECONDS',300,15,900);
   if(reason==='unavailable')return seconds(env,'RENDER_UNAVAILABLE_COOLDOWN_SECONDS',60,15,1800);
   return 0;
 }
