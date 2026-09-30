@@ -207,16 +207,16 @@ function selectedQuality(){
   return document.querySelector('input[name="qualityMode"]:checked')?.value==='quick'?'quick':'high';
 }
 function qualityLabel(mode=selectedQuality()){
-  return mode==='quick'?'Quick Preview':'High-Quality Preview';
+  return mode==='quick'?'Standard Preview':'High-Quality Preview';
 }
 function updateQualityUI(){
   const mode=selectedQuality();
   document.querySelectorAll('[data-quality-card]').forEach(card=>card.classList.toggle('selected',card.dataset.qualityCard===mode));
   const button=document.querySelector('#generate-button');
-  if(button&&!generationInFlight)button.textContent=mode==='quick'?'Create Quick Preview':'Create High-Quality Preview';
+  if(button&&!generationInFlight)button.textContent=mode==='quick'?'Create Standard Preview':'Create High-Quality Preview';
   const copy=document.querySelector('#model-copy');
   if(copy)copy.textContent=mode==='quick'
-    ? 'Quick Preview · faster, lower detail and likeness accuracy'
+    ? 'Standard Preview · faster, lower detail and likeness accuracy'
     : 'High-Quality Preview · best likeness, prompt accuracy, and detail';
 }
 document.querySelectorAll('input[name="qualityMode"]').forEach(input=>input.addEventListener('change',()=>{updateQualityUI();applyReadiness();refreshRenderAvailability();}));
@@ -269,7 +269,7 @@ function readinessMessage(mode=selectedQuality()){
 function applyReadiness(){
   const mode=selectedQuality(),health=readinessFor(mode),button=document.querySelector('#generate-button'),notice=document.querySelector('#render-availability');
   const ready=Boolean(readinessSnapshot?.local?.ready&&health?.ready);
-  if(button&&!generationInFlight){button.disabled=!ready;button.textContent=ready?(mode==='quick'?'Create Quick Preview':'Create High-Quality Preview'):'Checking availability…';}
+  if(button&&!generationInFlight){button.disabled=!ready;button.textContent=ready?(mode==='quick'?'Create Standard Preview':'Create High-Quality Preview'):'Checking availability…';}
   const copy=document.querySelector('#model-copy');if(copy)copy.textContent=readinessMessage(mode);
   const dot=document.querySelector('.quality-dot');if(dot)dot.dataset.state=ready?'ready':readinessSnapshot?.local?.ready?'waiting':'error';
   if(notice){notice.hidden=ready;notice.textContent=ready?'':readinessMessage(mode)+' Your photo and settings stay here.';}
@@ -300,15 +300,15 @@ function syncRetryControls(){
       :failed?.reason==='capacity'
       ?`${qualityLabel(lastAttemptQuality)} busy — checking…`
       :`${qualityLabel(lastAttemptQuality)} unavailable — checking…`;
-    retry.textContent=ready?(lastAttemptQuality==='quick'?'Try Quick again':'Try High-Quality again'):waitText;
+    retry.textContent=ready?(lastAttemptQuality==='quick'?'Try Standard again':'Try High-Quality again'):waitText;
   }
   if(switchMode&&!switchMode.classList.contains('hidden')){
     const next=lastAttemptQuality==='quick'?'high':'quick',alternate=readinessFor(next);
     const ready=Boolean(readinessSnapshot?.local?.ready&&alternate?.ready);
     switchMode.disabled=!ready;
     switchMode.textContent=ready
-      ?(next==='quick'?'Try Quick Preview':'Try High-Quality Preview')
-      :(next==='quick'?'Quick Preview unavailable':'High Quality unavailable');
+      ?(next==='quick'?'Try Standard Preview':'Try High-Quality Preview')
+      :(next==='quick'?'Standard Preview unavailable':'High Quality unavailable');
   }
 }
 
@@ -647,7 +647,7 @@ form.addEventListener('submit',async e=>{
       fd.append('branchPreview',await resizeFile(new File([blob],'previous-recast.jpg',{type:blob.type||'image/jpeg'})));
     }
 
-    button.textContent=qualityMode==='quick'?'Creating Quick Preview…':'Creating High-Quality Preview…';
+    button.textContent=qualityMode==='quick'?'Creating Standard Preview…':'Creating High-Quality Preview…';
     startGenerationUI(qualityMode);
     const controller=new AbortController();
     const timeout=setTimeout(()=>controller.abort(),qualityMode==='quick'?135000:270000);
@@ -711,8 +711,8 @@ form.addEventListener('submit',async e=>{
       : `${qualityLabel(lastAttemptQuality)} didn’t finish this time.`;
     const retryButton=document.querySelector('#retry-generation');
     const switchButton=document.querySelector('#switch-quality-generation');
-    if(retryButton)retryButton.textContent=lastAttemptQuality==='quick'?'Try Quick again':'Try High-Quality again';
-    if(switchButton)switchButton.textContent=lastAttemptQuality==='quick'?'Try High-Quality Preview':'Try Quick Preview';
+    if(retryButton)retryButton.textContent=lastAttemptQuality==='quick'?'Try Standard again':'Try High-Quality again';
+    if(switchButton)switchButton.textContent=lastAttemptQuality==='quick'?'Try High-Quality Preview':'Try Standard Preview';
     await refreshRenderAvailability();
     if(!hasSuccessfulPreview)document.querySelector('#request-id').textContent='';
 

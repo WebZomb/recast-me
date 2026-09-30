@@ -1,6 +1,6 @@
 import { assertRenderReady, readinessSnapshot, recordRenderHealth } from './render-health.js';
 const DEFAULT_HIGH_QUALITY = "@cf/black-forest-labs/flux-2-dev";
-const DEFAULT_QUICK = "@cf/black-forest-labs/flux-2-klein-9b";
+const DEFAULT_QUICK = "@cf/black-forest-labs/flux-2-dev";
 
 const STYLES = {
   game:{name:"Game World",prompt:"premium original cinematic action-world key art, modern city scale, dramatic sunset and neon light, sophisticated realistic illustration, strong dynamic composition, no franchise references, no weapons"},
@@ -234,8 +234,9 @@ async function generateHighQuality({env,model,styleId,subjectType,notes,customWo
 async function generateQuick({env,model,styleId,subjectType,notes,customWorld,inputFiles,hasBranch}){
   const main=makePrompt(styleId,subjectType,notes,inputFiles.length,customWorld,hasBranch);
   const safe=safePrompt(styleId,subjectType,inputFiles.length,notes,customWorld,hasBranch);
-  const guidance=Math.max(1,Math.min(10,Number(env.IMAGE_QUICK_GUIDANCE||4)));
-  const settings={width:768,height:960,guidance,steps:null};
+  const guidance=Math.max(1,Math.min(10,Number(env.IMAGE_QUICK_GUIDANCE||5)));
+  const steps=Math.max(8,Math.min(30,Number(env.IMAGE_QUICK_STEPS||12)));
+  const settings={width:768,height:960,guidance,steps};
 
   let firstError;
   try{
@@ -394,7 +395,7 @@ export async function modelStatus(env){
     ok:true,
     modes:{
       high:{label:"High-Quality Preview",model:highQuality,steps:Number(env.IMAGE_HIGH_QUALITY_STEPS||18),guidance:Number(env.IMAGE_HIGH_QUALITY_GUIDANCE||5)},
-      quick:{label:"Quick Preview",model:quick,guidance:Number(env.IMAGE_QUICK_GUIDANCE||4)}
+      quick:{label:"Standard Preview",model:quick,steps:Number(env.IMAGE_QUICK_STEPS||12),guidance:Number(env.IMAGE_QUICK_GUIDANCE||5)}
     },
     defaultMode:"high",
     version:"v1.6",
