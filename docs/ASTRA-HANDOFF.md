@@ -4,6 +4,8 @@ Updated: 2026-10-03. Keep this index and append-only session records current whe
 
 ## Start here
 
+- [RM-014: approved $5/day budget](ASTRA-SESSION-RM-014.md). Decision recorded; runtime settings unchanged until the per-call reserve is verified.
+
 - [RM-013: bounded previews and customer print approval](ASTRA-SESSION-RM-013.md) and [activation checklist](COMMERCE-ACTIVATION.md). HQ-first; three starter previews/five per paid order; customer swap/proof/approval flow. 124 mocked tests and dry-run passed; application `5aaa7c8` deployed successfully to Cloudflare Preview. New limits remain inactive until configured. Owner-provided RM-012 comparison screenshots show successful output; physical print quality remains unverified.
 
 - [RM-012: protected print-finish comparison](ASTRA-SESSION-RM-012.md). Owner accepted Standard in the September 30 PR record. New owner-only Preserve/Enhanced comparison; 100 mocked tests and local bundle passed, live upscaling still unverified.

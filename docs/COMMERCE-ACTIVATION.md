@@ -2,6 +2,12 @@
 
 Code is on the secure-preview branch. It is not enabled on production merely by a GitHub upload. Do not merge while launch gates below are incomplete.
 
+## Approved daily budget — October 3, 2026
+
+The owner approved **$5/day (500 cents)** for AI generation reservations. This replaces the earlier unselected amount; $2/day was only a discussion example. At full use this is $150 over 30 days or $155 over 31 days, excluding the base plan and non-generation services. It is adjustable; do not automatically raise it when orders arrive. Evaluate net contribution after product, shipping, payment and rendering costs.
+
+Activation target: `AI_DAILY_BUDGET_CENTS=500`. This decision is recorded, **not live configuration**. Verify the per-call reservation against account usage and the largest supported reference/step settings before setting both budget variables together. Setting only the daily amount would fail budget validation and pause generation. The earlier 4–6-cent estimate described ordinary initial renders, not a measured worst-case reservation or guaranteed daily output. Existing environment values have not been inspected or changed in this session.
+
 ## Chosen customer flow
 
 - FLUX.2 dev High Quality is selected by default; Standard remains an explicit option. No model replacement.
@@ -19,7 +25,7 @@ In the intended Cloudflare Worker environment:
 | Setting | Required value/purpose |
 |---|---|
 | `RENDER_CREDITS_ENABLED` | `true` only after configuration/testing; absent means the new allowance is inactive |
-| `AI_DAILY_BUDGET_CENTS` | Owner-chosen nonnegative integer; `0` pauses new AI submissions |
+| `AI_DAILY_BUDGET_CENTS` | Approved target `500` ($5/day); `0` pauses new AI submissions |
 | `AI_CALL_RESERVE_CENTS` | Positive integer chosen conservatively from measured maximum cost per actual AI.run call |
 | `AI_DAILY_CALL_LIMIT` | Optional additional cap on actual inference submissions |
 | `CREDIT_IP_SALT` | New long random secret, at least 32 characters; keep stable and do not commit/share it |
@@ -32,7 +38,7 @@ In the intended Cloudflare Worker environment:
 | `ORDER_SYNC_ENABLED` | Enable only after the manual payment/refund sync tests pass |
 | `ALLOW_TEST_ORDER_CREDITS` | Optional `true` on isolated test deployments only; Shopify test orders are never sent to paid print production |
 
-The budget caps **reserved amounts for AI.run calls**, not the Cloudflare invoice. Every retry reserves separately; there are no automatic reservation refunds. Images/upscaling/watermark processing, storage, Workers, taxes and other services are outside this counter. Owner/social calls bypass guest allowance but share configured call/budget limits. Other deployments sharing R2 must use compatible controls; calls from old unguarded deployments are not covered. Recheck the reserve amount whenever models, resolution, inputs, steps or provider prices change. No dollar cap or per-call reserve is silently selected by code.
+The budget caps **reserved amounts for AI.run calls**, not the Cloudflare invoice. Every retry reserves separately; there are no automatic reservation refunds. Images/upscaling/watermark processing, storage, Workers, taxes and other services are outside this counter. Owner/social calls bypass guest allowance but share configured call/budget limits. Other deployments sharing R2 must use compatible controls; calls from old unguarded deployments are not covered. Recheck the reserve amount whenever models, resolution, inputs, steps or provider prices change. The owner approved the $5/day target above; the per-call reserve still needs verification before activation.
 
 Cloudflare's published FLUX.2 dev pricing is per input/output 512px tile per step: https://developers.cloudflare.com/workers-ai/models/flux-2-dev/ . Use actual account measurements for the reserve; do not infer unlimited AI from the $5 Workers plan.
 
