@@ -647,3 +647,16 @@ section[id]{scroll-margin-top:100px}
 .quality-dot[data-state="ready"]{background:#5ee58c!important;box-shadow:0 0 12px rgba(94,229,140,.55)!important}
 .quality-dot[data-state="waiting"]{background:#ffb84d!important;box-shadow:0 0 12px rgba(255,184,77,.55)!important}
 .quality-dot[data-state="error"]{background:#ff5575!important;box-shadow:0 0 12px rgba(255,85,117,.55)!important}
+
+/* Launch polish: device safe areas, honest waiting state and accessible export. */
+[hidden]{display:none!important}
+.skip-link{position:fixed;top:-100px;left:16px;z-index:100;padding:14px 20px;border-radius:12px;background:#fff;color:#121020}
+.skip-link:focus{top:12px}
+.generation-wait-note{font-size:12px!important;line-height:1.5;color:#bdb6d7;margin:12px 24px!important}
+.preview-info .button{width:100%;white-space:normal;text-align:center;line-height:1.4;padding:14px 20px}
+#preview-export-status{color:#c4bddb;font-size:14px;line-height:1.5;overflow-wrap:anywhere}
+.consent a{color:#92dfff;text-underline-offset:3px}
+body{padding-bottom:env(safe-area-inset-bottom)}
+.site-header{padding-top:max(14px,env(safe-area-inset-top))}
+@media(max-width:520px){.site-header .brand{gap:8px}.site-header .nav-cta{font-size:13px;padding:12px 14px}.quality-choice strong{line-height:1.45}.quality-choice strong em{display:inline-block}.consent{line-height:1.6}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}

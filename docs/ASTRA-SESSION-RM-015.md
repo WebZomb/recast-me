@@ -1,0 +1,13 @@
+# RM-015 — web polish and initial iPhone project
+
+Date: 2026-10-03. Baseline `c84b05c7c66a42c3b434233f4dc01d8fc7ca6b8c` on `recast/secure-previews-2026-09-29`. Resulting implementation commit is the commit introducing this file; exact upload/CI evidence appended separately after verification. Main remains unmerged.
+
+The owner requested final polish and preparation for App Store submission. Inspected live preview hero/form/catalog in the browser and authoritative current source. Hero has Jack Russell before/after; one catalog with separate physical/digital tiers. No iOS project existed. Reviewed current Apple guidelines for minimum functionality, AI permission and physical/digital purchases.
+
+Changes: index/app/CSS/order-page polish; protected preview export module and security tests; factual privacy/help page; SwiftUI iOS development source with native local preview gallery/sharing, origin-restricted reply bridge, guide, connection error handling; XcodeGen and unsigned Mac compile CI; release checklist with truthful unimplemented gates. No model, budget runtime, production or commerce activation change.
+
+Validation before upload: `node --check public/app.js`; 126 mocked Node tests passed, 0 failed. New export tests reject missing watermark contract, invalid types/bytes and oversized responses and verify private tokens are not included in returned share data. Existing tests cover backend watermark authorization. No live AI image or billable commerce/provider action initiated. Browser confirmed existing desktop preview layout; phone and native runtime still unverified. Initial git fetch failed due sandbox proxy; escalated fetch succeeded, local prior documentation changes matched remote before syncing HEAD.
+
+Known limitations: development app connects to preview in all configurations, no StoreKit, signing/app icon/privacy manifest/App Store record yet, no background job resume or notification, native checkout redirect intentionally blocked until physical checkout design and digital policy are tested. My Recasts is local-only, max 20, not an account sync or backup. WKWebView picker/camera and save bridge need device testing. Apple approval is not promised. $5/day remains approved but inactive pending measured reserve. Live Cloudflare/Apple settings and keys were not available through a purpose-built connector in this turn. Checkout/sample/retention/support policies remain release gates.
+
+Rollback: revert RM-015 source and docs together; no backend storage schema changed. Remove iOS workflow if undesired. Retain any user's native gallery files; website private artwork and orders are unaffected. Cumulative prior notes remain authoritative for their dated evidence.

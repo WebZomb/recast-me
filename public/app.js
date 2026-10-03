@@ -1,3 +1,4 @@
+import {protectedPreviewFile} from './preview-export.js';
 let creditInfo=null;
 async function refreshCredits(initialize=false){
   const display=document.querySelector('#render-credits');
@@ -74,7 +75,7 @@ document.querySelectorAll('.style-card').forEach(card=>{
 function merchCard(item,{featured=false}={}){
   const classes=['product',featured?'featured-product':'secondary-product'].filter(Boolean).join(' ');
   return `<div class="${classes}">
-    <div class="product-art"><img src="${item.image || `/assets/product-${item.asset}-v09.jpg`}" alt="${item.name}"></div>
+    <div class="product-art"><img src="${item.image || `/assets/product-${item.asset}-v09.jpg`}" alt="${item.name}" loading="lazy" decoding="async"></div>
     <div class="product-body">
       <span class="product-badge">${item.badge}</span>
       <strong>${item.name}</strong>
@@ -435,7 +436,7 @@ async function fetchStoredPreview(version){
   url.searchParams.set('token',version.accessToken);
   const response=await fetch(url);
   const data=await response.json().catch(()=>({}));
-  if(!response.ok||!data.ok||!data.image)throw new Error(data.error||'This saved version is unavailable.');
+  if(!response.ok||!data.ok||data.watermarked!==true||!data.image)throw new Error(data.error||'This saved version is unavailable.');
   return data.image;
   })();
   previewCache.set(version.requestId,pending);
@@ -677,7 +678,7 @@ form.addEventListener('submit',async e=>{
 
     if(res.status===202&&data.reviewRequired) throw Object.assign(new Error(friendlyGenerationError(data)),{publicMessage:friendlyGenerationError(data),diagnosticId:data.diagnosticId||'',retryable:false});
     if(!res.ok) throw Object.assign(new Error(friendlyGenerationError(data)),{publicMessage:friendlyGenerationError(data),diagnosticId:data.diagnosticId||'',retryable:data.retryable!==false});
-    if(typeof data.image!=='string'||!data.image.startsWith('data:image/')) throw Object.assign(new Error('invalid preview'),{publicMessage:'The image engine returned an incomplete preview. Please try again.',retryable:true});
+    if(data.watermarked!==true||typeof data.image!=='string'||!data.image.startsWith('data:image/')) throw Object.assign(new Error('invalid preview'),{publicMessage:'The image engine returned an incomplete preview. Please try again.',retryable:true});
     if(!data.persisted)throw Object.assign(new Error('storage unavailable'),{
       publicMessage:'The artwork was generated, but private storage did not save it. Your last saved version is still available. Please try again in a moment.',
       diagnosticId:data.clientAttemptId||'',retryable:true
@@ -848,3 +849,31 @@ status();
 setupTurnstile();
 refreshRenderAvailability();
 setInterval(()=>{if(!generationInFlight)refreshRenderAvailability()},30000);
+
+// Sharing never includes the private access token, source photo or order link.
+const exportStatus=document.querySelector('#preview-export-status');
+const nativeSave=document.querySelector('#save-native-preview');
+if(window.webkit?.messageHandlers?.recastPreview)nativeSave.hidden=false;
+async function exportPreview(native=false){
+  const button=document.querySelector(native?'#save-native-preview':'#share-preview');
+  button.disabled=true;exportStatus.textContent='Preparing your watermarked preview…';
+  try{
+    const result=await protectedPreviewFile(lastSuccessfulPreviewMeta);
+    if(native){
+      // Native replies after it has actually persisted the file.
+      await window.webkit.messageHandlers.recastPreview.postMessage({id:result.id,image:result.image});
+      exportStatus.textContent='Saved to My Recasts on this iPhone.';
+    }else if(navigator.canShare?.({files:[result.file]})){
+      await navigator.share({files:[result.file],title:'My Recast',text:'Made with @RecastMeAi'});
+      exportStatus.textContent='Your watermarked preview is ready to share.';
+    }else{
+      const url=URL.createObjectURL(result.file),link=document.createElement('a');
+      link.href=url;link.download=result.file.name;link.click();
+      setTimeout(()=>URL.revokeObjectURL(url),60000);
+      exportStatus.textContent='Your watermarked preview download has started.';
+    }
+  }catch(error){exportStatus.textContent=error.name==='AbortError'?'Sharing canceled. Your preview is still here.':error.message||'Could not save this preview.'}
+  finally{button.disabled=false}
+}
+document.querySelector('#share-preview')?.addEventListener('click',()=>exportPreview());
+nativeSave?.addEventListener('click',()=>exportPreview(true));

@@ -2,15 +2,17 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="referrer" content="no-referrer" />
   <meta name="theme-color" content="#07070b" />
   <meta name="description" content="Create amazing AI portraits of your pet or you together. Turn your favorite into personalized mugs, clothing, wall art, and gifts." />
   <title>Recast Me — Your pet. A whole new world.</title>
   <link rel="stylesheet" href="/styles.css?v=130" />
   <link rel="stylesheet" href="/merch-v07.css?v=130" />
-  <link rel="stylesheet" href="/site-v10.css?v=190" />
+  <link rel="stylesheet" href="/site-v10.css?v=200" />
 </head>
 <body>
+  <a class="skip-link" href="#start">Skip to create your Recast</a>
   <header class="site-header">
     <a class="brand" href="#home" aria-label="Recast Me home">
       <span class="brand-mark" aria-hidden="true"><span>R</span><span>M</span></span>
@@ -223,7 +225,7 @@
             </fieldset>
             <p id="prefill-note" class="prefill-note"></p>
             <div id="branch-note" class="branch-note hidden"></div>
-            <div class="consent"><input id="consent" type="checkbox" required><label for="consent">I have permission to use these photos and agree to the Recast Me AI/Image Policy.</label></div>
+            <div class="consent"><input id="consent" type="checkbox" required><label for="consent">I have permission to use these photos. I agree to send my selected photos and descriptions to Cloudflare Workers AI to create my Recast. <a href="/privacy.html" target="_blank" rel="noopener">Photo privacy &amp; AI policy</a>.</label></div>
 
             <fieldset class="quality-picker" id="quality-picker">
               <legend>Choose generation quality</legend>
@@ -264,13 +266,13 @@
       </div>
       <div class="preview-layout">
         <div class="preview-frame">
-          <canvas id="preview-canvas"></canvas>
+          <canvas id="preview-canvas" role="img" aria-label="Your watermarked Recast preview"></canvas>
           <div class="loading hidden" id="loading">
             <div class="loader-orbit"><i></i><i></i><i></i></div>
             <p id="generation-status">Building your Recast…</p>
-            <small id="generation-detail">Locking the subject identity to your reference photo.</small>
+            <small id="generation-detail">Preparing your selected photos.</small>
             <div class="generation-track"><span id="generation-progress"></span></div>
-            <div class="generation-milestones"><span>IDENTITY</span><span>WORLD</span><span>DETAIL</span><span>PREVIEW</span></div>
+            <p class="generation-wait-note">This is a waiting indicator, not a completion percentage.</p>
           </div>
           <div id="preview-error" class="preview-error hidden" role="alert">
             <div class="preview-error-orb">!</div>
@@ -288,6 +290,9 @@
         <div class="preview-info">
           <div class="callout"><strong>WATERMARKED PREVIEW</strong><p>Your clean artwork stays private. Purchase options below stay tied to this exact Artwork ID.</p></div>
           <a class="button primary" href="#shop">Choose a product for your Recast →</a>
+          <button type="button" id="share-preview" class="button ghost">Save / share watermarked preview</button>
+          <button type="button" id="save-native-preview" class="button ghost" hidden>Save to My Recasts</button>
+          <p id="preview-export-status" role="status" aria-live="polite"></p>
           <a id="order-status-link" class="button ghost order-status-link hidden" href="#">Track this Recast / downloads</a>
 
         </div>
@@ -346,9 +351,10 @@
   <footer>
     <div class="brand compact-brand"><span class="brand-mark"><span>R</span><span>M</span></span><span>RECAST ME</span></div>
     <p>Same you. A bolder reality.</p>
+    <a href="/privacy.html">Privacy &amp; photo help</a>
     <span>© 2026 Recast Me</span>
   </footer>
 
-  <script src="/app.js?v=190" type="module"></script>
+  <script src="/app.js?v=200" type="module"></script>
 </body>
 </html>
