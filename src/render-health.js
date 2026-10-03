@@ -1,3 +1,4 @@
+import {budgetStatus} from './render-controls.js';
 const PREFIX='system/render-health',LEGACY_KEY='system/render-health.json',MODES=new Set(['high','quick']);
 const BLOCKING_REASONS=new Set(['capacity','quota','timeout','unavailable']);
 const modeName=m=>MODES.has(m)?m:'high',key=m=>`${PREFIX}-${modeName(m)}.json`,nowMs=n=>n instanceof Date?n.getTime():Number(n??Date.now()),parseMs=v=>{const n=Date.parse(v||'');return Number.isFinite(n)?n:0};
@@ -10,7 +11,7 @@ function cooldown(env,reason){
   return 0;
 }
 async function readJson(env,objectKey){const object=await env.ARTWORK?.get(objectKey);return object?object.json().catch(()=>null):null}
-export function localReadiness(env){const missing=[];if(!env.AI?.run)missing.push('AI');if(!env.ARTWORK?.get||!env.ARTWORK?.put)missing.push('ARTWORK');if(!env.IMAGES?.input||!env.IMAGES?.info)missing.push('IMAGES');const controls=String(env.AI_DAILY_CALL_LIMIT??'');if(controls&&!/^(0|[1-9]\d*)$/.test(controls))missing.push('AI_DAILY_CALL_LIMIT');return{ready:missing.length===0,missing}}
+export function localReadiness(env){const missing=[];if(!env.AI?.run)missing.push('AI');if(!env.ARTWORK?.get||!env.ARTWORK?.put)missing.push('ARTWORK');if(!env.IMAGES?.input||!env.IMAGES?.info)missing.push('IMAGES');const budget=budgetStatus(env);if((budget.configured||env.RENDER_CREDITS_ENABLED==='true')&&!budget.valid)missing.push('AI_BUDGET');if(env.RENDER_CREDITS_ENABLED==='true'&&String(env.CREDIT_IP_SALT||'').length<32)missing.push('CREDIT_IP_SALT');const controls=String(env.AI_DAILY_CALL_LIMIT??'');if(controls&&!/^(0|[1-9]\d*)$/.test(controls))missing.push('AI_DAILY_CALL_LIMIT');return{ready:missing.length===0,missing}}
 export async function renderHealth(env,mode='high',now=Date.now()){
   const local=localReadiness(env),selected=modeName(mode);
   if(!local.ready)return{state:'unconfigured',ready:false,mode:selected,reason:'configuration',missing:local.missing,checkedAt:null,retryAt:null,lastResult:null,lastReason:'configuration',lastSuccessAt:null,lastFailureAt:null,visitorDailyLimit:null};

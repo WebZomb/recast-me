@@ -1,3 +1,19 @@
+let creditInfo=null;
+async function refreshCredits(initialize=false){
+  const display=document.querySelector('#render-credits');
+  try{
+    const r=await fetch('/api/render-credits',{method:initialize?'POST':'GET',headers:{'x-recast-request':'1'}}),d=await r.json();
+    if(!r.ok)throw new Error(d.userMessage||d.error||'Could not check your previews.');
+    creditInfo=d;
+    if(display){display.hidden=!d.enabled;display.textContent=d.enabled?`${d.remaining??0} previews remaining · 3 starter previews + 5 per paid order. Failed previews restore your credit. Shared-network and site availability limits apply.`:'';}
+    return d;
+  }catch(e){if(display){display.hidden=false;display.textContent=e.message}throw e}
+}
+refreshCredits(true).catch(()=>{});
+try{
+  const path=sessionStorage.getItem('recast_order_return');
+  if(path&&path.startsWith('/order.html?')){const box=document.querySelector('#return-to-order');box.hidden=false;box.querySelector('a').href=path;}
+}catch{}
 const STYLES = [
   ["game","Game World","Cinematic city energy, dramatic light, bold illustrated realism.","/assets/world-game-card-v181.webp","Jack Russell in an adventure vest"],
   ["halloween","Halloween","Stylish costumes, moonlight, fog, pumpkins — playful, not grim.","/assets/world-halloween-v18.webp","Jack Russell in a Halloween cape"],
@@ -617,6 +633,8 @@ form.addEventListener('submit',async e=>{
   section.classList.remove('hidden');section.scrollIntoView({behavior:'smooth'});loading.classList.remove('hidden');
 
   try{
+    const credits=await refreshCredits(true);
+    if(credits.enabled&&credits.remaining<=0)throw Object.assign(new Error('Your free previews are used. A paid order adds five more; physical orders wait for your design approval.'),{publicMessage:'Your free previews are used. A paid order adds five more; physical orders wait for your design approval.'});
     const fd=new FormData();
     fd.append('style',styleSelect.value);
     const customWorld=styleSelect.value==='custom'?document.querySelector('#custom-world').value.trim():'';
@@ -653,7 +671,8 @@ form.addEventListener('submit',async e=>{
     // cannot cancel Workers AI and can create an orphaned paid render whose result
     // is discarded. Let the provider/Worker return the authoritative outcome.
     let res,data;
-    res=await fetch('/api/transform-v2',{method:'POST',body:fd});
+    res=await fetch('/api/transform-v2',{method:'POST',headers:{'x-recast-request':'1'},body:fd});
+    refreshCredits().catch(()=>{});
     data=await res.json().catch(()=>({}));
 
     if(res.status===202&&data.reviewRequired) throw Object.assign(new Error(friendlyGenerationError(data)),{publicMessage:friendlyGenerationError(data),diagnosticId:data.diagnosticId||'',retryable:false});

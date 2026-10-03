@@ -268,7 +268,7 @@ async function generateQuick({env,model,styleId,subjectType,notes,customWorld,in
 async function store(env,{requestId,accessToken,styleId,subjectType,notes,customWorld,parentRequestId,source,sourceTweet,qualityMode,inputs,image,previewMime,safety,modelUsed,attemptKind}){
   if(!env.ARTWORK)return{persisted:false,storageError:"ARTWORK binding is missing."};
   const now=new Date().toISOString();
-  const metadata={requestId,accessToken,styleId,styleName:STYLES[styleId]?.name||"Custom World",subjectType,notes,customWorld,parentRequestId:parentRequestId||null,previewMime,source:source||"site",sourceTweet:sourceTweet||null,safety,status:"preview_ready",createdAt:now,updatedAt:now,inputCount:inputs.length,paid:false,fulfillment:"not_started",modelUsed,attemptKind,qualityMode,promptVersion:"v1.4"};
+  const metadata={creditWalletId:env.RECAST_CREDIT_WALLET?.id||null,requestId,accessToken,styleId,styleName:STYLES[styleId]?.name||"Custom World",subjectType,notes,customWorld,parentRequestId:parentRequestId||null,previewMime,source:source||"site",sourceTweet:sourceTweet||null,safety,status:"preview_ready",createdAt:now,updatedAt:now,inputCount:inputs.length,paid:false,fulfillment:"not_started",modelUsed,attemptKind,qualityMode,promptVersion:"v1.4"};
   try{
     for(let i=0;i<inputs.length;i++)await env.ARTWORK.put(requestKey(requestId,`input-${i}.jpg`),await inputs[i].arrayBuffer());
     await env.ARTWORK.put(requestKey(requestId,"preview.b64"),image);
@@ -397,7 +397,7 @@ export async function modelStatus(env){
       high:{label:"High-Quality Preview",model:highQuality,steps:Number(env.IMAGE_HIGH_QUALITY_STEPS||18),guidance:Number(env.IMAGE_HIGH_QUALITY_GUIDANCE||5)},
       quick:{label:"Standard Preview",model:quick,steps:Number(env.IMAGE_QUICK_STEPS||12),guidance:Number(env.IMAGE_QUICK_GUIDANCE||5)}
     },
-    defaultMode:"quick",
+    defaultMode:"high",
     version:"v1.6",
     promptVersion:"v1.4",
     availability:await readinessSnapshot(env)

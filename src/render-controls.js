@@ -1,5 +1,6 @@
 // Counts actual AI.run submissions, including retries and ambiguous failures.
-// This is an optional REQUEST cap, not a monetary cap or a per-customer allowance.
+// AI call caps and conservative, owner-configured budget reservations.
+import { reserveCustomerRender } from './render-credits.js';
 const DAY_MS = 86400000;
 const CONTROL = Symbol('recastRenderControl');
 
@@ -93,6 +94,9 @@ export function guardedEnvironment(env, fingerprint = null) {
           state.claimPromise ||= claim();
           await state.claimPromise;
           await reserveAiCall(env);
+          await reserveBudget(env);
+          state.creditPromise ||= reserveCustomerRender(env);
+          await state.creditPromise;
         } catch (error) {
           state.blocked = error.renderControl ? error : blocked('render_control_unavailable', 'Image creation is paused because its usage safeguards could not be checked.');
           throw state.blocked;
@@ -104,4 +108,31 @@ export function guardedEnvironment(env, fingerprint = null) {
     }
   });
   return { env: guarded, state };
+}
+
+// This caps RESERVATIONS, not the Cloudflare invoice. Images, storage, taxes and
+// other services are excluded. The owner must set a conservative per-call amount.
+export function budgetStatus(env) {
+  const raw = env.AI_DAILY_BUDGET_CENTS;
+  const configured = raw !== undefined && raw !== '';
+  const integer = v => /^(0|[1-9]\d*)$/.test(String(v)) && Number.isSafeInteger(Number(v));
+  const valid = configured && integer(raw) && integer(env.AI_CALL_RESERVE_CENTS) && Number(env.AI_CALL_RESERVE_CENTS) > 0;
+  return { configured, valid, dailyBudgetCents: valid ? Number(raw) : null,
+    perCallReserveCents: valid ? Number(env.AI_CALL_RESERVE_CENTS) : null,
+    scope: 'AI.run reservations only; not a provider invoice limit', timezone: 'UTC' };
+}
+export async function reserveBudget(env, time = Date.now()) {
+  const c = budgetStatus(env);
+  if (!c.configured && env.RENDER_CREDITS_ENABLED !== 'true') return { enforced: false };
+  if (!c.valid) throw blocked('budget_config', 'Image creation is paused while the owner sets the rendering budget.');
+  const day = new Date(time).toISOString().slice(0, 10), key = `security/ai-budget/${day}.json`;
+  for (let i = 0; i < 8; i++) {
+    const old = await env.ARTWORK.get(key), ledger = old ? await old.json() : {day, reservedCents: 0};
+    if (ledger.day !== day || !Number.isSafeInteger(ledger.reservedCents) || ledger.reservedCents < 0 || (old && !old.etag)) throw blocked('budget_storage', 'The render budget needs review.');
+    if (ledger.reservedCents + c.perCallReserveCents > c.dailyBudgetCents) throw blocked('daily_render_budget', 'Today’s image creation budget has been reached. Your credits and saved artwork are still here.', 429);
+    ledger.reservedCents += c.perCallReserveCents;
+    const put = await env.ARTWORK.put(key, JSON.stringify(ledger), {onlyIf: old ? {etagMatches: old.etag} : new Headers({'If-None-Match':'*'})});
+    if (put) return {enforced: true, ...ledger};
+  }
+  throw blocked('budget_busy', 'The render budget is busy. Please try again shortly.');
 }

@@ -1,6 +1,10 @@
 import { FULFILLMENT } from "./entry.js";
 import { runSocialPipeline, socialReadiness } from './social.js';
 import { renderHealth } from './render-health.js';
+import { change, hash, fault, sameOrigin, privateJson } from './commerce-store.js';
+import { reconcileOrderCredits, orderEligible, creditsEnabled, walletFor, creditBalance } from './render-credits.js';
+import { designFor, publicDesign, customerDesignAction, approvedDesign, finishApprovedDesign, printDesignFile } from './order-approval.js';
+import { SYNC_ORDERS_QUERY, VERIFY_ORDER_QUERY } from './order-queries.js';
 
 const X_API = "https://api.x.com/2";
 const PRINTFUL_API = "https://api.printful.com";
@@ -114,9 +118,11 @@ export async function createMockup(request,env){
     if(!map.printfulProductId||!map.printfulVariantId)return json({ok:false,error:"This product is not mapped to Printful yet."},500);
     meta=await ensurePrintToken(env,meta);
     const sourceUrl=`${appBase(env,request)}/api/print-source/${encodeURIComponent(requestId)}?token=${encodeURIComponent(meta.printAccessToken)}`;
+    const savedSource=await env.ARTWORK.get(requestKey(requestId,'preview.b64'));
+    const sourceHash=await hash(await savedSource.text());
     const payload={variant_ids:[map.printfulVariantId],format:"jpg",width:1200,files:[{placement:map.preferredPlacement||"default",image_url:sourceUrl}]};
     const result=await printful(env,`/mockup-generator/create-task/${map.printfulProductId}`,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(payload)});
-    const record={requestId,sku,taskKey:result.task_key,status:result.status||"pending",createdAt:now(),updatedAt:now(),mockupAccessToken:randomHex(24),sourceUrl,printfulProductId:map.printfulProductId,printfulVariantId:map.printfulVariantId};
+    const record={requestId,sku,sourceHash,taskKey:result.task_key,status:result.status||"pending",createdAt:now(),updatedAt:now(),mockupAccessToken:randomHex(24),sourceUrl,printfulProductId:map.printfulProductId,printfulVariantId:map.printfulVariantId};
     await putJson(env,mockupKey(requestId,sku),record);
     return json({ok:true,status:record.status,taskKey:record.taskKey,sku,waitSeconds:10});
   }catch(error){return json({ok:false,error:error?.message||String(error)},error.status||500)}
@@ -189,28 +195,89 @@ function recipientFromOrder(order){
   const a=order.shippingAddress||{};return{name:a.name||[a.firstName,a.lastName].filter(Boolean).join(" "),company:a.company||undefined,address1:a.address1,address2:a.address2||undefined,city:a.city,state_code:a.provinceCode||undefined,state_name:a.province||undefined,country_code:a.countryCodeV2,zip:a.zip,phone:a.phone||undefined,email:order.email||undefined};
 }
 
-export async function syncPaidOrders(env){
-  if(!env.ARTWORK)return{ok:false,error:"R2 missing"};
-  const data=await shopifyGraphQL(env,`query RecastPaidOrders {
-    orders(first: 25, sortKey: CREATED_AT, reverse: true, query: "financial_status:paid") {
-      nodes { id name createdAt email displayFinancialStatus
-        shippingAddress { name firstName lastName company address1 address2 city province provinceCode countryCodeV2 zip phone }
-        lineItems(first: 50) { nodes { name sku quantity customAttributes { key value } } }
-      }
+export async function verifyPaidOrder(env,job,{forProduction=false}={}){
+  const data=await shopifyGraphQL(env,VERIFY_ORDER_QUERY,{id:job.orderId});
+  const order=data.order;
+  if(!order)throw fault('payment_unverified','We could not verify this payment. Your order is still on hold.',503);
+  await reconcileOrderCredits(env,order);
+  if(forProduction&&order.test)throw fault('test_order','Shopify test orders cannot be sent to paid print production.');
+  if(!orderEligible(order,env))throw fault('payment_required','This order is not eligible for printing or bonus renders. Check its payment, refund or cancellation status.');
+  if(order.lineItems?.pageInfo?.hasNextPage)throw fault('order_review','This large order needs an owner review.');
+  const line=(order.lineItems?.nodes||[]).find(l=>job.lineId?l.id===job.lineId:(artworkFromLine(l)===job.requestId&&l.sku===job.sku));
+  if(!line||line.sku!==job.sku||line.quantity!==job.quantity||artworkFromLine(line)!==job.requestId)throw fault('order_changed','The purchased item changed. An owner must review this order before printing.');
+  return order;
+}
+
+export async function reconcileShopifyOrder(env,order){
+  if(order.lineItems?.pageInfo?.hasNextPage)throw fault('order_review','An order has more than 250 lines and needs manual review.',503);
+  let created=0,seen=0,walletId=null;
+  const eligible=orderEligible(order,env);
+  for(const line of order.lineItems?.nodes||[]){
+    const requestId=artworkFromLine(line);if(!requestId||!line.sku||!FULFILLMENT[line.sku])continue;
+    if(!/^RC-[A-Z0-9-]{8,60}$/.test(requestId))continue;
+    const meta=await requestMeta(env,requestId);if(!meta)continue;
+    walletId ||= meta.creditWalletId||null;seen++;
+    const legacy=sanitizeId(`${order.name}-${requestId}-${line.sku}`);
+    const id=await env.ARTWORK.head(jobKey(legacy))?legacy:sanitizeId(`${order.id.split('/').pop()}-${line.id.split('/').pop()}`);
+    const map=FULFILLMENT[line.sku];
+    if(eligible){
+      const job={id,lineId:line.id,orderId:order.id,orderName:order.name,orderCreatedAt:order.createdAt,financialStatus:order.displayFinancialStatus,requestId,sku:line.sku,quantity:line.quantity,product:map.product,digital:Boolean(map.digital),recipient:recipientFromOrder(order),status:map.digital?'digital_fulfillment_pending':'awaiting_customer_approval',createdAt:now(),updatedAt:now(),printfulVariantId:map.printfulVariantId||null,printfulProductId:map.printfulProductId||null};
+      const put=await env.ARTWORK.put(jobKey(id),JSON.stringify(job),{onlyIf:new Headers({'If-None-Match':'*'})});if(put)created++;
+      await putJson(env,`commerce/request-jobs/${requestId}/${id}.json`,{id});
+    }else if(await env.ARTWORK.head(jobKey(id))){
+      await change(env,jobKey(id),null,j=>({...j,financialStatus:order.displayFinancialStatus,paymentRevokedAt:now(),status:j.sentToProductionAt?j.status:'payment_hold'}));
     }
-  }`);
-  let created=0,seen=0;
-  for(const order of data.orders?.nodes||[]){
-    for(const line of order.lineItems?.nodes||[]){
-      const requestId=artworkFromLine(line);if(!requestId||!line.sku||!FULFILLMENT[line.sku])continue;seen++;
-      const id=sanitizeId(`${order.name}-${requestId}-${line.sku}`);const key=jobKey(id);if(await env.ARTWORK.head(key))continue;
-      const map=FULFILLMENT[line.sku];const job={id,orderId:order.id,orderName:order.name,orderCreatedAt:order.createdAt,financialStatus:order.displayFinancialStatus,requestId,sku:line.sku,quantity:line.quantity,product:map.product,digital:Boolean(map.digital),recipient:recipientFromOrder(order),status:map.digital?"digital_fulfillment_pending":"awaiting_art_approval",createdAt:now(),updatedAt:now(),printfulVariantId:map.printfulVariantId||null,printfulProductId:map.printfulProductId||null};
-      await putJson(env,key,job);created++;
-      const meta=await requestMeta(env,requestId);if(meta){meta.paid=true;meta.orderName=order.name;meta.fulfillment=job.status;if(map.digital){meta.digitalEntitlement=line.sku;meta.digitalPaidAt=now()}meta.updatedAt=now();await putJson(env,requestKey(requestId,"request.json"),meta)}
-    }
+    await change(env,requestKey(requestId,'request.json'),null,m=>{
+      if(!m)return undefined;
+      m.paid=eligible;m.financialStatus=order.displayFinancialStatus;m.orderName=order.name;m.updatedAt=now();
+      if(!eligible)m.revokedAt=now();
+      if(eligible&&map.digital){m.digitalEntitlement=line.sku;m.digitalPaidAt=now()}
+      return m;
+    });
   }
-  await putJson(env,"system/order-sync.json",{lastRun:now(),created,seen});
-  return{ok:true,created,seen}
+  await reconcileOrderCredits(env,order,walletId);
+  return {created,seen};
+}
+
+export async function syncPaidOrders(env){
+  if(!env.ARTWORK)return{ok:false,error:'R2 missing'};
+  // Updated orders include refunds and cancellations, not only paid orders.
+  // Bounded pages persist their cursor; the next sync resumes instead of losing orders.
+  const key='system/order-sync-cursor.json',old=await readJson(env,key);
+  const until=old?.cursor?old.until:now();
+  const since=old?.since||new Date(Date.now()-30*86400000).toISOString();
+  let cursor=old?.cursor||null,created=0,seen=0,more=false;
+  for(let page=0;page<4;page++){
+    const data=await shopifyGraphQL(env,SYNC_ORDERS_QUERY,{after:cursor,query:`updated_at:>='${since}' updated_at:<='${until}'`});
+    for(const order of data.orders?.nodes||[]){const result=await reconcileShopifyOrder(env,order);created+=result.created;seen+=result.seen}
+    more=Boolean(data.orders?.pageInfo?.hasNextPage);cursor=data.orders?.pageInfo?.endCursor||null;
+    if(!more)break;
+  }
+  await putJson(env,key,more?{since,until,cursor}:{since:new Date(Date.parse(until)-60000).toISOString(),cursor:null});
+  await putJson(env,'system/order-sync.json',{lastRun:now(),created,seen,more});
+  return{ok:true,created,seen,more};
+}
+
+async function prepareOrderProof(request,env,job,meta){
+  if(appBase(env,request)!==new URL(request.url).origin)throw fault('proof_host','The owner must configure this deployment’s public URL before product previews can be made.',503);
+  const source=await env.ARTWORK.get(requestKey(meta.requestId,'preview.b64'));
+  const sourceHash=await hash(await source.text());
+  const existing=await readJson(env,mockupKey(meta.requestId,job.sku));
+  if(!existing||existing.sourceHash!==sourceHash){
+    const claim=`commerce/proof-start/${await hash(meta.requestId+'|'+job.sku+'|'+sourceHash)}.json`;
+    if(!await env.ARTWORK.put(claim,JSON.stringify({startedAt:now()}),{onlyIf:new Headers({'If-None-Match':'*'})}))throw fault('proof_started','A product preview has already started. Refresh to check it; an interrupted task needs owner review.');
+    const r=await createMockup(new Request(request.url,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({requestId:meta.requestId,accessToken:meta.accessToken,sku:job.sku})}),env);
+    const result=await r.json();if(!r.ok)throw fault('proof_failed',result.error||'The product preview could not start.',502);
+    return result;
+  }
+  const url=new URL('/api/mockup/status',request.url);url.searchParams.set('requestId',meta.requestId);url.searchParams.set('token',meta.accessToken);url.searchParams.set('sku',job.sku);
+  const r=await mockupStatus(new Request(url),env),result=await r.json();
+  if(!r.ok)throw fault('proof_failed',result.error||'The product preview did not finish.',502);
+  return result;
+}
+
+export async function serveApprovedPrint(request,env,id){
+  try{return await printDesignFile(request,env,await loadJob(env,id),(e,j)=>verifyPaidOrder(e,j,{forProduction:true}))}catch(e){return privateJson({ok:false,error:e.message},e.status||503)}
 }
 
 export async function syncPrintfulJobs(env){
@@ -242,8 +309,10 @@ export async function customerOrderStatus(request,env){
   try{
     const url=new URL(request.url);const requestId=String(url.searchParams.get("requestId")||"");const token=String(url.searchParams.get("token")||"");
     const meta=await requireRequest(env,requestId,token);
-    const jobs=(await listJson(env,"jobs/",100)).filter(j=>j.requestId===requestId);
-    return json({ok:true,request:{requestId,styleName:meta.styleName,paid:Boolean(meta.paid),orderName:meta.orderName||null,digitalEntitlement:meta.digitalEntitlement||null},jobs:jobs.map(j=>({id:j.id,orderName:j.orderName,product:j.product,sku:j.sku,status:j.status,digital:j.digital,createdAt:j.createdAt,printfulStatus:j.printfulStatus||null,trackingUrl:j.trackingUrl||null}))});
+    const index=await listJson(env,`commerce/request-jobs/${requestId}/`,1000);
+    const jobs=index.length?(await Promise.all(index.map(row=>readJson(env,jobKey(row.id))))).filter(Boolean):(await listJson(env,'jobs/',1000)).filter(j=>j.requestId===requestId);
+    const views=await Promise.all(jobs.map(async j=>({id:j.id,orderName:j.orderName,product:j.product,sku:j.sku,status:j.status,digital:j.digital,createdAt:j.createdAt,printfulStatus:j.printfulStatus||null,trackingUrl:j.trackingUrl||null,design:j.digital?null:publicDesign(await designFor(env,j))})));
+    return json({ok:true,creditsEnabled:creditsEnabled(env),request:{requestId,styleName:meta.styleName,paid:Boolean(meta.paid),orderName:meta.orderName||null,digitalEntitlement:meta.digitalEntitlement||null},jobs:views});
   }catch(error){return json({ok:false,error:error.message},error.status||500)}
 }
 
@@ -307,31 +376,17 @@ export async function adminSocial(request,env){try{requireAdmin(request,env);con
 export async function adminSyncOrders(request,env){try{requireAdmin(request,env);const orders=await syncPaidOrders(env);const printful=await syncPrintfulJobs(env);return json({ok:true,created:orders.created||0,seen:orders.seen||0,printfulUpdated:printful.updated||0})}catch(error){return json({ok:false,error:error.message},error.status||500)}}
 
 async function finalizePrintArt(env,job){
-  if(job.digital){
-    job.printReadyAt=now();job.status="digital_ready";await saveJob(env,job);return job;
-  }
-  if(!env.IMAGES)throw Object.assign(new Error("High-resolution print finishing is not enabled yet. Add the Cloudflare Images binding before producing physical orders."),{status:503});
-  const preview=await env.ARTWORK?.get(requestKey(job.requestId,"preview.b64"));
-  if(!preview)throw Object.assign(new Error("Source artwork is missing."),{status:404});
-  const bytes=decodeBase64(await preview.text());
-  const sourceMeta=await requestMeta(env,job.requestId);
-  const stream=new Response(bytes,{headers:{"content-type":sourceMeta?.previewMime||"image/jpeg"}}).body;
-  const optimized=await env.IMAGES.input(stream)
-    .transform({width:4096,fit:"scale-up",upscale:"generate"})
-    .output({format:"image/jpeg",quality:95});
-  const response=await optimized.response();
-  if(!response.ok)throw Object.assign(new Error(`High-resolution image finishing failed (${response.status}).`),{status:502});
-  const out=await response.arrayBuffer();
-  await env.ARTWORK.put(requestKey(job.requestId,"final-print.jpg"),out,{httpMetadata:{contentType:"image/jpeg"}});
-  const meta=await requestMeta(env,job.requestId);
-  if(meta){meta.finalPrint={status:"ready",createdAt:now(),method:"cloudflare-images-ai-upscale",targetWidth:4096};meta.updatedAt=now();await putJson(env,requestKey(job.requestId,"request.json"),meta)}
-  job.printReadyAt=now();job.printReadyMethod="cloudflare-images-ai-upscale";job.status="ready_for_printful_draft";await saveJob(env,job);return job;
+  if(job.digital){job.printReadyAt=now();job.status='digital_ready';await saveJob(env,job);return job}
+  await verifyPaidOrder(env,job);
+  const design=await finishApprovedDesign(env,job);
+  job.printReadyAt=design.finishedAt;job.printReadyMethod=design.finishMethod;job.status='ready_for_printful_draft';await saveJob(env,job);return job;
 }
 
 export async function adminJobAction(request,env,id,action){
   try{
     requireAdmin(request,env);let job=await loadJob(env,id);
     if(action==="approve-art"){
+      if(!job.digital){await verifyPaidOrder(env,job);await approvedDesign(env,job)}
       job.artApprovedAt=now();job.status=job.digital?"digital_ready":"art_approved_needs_high_res";await saveJob(env,job);return json({ok:true,job});
     }
     if(action==="finalize-art"){
@@ -346,8 +401,12 @@ export async function adminJobAction(request,env,id,action){
       if(!job.artApprovedAt)return json({ok:false,error:"Approve the artwork before creating a Printful draft."},409);
       if(!job.printReadyAt)return json({ok:false,error:"Prepare the high-resolution print file before creating a Printful draft."},409);
       if(job.printfulOrderId)return json({ok:true,job,alreadyCreated:true});
-      let meta=await requestMeta(env,job.requestId);if(!meta)return json({ok:false,error:"Artwork metadata missing."},404);meta=await ensurePrintToken(env,meta);
-      const map=FULFILLMENT[job.sku];const sourceUrl=`${String(env.PUBLIC_APP_URL||"").replace(/\/$/,"")}/api/print-source/${encodeURIComponent(job.requestId)}?token=${encodeURIComponent(meta.printAccessToken)}&final=1`;
+      if(job.status==='on_hold'||job.paymentRevokedAt)throw fault('order_hold','This order is on hold.');
+      await verifyPaidOrder(env,job,{forProduction:true});const design=await approvedDesign(env,job);
+      if(!design.finalKey)throw fault('print_not_ready','Prepare the approved print file first.');
+      const map=FULFILLMENT[job.sku];const sourceUrl=`${String(env.PUBLIC_APP_URL||'').replace(/\/$/,'')}/api/order-print/${encodeURIComponent(job.id)}?token=${encodeURIComponent(design.printToken)}`;
+      const claim=`commerce/production/${await hash(job.id)}-draft.json`;
+      if(!await env.ARTWORK.put(claim,JSON.stringify({startedAt:now()}),{onlyIf:new Headers({'If-None-Match':'*'})}))throw fault('draft_started','Draft submission already started; review Printful before retrying.');
       const payload={external_id:`recast-${job.id}`,recipient:job.recipient,items:[{variant_id:map.printfulVariantId,quantity:Number(job.quantity||1)*Number(map.quantity||1),files:[{type:map.orderFileType||"default",url:sourceUrl}]}]};
       const result=await printful(env,"/orders",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(payload)});
       job.printfulOrderId=result.id;job.printfulStatus=result.status||"draft";job.printSourceUrl=sourceUrl;job.status="printful_draft_ready";job.printfulCreatedAt=now();await saveJob(env,job);return json({ok:true,job});
@@ -355,6 +414,11 @@ export async function adminJobAction(request,env,id,action){
     if(action==="send-production"){
       const body=await request.json().catch(()=>({}));if(body.confirm!=="SEND_TO_PRODUCTION")return json({ok:false,error:"Explicit production confirmation is required."},409);
       if(!job.printfulOrderId)return json({ok:false,error:"Create a Printful draft first."},409);
+      if(job.sentToProductionAt)return json({ok:true,job,alreadySent:true});
+      if(job.status==='on_hold'||job.paymentRevokedAt)throw fault('order_hold','This order is on hold.');
+      await verifyPaidOrder(env,job,{forProduction:true});await approvedDesign(env,job);
+      const claim=`commerce/production/${await hash(job.id)}-confirm.json`;
+      if(!await env.ARTWORK.put(claim,JSON.stringify({startedAt:now()}),{onlyIf:new Headers({'If-None-Match':'*'})}))throw fault('production_started','Production submission already started; review Printful before retrying.');
       const result=await printful(env,`/orders/${encodeURIComponent(job.printfulOrderId)}/confirm`,{method:"POST"});job.status="submitted_to_printful";job.printfulStatus=result.status||"pending";job.sentToProductionAt=now();await saveJob(env,job);return json({ok:true,job});
     }
     return json({ok:false,error:"Unknown job action."},404);
@@ -428,6 +492,32 @@ export async function routeWorkflow(request,env,ctx){
   let m=p.match(/^\/api\/print-source\/([^/]+)$/);if(m&&request.method==="GET")return servePrintSource(request,env,decodeURIComponent(m[1]));
   m=p.match(/^\/api\/mockup\/image\/([^/]+)\/([^/]+)\/(\d+)$/);if(m&&request.method==="GET")return serveMockupImage(request,env,decodeURIComponent(m[1]),decodeURIComponent(m[2]),Number(m[3]));
   if(p==="/api/order-status"&&request.method==="GET")return customerOrderStatus(request,env);
+  const designPreview=p.match(/^\/api\/order-design\/([a-zA-Z0-9._-]+)\/preview$/);
+  if(designPreview&&request.method==='GET'){
+    try{
+      const job=await loadJob(env,designPreview[1]);await requireRequest(env,job.requestId,url.searchParams.get('token'));
+      const d=await designFor(env,job),object=await env.ARTWORK.get(d.snapshotKey||requestKey(d.selectedRequestId,'preview.b64'));
+      if(!object)return privateJson({ok:false,error:'Artwork unavailable'},404);
+      // The security boundary flattens the watermark before serving this image.
+      return new Response(decodeBase64(await object.text()),{headers:{'content-type':'image/jpeg','cache-control':'private, no-store'}});
+    }catch(e){return privateJson({ok:false,error:e.message},e.status||503)}
+  }
+  const orderAction=p.match(/^\/api\/order-design\/([a-zA-Z0-9._-]+)\/(swap|proof|approve)$/);
+  if(orderAction&&request.method==='POST'){
+    try{return await customerDesignAction(request,env,orderAction[1],orderAction[2],{verifyPaid:verifyPaidOrder,proof:prepareOrderProof})}
+    catch(e){return privateJson({ok:false,error:e.message},e.status||503)}
+  }
+  const bonus=p.match(/^\/api\/order-bonus\/([a-zA-Z0-9._-]+)$/);
+  if(bonus&&request.method==='POST'){
+    try{
+      sameOrigin(request);if(!creditsEnabled(env))throw fault('credits_disabled','Purchase credits are not enabled yet.',503);
+      const body=await request.json(),job=await loadJob(env,bonus[1]);await requireRequest(env,job.requestId,body.token);
+      const wallet=await walletFor(request,env);if(!wallet)throw fault('credits_required','Prepare your preview account first.',401);
+      const order=await verifyPaidOrder(env,job),grant=await reconcileOrderCredits(env,order,wallet.id);
+      if(grant.walletId!==wallet.id)throw fault('credits_already_linked','This order’s bonus is linked to the browser used to create its artwork. Use that browser or contact support for recovery.');
+      return privateJson({ok:true,...await creditBalance(env,wallet)});
+    }catch(e){return privateJson({ok:false,error:e.message},e.status||503)}
+  }
   m=p.match(/^\/api\/digital-download\/([^/]+)$/);if(m&&request.method==="GET")return digitalDownload(request,env,decodeURIComponent(m[1]));
   m=p.match(/^\/api\/recast\/([^/]+)$/);if(m&&request.method==="DELETE")return deleteUnpaidRecast(request,env,decodeURIComponent(m[1]));
   if(p==="/api/admin/status"&&request.method==="GET")return adminStatus(request,env);

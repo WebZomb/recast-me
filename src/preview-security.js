@@ -1,5 +1,9 @@
 import { WATERMARK_TILE_BASE64, WATERMARK_FOOTER_BASE64 } from './watermark-tile.js';
-import { digest, guardedEnvironment, renderControlStatus, submissionFingerprint } from './render-controls.js';
+import { digest, guardedEnvironment, renderControlStatus, budgetStatus, submissionFingerprint } from './render-controls.js';
+
+import { creditRoute, bindCustomerCredits, creditsEnabled, settleCustomerRender } from './render-credits.js';
+import { sameOrigin } from './commerce-store.js';
+import { serveApprovedPrint } from './workflow.js';
 
 export const SECURITY_VERSION = 'rm-preview-4';
 export const WATERMARK_LABEL = '@RecastMeAi • PREVIEW';
@@ -148,15 +152,20 @@ export function secureApplication(application) {
   return {
     async fetch(originalRequest, env, ctx) {
       let request = originalRequest;
+      let creditGuard=null,creditSuccess=false;
       const url = new URL(request.url), path = url.pathname;
       if (!path.startsWith('/api/')) return application.fetch(request, env, ctx);
       try {
+        const creditResponse=await creditRoute(request,env);
+        if(creditResponse)return hardened(creditResponse);
+        const approvedPrint=path.match(/^\/api\/order-print\/([a-zA-Z0-9._-]+)$/);
+        if(approvedPrint&&request.method==='GET')return hardened(await serveApprovedPrint(request,env,approvedPrint[1]));
         // Public diagnostic routes previously exposed operational order data or
         // bypassed normal rendering. Internal service calls are not HTTP routes.
         if (path.startsWith('/api/admin/') || ['/api/shopify-status', '/api/printful-status', '/api/storage-test', '/api/ai-test'].includes(path)) requireOwner(request, env);
         if (path === '/api/ai-test') return json({ error: 'use_model_lab', userMessage: 'Use the authenticated model comparison page.' }, 410);
         if (path === '/api/admin/render-controls' && request.method === 'GET') {
-          return json({ ok: true, securityVersion: SECURITY_VERSION, imageProcessingConfigured: Boolean(env.IMAGES?.input && env.IMAGES?.info), renderControls: renderControlStatus(env), monetaryBudgetEnforced: false });
+          return json({ ok: true, securityVersion: SECURITY_VERSION, imageProcessingConfigured: Boolean(env.IMAGES?.input && env.IMAGES?.info), renderControls: renderControlStatus(env), budgetReservations: budgetStatus(env), monetaryBudgetEnforced: false });
         }
         let match = path.match(/^\/api\/request\/([^/]+)(\/preview)?$/);
         if (match && request.method === 'GET') {
@@ -187,11 +196,13 @@ export function secureApplication(application) {
         if (generation) {
           requireImaging(env); // Fail before inference, not after paying for an unusable output.
           if (!env.ARTWORK) throw error('private_storage_required', 'Private artwork storage must be configured before rendering.');
+          if(!path.startsWith('/api/admin/')&&creditsEnabled(env)){sameOrigin(request);env=await bindCustomerCredits(request,env)}
           const form = await request.clone().formData();
           fingerprint = await submissionFingerprint(form, path + url.search);
           request = await prepareRefinement(request, env, form);
         }
         const guarded = guardedEnvironment(env, fingerprint);
+        creditGuard=guarded;
         const response = await application.fetch(request, guarded.env, ctx);
         if (guarded.state.blocked) return failure(guarded.state.blocked);
         const mime = response.headers.get('content-type') || '';
@@ -201,7 +212,9 @@ export function secureApplication(application) {
             if (!data.persisted || !data.requestId || !data.accessToken) throw error('artwork_not_saved', 'This preview could not be saved securely. Keep your last successful version.');
             const id = artworkId(data.requestId);
             await customerMeta(env, id, data.accessToken);
-            return json({ ...pick(data, GENERATED_FIELDS), image: `data:image/jpeg;base64,${to64(await protectedArtwork(env, id))}`, watermarked: true, securityVersion: SECURITY_VERSION });
+            const image=`data:image/jpeg;base64,${to64(await protectedArtwork(env,id))}`;
+            creditSuccess=true;
+            return json({ ...pick(data, GENERATED_FIELDS), image, watermarked: true, securityVersion: SECURITY_VERSION });
           }
           // No other public JSON route is allowed to return raw model pixels.
           if (typeof data.image === 'string' && data.image.startsWith('data:image/')) {
@@ -226,6 +239,12 @@ export function secureApplication(application) {
         }
         return hardened(response);
       } catch (cause) { return failure(cause); }
+      finally {
+        if(creditGuard?.state.creditPromise){
+          try{await settleCustomerRender(env,await creditGuard.state.creditPromise,creditSuccess)}
+          catch{ /* Preserve conservative reservations on storage failure; owner can reconcile. */ }
+        }
+      }
     },
     async scheduled(controller, env, ctx) {
       const guarded = guardedEnvironment(env);
