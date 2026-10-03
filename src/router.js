@@ -5,6 +5,8 @@ import { socialRoutes } from './social.js';
 import { secureApplication } from './preview-security.js';
 import { readinessSnapshot } from './render-health.js';
 
+import { printFinishRoutes } from './print-finish.js';
+
 const application = {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
@@ -19,6 +21,8 @@ const application = {
         return highQualityTransform(testRequest,{...env,IMAGE_MODEL_HIGH_QUALITY:models.dev,IMAGE_MODEL_QUICK:models[choice]}, {trustedSocialJob:true});
       }catch(error){return Response.json({error:error.message},{status:error.status||500});}
     }
+    const finishResponse=await printFinishRoutes(request,env);
+    if(finishResponse)return finishResponse;
     const socialResponse=await socialRoutes(request,env,ctx);
     if(socialResponse)return socialResponse;
 

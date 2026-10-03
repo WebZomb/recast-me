@@ -1,8 +1,11 @@
 # Recast Me — cumulative Astra handoff
 
-Updated: 2026-09-29. Keep this index and append-only session records current whenever work is performed; the owner does not need to repeat the request for notes.
+Updated: 2026-10-03. Keep this index and append-only session records current whenever work is performed; the owner does not need to repeat the request for notes.
 
 ## Start here
+
+- [RM-012: protected print-finish comparison](ASTRA-SESSION-RM-012.md). Owner accepted Standard in the September 30 PR record. New owner-only Preserve/Enhanced comparison; 100 mocked tests and local bundle passed, live upscaling still unverified.
+- [RM-011: Standard FLUX benchmark](ASTRA-SESSION-RM-011.md) and [live timeout correction](ASTRA-RM011-LIVE-TIMEOUT-CORRECTION.md). Current draft customer modes both use FLUX.2 dev; Standard is 12 steps, High Quality 18.
 
 - [RM-001: recovered baseline and requirements](ASTRA-HANDOFF-RM001.md). Exact preserved copy of the original handoff.
 - [RM-002: protected previews and AI-call controls](ASTRA-SESSION-RM-002.md). Implementation, activation requirements and limitations.
@@ -16,7 +19,7 @@ Application baseline: `209ac10fd4a7ec3b156417a08e2df86ad77b766a`.
 Implementation branch: `recast/secure-previews-2026-09-29`.
 Review: https://github.com/WebZomb/recast-me/pull/1 (draft; do not merge solely because CI is green).
 
-Do not confuse uploaded code, mocked validation, a dry-run, or a Cloudflare PR Preview with a deployed production application. The optional AI-call limit is not a monetary spending ceiling. No engine switch or paid comparison was performed.
+Do not confuse uploaded code, mocked validation, a dry-run, or a Cloudflare PR Preview with a deployed production application. The optional AI-call limit is not a monetary spending ceiling. See dated session records for later model decisions and owner-run comparisons; the older RM-001/RM-002 no-change statements apply only to those sessions.
 
 For each future session, record baseline/head commits, changed files, reasons, tests actually run and their evidence, failures, costs, deployment state, unresolved items and rollback. Preserve older entries; correct claims with a dated correction. Keep secrets, customer photos, access tokens and private transcripts out of this public repository.
 

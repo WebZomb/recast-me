@@ -61,12 +61,12 @@ function requireImaging(env) {
   }
 }
 
-export async function watermarkBytes(env, source) {
+export async function watermarkBytes(env, source, {maxWidth=768,maxHeight=960} = {}) {
   requireImaging(env);
   if (!(source instanceof Uint8Array) || !source.length || source.length > 12000000) throw error('bad_image', 'The preview image is unavailable.');
   const info = await env.IMAGES.info(new Blob([source]).stream());
   if (!(info.width > 0 && info.height > 0 && info.width <= 20000 && info.height <= 20000)) throw error('bad_image', 'The preview dimensions are invalid.');
-  const scale = Math.min(1, 768 / info.width, 960 / info.height);
+  const scale = Math.min(1, maxWidth / info.width, maxHeight / info.height);
   const width = Math.max(1, Math.round(info.width * scale));
   const height = Math.max(1, Math.round(info.height * scale));
   // Cloudflare Images does not reliably accept an SVG Blob as a draw source
