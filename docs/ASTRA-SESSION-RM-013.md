@@ -3,7 +3,7 @@
 Date: 2026-10-03.
 Baseline: `287507b1427ab29fa5c0e98f9b528bdcd20aab04` on `recast/secure-previews-2026-09-29`, draft PR #1.
 Production baseline remains `209ac10fd4a7ec3b156417a08e2df86ad77b766a`.
-Resulting application SHA and deployment evidence will be recorded after upload; do not treat this note as proof of deployment.
+Resulting application commit: `5aaa7c85b7549315fa4c8e1887e5cdbe6a235355`. Uploaded to the same draft PR branch; not merged to production.
 
 ## Owner decisions and new evidence
 
@@ -37,3 +37,11 @@ Read [COMMERCE-ACTIVATION.md](COMMERCE-ACTIVATION.md) before enabling or merging
 Production remains unmerged. Preview and production share the configured R2 bucket; isolate test commerce data/configuration before activation. Large-format DPI, Printful default placement equivalence and delivered sample quality remain unverified. Legacy Printful drafts require deliberate migration/review. New private approved snapshots require an order-retention policy.
 
 Rollback: stop new credits/production actions, retain all private commerce records and approved snapshots, and revert application files to the baseline through a reviewed commit. Do **not** allow the old owner-only approval path to print orders created under the new policy. Pause fulfillment until affected jobs are reconciled. Do not delete private artwork, ledgers or idempotency claims to roll back UI changes.
+
+## Observed upload and Preview validation
+
+- GitHub CI run `37135259572`, job `111238392649` completed successfully for `5aaa7c85b7549315fa4c8e1887e5cdbe6a235355`. Test and bundle steps passed.
+- Final local bundle: **192.68 KiB**, gzip 51.91 KiB; dry-run exited without deployment.
+- Cloudflare bot reports successful build and Preview deployment `31489b83-461a-4597-b8e2-6812e42b37b0` at `2026-10-03T16:00:44.671Z` for application commit `5aaa7c8`. Stable Preview: https://recast-secure-previews-2026-09-29-recast-me.sergz24.workers.dev .
+- Git fetch independently confirmed the branch update; local staged content was verified identical to that remote commit before synchronizing local HEAD.
+- These deployment checks do not activate customer credits or prove a live purchase/print result. Production remains unchanged.
