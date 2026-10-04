@@ -9,7 +9,7 @@
   <title>Recast Me — Your pet. A whole new world.</title>
   <link rel="stylesheet" href="/styles.css?v=130" />
   <link rel="stylesheet" href="/merch-v07.css?v=130" />
-  <link rel="stylesheet" href="/site-v10.css?v=200" />
+  <link rel="stylesheet" href="/site-v10.css?v=218" />
 </head>
 <body>
   <a class="skip-link" href="#start">Skip to create your Recast</a>
@@ -101,7 +101,7 @@
             <img src="/assets/world-halloween-v18.webp" alt=""><img src="/assets/world-fantasy-v18.webp" alt=""><img src="/assets/world-retro-v18.webp" alt="">
           </div>
           <h3>Choose your world</h3>
-          <p>Pick a world and describe what you want. Your written direction is treated as the primary creative instruction.</p>
+          <p>Tap an adventure. Add a personal touch if you want—no writing required.</p>
         </article>
         <article class="step-card">
           <b>03</b>
@@ -171,7 +171,7 @@
         <div class="create-intro">
           <div class="eyebrow">CREATE YOUR RECAST</div>
           <h2>Make it<br><span>yours.</span></h2>
-          <p>Add a clear photo, pick an adventure, and tell us your idea. Preview it before you buy.</p>
+          <p>Pick who’s starring, add a photo, and choose an adventure. No writing needed. Preview it before you buy.</p>
           <div class="privacy-card">
             <strong>PRIVATE BY DESIGN</strong>
             <p>Your prepared source photos and generated artwork are stored privately and tied to a unique Artwork ID.</p>
@@ -181,18 +181,11 @@
         <div class="create-card">
           <form id="recast-form">
             <p id="render-availability" class="prefill-note" role="status" hidden></p>
-            <label class="upload-zone" for="photos">
-              <input id="photos" type="file" accept="image/*" multiple class="photo-input" />
-              <span class="upload-icon" aria-hidden="true">+</span>
-              <span class="upload-copy"><strong>1. Add your photos</strong><small>Clear, well-lit photos work best. Person + pet can use one photo together or separate references.</small></span>
-              <span id="file-summary" class="file-summary" role="status">No photos selected</span>
-            </label>
-            <div id="photo-thumbnails" class="photo-thumbnails" aria-label="Selected photos"></div>
-
-            <fieldset class="creative-step">
-              <legend><span>02</span> Who’s in the picture?</legend>
+<nav class="creation-progress" aria-label="Creation steps"><button type="button" data-go-step="0">1 · Who</button><button type="button" data-go-step="1">2 · Photos</button><button type="button" data-go-step="2">3 · Adventure</button></nav>
+<div data-create-step="0">            <fieldset class="creative-step">
+              <legend><span>01</span> Who’s starring?</legend>
               <p>Your pet, you together, or anyone you love.</p>
-              <label>Subject suggestions
+              <div id="subject-choices" class="subject-choices"></div><label class="native-subject" hidden>Subject suggestions
                 <select name="subject" id="subject">
                   <option value="person">Person</option>
                   <option value="pet" selected>My dog / cat / pet</option>
@@ -205,16 +198,23 @@
                   <option value="custom">Something else — describe below</option>
                 </select>
               </label>
-              <label>Describe who and their look <span class="optional-label">OPTIONAL</span>
-                <textarea name="notes" id="notes" maxlength="1200" placeholder="My dog in a little wizard costume. Or: me, my girlfriend, and our dog in matching space suits."></textarea>
-                <small>Add everyone you want included, plus outfits, poses, or effects. Your description guides the picture.</small>
-              </label>
             </fieldset>
-            <fieldset class="creative-step environment-step">
-              <legend><span>03</span> Where’s the adventure?</legend>
-              <p>Pick a starting idea, then make the setting your own.</p>
-              <label>World / environment suggestions
-                <select name="style" id="style"></select>
+<label id="family-count-label" hidden>How many people? <select id="family-count"><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option></select></label>
+<button type="button" class="button primary full" data-go-step="1">Next: add photos →</button></div>
+<div data-create-step="1" hidden><p id="photo-guidance" role="status"></p><p class="photo-tip">One or two clear photos usually work best. Up to four allowed. Crop out extra background before uploading.</p>            <label class="upload-zone" for="photos">
+              <input id="photos" type="file" accept="image/*" multiple class="photo-input" />
+              <span class="upload-icon" aria-hidden="true">+</span>
+              <span class="upload-copy"><strong>2. Add your photos</strong><small>Choose a close, well-lit photo. Keep faces and ears fully visible.</small></span>
+              <span id="file-summary" class="file-summary" role="status">No photos selected</span>
+            </label>
+            <div id="photo-thumbnails" class="photo-thumbnails" aria-label="Selected photos"></div>
+
+<p id="photo-step-error" role="status"></p><div class="wizard-actions"><button type="button" class="button ghost" data-go-step="0">Back</button><button type="button" class="button primary" data-go-step="2">Next: pick an adventure →</button></div></div>
+<div data-create-step="2" hidden>            <fieldset class="creative-step environment-step">
+              <legend><span>03</span> Pick your adventure</legend>
+              <p>Choose a world. We’ll handle the outfit, setting, and atmosphere.</p>
+              <div id="adventure-choices" class="adventure-choices"></div><button type="button" class="button ghost" id="more-adventures">See more adventures</button><label>Adventure
+                <select name="style" id="style" aria-label="All adventures"></select>
                 <button type="button" id="surprise-world" class="button ghost">Surprise me ✦</button>
                 <small id="world-choice-feedback" role="status"></small>
               </label>
@@ -223,6 +223,11 @@
                 <small>Describe the place, mood, and lighting. Editing this makes it your custom setting.</small>
               </label>
             </fieldset>
+<details id="personal-details"><summary>Make it personal · optional</summary>              <label>Describe who and their look <span class="optional-label">OPTIONAL</span>
+                <textarea name="notes" id="notes" maxlength="1200" placeholder="My dog in a little wizard costume. Or: me, my girlfriend, and our dog in matching space suits."></textarea>
+                <small>Add everyone you want included, plus outfits, poses, or effects. Your description guides the picture.</small>
+              </label>
+</details>
             <p id="prefill-note" class="prefill-note"></p>
             <div id="branch-note" class="branch-note hidden"></div>
             <div class="consent"><input id="consent" type="checkbox" required><label for="consent">I have permission to use these photos. I agree to send my selected photos and descriptions to Cloudflare Workers AI to create my Recast. <a href="/privacy.html" target="_blank" rel="noopener">Photo privacy &amp; AI policy</a>.</label></div>
@@ -243,6 +248,8 @@
             <button type="submit" class="button primary full" id="generate-button">Create High-Quality Preview</button>
             <div id="recast-error" class="recast-error hidden" role="alert"></div>
             <div class="quality-line"><span class="quality-dot"></span><span id="model-copy">High-Quality Preview · Flux with extra detail and likeness</span></div>
+<button type="button" class="button ghost" data-go-step="1">Back to photos</button>
+</div>
           </form>
         </div>
       </div>
@@ -345,6 +352,6 @@
     <span>© 2026 Recast Me</span>
   </footer>
 
-  <script src="/app.js?v=217" type="module"></script>
+  <script src="/app.js?v=218" type="module"></script>
 </body>
 </html>

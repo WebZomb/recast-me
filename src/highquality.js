@@ -1,5 +1,6 @@
+import {referenceDirections} from './reference-labels.js';
 import { assertRenderReady, readinessSnapshot, recordRenderHealth } from './render-health.js';
-const PROMPT_VERSION = "identity-anatomy-v2";
+const PROMPT_VERSION = "identity-references-v3";
 const DEFAULT_HIGH_QUALITY = "@cf/black-forest-labs/flux-2-dev";
 const DEFAULT_QUICK = "@cf/black-forest-labs/flux-2-dev";
 
@@ -319,6 +320,9 @@ export async function highQualityTransform(request,env,{trustedSocialJob=false}=
         inputFiles.push(file)
       }
     }
+    let referenceGuide='';
+    try{referenceGuide=referenceDirections(incoming.get('referenceLabels'),inputFiles.length,subjectType==='family'?incoming.get('subjectCount'):'');}
+    catch(e){return json({error:'bad_reference_labels',userMessage:e.message,reason:'input'},400);}
     let parentRequestId=null;
     const branchRequestId=String(incoming.get("branchRequestId")||"");
     if(branchRequestId){
@@ -363,8 +367,8 @@ export async function highQualityTransform(request,env,{trustedSocialJob=false}=
     const quickModel=String(env.IMAGE_MODEL_QUICK||DEFAULT_QUICK);
     stage="ai-generation";
     const generated=qualityMode==="quick"
-      ? await generateQuick({env,model:quickModel,styleId,subjectType,notes,customWorld,inputFiles,hasBranch:Boolean(parentRequestId)})
-      : await generateHighQuality({env,model:highQualityModel,styleId,subjectType,notes,customWorld,inputFiles,hasBranch:Boolean(parentRequestId)});
+      ? await generateQuick({env,model:quickModel,styleId,subjectType,notes:[referenceGuide,notes].filter(Boolean).join(" "),customWorld,inputFiles,hasBranch:Boolean(parentRequestId)})
+      : await generateHighQuality({env,model:highQualityModel,styleId,subjectType,notes:[referenceGuide,notes].filter(Boolean).join(" "),customWorld,inputFiles,hasBranch:Boolean(parentRequestId)});
     const image=normalizeBase64(generated.image);
     if(!image||image.length<100)throw Object.assign(new Error("malformed"),{reason:"provider"});
     const previewMime=imageMime(image);

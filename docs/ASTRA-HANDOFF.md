@@ -4,6 +4,8 @@ Updated: 2026-10-03. Keep this index and append-only session records current whe
 
 ## Start here
 
+- [RM-018: guided creation and reference labels](ASTRA-SESSION-RM-018.md). Who → Photos → Adventure; 134 mocked tests pass.
+
 - [RM-017: HQ-first conditional fallback and renewing allowances](ASTRA-SESSION-RM-017.md). 131 mocked tests passed; feature configuration remains gated.
 
 - [RM-016: likeness/anatomy and deployment clarity](ASTRA-SESSION-RM-016.md). 127 mocked tests passed; prompt version identity-anatomy-v2. Production confirmed older v1.5; latest protection still requires preview acceptance before merge.

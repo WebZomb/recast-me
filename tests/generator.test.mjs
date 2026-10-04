@@ -122,7 +122,7 @@ test('preset pet renders restyle the pet and ignore stale custom world text',asy
   assert.doesNotMatch(prompt,/floating garden/i);
   const saved=JSON.parse(String(env.ARTWORK.objects.get(`requests/${result.requestId}/request.json`)));
   assert.equal(saved.customWorld,'');
-  assert.equal(saved.promptVersion,'identity-anatomy-v2');
+  assert.equal(saved.promptVersion,'identity-references-v3');
 });
 
 test('provider-wide free allowance is reported as shared capacity, not a visitor limit',async()=>{

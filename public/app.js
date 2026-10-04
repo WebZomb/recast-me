@@ -1,3 +1,4 @@
+import {initCreationWizard} from './creation-wizard.js';
 import {fallbackState} from './quality-policy.js';
 import {protectedPreviewFile} from './preview-export.js';
 let creditInfo=null;
@@ -135,11 +136,12 @@ function updateWorldFields(){
   const isCustom=styleSelect.value==='custom';
   const field=document.querySelector('#custom-world-field');
   const input=document.querySelector('#custom-world');
-  field.hidden=false;
+  field.hidden=!isCustom;
   input.disabled=false;
   input.required=isCustom;
   if(!isCustom)input.value=STYLES.find(s=>s[0]===styleSelect.value)?.[2]||'';
   document.querySelectorAll('.style-card').forEach(card=>card.classList.toggle('selected',card.dataset.style===styleSelect.value));
+  document.dispatchEvent(new Event('recast-style-change'));
 }
 updateWorldFields();
 document.querySelector('#custom-world').addEventListener('input',()=>{
@@ -161,7 +163,9 @@ function showSelectedPhotos(message=''){
     button.addEventListener('click',()=>{const transfer=new DataTransfer();[...photos.files].filter((_,i)=>i!==index).forEach(f=>transfer.items.add(f));photos.files=transfer.files;showSelectedPhotos();});
     tile.append(img,button);root.append(tile);
   });
+  document.dispatchEvent(new Event('recast-photos-change'));
 }
+const wizard=initCreationWizard({styles:STYLES,photos,subject:document.querySelector('#subject'),style:styleSelect,updateWorld:updateWorldFields,hasBranch:()=>Boolean(branchReference)});
 photos.addEventListener('change',()=>{
   const original=[...photos.files];const transfer=new DataTransfer();original.slice(0,4).forEach(f=>transfer.items.add(f));photos.files=transfer.files;
   showSelectedPhotos(original.length>4?'Using the first 4 photos. Remove or replace any below.':'');
@@ -174,7 +178,8 @@ document.querySelector('#surprise-world').addEventListener('click',()=>{
 document.querySelectorAll('[data-idea-subject]').forEach(card=>{
   card.addEventListener('click',()=>{
     const subject=document.querySelector('#subject');
-    if(subject)subject.value=card.dataset.ideaSubject||'person';
+    if(subject){subject.value=card.dataset.ideaSubject||'person';subject.dispatchEvent(new Event('change'));}
+    wizard.go(0);
     const note=document.querySelector('#notes');
     if(note)note.value=card.dataset.ideaNote||'';
     document.querySelector('#start')?.scrollIntoView({behavior:'smooth',block:'start'});
@@ -499,12 +504,14 @@ function setBranchReference(version){
     notes:version.notes||'',
     qualityMode:version.qualityMode||'high'
   };
+  wizard.go(0);
   const subject=document.querySelector('#subject');
   if(subject&&[...subject.options].some(o=>o.value===branchReference.subjectType))subject.value=branchReference.subjectType;
   if([...[styleSelect.options]].some(o=>o.value===branchReference.styleId))styleSelect.value=branchReference.styleId;
   document.querySelector('#custom-world').value=branchReference.customWorld;
   updateWorldFields();
   document.querySelector('#notes').value=branchReference.notes;
+  subject?.dispatchEvent(new Event('change'));
   const radio=document.querySelector(`input[name="qualityMode"][value="high"]`);
   if(radio){radio.checked=true;updateQualityUI()}
   const note=document.querySelector('#branch-note');
@@ -619,6 +626,7 @@ async function restoreLastPreview(){
 const form=document.querySelector('#recast-form');
 form.addEventListener('submit',async e=>{
   e.preventDefault();
+  if(!wizard.validate())return;
   if(generationInFlight)return;
   const files=[...photos.files].slice(0,4);
   clearRecastError();
@@ -661,6 +669,8 @@ form.addEventListener('submit',async e=>{
     fd.append('subject',submittedSubject);
     fd.append('customWorld',customWorld);
     fd.append('notes',document.querySelector('#notes').value);
+    fd.append('referenceLabels',JSON.stringify(wizard.references()));
+    if(document.querySelector('#subject').value==='family')fd.append('subjectCount',document.querySelector('#family-count').value);
     if(branchReference){
       fd.append('branchRequestId',branchReference.requestId);
       fd.append('branchAccessToken',branchReference.accessToken);
