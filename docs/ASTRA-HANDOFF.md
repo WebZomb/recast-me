@@ -4,6 +4,8 @@ Updated: 2026-10-03. Keep this index and append-only session records current whe
 
 ## Start here
 
+- [RM-016: likeness/anatomy and deployment clarity](ASTRA-SESSION-RM-016.md). 127 mocked tests passed; prompt version identity-anatomy-v2. Production confirmed older v1.5; latest protection still requires preview acceptance before merge.
+
 - [RM-015: web polish and iPhone development project](ASTRA-SESSION-RM-015.md), [App Store readiness](APP-STORE-READINESS.md). Protected sharing, explicit AI permission, native offline preview gallery. 126 mocked tests passed; unsigned iOS simulator compiled successfully in Mac CI; application `7feaad0` deployed to Preview. Not yet signed or submission-ready.
 
 - [RM-014: approved $5/day budget](ASTRA-SESSION-RM-014.md). Decision recorded; runtime settings unchanged until the per-call reserve is verified.

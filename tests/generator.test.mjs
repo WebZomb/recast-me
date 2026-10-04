@@ -122,7 +122,7 @@ test('preset pet renders restyle the pet and ignore stale custom world text',asy
   assert.doesNotMatch(prompt,/floating garden/i);
   const saved=JSON.parse(String(env.ARTWORK.objects.get(`requests/${result.requestId}/request.json`)));
   assert.equal(saved.customWorld,'');
-  assert.equal(saved.promptVersion,'v1.4');
+  assert.equal(saved.promptVersion,'identity-anatomy-v2');
 });
 
 test('provider-wide free allowance is reported as shared capacity, not a visitor limit',async()=>{
@@ -185,4 +185,26 @@ test('Workers AI calls request immediate busy rejection instead of entering a ca
   const options=[];const env=envFor(async(_model,_input,runOptions)=>{options.push(runOptions);return {image}});
   const response=await highQualityTransform(submission(),env);assert.equal(response.status,200);
   assert.deepEqual(options,[{rejectIfBusy:true}]);
+});
+
+// Inspect actual multipart prompts on both initial and moderation-retry calls.
+test('Royal multi-reference retries retain animal anatomy and do not count photos as subjects',async()=>{
+  const prompts=[];
+  const env=envFor(async(model,{multipart})=>{
+    assert.equal(model,'@cf/black-forest-labs/flux-2-dev');
+    const form=await new Response(multipart.body,{headers:{'content-type':multipart.contentType}}).formData();
+    prompts.push(String(form.get('prompt')));
+    if(prompts.length===1)throw new Error('3030 moderation');
+    return {image};
+  });
+  const form=await submission({style:'royal',notes:''}).formData();
+  form.set('subject','person and pet');form.set('image_1',original);
+  const response=await highQualityTransform(new Request('https://recast.test/api/transform-v2',{method:'POST',body:form}),env);
+  assert.equal(response.status,200);assert.equal(prompts.length,2);
+  for(const prompt of prompts){
+    assert.match(prompt,/Never give a pet human hands/);
+    assert.match(prompt,/photo.*same individual/);
+    assert.match(prompt,/natural age, hair and beard, body build/);
+    assert.doesNotMatch(prompt,/Preserve all 2 reference subjects/);
+  }
 });

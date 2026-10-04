@@ -1,4 +1,5 @@
 import { assertRenderReady, readinessSnapshot, recordRenderHealth } from './render-health.js';
+const PROMPT_VERSION = "identity-anatomy-v2";
 const DEFAULT_HIGH_QUALITY = "@cf/black-forest-labs/flux-2-dev";
 const DEFAULT_QUICK = "@cf/black-forest-labs/flux-2-dev";
 
@@ -33,6 +34,7 @@ function subjectTransformation(styleId,subjectType){
   return [
     `VISIBLE SUBJECT TRANSFORMATION REQUIRED: ${theme}.`,
     isPet?"PET IDENTITY IS NON-NEGOTIABLE: costume and environment may change, but the animal itself must not be redesigned. Preserve the exact head and muzzle shape, ear size/shape/angle, eye size/spacing/color, nose, expression character, breed/body proportions, leg length, fur length/texture, and the exact boundaries and placement of every coat-color patch and facial marking from the reference. Do not widen or shorten the muzzle, enlarge the eyes, round the skull, change ear proportions, invent spots, or turn the pet into a generic/cuter/cartoon version. Fit costume around the real anatomy without hiding the defining face or markings. The finished pet should be identifiable from the face and coat even if the costume/background are removed. The pet must be visibly transformed by costume, pose and world lighting, but never appear as an unchanged photo cutout pasted onto new scenery.":"",
+    "ANATOMY RULE: for every animal visible in any reference, retain its species anatomy: natural animal torso, legs and paws. Never give a pet human hands, fingers, arms, shoulders or an upright human body unless explicitly requested. Royal pets wear fitted capes, collars or crowns on their real animal bodies; royal styling is not a dog head on a human monarch.",
     isCar?"For the car, visibly restyle its paint, lighting and original unbranded trim to fit the world, while retaining its recognizable silhouette and defining features.":"",
     isPerson?"For each person, visibly change their wardrobe, character role, pose and the lighting on their face while preserving their recognizable face, natural age and proportions.":"",
     "Show the costume or themed details on the subject clearly in the finished image. Integrate subject and environment with consistent shadows, perspective, color and light."
@@ -130,13 +132,14 @@ function makePrompt(styleId,subjectType,notes,inputCount,customWorld="",hasBranc
     userDirection?`CUSTOMER DIRECTION: ${userDirection}.`:"",
     refs,
     `Subject type: ${subjectType||"person"}.`,
+    "REFERENCE RECONCILIATION: multiple photos can show the same individual. Use additional views to clarify identity, not to duplicate subjects. A pet shown alone and with a person is the same pet when its features match. Include only the requested subjects. Preserve each person’s face, natural age, hair and beard, body build and each animal’s markings; never blend identities.",
     "This is a transformation, not a retouch. Create a clearly new scene rather than recreating the source photograph.",
     "IDENTITY LOCK: preserve facial geometry, eye shape and spacing, eyebrows, nose, mouth, jawline, skin tone, natural age, hair color and hairline, body proportions, pet breed, exact pet head/muzzle/ear proportions and exact coat-marking boundaries, and vehicle silhouette/details. Never use a generic breed template in place of the referenced animal.",
     "The result must immediately read as the same real subject. Do not make the subject younger, older, thinner, heavier, more muscular, more glamorous, or generically attractive unless the customer explicitly requests it.",
     style?`SELECTED WORLD: ${style.name}. ${style.prompt}.`:"SELECTED WORLD: an original world designed from the customer's description.",
     customWorld?`CUSTOM WORLD SETTING (customer's priority): ${safeNotes(customWorld)}.`:"",
     subjectTransformation(styleId,subjectType),
-    "Change the scene, camera composition, atmosphere and storytelling substantially. A new background alone is not a completed transformation.",
+    "Build the requested world around the recognizable subjects. Keep faces large enough to recognize, with complete heads and ears inside the frame. Prefer a similar head angle to the references when another view is unavailable. Do not invent a new face to force a dramatic pose. Costume and setting provide the transformation; identity and body build stay faithful.",
     "If the customer direction conflicts with a generic style detail, honor the customer's direction first while keeping the broad selected-world mood.",
     "No third-party logos, trademarks, copied famous characters, franchise costumes, branded typography, or recognizable title treatments.",
     "Natural anatomy, believable hands and paws, no duplicated limbs or facial features, no text unless explicitly requested, premium commercial/editorial finish.",
@@ -148,9 +151,10 @@ function safePrompt(styleId,subjectType,inputCount,notes="",customWorld="",hasBr
   const style=styleId==="custom"?null:(STYLES[styleId]||STYLES.game);
   const userDirection=safeNotes(notes);
   return [
-    hasBranch?"Use the last image as the previous artwork, and earlier images for the real subject's identity.":inputCount>1?`Preserve all ${inputCount} reference subjects as separate recognizable subjects.`:"Preserve the reference subject exactly and recognizably; for pets lock head/muzzle/ear proportions, eye placement and exact coat markings before applying any style.",
+    hasBranch?"Use the last image as the previous artwork, and earlier images for the real subject's identity.":inputCount>1?`Use all ${inputCount} reference photos as identity evidence; photo count is not subject count.`:"Preserve the reference subject exactly and recognizably; for pets lock head/muzzle/ear proportions, eye placement and exact coat markings before applying any style.",
     userDirection?`Customer direction, simplified but still important: ${userDirection}.`:"",
     `Subject type: ${subjectType||"person"}.`,
+    "REFERENCE RECONCILIATION: multiple photos can show the same individual. Use additional views to clarify identity, not to duplicate subjects. A pet shown alone and with a person is the same pet when its features match. Include only the requested subjects. Preserve each person’s face, natural age, hair and beard, body build and each animal’s markings; never blend identities.",
     style?`Create an original ${style.name} transformation: ${style.prompt}.`:"Create an original custom-world transformation.",
     customWorld?`Customer's custom setting: ${safeNotes(customWorld)}.`:"",
     subjectTransformation(styleId,subjectType),
@@ -268,7 +272,7 @@ async function generateQuick({env,model,styleId,subjectType,notes,customWorld,in
 async function store(env,{requestId,accessToken,styleId,subjectType,notes,customWorld,parentRequestId,source,sourceTweet,qualityMode,inputs,image,previewMime,safety,modelUsed,attemptKind}){
   if(!env.ARTWORK)return{persisted:false,storageError:"ARTWORK binding is missing."};
   const now=new Date().toISOString();
-  const metadata={creditWalletId:env.RECAST_CREDIT_WALLET?.id||null,requestId,accessToken,styleId,styleName:STYLES[styleId]?.name||"Custom World",subjectType,notes,customWorld,parentRequestId:parentRequestId||null,previewMime,source:source||"site",sourceTweet:sourceTweet||null,safety,status:"preview_ready",createdAt:now,updatedAt:now,inputCount:inputs.length,paid:false,fulfillment:"not_started",modelUsed,attemptKind,qualityMode,promptVersion:"v1.4"};
+  const metadata={creditWalletId:env.RECAST_CREDIT_WALLET?.id||null,requestId,accessToken,styleId,styleName:STYLES[styleId]?.name||"Custom World",subjectType,notes,customWorld,parentRequestId:parentRequestId||null,previewMime,source:source||"site",sourceTweet:sourceTweet||null,safety,status:"preview_ready",createdAt:now,updatedAt:now,inputCount:inputs.length,paid:false,fulfillment:"not_started",modelUsed,attemptKind,qualityMode,promptVersion:PROMPT_VERSION};
   try{
     for(let i=0;i<inputs.length;i++)await env.ARTWORK.put(requestKey(requestId,`input-${i}.jpg`),await inputs[i].arrayBuffer());
     await env.ARTWORK.put(requestKey(requestId,"preview.b64"),image);
@@ -372,7 +376,7 @@ export async function highQualityTransform(request,env,{trustedSocialJob=false}=
     const stored=await store(env,{requestId,accessToken,styleId,subjectType,notes,customWorld,parentRequestId,source,sourceTweet,qualityMode,inputs:inputFiles,image,previewMime,safety,modelUsed:generated.modelUsed,attemptKind:generated.attemptKind});
 
     await writeAttemptReceipt(env,clientAttemptId,{status:"success",completedAt:new Date().toISOString(),durationMs:Date.now()-attemptStartedAt,requestId,qualityMode,modelUsed:generated.modelUsed,attemptKind:generated.attemptKind,persisted:stored.persisted});
-    return json({ok:true,requestId,accessToken,style:STYLES[styleId]?.name||"Custom World",image:`data:${previewMime};base64,${image}`,persisted:stored.persisted,storageError:stored.storageError,qualityMode,qualityLabel:qualityMode==="quick"?"Standard Preview":"High-Quality Preview",modelUsed:generated.modelUsed,usedSafeRetry:generated.usedSafeRetry,usedFastFallback:false,promptVersion:"v1.4",clientAttemptId});
+    return json({ok:true,requestId,accessToken,style:STYLES[styleId]?.name||"Custom World",image:`data:${previewMime};base64,${image}`,persisted:stored.persisted,storageError:stored.storageError,qualityMode,qualityLabel:qualityMode==="quick"?"Standard Preview":"High-Quality Preview",modelUsed:generated.modelUsed,usedSafeRetry:generated.usedSafeRetry,usedFastFallback:false,promptVersion:PROMPT_VERSION,clientAttemptId});
   }catch(error){
     const reason=error?.reason||"provider";
     if(['capacity','quota','timeout','unavailable'].includes(reason))await recordRenderHealth(env,qualityMode,'failed',reason);
@@ -399,7 +403,7 @@ export async function modelStatus(env){
     },
     defaultMode:"high",
     version:"v1.6",
-    promptVersion:"v1.4",
+    promptVersion:PROMPT_VERSION,
     availability:await readinessSnapshot(env)
   })
 }
