@@ -208,3 +208,25 @@ test('order sync paginates updated orders and retains its cursor rather than dro
   assert.equal((await syncPaidOrders(env)).more,false);assert.equal((await read(env,'system/order-sync-cursor.json')).cursor,null);assert.equal(count,5);
  }finally{globalThis.fetch=original}
 });
+
+test('24-hour HQ reset preserves bonus and ignores delayed previous-window refunds',async()=>{
+ const {env,wallet}=await walletSetup();const bound={...env,RECAST_CREDIT_WALLET:wallet},now=Date.now();
+ const old=await reserveCustomerRender(bound,now);
+ await reserveCustomerRender(bound,now);await reserveCustomerRender(bound,now);
+ assert.equal((await creditBalance(env,wallet,now+86399999)).remaining,0);
+ assert.equal((await creditBalance(env,wallet,now+86400000)).remaining,3);
+ await reserveCustomerRender(bound,now+86400000);
+ await settleCustomerRender(env,old,false);
+ assert.equal((await creditBalance(env,wallet,now+86400000)).remaining,2);
+});
+test('Standard has one independent shared-network slot, failure refund and 24-hour reset',async()=>{
+ const {env,wallet}=await walletSetup();const bound={...env,RECAST_CREDIT_WALLET:wallet,RECAST_RENDER_MODE:'quick'},now=Date.now();
+ const results=await Promise.allSettled(Array.from({length:5},()=>reserveCustomerRender(bound,now)));
+ const accepted=results.filter(r=>r.status==='fulfilled');assert.equal(accepted.length,1);
+ assert.equal((await creditBalance(env,wallet,now)).remaining,3);
+ assert.equal((await creditBalance(env,wallet,now)).standardRemaining,0);
+ await settleCustomerRender(env,accepted[0].value,false);
+ assert.equal((await creditBalance(env,wallet,now)).standardRemaining,1);
+ await reserveCustomerRender(bound,now);
+ assert.equal((await creditBalance(env,wallet,now+86400000)).standardRemaining,1);
+});

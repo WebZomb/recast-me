@@ -10,7 +10,7 @@ Activation target: `AI_DAILY_BUDGET_CENTS=500`. This decision is recorded, **not
 
 ## Chosen customer flow
 
-- FLUX.2 dev High Quality is selected by default; Standard remains an explicit option. No model replacement.
+- FLUX.2 dev High Quality is selected by default; Standard is offered explicitly only as a fallback for unavailable/exhausted HQ, with a lower-quality warning. No model replacement.
 - Three starter previews, then five bonus previews per eligible paid Shopify order, not per line or quantity. Both quality modes use one customer credit.
 - Failed protected previews restore customer credits when the request completes. Actual inference submissions, including failures and retries, retain their cost reservations. A Worker crash can leave a conservative reservation requiring support reconciliation.
 - Guest wallet uses a Secure, HttpOnly, SameSite cookie. Starter allowance is shared by a salted network identifier to resist cookie resets. This is **not verified-person/account quota enforcement**; shared Wi-Fi users can share an allowance and changing networks can evade the starter limit. No raw IP address is stored. Verified customer sign-in and account recovery remain launch work for broader traffic.
@@ -45,7 +45,7 @@ Cloudflare's published FLUX.2 dev pricing is per input/output 512px tile per ste
 ## Acceptance sequence
 
 1. Confirm CI and Preview deployment. Visually check the mobile form, order page, balance, recent-version dropdown, product proof and explicit approval checkbox.
-2. On an isolated test setup, enable allowances with the chosen budget. Confirm three successful previews exhaust the starter allowance; one failed preview returns its credit. Confirm another browser on the same network cannot restart the allowance. All previews, including selected order art, must remain watermarked.
+2. On an isolated test setup, enable allowances with the chosen budget. Confirm three successful HQ previews exhaust the 24-hour allowance; one failed preview returns its credit. Confirm another browser on the same network cannot restart the allowance. All previews, including selected order art, must remain watermarked.
 3. Create an appropriate Shopify test order, manually sync, and verify exactly five credits once across repeat syncs and multiple order items. Confirm unpaid/canceled/refunded/partially-refunded purchases cannot grant or restore credits. Refund revocation relies on sync, so it is not instantaneous; production actions also perform a fresh Shopify check.
 4. Swap the artwork, generate the product proof, inspect crop/placement, and approve. Refresh and try another tab: changing the approved artwork must fail. Owner approval alone must not bypass customer approval.
 5. Verify the real Printful variant/template mapping, placement, final dimensions and DPI for each product. The current proof and order both use default provider placement, with no customer crop editor. Mocked proof tests do not establish exact physical fit. Keep owner review until this is proven on real products.
@@ -63,3 +63,5 @@ Cloudflare's published FLUX.2 dev pricing is per input/output 512px tile per ste
 - Production Images binding and commerce activation remain unverified in this session. X stays off. App Store submission is a later milestone.
 
 Shopify references: https://shopify.dev/docs/api/admin-graphql/2026-07/queries/order and https://shopify.dev/docs/api/admin-graphql/2026-07/queries/orders . Both new operations were schema-validated for 2026-07.
+
+RM-017: HQ free allowance renews 24 hours after the first reservation in each window; Standard has a separate one-render/24-hour shared-network allowance. Five purchase bonus credits remain HQ-only and do not expire with the free window. Test both boundary resets, simultaneous attempts, and late failure refunds before activation. Legacy trial records without resetAt begin a new window on their next reservation. Do not roll back ledger semantics blindly after activation.

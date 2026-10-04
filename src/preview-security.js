@@ -198,6 +198,7 @@ export function secureApplication(application) {
           if (!env.ARTWORK) throw error('private_storage_required', 'Private artwork storage must be configured before rendering.');
           if(!path.startsWith('/api/admin/')&&creditsEnabled(env)){sameOrigin(request);env=await bindCustomerCredits(request,env)}
           const form = await request.clone().formData();
+          env={...env,RECAST_RENDER_MODE:form.get('qualityMode')==='quick'?'quick':'high'};
           fingerprint = await submissionFingerprint(form, path + url.search);
           request = await prepareRefinement(request, env, form);
         }

@@ -1,3 +1,4 @@
+import {fallbackState} from './quality-policy.js';
 import {protectedPreviewFile} from './preview-export.js';
 let creditInfo=null;
 async function refreshCredits(initialize=false){
@@ -6,7 +7,8 @@ async function refreshCredits(initialize=false){
     const r=await fetch('/api/render-credits',{method:initialize?'POST':'GET',headers:{'x-recast-request':'1'}}),d=await r.json();
     if(!r.ok)throw new Error(d.userMessage||d.error||'Could not check your previews.');
     creditInfo=d;
-    if(display){display.hidden=!d.enabled;display.textContent=d.enabled?`${d.remaining??0} previews remaining · 3 starter previews + 5 per paid order. Failed previews restore your credit. Shared-network and site availability limits apply.`:'';}
+    if(display){display.hidden=!d.enabled;display.textContent=d.enabled?`${d.remaining??0} High Quality renders remaining · 3 per 24 hours + ${d.purchaseBonus??5} per eligible paid order. Failed previews restore your credit. Shared-network and site limits apply.`:'';}
+    applyReadiness();
     return d;
   }catch(e){if(display){display.hidden=false;display.textContent=e.message}throw e}
 }
@@ -233,7 +235,7 @@ function updateQualityUI(){
   if(button&&!generationInFlight)button.textContent=mode==='quick'?'Create Standard Preview':'Create High-Quality Preview';
   const copy=document.querySelector('#model-copy');
   if(copy)copy.textContent=mode==='quick'
-    ? 'Standard Preview · 12-step Flux, lower cost with strong likeness target'
+    ? 'Standard Preview · detail and likeness may be lower than High Quality'
     : 'High-Quality Preview · best likeness, prompt accuracy, and detail';
 }
 document.querySelectorAll('input[name="qualityMode"]').forEach(input=>input.addEventListener('change',()=>{updateQualityUI();applyReadiness();refreshRenderAvailability();}));
@@ -283,13 +285,29 @@ function readinessMessage(mode=selectedQuality()){
   if(health.reason==='unavailable')return `${qualityLabel(mode)} · Provider temporarily unavailable`;
   return `${qualityLabel(mode)} · Unavailable`;
 }
+function currentFallback(){return fallbackState(readinessSnapshot,creditInfo,selectedQuality())}
+function updateFallback(){
+  const state=currentFallback(),box=document.querySelector('#quality-fallback');
+  if(box)box.hidden=!state.show;
+  const reason=document.querySelector('#quality-fallback-reason');if(reason)reason.textContent=state.message;
+  const standard=document.querySelector('#choose-standard');if(standard){standard.hidden=selectedQuality()==='quick';standard.disabled=!state.standardReady;}
+  const high=document.querySelector('#choose-high');if(high)high.hidden=selectedQuality()!=='quick';
+  const purchase=document.querySelector('#credit-purchase-link');if(purchase)purchase.hidden=!state.exhausted;
+  return state;
+}
+for(const [id,mode] of [['choose-standard','quick'],['choose-high','high']])document.querySelector('#'+id)?.addEventListener('click',()=>{
+  if(mode==='quick'&&!currentFallback().standardReady)return;
+  document.querySelector(`input[name="qualityMode"][value="${mode}"]`).checked=true;
+  updateQualityUI();applyReadiness();
+});
 function applyReadiness(){
   const mode=selectedQuality(),health=readinessFor(mode),button=document.querySelector('#generate-button'),notice=document.querySelector('#render-availability');
-  const ready=Boolean(readinessSnapshot?.local?.ready&&health?.ready);
-  if(button&&!generationInFlight){button.disabled=!ready;button.textContent=ready?(mode==='quick'?'Create Standard Preview':'Create High-Quality Preview'):'Checking availability…';}
+  const fallback=updateFallback();
+  const ready=Boolean(readinessSnapshot?.local?.ready&&health?.ready&&(mode==='quick'?fallback.standardReady:!fallback.exhausted));
+  if(button&&!generationInFlight){button.disabled=!ready;button.textContent=ready?(mode==='quick'?'Create Standard Preview':'Create High-Quality Preview'):fallback.exhausted&&mode==='high'?'High Quality allowance used':'Checking availability…';}
   const copy=document.querySelector('#model-copy');if(copy)copy.textContent=readinessMessage(mode);
   const dot=document.querySelector('.quality-dot');if(dot)dot.dataset.state=ready?'ready':readinessSnapshot?.local?.ready?'waiting':'error';
-  if(notice){notice.hidden=ready;notice.textContent=ready?'':readinessMessage(mode)+' Your photo and settings stay here.';}
+  if(notice){notice.hidden=ready;notice.textContent=ready?'':fallback.exhausted&&mode==='high'?fallback.message:readinessMessage(mode)+' Your photo and settings stay here.';}
   return ready;
 }
 async function refreshRenderAvailability(){
@@ -321,10 +339,10 @@ function syncRetryControls(){
   }
   if(switchMode&&!switchMode.classList.contains('hidden')){
     const next=lastAttemptQuality==='quick'?'high':'quick',alternate=readinessFor(next);
-    const ready=Boolean(readinessSnapshot?.local?.ready&&alternate?.ready);
+    const ready=Boolean(readinessSnapshot?.local?.ready&&alternate?.ready&&(next==='quick'?currentFallback().standardReady:!currentFallback().exhausted));
     switchMode.disabled=!ready;
     switchMode.textContent=ready
-      ?(next==='quick'?'Try Standard Preview':'Try High-Quality Preview')
+      ?(next==='quick'?'Try Standard · lower detail and likeness':'Try High-Quality Preview')
       :(next==='quick'?'Standard Preview unavailable':'High Quality unavailable');
   }
 }
@@ -487,7 +505,7 @@ function setBranchReference(version){
   document.querySelector('#custom-world').value=branchReference.customWorld;
   updateWorldFields();
   document.querySelector('#notes').value=branchReference.notes;
-  const radio=document.querySelector(`input[name="qualityMode"][value="${branchReference.qualityMode}"]`);
+  const radio=document.querySelector(`input[name="qualityMode"][value="high"]`);
   if(radio){radio.checked=true;updateQualityUI()}
   const note=document.querySelector('#branch-note');
   if(note){
@@ -517,7 +535,7 @@ async function renderRecentVersions(){
       <div class="recent-version-copy">
         <span>VERSION ${rows.length-i}</span>
         <strong>${escapeHtml(v.styleName||'Custom Recast')}</strong>
-        <small>${v.qualityMode==='quick'?'Quick':'High-Quality'} · ${new Date(v.createdAt||Date.now()).toLocaleString([], {month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})}</small>
+        <small>${v.qualityMode==='quick'?'Standard':'High-Quality'} · ${new Date(v.createdAt||Date.now()).toLocaleString([], {month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})}</small>
       </div>
       <div class="recent-version-actions">
         <button type="button" data-history-action="use">Use this version</button>
@@ -635,7 +653,7 @@ form.addEventListener('submit',async e=>{
 
   try{
     const credits=await refreshCredits(true);
-    if(credits.enabled&&credits.remaining<=0)throw Object.assign(new Error('Your free previews are used. A paid order adds five more; physical orders wait for your design approval.'),{publicMessage:'Your free previews are used. A paid order adds five more; physical orders wait for your design approval.'});
+    if(credits.enabled&&(selectedQuality()==='quick'?credits.standardRemaining:credits.remaining)<=0)throw Object.assign(new Error('Your selected preview allowance is used. Check the reset time and available options below.'),{publicMessage:'Your selected preview allowance is used. Check the reset time and available options below.'});
     const fd=new FormData();
     fd.append('style',styleSelect.value);
     const customWorld=styleSelect.value==='custom'?document.querySelector('#custom-world').value.trim():'';
@@ -731,7 +749,7 @@ form.addEventListener('submit',async e=>{
     const retryButton=document.querySelector('#retry-generation');
     const switchButton=document.querySelector('#switch-quality-generation');
     if(retryButton)retryButton.textContent=lastAttemptQuality==='quick'?'Try Standard again':'Try High-Quality again';
-    if(switchButton)switchButton.textContent=lastAttemptQuality==='quick'?'Try High-Quality Preview':'Try Standard Preview';
+    if(switchButton)switchButton.textContent=lastAttemptQuality==='quick'?'Try High-Quality Preview':'Try Standard · lower detail and likeness';
     await refreshRenderAvailability();
     if(!hasSuccessfulPreview)document.querySelector('#request-id').textContent='';
 
@@ -769,7 +787,7 @@ document.querySelector('#switch-quality-generation')?.addEventListener('click',a
   const button=event.currentTarget;if(button.disabled)return;
   const next=lastAttemptQuality==='quick'?'high':'quick';
   await refreshRenderAvailability();
-  if(!readinessFor(next)?.ready){syncRetryControls();return;}
+  if(!readinessFor(next)?.ready||(next==='quick'&&!currentFallback().standardReady)){syncRetryControls();return;}
   const radio=document.querySelector(`input[name="qualityMode"][value="${next}"]`);
   if(radio){radio.checked=true;updateQualityUI();applyReadiness();}
   clearPreviewError();form.requestSubmit();

@@ -660,3 +660,9 @@ body{padding-bottom:env(safe-area-inset-bottom)}
 .site-header{padding-top:max(14px,env(safe-area-inset-top))}
 @media(max-width:520px){.site-header .brand{gap:8px}.site-header .nav-cta{font-size:13px;padding:12px 14px}.quality-choice strong{line-height:1.45}.quality-choice strong em{display:inline-block}.consent{line-height:1.6}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+
+/* RM-017: conditional quality fallback, with native hidden semantics. */
+#quality-fallback[hidden], #quality-fallback [hidden], input[name="qualityMode"][hidden]{display:none!important}
+#quality-fallback{padding:18px;border:1px solid #76649a;border-radius:18px;background:#151329;margin:16px 0;line-height:1.5}
+#quality-fallback .button{margin:6px 8px 6px 0;white-space:normal}
+#quality-fallback a{display:block;margin-top:12px;color:#a8e5fc}

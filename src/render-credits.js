@@ -1,4 +1,7 @@
 import {change,read,hash,randomToken,fault,sameOrigin,privateJson} from './commerce-store.js';
+const WINDOW_MS=86400000;
+const windowState=(v,now)=>!v?.resetAt||now>=v.resetAt?{used:0,active:{},resetAt:now+WINDOW_MS}:v;
+const standardKey=id=>`commerce/standard/${id}.json`;
 const COOKIE='__Host-recast-credit';
 export const creditsEnabled=env=>env.RENDER_CREDITS_ENABLED==='true';
 const walletKey=id=>`commerce/wallets/${id}.json`;
@@ -15,12 +18,14 @@ async function networkKey(request,env){
   const key=await crypto.subtle.importKey('raw',new TextEncoder().encode(env.CREDIT_IP_SALT),{name:'HMAC',hash:'SHA-256'},false,['sign']);
   return [...new Uint8Array(await crypto.subtle.sign('HMAC',key,new TextEncoder().encode(ip)))].map(b=>b.toString(16).padStart(2,'0')).join('');
 }
-export async function creditBalance(env,wallet){
+export async function creditBalance(env,wallet,now=Date.now()){
   const current=await read(env,walletKey(wallet.id));
   const trial=await read(env,trialKey(wallet.network));
-  const free=Math.max(0,3-Number(trial?.used||0));
+  const daily=windowState(trial,now);
+  const standard=windowState(await read(env,standardKey(wallet.network)),now);
+  const free=Math.max(0,3-Number(daily.used||0));
   const bonus=Object.values(current?.orders||{}).reduce((n,o)=>n+(o.revoked?0:Math.max(0,5-o.used)),0);
-  return {free,bonus,remaining:free+bonus};
+  return {free,bonus,remaining:free+bonus,standardRemaining:Math.max(0,1-standard.used),resetAt:new Date(daily.resetAt).toISOString(),standardResetAt:new Date(standard.resetAt).toISOString()};
 }
 export async function creditRoute(request,env){
   if(new URL(request.url).pathname!=='/api/render-credits')return null;
@@ -37,7 +42,7 @@ export async function creditRoute(request,env){
     }
   }
   return privateJson({ok:true,enabled:true,initialized:Boolean(wallet),...(wallet?await creditBalance(env,wallet):{}),freeAllowance:3,purchaseBonus:5,
-    policy:'Three starter previews; shared-network abuse limits apply. Five bonus previews per verified paid order. Failed previews restore your credit. Site availability limits apply.'},200,cookie);
+    policy:'Three High Quality previews per 24 hours and one Standard fallback; shared-network abuse limits apply. Five bonus previews per verified paid order. Failed previews restore your credit. Site availability limits apply.'},200,cookie);
 }
 export async function bindCustomerCredits(request,env){
   if(!creditsEnabled(env))return env;
@@ -45,14 +50,25 @@ export async function bindCustomerCredits(request,env){
   if(!wallet)throw fault('credits_required','Please reload to prepare your free previews.',401);
   return {...env,RECAST_CREDIT_WALLET:wallet};
 }
-export async function reserveCustomerRender(env){
+export async function reserveCustomerRender(env,now=Date.now()){
   const wallet=env.RECAST_CREDIT_WALLET;
   if(!creditsEnabled(env)||!wallet)return; // owner/social still pass the global budget and call caps
   const ticket=randomToken();
+  if(env.RECAST_RENDER_MODE==='quick'){
+    const key=standardKey(wallet.network);
+    await change(env,key,{used:0},previous=>{
+      const v=windowState(previous,now);
+      if(!Number.isSafeInteger(v.used)||v.used<0)throw fault('credits_storage','The Standard allowance needs review.',503);
+      if(v.used>=1)throw fault('standard_credits_used','Your Standard preview allowance is used. Wait for its 24-hour reset.',429);
+      v.used++;v.active ||= {};v.active[ticket]=true;return v;
+    });
+    return {key,ticket};
+  }
   // Reserve while running; restore customer credit if a protected preview fails.
   // Provider spending reservations are never refunded automatically.
   try{
-    await change(env,trialKey(wallet.network),{used:0},v=>{
+    await change(env,trialKey(wallet.network),{used:0},previous=>{
+      const v=windowState(previous,now);
       if(!Number.isSafeInteger(v.used)||v.used<0)throw fault('credits_storage','The preview allowance needs review.',503);
       if(v.used>=3)throw fault('trial_exhausted','Starter attempts used.',429);
       v.used++;v.active ||= {};v.active[ticket]=true;return v;
@@ -64,7 +80,7 @@ export async function reserveCustomerRender(env){
     if(Object.values(v.orders||{}).some(o=>!Number.isSafeInteger(o.used)||o.used<0||o.used>5))throw fault('credits_storage','The purchase credit balance needs review.',503);
     orderKey=Object.keys(v.orders||{}).find(k=>!v.orders[k].revoked&&v.orders[k].used<5);
     const order=v.orders?.[orderKey];
-    if(!order)throw fault('render_credits_used','Your preview attempts are used. A paid order adds five more, and physical orders wait for your design approval.',429);
+    if(!order)throw fault('render_credits_used','Your High Quality allowance is used. An eligible paid order adds five more, or wait for your 24-hour reset.',429);
     order.used++;order.active ||= {};order.active[ticket]=true;return v;
   });
   return {key:walletKey(wallet.id),orderKey,ticket};
