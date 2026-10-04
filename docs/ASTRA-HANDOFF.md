@@ -4,6 +4,8 @@ Updated: 2026-10-03. Keep this index and append-only session records current whe
 
 ## Start here
 
+- [RM-019: purchase routing and stable adventure cards](ASTRA-SESSION-RM-019.md). Direct checkout script loading; 139 mocked tests pass.
+
 - [RM-018: guided creation and reference labels](ASTRA-SESSION-RM-018.md). Who → Photos → Adventure; 134 mocked tests pass.
 
 - [RM-017: HQ-first conditional fallback and renewing allowances](ASTRA-SESSION-RM-017.md). 131 mocked tests passed; feature configuration remains gated.

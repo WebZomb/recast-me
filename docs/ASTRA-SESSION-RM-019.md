@@ -1,0 +1,11 @@
+# RM-019 — purchase routing and stable adventure cards
+
+2026-10-04. Remote baseline 3bdfea876f29aa489ff1514257205f1bed942c86; local baseline c7eb0bc. Result is the commit introducing this record; exact uploaded SHA will be appended after verification. Preview branch only; production merge gates unchanged.
+
+Owner mobile screenshots show a successful protected render, followed by Choose a product → Mug → creator loop. Root cause: static index did not include checkout.js, depending on Worker HTML injection, while assets run Worker first only for /api/*. Added versioned checkout script directly to index. Explicit artwork-selected event follows committed ID/token; checkout prefers active tab selection over stale localStorage. Existing product variants and Shopify checkout endpoint retained. Catalog failure/empty results show a retry; checkout failures show an inline alert, and stale product buttons cannot buy the previously selected artwork. No catalog product activation or credentials changed.
+
+Adventure selection changed border width from 1px to 2px and reduced available title width. Both states now use 2px; card padding/title spacing and minimum title height keep selection stable and allow accessible wrapping at narrow widths. No image model, prompt, quota, or fulfillment changes.
+
+Files: public/index.html, app.js, checkout.js, site-v10.css; tests/checkout-ui.test.mjs; handoff/session notes. Validation: 139 mocked Node tests passed, zero failures; JS syntax and git diff whitespace checks passed. New executed UI harness tests cover static checkout loading, selected artwork overriding stale storage, exact Mug SKU/credentials to checkout, visible retryable checkout failure, catalog retry, stale response rejection and stale button behavior. These are mocked tests, not a real Shopify payment or mobile Safari check.
+
+No AI generation, Images transform, mockup, paid purchase, production print, or social action initiated. Deployment and browser evidence will be appended when observed. Real checkout/payment, Printful mapping/proof, physical sample, active budget, and App Store gates remain outstanding. Rollback: revert RM-019 application changes; no storage migration, artwork regeneration or provider configuration changes.

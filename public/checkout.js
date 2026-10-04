@@ -31,7 +31,13 @@ const PRODUCT_META = {
   "Recast Pack": {order:91,badge:"DIGITAL PACK",pitch:"The complete digital set with useful crops and formats.",tier:"digital",cta:"Get Recast Pack"}
 };
 
-function lastRequest(){try{return JSON.parse(localStorage.getItem("recast_last_request")||"null")||window.__recastActiveRequest}catch{return window.__recastActiveRequest||null}}
+function lastRequest(){if(window.__recastActiveRequest)return window.__recastActiveRequest;try{return JSON.parse(localStorage.getItem("recast_last_request")||"null")}catch{return null}}
+function showCatalogError(message){
+  grid.replaceChildren();
+  const copy=document.createElement("p");copy.className="product-loading";copy.setAttribute("role","status");copy.textContent=message;
+  const retry=document.createElement("button");retry.type="button";retry.className="button";retry.textContent="Try loading products again";retry.addEventListener("click",loadCheckout);
+  grid.append(copy,retry);
+}
 function money(n){const value=Number(n);return Number.isFinite(value)?`$${value.toFixed(2)}`:n}
 function sleep(ms){return new Promise(resolve=>setTimeout(resolve,ms))}
 let checkoutLoadId=0;
@@ -89,7 +95,7 @@ async function loadCheckout(){
   }catch(error){data={error:error?.message||'Connection interrupted.'}}
   if(loadId!==checkoutLoadId)return;
   if(!response?.ok||!data.ok){
-    grid.innerHTML='<p class="product-loading">Products are temporarily unavailable for this Recast. Your artwork is saved; please try again shortly.</p>';
+    showCatalogError("Products are temporarily unavailable for this Recast. Your artwork is saved; try loading products again.");
     console.warn("Checkout options unavailable",data);
     return;
   }
@@ -98,13 +104,15 @@ async function loadCheckout(){
     .filter(product=>PRODUCT_META[product.title])
     .sort((a,b)=>(PRODUCT_META[a.title]?.order??50)-(PRODUCT_META[b.title]?.order??50));
 
+  if(!ordered.length){showCatalogError("No products are available for this Recast yet. Your artwork is saved.");return;}
+
   grid.innerHTML=ordered.map((product,index)=>{
     const meta=PRODUCT_META[product.title];
     const variants=product.variants||[],first=variants[0];
     const prices=variants.map(v=>Number(v.price)).filter(Number.isFinite);
     const min=prices.length?Math.min(...prices):0,max=prices.length?Math.max(...prices):min;
     const priceText=min===max?money(min):`from ${money(min)}`;
-    const active=product.status==="ACTIVE";
+    const active=product.status==="ACTIVE"&&variants.length>0;
     const featured=meta.tier==="featured";
     const digital=meta.tier==="digital";
     const classes=["product",featured?"featured-product":"secondary-product",digital?"digital-product":""].filter(Boolean).join(" ");
@@ -127,6 +135,7 @@ async function loadCheckout(){
         <button class="recast-buy" data-product="${index}" ${active?"":"disabled"}>
           ${active?meta.cta:"Checkout stays locked until launch"}
         </button>
+        <p class="checkout-error" role="alert" hidden></p>
       </div>
     </div>`;
   }).join("");
@@ -157,19 +166,20 @@ async function loadCheckout(){
       const index=button.dataset.product;
       const selector=document.querySelector(`.recast-variant[data-product="${index}"]`);
       const sku=selector?.value;if(!sku)return;
+      if(lastRequest()?.requestId!==req.requestId||lastRequest()?.accessToken!==req.accessToken){await loadCheckout();return;}
+      const errorCopy=button.parentElement.querySelector(".checkout-error");
+      errorCopy.hidden=true;errorCopy.textContent="";
       button.disabled=true;const previous=button.textContent;button.textContent="Opening Shopify…";
       try{
         const res=await fetch("/api/checkout-link",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({requestId:req.requestId,accessToken:req.accessToken,sku})});
         const result=await res.json().catch(()=>({}));
         if(!res.ok||!result.ok||!result.checkoutUrl)throw new Error(result.error||"Checkout link could not be created.");
         location.href=result.checkoutUrl;
-      }catch(error){button.disabled=false;button.textContent=previous;console.warn(error)}
+      }catch(error){button.disabled=false;button.textContent=previous;errorCopy.textContent=error.message||"Checkout is temporarily unavailable. Please try again.";errorCopy.hidden=false;}
     })
   })
 }
 
-if(requestLabel){
-  const observer=new MutationObserver(()=>{if(/Artwork ID:/i.test(requestLabel.textContent||""))loadCheckout()});
-  observer.observe(requestLabel,{childList:true,subtree:true,characterData:true})
-}
+// Artwork activation is explicit: wait until both ID and token are committed.
+document.addEventListener('recast-artwork-selected',loadCheckout);
 if(lastRequest()?.requestId&&requestLabel&&/Artwork ID:/i.test(requestLabel.textContent||""))loadCheckout();

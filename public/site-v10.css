@@ -672,11 +672,13 @@ body{padding-bottom:env(safe-area-inset-bottom)}
 .creation-progress button{flex:1;min-width:0;padding:12px 5px;background:#171329;border:1px solid #494061;border-radius:12px;color:#cbc4e4;font:inherit;font-size:13px;cursor:pointer}
 .creation-progress [aria-current="step"]{border-color:#76dff1;color:white;background:#33234f}
 .subject-choices,.adventure-choices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:16px 0}
-.subject-choices button,.adventure-choices button{min-width:0;overflow:hidden;border:1px solid #4a4265;border-radius:16px;background:#151124;color:#f9f6ff;font:inherit;cursor:pointer}
+.subject-choices button,.adventure-choices button{min-width:0;overflow:hidden;border:2px solid #4a4265;border-radius:16px;background:#151124;color:#f9f6ff;font:inherit;cursor:pointer}
 .subject-choices button{padding:18px 10px}
-.subject-choices [aria-pressed="true"],.adventure-choices [aria-pressed="true"]{border:2px solid #72deef;background:#2d2250}
+.subject-choices [aria-pressed="true"],.adventure-choices [aria-pressed="true"]{border-color:#72deef;background:#2d2250}
 .adventure-choices img{display:block;width:100%;height:150px;object-fit:contain;background:#100d1c}
-.adventure-choices strong{display:block;padding:12px;font-size:15px}
+.adventure-choices button{padding:0}
+.adventure-choices strong{display:flex;align-items:center;justify-content:center;min-height:60px;padding:10px 6px;font-size:14px;line-height:1.3}
+.checkout-error{color:#ffcca1;line-height:1.5}
 .wizard-actions{display:flex;gap:12px;justify-content:space-between;margin-top:22px;flex-wrap:wrap}
 .photo-tip{font-size:14px;color:#beb6d0}.reference-label{display:block;padding:10px;font-size:13px}.reference-label select{width:100%;min-width:0;font-size:14px}
 #photo-step-error{color:#ffcca1}#personal-details{margin:20px 0;padding:16px;border:1px solid #4a4265;border-radius:16px}#personal-details summary{cursor:pointer;font-weight:700}#personal-details label{margin-top:16px}

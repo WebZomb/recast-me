@@ -454,6 +454,7 @@ function activeRequestFromVersion(version){
     model:version.modelUsed||null,
     qualityMode:version.qualityMode||'high'
   }))}catch{showRecastError('Browser storage is unavailable. Keep this tab open to choose products.')}
+  document.dispatchEvent(new Event('recast-artwork-selected'));
 }
 async function fetchStoredPreview(version){
   if(previewCache.has(version.requestId))return previewCache.get(version.requestId);
