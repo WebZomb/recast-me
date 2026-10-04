@@ -1,3 +1,22 @@
+import {fallbackState} from './quality-policy.js';
+import {protectedPreviewFile} from './preview-export.js';
+let creditInfo=null;
+async function refreshCredits(initialize=false){
+  const display=document.querySelector('#render-credits');
+  try{
+    const r=await fetch('/api/render-credits',{method:initialize?'POST':'GET',headers:{'x-recast-request':'1'}}),d=await r.json();
+    if(!r.ok)throw new Error(d.userMessage||d.error||'Could not check your previews.');
+    creditInfo=d;
+    if(display){display.hidden=!d.enabled;display.textContent=d.enabled?`${d.remaining??0} High Quality renders remaining · 3 per 24 hours + ${d.purchaseBonus??5} per eligible paid order. Failed previews restore your credit. Shared-network and site limits apply.`:'';}
+    applyReadiness();
+    return d;
+  }catch(e){if(display){display.hidden=false;display.textContent=e.message}throw e}
+}
+refreshCredits(true).catch(()=>{});
+try{
+  const path=sessionStorage.getItem('recast_order_return');
+  if(path&&path.startsWith('/order.html?')){const box=document.querySelector('#return-to-order');box.hidden=false;box.querySelector('a').href=path;}
+}catch{}
 const STYLES = [
   ["game","Game World","Cinematic city energy, dramatic light, bold illustrated realism.","/assets/world-game-card-v181.webp","Jack Russell in an adventure vest"],
   ["halloween","Halloween","Stylish costumes, moonlight, fog, pumpkins — playful, not grim.","/assets/world-halloween-v18.webp","Jack Russell in a Halloween cape"],
@@ -58,7 +77,7 @@ document.querySelectorAll('.style-card').forEach(card=>{
 function merchCard(item,{featured=false}={}){
   const classes=['product',featured?'featured-product':'secondary-product'].filter(Boolean).join(' ');
   return `<div class="${classes}">
-    <div class="product-art"><img src="${item.image || `/assets/product-${item.asset}-v09.jpg`}" alt="${item.name}"></div>
+    <div class="product-art"><img src="${item.image || `/assets/product-${item.asset}-v09.jpg`}" alt="${item.name}" loading="lazy" decoding="async"></div>
     <div class="product-body">
       <span class="product-badge">${item.badge}</span>
       <strong>${item.name}</strong>
@@ -188,21 +207,11 @@ async function resizeFile(file,max=500){
 }
 
 async function renderWatermark(dataUrl){
+  // Server output is already flattened with @RecastMeAi • PREVIEW.
+  // Display those same protected pixels everywhere; never rely on a canvas-only mark.
   const img=new Image();img.src=dataUrl;await img.decode();
-  const preview=document.createElement('canvas');preview.width=img.naturalWidth;preview.height=img.naturalHeight;
-  const ctx=preview.getContext('2d');ctx.drawImage(img,0,0,preview.width,preview.height);
-  ctx.save();ctx.globalAlpha=.22;ctx.fillStyle='#ffffff';ctx.textAlign='center';ctx.font=`900 ${Math.max(16,preview.width/24)}px system-ui`;
-  ctx.translate(preview.width/2,preview.height/2);ctx.rotate(-Math.PI/5);
-  const gap=preview.width/2.1;
-  for(let y=-preview.height*1.4;y<preview.height*1.4;y+=gap*.65){
-    for(let x=-preview.width*1.5;x<preview.width*1.5;x+=gap){ctx.fillText('RECAST ME • PREVIEW',x,y)}
-  }
-  ctx.restore();
-  ctx.fillStyle='rgba(7,7,11,.75)';ctx.fillRect(0,preview.height-46,preview.width,46);
-  ctx.fillStyle='#fff';ctx.font=`800 ${Math.max(13,preview.width/34)}px system-ui`;ctx.textAlign='center';
-  ctx.fillText('RECAST ME • PREVIEW',preview.width/2,preview.height-18);
-  const canvas=document.querySelector('#preview-canvas');canvas.width=preview.width;canvas.height=preview.height;
-  canvas.getContext('2d').drawImage(preview,0,0);
+  const canvas=document.querySelector('#preview-canvas');canvas.width=img.naturalWidth;canvas.height=img.naturalHeight;
+  canvas.getContext('2d').drawImage(img,0,0);
 }
 
 function inferSubject(subject,notes){
@@ -217,19 +226,19 @@ function selectedQuality(){
   return document.querySelector('input[name="qualityMode"]:checked')?.value==='quick'?'quick':'high';
 }
 function qualityLabel(mode=selectedQuality()){
-  return mode==='quick'?'Quick Preview':'High-Quality Preview';
+  return mode==='quick'?'Standard Preview':'High-Quality Preview';
 }
 function updateQualityUI(){
   const mode=selectedQuality();
   document.querySelectorAll('[data-quality-card]').forEach(card=>card.classList.toggle('selected',card.dataset.qualityCard===mode));
   const button=document.querySelector('#generate-button');
-  if(button&&!generationInFlight)button.textContent=mode==='quick'?'Create Quick Preview':'Create High-Quality Preview';
+  if(button&&!generationInFlight)button.textContent=mode==='quick'?'Create Standard Preview':'Create High-Quality Preview';
   const copy=document.querySelector('#model-copy');
   if(copy)copy.textContent=mode==='quick'
-    ? 'Quick Preview · faster, lower detail and likeness accuracy'
+    ? 'Standard Preview · detail and likeness may be lower than High Quality'
     : 'High-Quality Preview · best likeness, prompt accuracy, and detail';
 }
-document.querySelectorAll('input[name="qualityMode"]').forEach(input=>input.addEventListener('change',updateQualityUI));
+document.querySelectorAll('input[name="qualityMode"]').forEach(input=>input.addEventListener('change',()=>{updateQualityUI();applyReadiness();refreshRenderAvailability();}));
 
 function startGenerationUI(mode=selectedQuality()){
   const status=document.querySelector('#generation-status');
@@ -253,24 +262,89 @@ function stopGenerationUI(success=false){
 function friendlyGenerationError(data,error){
   const mode=data?.qualityMode||selectedQuality();
   const label=qualityLabel(mode);
-  if(error?.name==='AbortError') return `${label} took too long this time. Your photo and settings are still here — try again or switch quality.`;
+  if(error?.name==='AbortError') return `${label} was still processing after several minutes, so this page stopped waiting. Keep this page open briefly and check Recent Versions before starting another attempt.`;
   if(data?.reviewRequired) return 'This request needs a quick human review before generation.';
   if(data?.code===3036 || data?.reason==='quota') return 'Recast Me has reached its shared AI capacity for today. This is a site-wide limit, not your personal render count. Your photo and settings are still here; nothing was charged.';
   if(data?.code===3030 || data?.reason==='moderation') return `${label} could not complete that exact photo and wording combination. Try again, edit the direction, or switch quality.`;
-  if(data?.reason==='capacity') return `${label} is temporarily busy. Your photo and settings are still here — try again or switch quality.`;
+  if(data?.reason==='timeout') return `${label} timed out before the provider returned the artwork. Your photo and settings are still here — wait for Ready before trying again.`;
+  if(data?.reason==='capacity') return `${label} received a confirmed busy response. Your photo and settings are still here — wait for Ready or choose another ready quality.`;
+  if(data?.reason==='unavailable') return `${label} is temporarily unavailable. Your photo and settings are still here — wait for Ready before trying again.`;
   return data?.userMessage || `${label} did not finish this time. Your photo and settings are still here.`;
 }
 
+let readinessSnapshot=null;
+function readinessFor(mode=selectedQuality()){return readinessSnapshot?.modes?.[mode]||null}
+function readinessMessage(mode=selectedQuality()){
+  const health=readinessFor(mode);
+  if(!readinessSnapshot?.local?.ready)return 'Image creation is unavailable while Recast Me checks its required services.';
+  if(!health)return 'Checking render readiness…';
+  if(health.ready)return `${qualityLabel(mode)} · Ready`;
+  if(health.reason==='quota')return `${qualityLabel(mode)} · Shared capacity paused`;
+  if(health.reason==='timeout')return `${qualityLabel(mode)} · Previous attempt timed out — cooling down`;
+  if(health.reason==='capacity')return `${qualityLabel(mode)} · Confirmed busy — cooling down`;
+  if(health.reason==='unavailable')return `${qualityLabel(mode)} · Provider temporarily unavailable`;
+  return `${qualityLabel(mode)} · Unavailable`;
+}
+function currentFallback(){return fallbackState(readinessSnapshot,creditInfo,selectedQuality())}
+function updateFallback(){
+  const state=currentFallback(),box=document.querySelector('#quality-fallback');
+  if(box)box.hidden=!state.show;
+  const reason=document.querySelector('#quality-fallback-reason');if(reason)reason.textContent=state.message;
+  const standard=document.querySelector('#choose-standard');if(standard){standard.hidden=selectedQuality()==='quick';standard.disabled=!state.standardReady;}
+  const high=document.querySelector('#choose-high');if(high)high.hidden=selectedQuality()!=='quick';
+  const purchase=document.querySelector('#credit-purchase-link');if(purchase)purchase.hidden=!state.exhausted;
+  return state;
+}
+for(const [id,mode] of [['choose-standard','quick'],['choose-high','high']])document.querySelector('#'+id)?.addEventListener('click',()=>{
+  if(mode==='quick'&&!currentFallback().standardReady)return;
+  document.querySelector(`input[name="qualityMode"][value="${mode}"]`).checked=true;
+  updateQualityUI();applyReadiness();
+});
+function applyReadiness(){
+  const mode=selectedQuality(),health=readinessFor(mode),button=document.querySelector('#generate-button'),notice=document.querySelector('#render-availability');
+  const fallback=updateFallback();
+  const ready=Boolean(readinessSnapshot?.local?.ready&&health?.ready&&(mode==='quick'?fallback.standardReady:!fallback.exhausted));
+  if(button&&!generationInFlight){button.disabled=!ready;button.textContent=ready?(mode==='quick'?'Create Standard Preview':'Create High-Quality Preview'):fallback.exhausted&&mode==='high'?'High Quality allowance used':'Checking availability…';}
+  const copy=document.querySelector('#model-copy');if(copy)copy.textContent=readinessMessage(mode);
+  const dot=document.querySelector('.quality-dot');if(dot)dot.dataset.state=ready?'ready':readinessSnapshot?.local?.ready?'waiting':'error';
+  if(notice){notice.hidden=ready;notice.textContent=ready?'':fallback.exhausted&&mode==='high'?fallback.message:readinessMessage(mode)+' Your photo and settings stay here.';}
+  return ready;
+}
 async function refreshRenderAvailability(){
   try{
-    const response=await fetch('/api/model-status',{signal:AbortSignal.timeout(5000)});
-    if(!response.ok)return true;
+    const response=await fetch('/api/render-readiness',{cache:'no-store',signal:AbortSignal.timeout(5000)});
     const data=await response.json();
-    const paused=['paused','unconfigured'].includes(data.availability?.state);
-    const notice=document.querySelector('#render-availability');
-    if(notice){notice.hidden=!paused;notice.textContent=paused?'Image creation is temporarily unavailable. Your settings are safe. Please check again shortly.':'';}
-    return !paused;
-  }catch{return true;}
+    if(!data?.modes)throw new Error('invalid readiness response');
+    readinessSnapshot=data;
+    const ready=applyReadiness();
+    syncRetryControls();
+    return ready;
+  }catch{readinessSnapshot=null;applyReadiness();syncRetryControls();return false;}
+}
+function syncRetryControls(){
+  const retry=document.querySelector('#retry-generation');
+  const switchMode=document.querySelector('#switch-quality-generation');
+  const failed=readinessFor(lastAttemptQuality);
+  if(retry&&!retry.classList.contains('hidden')){
+    const ready=Boolean(readinessSnapshot?.local?.ready&&failed?.ready);
+    retry.disabled=!ready;
+    const waitText=failed?.reason==='timeout'
+      ?`${qualityLabel(lastAttemptQuality)} timed out — checking readiness…`
+      :failed?.reason==='unavailable'
+      ?`${qualityLabel(lastAttemptQuality)} unavailable — checking…`
+      :failed?.reason==='capacity'
+      ?`${qualityLabel(lastAttemptQuality)} busy — checking…`
+      :`${qualityLabel(lastAttemptQuality)} unavailable — checking…`;
+    retry.textContent=ready?(lastAttemptQuality==='quick'?'Try Standard again':'Try High-Quality again'):waitText;
+  }
+  if(switchMode&&!switchMode.classList.contains('hidden')){
+    const next=lastAttemptQuality==='quick'?'high':'quick',alternate=readinessFor(next);
+    const ready=Boolean(readinessSnapshot?.local?.ready&&alternate?.ready&&(next==='quick'?currentFallback().standardReady:!currentFallback().exhausted));
+    switchMode.disabled=!ready;
+    switchMode.textContent=ready
+      ?(next==='quick'?'Try Standard · lower detail and likeness':'Try High-Quality Preview')
+      :(next==='quick'?'Standard Preview unavailable':'High Quality unavailable');
+  }
 }
 
 
@@ -329,7 +403,7 @@ function showPreviewError(message,{diagnosticId='',retryable=true}={}){
     if(diagnosticId){ref.textContent=`Support reference: ${diagnosticId}`;ref.classList.remove('hidden')}
     else{ref.textContent='';ref.classList.add('hidden')}
   }
-  if(retry)retry.classList.toggle('hidden',retryable===false);
+  if(retry){retry.classList.toggle('hidden',retryable===false);retry.disabled=retryable===false;}
   if(switchMode)switchMode.classList.toggle('hidden',retryable===false);
   box?.classList.remove('hidden');
 }
@@ -380,7 +454,7 @@ async function fetchStoredPreview(version){
   url.searchParams.set('token',version.accessToken);
   const response=await fetch(url);
   const data=await response.json().catch(()=>({}));
-  if(!response.ok||!data.ok||!data.image)throw new Error(data.error||'This saved version is unavailable.');
+  if(!response.ok||!data.ok||data.watermarked!==true||!data.image)throw new Error(data.error||'This saved version is unavailable.');
   return data.image;
   })();
   previewCache.set(version.requestId,pending);
@@ -431,7 +505,7 @@ function setBranchReference(version){
   document.querySelector('#custom-world').value=branchReference.customWorld;
   updateWorldFields();
   document.querySelector('#notes').value=branchReference.notes;
-  const radio=document.querySelector(`input[name="qualityMode"][value="${branchReference.qualityMode}"]`);
+  const radio=document.querySelector(`input[name="qualityMode"][value="high"]`);
   if(radio){radio.checked=true;updateQualityUI()}
   const note=document.querySelector('#branch-note');
   if(note){
@@ -461,7 +535,7 @@ async function renderRecentVersions(){
       <div class="recent-version-copy">
         <span>VERSION ${rows.length-i}</span>
         <strong>${escapeHtml(v.styleName||'Custom Recast')}</strong>
-        <small>${v.qualityMode==='quick'?'Quick':'High-Quality'} · ${new Date(v.createdAt||Date.now()).toLocaleString([], {month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})}</small>
+        <small>${v.qualityMode==='quick'?'Standard':'High-Quality'} · ${new Date(v.createdAt||Date.now()).toLocaleString([], {month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})}</small>
       </div>
       <div class="recent-version-actions">
         <button type="button" data-history-action="use">Use this version</button>
@@ -578,6 +652,8 @@ form.addEventListener('submit',async e=>{
   section.classList.remove('hidden');section.scrollIntoView({behavior:'smooth'});loading.classList.remove('hidden');
 
   try{
+    const credits=await refreshCredits(true);
+    if(credits.enabled&&(selectedQuality()==='quick'?credits.standardRemaining:credits.remaining)<=0)throw Object.assign(new Error('Your selected preview allowance is used. Check the reset time and available options below.'),{publicMessage:'Your selected preview allowance is used. Check the reset time and available options below.'});
     const fd=new FormData();
     fd.append('style',styleSelect.value);
     const customWorld=styleSelect.value==='custom'?document.querySelector('#custom-world').value.trim():'';
@@ -608,19 +684,19 @@ form.addEventListener('submit',async e=>{
       fd.append('branchPreview',await resizeFile(new File([blob],'previous-recast.jpg',{type:blob.type||'image/jpeg'})));
     }
 
-    button.textContent=qualityMode==='quick'?'Creating Quick Preview…':'Creating High-Quality Preview…';
+    button.textContent=qualityMode==='quick'?'Creating Standard Preview…':'Creating High-Quality Preview…';
     startGenerationUI(qualityMode);
-    const controller=new AbortController();
-    const timeout=setTimeout(()=>controller.abort(),qualityMode==='quick'?135000:270000);
+    // Do not locally abort an in-flight image generation request. A browser timer
+    // cannot cancel Workers AI and can create an orphaned paid render whose result
+    // is discarded. Let the provider/Worker return the authoritative outcome.
     let res,data;
-    try{
-      res=await fetch('/api/transform-v2',{method:'POST',body:fd,signal:controller.signal});
-      data=await res.json().catch(()=>({}));
-    }finally{ clearTimeout(timeout); }
+    res=await fetch('/api/transform-v2',{method:'POST',headers:{'x-recast-request':'1'},body:fd});
+    refreshCredits().catch(()=>{});
+    data=await res.json().catch(()=>({}));
 
     if(res.status===202&&data.reviewRequired) throw Object.assign(new Error(friendlyGenerationError(data)),{publicMessage:friendlyGenerationError(data),diagnosticId:data.diagnosticId||'',retryable:false});
     if(!res.ok) throw Object.assign(new Error(friendlyGenerationError(data)),{publicMessage:friendlyGenerationError(data),diagnosticId:data.diagnosticId||'',retryable:data.retryable!==false});
-    if(typeof data.image!=='string'||!data.image.startsWith('data:image/')) throw Object.assign(new Error('invalid preview'),{publicMessage:'The image engine returned an incomplete preview. Please try again.',retryable:true});
+    if(data.watermarked!==true||typeof data.image!=='string'||!data.image.startsWith('data:image/')) throw Object.assign(new Error('invalid preview'),{publicMessage:'The image engine returned an incomplete preview. Please try again.',retryable:true});
     if(!data.persisted)throw Object.assign(new Error('storage unavailable'),{
       publicMessage:'The artwork was generated, but private storage did not save it. Your last saved version is still available. Please try again in a moment.',
       diagnosticId:data.clientAttemptId||'',retryable:true
@@ -672,8 +748,9 @@ form.addEventListener('submit',async e=>{
       : `${qualityLabel(lastAttemptQuality)} didn’t finish this time.`;
     const retryButton=document.querySelector('#retry-generation');
     const switchButton=document.querySelector('#switch-quality-generation');
-    if(retryButton)retryButton.textContent=lastAttemptQuality==='quick'?'Try Quick again':'Try High-Quality again';
-    if(switchButton)switchButton.textContent=lastAttemptQuality==='quick'?'Try High-Quality Preview':'Try Quick Preview';
+    if(retryButton)retryButton.textContent=lastAttemptQuality==='quick'?'Try Standard again':'Try High-Quality again';
+    if(switchButton)switchButton.textContent=lastAttemptQuality==='quick'?'Try High-Quality Preview':'Try Standard · lower detail and likeness';
+    await refreshRenderAvailability();
     if(!hasSuccessfulPreview)document.querySelector('#request-id').textContent='';
 
     try{
@@ -695,20 +772,25 @@ form.addEventListener('submit',async e=>{
     button.disabled=false;
     generationInFlight=false;
     updateQualityUI();
+    await refreshRenderAvailability();
     resetTurnstile();
   }
 });
 
-document.querySelector('#retry-generation')?.addEventListener('click',()=>{
-  clearPreviewError();
-  form.requestSubmit();
+document.querySelector('#retry-generation')?.addEventListener('click',async event=>{
+  const button=event.currentTarget;if(button.disabled)return;
+  const available=await refreshRenderAvailability();
+  if(!available||!readinessFor(lastAttemptQuality)?.ready){syncRetryControls();return;}
+  clearPreviewError();form.requestSubmit();
 });
-document.querySelector('#switch-quality-generation')?.addEventListener('click',()=>{
+document.querySelector('#switch-quality-generation')?.addEventListener('click',async event=>{
+  const button=event.currentTarget;if(button.disabled)return;
   const next=lastAttemptQuality==='quick'?'high':'quick';
+  await refreshRenderAvailability();
+  if(!readinessFor(next)?.ready||(next==='quick'&&!currentFallback().standardReady)){syncRetryControls();return;}
   const radio=document.querySelector(`input[name="qualityMode"][value="${next}"]`);
-  if(radio){radio.checked=true;updateQualityUI();}
-  clearPreviewError();
-  form.requestSubmit();
+  if(radio){radio.checked=true;updateQualityUI();applyReadiness();}
+  clearPreviewError();form.requestSubmit();
 });
 document.querySelector('#keep-last-preview')?.addEventListener('click',()=>{
   restoreLastPreview().catch(()=>showRecastError('That saved preview could not be displayed. Select it from recent versions.'));
@@ -784,3 +866,32 @@ restoreRecentVersionOnLoad();
 status();
 setupTurnstile();
 refreshRenderAvailability();
+setInterval(()=>{if(!generationInFlight)refreshRenderAvailability()},30000);
+
+// Sharing never includes the private access token, source photo or order link.
+const exportStatus=document.querySelector('#preview-export-status');
+const nativeSave=document.querySelector('#save-native-preview');
+if(window.webkit?.messageHandlers?.recastPreview)nativeSave.hidden=false;
+async function exportPreview(native=false){
+  const button=document.querySelector(native?'#save-native-preview':'#share-preview');
+  button.disabled=true;exportStatus.textContent='Preparing your watermarked preview…';
+  try{
+    const result=await protectedPreviewFile(lastSuccessfulPreviewMeta);
+    if(native){
+      // Native replies after it has actually persisted the file.
+      await window.webkit.messageHandlers.recastPreview.postMessage({id:result.id,image:result.image});
+      exportStatus.textContent='Saved to My Recasts on this iPhone.';
+    }else if(navigator.canShare?.({files:[result.file]})){
+      await navigator.share({files:[result.file],title:'My Recast',text:'Made with @RecastMeAi'});
+      exportStatus.textContent='Your watermarked preview is ready to share.';
+    }else{
+      const url=URL.createObjectURL(result.file),link=document.createElement('a');
+      link.href=url;link.download=result.file.name;link.click();
+      setTimeout(()=>URL.revokeObjectURL(url),60000);
+      exportStatus.textContent='Your watermarked preview download has started.';
+    }
+  }catch(error){exportStatus.textContent=error.name==='AbortError'?'Sharing canceled. Your preview is still here.':error.message||'Could not save this preview.'}
+  finally{button.disabled=false}
+}
+document.querySelector('#share-preview')?.addEventListener('click',()=>exportPreview());
+nativeSave?.addEventListener('click',()=>exportPreview(true));

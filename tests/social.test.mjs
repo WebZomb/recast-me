@@ -15,7 +15,7 @@ const tweet={id:'1234',author_id:'5678',text:'@recastmeai make me and my dog rea
 const media={media_key:'photo1',type:'photo',url:'https://pbs.twimg.com/media/photo.jpg'};
 function setup(t,{quota=false,ambiguous=false}={}){
   const calls={ai:0,uploads:0,replies:[],mentions:[]};
-  const env={PUBLIC_APP_URL:'https://recast.test',X_USER_ID:'999',X_USERNAME:'recastmeai',X_USER_ACCESS_TOKEN:'test',X_BOT_ENABLED:'true',X_BOT_APPROVED:'true',ARTWORK:new Bucket(),TURNSTILE_SECRET_KEY:'enabled',AI:{run:async()=>{calls.ai++;if(quota)throw new Error('3036 daily free allocation');return {image:jpeg.toString('base64')};}},ASSETS:{fetch:async()=>new Response('watermark')},IMAGES:{input:()=>{let drawn=false;const chain={transform:()=>chain,draw:()=>{drawn=true;return chain;},output:async()=>({response:()=>new Response(drawn?'watermarked-public-preview':jpeg)})};return chain;}}};
+  const env={PUBLIC_APP_URL:'https://recast.test',X_USER_ID:'999',X_USERNAME:'recastmeai',X_USER_ACCESS_TOKEN:'test',X_BOT_ENABLED:'true',X_BOT_APPROVED:'true',ARTWORK:new Bucket(),TURNSTILE_SECRET_KEY:'enabled',AI:{run:async()=>{calls.ai++;if(quota)throw new Error('3036 daily free allocation');return {image:jpeg.toString('base64')};}},ASSETS:{fetch:async()=>new Response('watermark')},IMAGES:{info:async()=>({width:1024,height:1280}),input:()=>{let drawn=false;const chain={transform:()=>chain,draw:()=>{drawn=true;return chain;},output:async()=>({response:()=>new Response(drawn?'watermarked-public-preview':jpeg)})};return chain;}}};
   t.mock.method(globalThis,'fetch',async(raw,options={})=>{
     const url=new URL(raw instanceof Request?raw.url:String(raw));
     if(url.pathname.endsWith('/mentions')){calls.mentions.push(url);return Response.json({data:[tweet],includes:{media:[media]}});}
@@ -63,7 +63,7 @@ test('quota pauses the X job without dropping it; the same request completes aft
   assert.equal((await renderHealth(env)).state,'paused');
   assert.ok(await env.ARTWORK.get('social/pending/1234.json'));
   await runSocialPipeline(env);assert.equal(calls.ai,1);
-  job.retryAt='2000-01-01';await env.ARTWORK.put('social/x/1234.json',JSON.stringify(job));await env.ARTWORK.delete('system/render-health.json');
+  job.retryAt='2000-01-01';await env.ARTWORK.put('social/x/1234.json',JSON.stringify(job));await env.ARTWORK.delete('system/render-health-high.json');await env.ARTWORK.delete('system/render-health.json');
   env.AI.run=async()=>{calls.ai++;return {image:jpeg.toString('base64')};};
   await runSocialPipeline(env);job=await (await env.ARTWORK.get('social/x/1234.json')).json();
   assert.equal(job.replyStatus,'replied');assert.equal(calls.ai,2);

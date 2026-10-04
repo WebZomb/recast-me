@@ -2,8 +2,12 @@ import app from "./entry.js";
 import { highQualityTransform, modelStatus } from "./highquality.js";
 import { routeWorkflow, scheduledWorkflow, requireAdmin } from "./workflow.js";
 import { socialRoutes } from './social.js';
+import { secureApplication } from './preview-security.js';
+import { readinessSnapshot } from './render-health.js';
 
-export default {
+import { printFinishRoutes } from './print-finish.js';
+
+const application = {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
     if(url.pathname === '/api/admin/model-test' && request.method === 'POST'){
@@ -17,6 +21,8 @@ export default {
         return highQualityTransform(testRequest,{...env,IMAGE_MODEL_HIGH_QUALITY:models.dev,IMAGE_MODEL_QUICK:models[choice]}, {trustedSocialJob:true});
       }catch(error){return Response.json({error:error.message},{status:error.status||500});}
     }
+    const finishResponse=await printFinishRoutes(request,env);
+    if(finishResponse)return finishResponse;
     const socialResponse=await socialRoutes(request,env,ctx);
     if(socialResponse)return socialResponse;
 
@@ -25,6 +31,10 @@ export default {
     }
     if (url.pathname === "/api/model-status" && request.method === "GET") {
       return modelStatus(env);
+    }
+    if (url.pathname === "/api/render-readiness" && request.method === "GET") {
+      const snapshot=await readinessSnapshot(env);
+      return new Response(JSON.stringify(snapshot),{status:snapshot.ok?200:503,headers:{"content-type":"application/json; charset=utf-8","cache-control":"no-store"}});
     }
     if (url.pathname === "/api/public-config" && request.method === "GET") {
       return new Response(JSON.stringify({turnstileSiteKey: env.TURNSTILE_SITE_KEY || null}), {headers:{"content-type":"application/json; charset=utf-8","cache-control":"no-store"}});
@@ -40,3 +50,6 @@ export default {
     return scheduledWorkflow(controller, env, ctx);
   }
 };
+
+// All external API responses cross this boundary. Internal artwork stays private.
+export default secureApplication(application);

@@ -152,7 +152,7 @@ export async function processSocialJob(env,job) {
     }
     if(!env.IMAGES){job.replyStatus='configuration_required';job.error='Add the IMAGES binding for photo preparation and watermarked X previews.';await saveJob(env,job);return;}
     if(!job.requestId) {
-      if((await renderHealth(env)).state==='paused'){
+      if((await renderHealth(env,'high')).state==='paused'){
         job.replyStatus='awaiting_capacity';job.retryAt=new Date(Date.now()+5*60000).toISOString();await saveJob(env,job);return;
       }
       const form=new FormData();
@@ -165,7 +165,7 @@ export async function processSocialJob(env,job) {
       if(response.status===202||rendered.reason==='policy'||rendered.reason==='moderation'){job.error=rendered.userMessage;await finish(env,job,'needs_review');return;}
       if(!response.ok||!rendered.persisted) {
         job.error=rendered.userMessage||'Artwork could not be saved.';
-        if(rendered.reason==='quota'){job.replyStatus='awaiting_capacity';job.retryAt=new Date(Date.now()+5*60000).toISOString();await saveJob(env,job);return;}
+        if(rendered.reason==='quota'||rendered.reason==='capacity'){job.replyStatus='awaiting_capacity';job.retryAt=rendered.retryAt||new Date(Date.now()+(rendered.reason==='capacity'?90:300)*1000).toISOString();await saveJob(env,job);return;}
         throw new Error(job.error);
       }
       job.requestId=rendered.requestId;job.replyStatus='artwork_saved';job.error=null;await saveJob(env,job);

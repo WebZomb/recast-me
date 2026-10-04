@@ -1,6 +1,7 @@
-import { renderHealth, recordRenderHealth } from './render-health.js';
+import { assertRenderReady, readinessSnapshot, recordRenderHealth } from './render-health.js';
+const PROMPT_VERSION = "identity-anatomy-v2";
 const DEFAULT_HIGH_QUALITY = "@cf/black-forest-labs/flux-2-dev";
-const DEFAULT_QUICK = "@cf/black-forest-labs/flux-2-klein-9b";
+const DEFAULT_QUICK = "@cf/black-forest-labs/flux-2-dev";
 
 const STYLES = {
   game:{name:"Game World",prompt:"premium original cinematic action-world key art, modern city scale, dramatic sunset and neon light, sophisticated realistic illustration, strong dynamic composition, no franchise references, no weapons"},
@@ -26,13 +27,14 @@ const SUBJECT_STYLING = {
 
 function subjectTransformation(styleId,subjectType){
   const subject=String(subjectType||"person").toLowerCase();
-  const isPet=subject.includes("pet");
+  const isPet=subject.includes("pet")||subject.includes("dog")||subject.includes("cat")||subject.includes("puppy")||subject.includes("kitten");
   const isCar=subject.includes("car");
   const isPerson=subject.includes("person")||subject.includes("couple")||subject.includes("family");
   const theme=SUBJECT_STYLING[styleId]||"an original costume, role and visual styling drawn directly from the customer's custom world";
   return [
     `VISIBLE SUBJECT TRANSFORMATION REQUIRED: ${theme}.`,
-    isPet?"For every pet, visibly transform the pet itself with a fitted, comfortable original costume, cape, collar, or themed gear, plus an expressive new pose and world-matched light on its fur. Keep its real face, exact coat colors and patches, breed, eye color and natural four-legged anatomy recognizable. The pet must belong in the story, never appear as an unchanged photo cutout pasted onto new scenery.":"",
+    isPet?"PET IDENTITY IS NON-NEGOTIABLE: costume and environment may change, but the animal itself must not be redesigned. Preserve the exact head and muzzle shape, ear size/shape/angle, eye size/spacing/color, nose, expression character, breed/body proportions, leg length, fur length/texture, and the exact boundaries and placement of every coat-color patch and facial marking from the reference. Do not widen or shorten the muzzle, enlarge the eyes, round the skull, change ear proportions, invent spots, or turn the pet into a generic/cuter/cartoon version. Fit costume around the real anatomy without hiding the defining face or markings. The finished pet should be identifiable from the face and coat even if the costume/background are removed. The pet must be visibly transformed by costume, pose and world lighting, but never appear as an unchanged photo cutout pasted onto new scenery.":"",
+    "ANATOMY RULE: for every animal visible in any reference, retain its species anatomy: natural animal torso, legs and paws. Never give a pet human hands, fingers, arms, shoulders or an upright human body unless explicitly requested. Royal pets wear fitted capes, collars or crowns on their real animal bodies; royal styling is not a dog head on a human monarch.",
     isCar?"For the car, visibly restyle its paint, lighting and original unbranded trim to fit the world, while retaining its recognizable silhouette and defining features.":"",
     isPerson?"For each person, visibly change their wardrobe, character role, pose and the lighting on their face while preserving their recognizable face, natural age and proportions.":"",
     "Show the costume or themed details on the subject clearly in the finished image. Integrate subject and environment with consistent shadows, perspective, color and light."
@@ -59,7 +61,8 @@ function errorText(error){return (error?.message||String(error)||"").toLowerCase
 function isModeration(error){const m=errorText(error);return m.includes("3030")||m.includes("flagged")||m.includes("moderation")}
 function isQuota(error){const m=errorText(error);return m.includes("3036")||m.includes("daily free allocation")||m.includes("free allocation")||m.includes("used up your daily")||m.includes("quota exceeded")}
 function isCapacity(error){const m=errorText(error);return m.includes("3040")||m.includes("out of capacity")||m.includes("capacity temporarily exceeded")||m.includes("busy")||m.includes("overload")}
-function isTransient(error){const m=errorText(error);return isCapacity(error)||m.includes("timeout")||m.includes("timed out")||m.includes("503")||m.includes("502")||m.includes("504")}
+function isTimeout(error){const m=errorText(error);return error?.reason==="timeout"||error?.name==="TimeoutError"||m.includes("timeout")||m.includes("timed out")}
+function isTemporaryUnavailable(error){const m=errorText(error);return m.includes("503")||m.includes("502")||m.includes("504")||m.includes("service unavailable")||m.includes("upstream unavailable")}
 function providerCode(error){const m=String(error?.message||error||"").match(/\b(3\d{3}|5\d{3})\b/);return m?Number(m[1]):null}
 async function writeGenerationDiagnostic(env,payload){
   const diagnosticId=`GEN-${Date.now().toString(36).toUpperCase()}-${randomHex(2).toUpperCase()}`;
@@ -124,17 +127,19 @@ function makePrompt(styleId,subjectType,notes,inputCount,customWorld="",hasBranc
     : "Use input image 0 as the strict identity and appearance reference.";
 
   return [
-    "PRIORITY 1: faithfully execute the customer's written direction.",
+    "PRIORITY 1: preserve the exact identity of every real person and pet in the reference images. Identity accuracy outranks costume, pose, style, drama, cuteness, and customer world details.",
+    "PRIORITY 2: faithfully execute the customer's written direction without changing who the subject is.",
     userDirection?`CUSTOMER DIRECTION: ${userDirection}.`:"",
     refs,
     `Subject type: ${subjectType||"person"}.`,
+    "REFERENCE RECONCILIATION: multiple photos can show the same individual. Use additional views to clarify identity, not to duplicate subjects. A pet shown alone and with a person is the same pet when its features match. Include only the requested subjects. Preserve each person’s face, natural age, hair and beard, body build and each animal’s markings; never blend identities.",
     "This is a transformation, not a retouch. Create a clearly new scene rather than recreating the source photograph.",
-    "IDENTITY LOCK: preserve facial geometry, eye shape and spacing, eyebrows, nose, mouth, jawline, skin tone, natural age, hair color and hairline, body proportions, pet breed and coat markings, and vehicle silhouette/details.",
+    "IDENTITY LOCK: preserve facial geometry, eye shape and spacing, eyebrows, nose, mouth, jawline, skin tone, natural age, hair color and hairline, body proportions, pet breed, exact pet head/muzzle/ear proportions and exact coat-marking boundaries, and vehicle silhouette/details. Never use a generic breed template in place of the referenced animal.",
     "The result must immediately read as the same real subject. Do not make the subject younger, older, thinner, heavier, more muscular, more glamorous, or generically attractive unless the customer explicitly requests it.",
     style?`SELECTED WORLD: ${style.name}. ${style.prompt}.`:"SELECTED WORLD: an original world designed from the customer's description.",
     customWorld?`CUSTOM WORLD SETTING (customer's priority): ${safeNotes(customWorld)}.`:"",
     subjectTransformation(styleId,subjectType),
-    "Change the scene, camera composition, atmosphere and storytelling substantially. A new background alone is not a completed transformation.",
+    "Build the requested world around the recognizable subjects. Keep faces large enough to recognize, with complete heads and ears inside the frame. Prefer a similar head angle to the references when another view is unavailable. Do not invent a new face to force a dramatic pose. Costume and setting provide the transformation; identity and body build stay faithful.",
     "If the customer direction conflicts with a generic style detail, honor the customer's direction first while keeping the broad selected-world mood.",
     "No third-party logos, trademarks, copied famous characters, franchise costumes, branded typography, or recognizable title treatments.",
     "Natural anatomy, believable hands and paws, no duplicated limbs or facial features, no text unless explicitly requested, premium commercial/editorial finish.",
@@ -146,9 +151,10 @@ function safePrompt(styleId,subjectType,inputCount,notes="",customWorld="",hasBr
   const style=styleId==="custom"?null:(STYLES[styleId]||STYLES.game);
   const userDirection=safeNotes(notes);
   return [
-    hasBranch?"Use the last image as the previous artwork, and earlier images for the real subject's identity.":inputCount>1?`Preserve all ${inputCount} reference subjects as separate recognizable subjects.`:"Preserve the reference subject closely and recognizably.",
+    hasBranch?"Use the last image as the previous artwork, and earlier images for the real subject's identity.":inputCount>1?`Use all ${inputCount} reference photos as identity evidence; photo count is not subject count.`:"Preserve the reference subject exactly and recognizably; for pets lock head/muzzle/ear proportions, eye placement and exact coat markings before applying any style.",
     userDirection?`Customer direction, simplified but still important: ${userDirection}.`:"",
     `Subject type: ${subjectType||"person"}.`,
+    "REFERENCE RECONCILIATION: multiple photos can show the same individual. Use additional views to clarify identity, not to duplicate subjects. A pet shown alone and with a person is the same pet when its features match. Include only the requested subjects. Preserve each person’s face, natural age, hair and beard, body build and each animal’s markings; never blend identities.",
     style?`Create an original ${style.name} transformation: ${style.prompt}.`:"Create an original custom-world transformation.",
     customWorld?`Customer's custom setting: ${safeNotes(customWorld)}.`:"",
     subjectTransformation(styleId,subjectType),
@@ -171,26 +177,21 @@ function makeForm(prompt,inputFiles,{width=768,height=960,guidance=4,steps=null}
 
 async function runModel(form,env,model){
   const serialized=new Response(form);
-  const result=await env.AI.run(model,{multipart:{body:serialized.body,contentType:serialized.headers.get("content-type")}});
+  // Reject a request before inference when the model is currently saturated.
+  // Cloudflare documents 3040 as a temporary capacity rejection. Do not
+  // automatically resubmit it: preserve the user's last result and let a
+  // deliberate later action create the next attempt.
+  const result=await env.AI.run(model,{multipart:{body:serialized.body,contentType:serialized.headers.get("content-type")}}, {rejectIfBusy:true});
   if(!result?.image)throw new Error("Image model returned no image.");
   return result.image
 }
 
-async function withAttemptTimeout(promise,ms){
-  let timer;
-  try{
-    return await Promise.race([
-      promise,
-      new Promise((_,reject)=>{timer=setTimeout(()=>reject(Object.assign(new Error("attempt timeout"),{reason:"capacity"})),ms)})
-    ])
-  }finally{clearTimeout(timer)}
-}
-
-async function tryGeneration(env,model,prompt,inputFiles,kind,settings,timeoutMs){
-  const image=await withAttemptTimeout(
-    runModel(makeForm(prompt,inputFiles,settings),env,model),
-    timeoutMs
-  );
+async function tryGeneration(env,model,prompt,inputFiles,kind,settings){
+  // Do not race AI.run against a local timer. Promise.race does not cancel the
+  // provider call, so the old 125s/60s timers could discard a late successful
+  // result while the inference continued. Capacity is handled by rejectIfBusy;
+  // genuine provider timeouts are classified from the provider error itself.
+  const image=await runModel(makeForm(prompt,inputFiles,settings),env,model);
   return{
     image,
     modelUsed:model,
@@ -208,29 +209,28 @@ async function generateHighQuality({env,model,styleId,subjectType,notes,customWo
   const settings={width:1024,height:1280,guidance,steps};
 
   try{
-    return await tryGeneration(env,model,main,inputFiles,"high-primary",settings,125000)
+    return await tryGeneration(env,model,main,inputFiles,"high-primary",settings)
   }catch(firstError){
     if(isQuota(firstError))throw Object.assign(new Error("quota"),{reason:"quota",code:3036,cause:firstError});
     if(isModeration(firstError)){
       try{
-        return await tryGeneration(env,model,safe,inputFiles,"high-safe",settings,125000)
+        return await tryGeneration(env,model,safe,inputFiles,"high-safe",settings)
       }catch(last){
         if(isQuota(last))throw Object.assign(new Error("quota"),{reason:"quota",code:3036,cause:last});
         if(isModeration(last))throw Object.assign(new Error("moderation"),{reason:"moderation",code:3030,cause:last});
-        if(isTransient(last)||isCapacity(last))throw Object.assign(new Error("capacity"),{reason:"capacity",cause:last});
+        if(isTimeout(last))throw Object.assign(new Error("timeout"),{reason:"timeout",cause:last});
+        if(isCapacity(last))throw Object.assign(new Error("capacity"),{reason:"capacity",cause:last});
+        if(isTemporaryUnavailable(last))throw Object.assign(new Error("unavailable"),{reason:"unavailable",cause:last});
         throw Object.assign(new Error("provider"),{reason:"provider",cause:last});
       }
     }
+    if(isTimeout(firstError))throw Object.assign(new Error("timeout"),{reason:"timeout",cause:firstError});
     if(isCapacity(firstError)){
-      // Retry only a definitive busy rejection, never an ambiguous timed-out render.
-      try { return await tryGeneration(env,model,main,inputFiles,"high-busy-retry",settings,125000); }
-      catch(last){
-        if(isQuota(last))throw Object.assign(new Error("quota"),{reason:"quota",code:3036,cause:last});
-        const reason=isModeration(last)?'moderation':isTransient(last)?'capacity':'provider';
-        throw Object.assign(new Error(reason),{reason,cause:last});
-      }
+      // Capacity is not a quality failure and should not trigger a second
+      // automatic provider submission. The UI can invite a deliberate retry.
+      throw Object.assign(new Error("capacity"),{reason:"capacity",cause:firstError});
     }
-    if(isTransient(firstError))throw Object.assign(new Error("capacity"),{reason:"capacity",cause:firstError});
+    if(isTemporaryUnavailable(firstError))throw Object.assign(new Error("unavailable"),{reason:"unavailable",cause:firstError});
     throw Object.assign(new Error("provider"),{reason:"provider",cause:firstError});
   }
 }
@@ -238,12 +238,13 @@ async function generateHighQuality({env,model,styleId,subjectType,notes,customWo
 async function generateQuick({env,model,styleId,subjectType,notes,customWorld,inputFiles,hasBranch}){
   const main=makePrompt(styleId,subjectType,notes,inputFiles.length,customWorld,hasBranch);
   const safe=safePrompt(styleId,subjectType,inputFiles.length,notes,customWorld,hasBranch);
-  const guidance=Math.max(1,Math.min(10,Number(env.IMAGE_QUICK_GUIDANCE||4)));
-  const settings={width:768,height:960,guidance,steps:null};
+  const guidance=Math.max(1,Math.min(10,Number(env.IMAGE_QUICK_GUIDANCE||5)));
+  const steps=Math.max(8,Math.min(30,Number(env.IMAGE_QUICK_STEPS||12)));
+  const settings={width:768,height:960,guidance,steps};
 
   let firstError;
   try{
-    return await tryGeneration(env,model,main,inputFiles,"quick-primary",settings,60000)
+    return await tryGeneration(env,model,main,inputFiles,"quick-primary",settings)
   }catch(error){firstError=error}
 
   if(isQuota(firstError))throw Object.assign(new Error("quota"),{reason:"quota",code:3036,cause:firstError});
@@ -251,23 +252,27 @@ async function generateQuick({env,model,styleId,subjectType,notes,customWorld,in
   // A moderated prompt can be simplified once. Never substitute the low-fidelity 4B model.
   if(isModeration(firstError)){
     try{
-      return await tryGeneration(env,model,safe,inputFiles,"quick-safe",settings,60000)
+      return await tryGeneration(env,model,safe,inputFiles,"quick-safe",settings)
     }catch(last){
       if(isQuota(last))throw Object.assign(new Error("quota"),{reason:"quota",code:3036,cause:last});
       if(isModeration(last))throw Object.assign(new Error("moderation"),{reason:"moderation",code:3030,cause:last});
-      if(isTransient(last)||isCapacity(last))throw Object.assign(new Error("capacity"),{reason:"capacity",cause:last});
+      if(isTimeout(last))throw Object.assign(new Error("timeout"),{reason:"timeout",cause:last});
+      if(isCapacity(last))throw Object.assign(new Error("capacity"),{reason:"capacity",cause:last});
+      if(isTemporaryUnavailable(last))throw Object.assign(new Error("unavailable"),{reason:"unavailable",cause:last});
       throw Object.assign(new Error("provider"),{reason:"provider",cause:last});
     }
   }
 
-  if(isTransient(firstError)||isCapacity(firstError))throw Object.assign(new Error("capacity"),{reason:"capacity",cause:firstError});
+  if(isTimeout(firstError))throw Object.assign(new Error("timeout"),{reason:"timeout",cause:firstError});
+  if(isCapacity(firstError))throw Object.assign(new Error("capacity"),{reason:"capacity",cause:firstError});
+  if(isTemporaryUnavailable(firstError))throw Object.assign(new Error("unavailable"),{reason:"unavailable",cause:firstError});
   throw Object.assign(new Error("provider"),{reason:"provider",cause:firstError});
 }
 
 async function store(env,{requestId,accessToken,styleId,subjectType,notes,customWorld,parentRequestId,source,sourceTweet,qualityMode,inputs,image,previewMime,safety,modelUsed,attemptKind}){
   if(!env.ARTWORK)return{persisted:false,storageError:"ARTWORK binding is missing."};
   const now=new Date().toISOString();
-  const metadata={requestId,accessToken,styleId,styleName:STYLES[styleId]?.name||"Custom World",subjectType,notes,customWorld,parentRequestId:parentRequestId||null,previewMime,source:source||"site",sourceTweet:sourceTweet||null,safety,status:"preview_ready",createdAt:now,updatedAt:now,inputCount:inputs.length,paid:false,fulfillment:"not_started",modelUsed,attemptKind,qualityMode,promptVersion:"v1.4"};
+  const metadata={creditWalletId:env.RECAST_CREDIT_WALLET?.id||null,requestId,accessToken,styleId,styleName:STYLES[styleId]?.name||"Custom World",subjectType,notes,customWorld,parentRequestId:parentRequestId||null,previewMime,source:source||"site",sourceTweet:sourceTweet||null,safety,status:"preview_ready",createdAt:now,updatedAt:now,inputCount:inputs.length,paid:false,fulfillment:"not_started",modelUsed,attemptKind,qualityMode,promptVersion:PROMPT_VERSION};
   try{
     for(let i=0;i<inputs.length;i++)await env.ARTWORK.put(requestKey(requestId,`input-${i}.jpg`),await inputs[i].arrayBuffer());
     await env.ARTWORK.put(requestKey(requestId,"preview.b64"),image);
@@ -337,10 +342,22 @@ export async function highQualityTransform(request,env,{trustedSocialJob=false}=
     }
     if(!inputFiles.length)return json({error:"missing_upload",userMessage:"Add at least one photo first.",reason:"input"},400);
 
-    const health=await renderHealth(env);
-    if(health.state==='paused'){
-      await writeAttemptReceipt(env,clientAttemptId,{status:'failed',failedAt:new Date().toISOString(),reason:'quota',stage:'capacity-preflight',qualityMode});
-      return json({error:'shared_ai_capacity_used',code:3036,reason:'quota',retryable:false,retryAt:health.retryAt,userMessage:'Image creation is temporarily unavailable. Your settings are still here. Please check again shortly.'},429);
+    stage="readiness-preflight";
+    try{await assertRenderReady(env,qualityMode)}
+    catch(gate){
+      await writeAttemptReceipt(env,clientAttemptId,{status:'blocked',blockedAt:new Date().toISOString(),reason:gate.reason,stage,qualityMode,retryAt:gate.retryAt||null});
+      const quota=gate.reason==='quota';
+      const label=qualityMode==='quick'?'Standard Preview':'High-Quality Preview';
+      const userMessage=gate.reason==='configuration'
+        ?'Image creation is unavailable while Recast Me checks its required services. Your photo and settings are safe.'
+        :quota
+        ?'Recast Me has reached its shared AI capacity. Your settings are safe; try again after the cooldown.'
+        :gate.reason==='timeout'
+        ?`${label} is cooling down after a timeout. Your settings are safe; wait for Ready before trying again.`
+        :gate.reason==='unavailable'
+        ?`${label} is cooling down after a temporary provider error. Your settings are safe; wait for Ready before trying again.`
+        :`${label} is cooling down after a confirmed busy response. Your settings are safe; wait for Ready before trying again.`;
+      return json({error:quota?'shared_ai_capacity_used':'render_not_ready',reason:gate.reason,retryable:false,retryAt:gate.retryAt||null,qualityMode,userMessage},gate.status||503);
     }
     const highQualityModel=String(env.IMAGE_MODEL_HIGH_QUALITY||DEFAULT_HIGH_QUALITY);
     const quickModel=String(env.IMAGE_MODEL_QUICK||DEFAULT_QUICK);
@@ -352,23 +369,25 @@ export async function highQualityTransform(request,env,{trustedSocialJob=false}=
     if(!image||image.length<100)throw Object.assign(new Error("malformed"),{reason:"provider"});
     const previewMime=imageMime(image);
 
-    await recordRenderHealth(env,'success');
+    await recordRenderHealth(env,qualityMode,'success');
     stage="storage";
     const requestId=`RC-${Date.now().toString(36).toUpperCase()}-${randomHex(3).toUpperCase()}`;
     const accessToken=randomHex(32);
     const stored=await store(env,{requestId,accessToken,styleId,subjectType,notes,customWorld,parentRequestId,source,sourceTweet,qualityMode,inputs:inputFiles,image,previewMime,safety,modelUsed:generated.modelUsed,attemptKind:generated.attemptKind});
 
     await writeAttemptReceipt(env,clientAttemptId,{status:"success",completedAt:new Date().toISOString(),durationMs:Date.now()-attemptStartedAt,requestId,qualityMode,modelUsed:generated.modelUsed,attemptKind:generated.attemptKind,persisted:stored.persisted});
-    return json({ok:true,requestId,accessToken,style:STYLES[styleId]?.name||"Custom World",image:`data:${previewMime};base64,${image}`,persisted:stored.persisted,storageError:stored.storageError,qualityMode,qualityLabel:qualityMode==="quick"?"Quick Preview":"High-Quality Preview",modelUsed:generated.modelUsed,usedSafeRetry:generated.usedSafeRetry,usedFastFallback:false,promptVersion:"v1.4",clientAttemptId});
+    return json({ok:true,requestId,accessToken,style:STYLES[styleId]?.name||"Custom World",image:`data:${previewMime};base64,${image}`,persisted:stored.persisted,storageError:stored.storageError,qualityMode,qualityLabel:qualityMode==="quick"?"Standard Preview":"High-Quality Preview",modelUsed:generated.modelUsed,usedSafeRetry:generated.usedSafeRetry,usedFastFallback:false,promptVersion:PROMPT_VERSION,clientAttemptId});
   }catch(error){
     const reason=error?.reason||"provider";
-    await recordRenderHealth(env,'failed',reason);
+    if(['capacity','quota','timeout','unavailable'].includes(reason))await recordRenderHealth(env,qualityMode,'failed',reason);
     const internal=error?.cause||error;
     const diagnosticId=await writeGenerationDiagnostic(env,{stage,reason,providerCode:providerCode(internal),providerMessage:String(internal?.message||internal||"").slice(0,500),highQuality:String(env.IMAGE_MODEL_HIGH_QUALITY||DEFAULT_HIGH_QUALITY),quick:String(env.IMAGE_MODEL_QUICK||DEFAULT_QUICK)});
     await writeAttemptReceipt(env,clientAttemptId,{status:"failed",failedAt:new Date().toISOString(),durationMs:Date.now()-attemptStartedAt,stage,reason,providerCode:providerCode(internal),diagnosticId,qualityMode});
     if(reason==="quota")return json({error:"shared_ai_capacity_used",code:3036,reason:"quota",retryable:false,diagnosticId,qualityMode,userMessage:"Recast Me has reached its shared AI capacity for today. This is a site-wide limit, not your personal render count. Your photo is safe, and nothing was charged."},429);
     if(reason==="moderation")return json({error:"generation_declined",code:3030,reason:"moderation",retryable:true,diagnosticId,qualityMode,userMessage:"The image engine would not complete that exact photo and wording combination. We already retried with a safer version. Try the same idea with simpler wording or another reference photo."},422);
-    if(reason==="capacity")return json({error:"engine_busy",reason:"capacity",retryable:true,diagnosticId,qualityMode,userMessage:"The image engine is temporarily busy. Your photo is safe — tap Try again in a moment."},503);
+    if(reason==="capacity")return json({error:"engine_busy",reason:"capacity",retryable:true,diagnosticId,qualityMode,userMessage:"The image engine returned a confirmed busy response. Your photo and settings are safe; wait for Ready before trying again."},503);
+    if(reason==="timeout")return json({error:"engine_timeout",reason:"timeout",retryable:true,diagnosticId,qualityMode,userMessage:"The image provider timed out before returning the artwork. Your photo and settings are safe; wait for Ready before trying again."},504);
+    if(reason==="unavailable")return json({error:"engine_unavailable",reason:"unavailable",retryable:true,diagnosticId,qualityMode,userMessage:"The image provider is temporarily unavailable. Your photo and settings are safe; wait for Ready before trying again."},503);
     return json({error:"generation_failed",reason,retryable:true,diagnosticId,qualityMode,userMessage:"We could not finish this preview. Your uploaded photo was not changed."},500)
   }
 }
@@ -380,11 +399,11 @@ export async function modelStatus(env){
     ok:true,
     modes:{
       high:{label:"High-Quality Preview",model:highQuality,steps:Number(env.IMAGE_HIGH_QUALITY_STEPS||18),guidance:Number(env.IMAGE_HIGH_QUALITY_GUIDANCE||5)},
-      quick:{label:"Quick Preview",model:quick,guidance:Number(env.IMAGE_QUICK_GUIDANCE||4)}
+      quick:{label:"Standard Preview",model:quick,steps:Number(env.IMAGE_QUICK_STEPS||12),guidance:Number(env.IMAGE_QUICK_GUIDANCE||5)}
     },
     defaultMode:"high",
-    version:"v1.5",
-    promptVersion:"v1.4",
-    availability:await renderHealth(env)
+    version:"v1.6",
+    promptVersion:PROMPT_VERSION,
+    availability:await readinessSnapshot(env)
   })
 }

@@ -29,7 +29,7 @@
 
     <section id="dashboard" class="hidden">
       <div class="dashboard-top">
-        <div><div class="eyebrow">RECAST ME V1.5</div><h1>Operations at a glance.</h1></div>
+        <div><div class="eyebrow">RECAST ME · RM-016</div><h1>Operations at a glance.</h1><p id="deployment-identity" class="muted"></p></div>
         <div class="toolbar"><button id="refresh-all">Refresh</button><button id="lock-admin" class="ghost">Lock</button></div>
       </div>
 
@@ -71,6 +71,7 @@
       </section>
 
       <section class="tab-panel" data-panel="system">
+        <p><a href="/print-finish.html">Compare print finishes →</a></p>
         <p><a href="/model-lab.html">Compare rendering engines →</a></p>
         <div id="render-readiness" class="glass launch-box"></div>
         <div class="panel-heading"><div><div class="eyebrow">CONNECTIONS</div><h2>Launch readiness</h2><p>Green means the backend can see that connection. Automation flags intentionally stay off until launch testing is complete.</p></div></div>
@@ -91,6 +92,6 @@
       <div id="toast" class="toast hidden"></div>
     </section>
   </main>
-  <script src="/admin.js" type="module"></script>
+  <script src="/admin.js?v=rm016" type="module"></script>
 </body>
 </html>
