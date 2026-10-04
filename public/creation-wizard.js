@@ -38,7 +38,7 @@ export function initCreationWizard({styles,photos,subject,style,updateWorld,hasB
     step=next;
     document.querySelectorAll('[data-create-step]').forEach(p=>p.hidden=Number(p.dataset.createStep)!==step);
     document.querySelectorAll('.creation-progress button').forEach(b=>{if(Number(b.dataset.goStep)===step)b.setAttribute('aria-current','step');else b.removeAttribute('aria-current');});
-    $('#start').scrollIntoView({behavior:'smooth',block:'start'});
+    $('.creation-progress').scrollIntoView({behavior:'auto',block:'start'});
   }
   for(const [value,title] of Object.entries(names)){
     const b=document.createElement('button');b.type='button';b.dataset.subjectChoice=value;b.textContent=title;

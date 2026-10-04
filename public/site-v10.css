@@ -683,3 +683,7 @@ body{padding-bottom:env(safe-area-inset-bottom)}
 .create-card,.creative-step,.photo-thumbnail{min-width:0}.creative-step legend{max-width:100%;white-space:normal}
 #preview-section,#start{scroll-margin-top:130px}
 @media(max-width:600px){.header-inner{gap:10px}.adventure-choices img{height:130px}.creative-step legend{font-size:23px}.creation-progress button{font-size:12px}}
+#photo-thumbnails{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+#photo-thumbnails .photo-thumbnail{width:auto;max-width:none}
+.creation-progress{scroll-margin-top:115px}
+@media(max-width:480px){#photo-thumbnails{grid-template-columns:1fr}}

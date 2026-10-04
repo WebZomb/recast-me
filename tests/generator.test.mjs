@@ -198,10 +198,12 @@ test('Royal multi-reference retries retain animal anatomy and do not count photo
     return {image};
   });
   const form=await submission({style:'royal',notes:''}).formData();
-  form.set('subject','person and pet');form.set('image_1',original);
+  form.set('subject','person and pet');form.set('image_1',original);form.set('referenceLabels','["person1","pet"]');
   const response=await highQualityTransform(new Request('https://recast.test/api/transform-v2',{method:'POST',body:form}),env);
   assert.equal(response.status,200);assert.equal(prompts.length,2);
   for(const prompt of prompts){
+    assert.match(prompt,/Input image 0 \(photo 1\) shows person 1/);
+    assert.match(prompt,/Input image 1 \(photo 2\) shows the same pet/);
     assert.match(prompt,/Never give a pet human hands/);
     assert.match(prompt,/photo.*same individual/);
     assert.match(prompt,/natural age, hair and beard, body build/);
