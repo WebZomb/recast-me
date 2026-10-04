@@ -13,3 +13,5 @@ Rollback: revert RM-018 source only; no ledger/storage migration. Keep RM-017 gu
 ## Observed preview checks
 
 Application 381eba2f7a636e1e1a5022fccf5006f367dfba5f deployed and opened in cloud Chrome. Verified Who buttons, person+pet guidance, empty-upload block, public demo upload, explicit Together label, adventure cards, HQ default with no picker, and retained photo/label/adventure after Back. No Create/consent action taken. Screenshot exposed a narrow photo label; follow-up widens photo tiles and scrolls to progress rather than the section introduction. Existing 500px input is unchanged; actual identity quality and iPhone layout still need owner acceptance. Local test also now checks reference mapping in actual main/moderation-retry multipart prompts; 134 mocked tests still pass.
+
+Follow-up also retains prior selections when picking another photo in a separate picker visit; duplicate file selections are ignored and the total remains capped at four. Original File objects keep their subject labels when another photo is added.

@@ -151,9 +151,10 @@ document.querySelector('#custom-world').addEventListener('input',()=>{
 
 const photos = document.querySelector('#photos');
 let photoURLs=[];
+let selectedPhotoFiles=[];
 function showSelectedPhotos(message=''){
   photoURLs.forEach(url=>URL.revokeObjectURL(url));photoURLs=[];
-  const selected=[...photos.files];
+  const selected=[...photos.files];selectedPhotoFiles=selected;
   document.querySelector('#file-summary').textContent=message||(selected.length?`${selected.length} of 4 photos ready`:'No photos selected');
   const root=document.querySelector('#photo-thumbnails');root.replaceChildren();
   selected.forEach((file,index)=>{
@@ -167,7 +168,9 @@ function showSelectedPhotos(message=''){
 }
 const wizard=initCreationWizard({styles:STYLES,photos,subject:document.querySelector('#subject'),style:styleSelect,updateWorld:updateWorldFields,hasBranch:()=>Boolean(branchReference)});
 photos.addEventListener('change',()=>{
-  const original=[...photos.files];const transfer=new DataTransfer();original.slice(0,4).forEach(f=>transfer.items.add(f));photos.files=transfer.files;
+  const original=[...selectedPhotoFiles];
+  for(const file of photos.files)if(!original.some(old=>old.name===file.name&&old.size===file.size&&old.lastModified===file.lastModified))original.push(file);
+  const transfer=new DataTransfer();original.slice(0,4).forEach(f=>transfer.items.add(f));photos.files=transfer.files;
   showSelectedPhotos(original.length>4?'Using the first 4 photos. Remove or replace any below.':'');
 });
 document.querySelector('#surprise-world').addEventListener('click',()=>{

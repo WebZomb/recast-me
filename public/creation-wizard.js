@@ -9,6 +9,7 @@ export function initCreationWizard({styles,photos,subject,style,updateWorld,hasB
   const roleName=value=>value==='together'?'Everyone together':value==='pet'?'Your pet':value==='car'?'Your car':`Person ${value.slice(6)}`;
   function refreshPhotos(){
     const options=roles();
+    $('#photo-step-error').textContent='';
     $('#family-count-label').hidden=subject.value!=='family';
     $('#photo-guidance').textContent=subject.value==='pet'?'Add a clear photo of your pet’s face and markings.':subject.value==='person'?'Add a clear photo of your face.':subject.value==='car'?'Add a clear photo showing your car.':'Add one clear photo per subject, or use a photo together. Label each photo below. Another angle of the same subject should use the same label.';
     [...photos.files].forEach((file,index)=>{
