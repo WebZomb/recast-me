@@ -1,3 +1,4 @@
+import {saveOriginalPhoto} from './original-photo.js';
 import { WATERMARK_TILE_BASE64, WATERMARK_FOOTER_BASE64 } from './watermark-tile.js';
 import { digest, guardedEnvironment, renderControlStatus, budgetStatus, submissionFingerprint } from './render-controls.js';
 
@@ -156,6 +157,11 @@ export function secureApplication(application) {
       const url = new URL(request.url), path = url.pathname;
       if (!path.startsWith('/api/')) return application.fetch(request, env, ctx);
       try {
+        if(path==='/api/original-photo'&&request.method==='POST'){
+          const data=await saveOriginalPhoto(request,env);
+          const image=`data:image/jpeg;base64,${to64(await protectedArtwork(env,data.requestId))}`;
+          return json({...data,image,watermarked:true});
+        }
         const creditResponse=await creditRoute(request,env);
         if(creditResponse)return hardened(creditResponse);
         const approvedPrint=path.match(/^\/api\/order-print\/([a-zA-Z0-9._-]+)$/);

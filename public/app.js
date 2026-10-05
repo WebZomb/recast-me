@@ -1,3 +1,4 @@
+import {mergeHistory,privateRecastLink,readRecastLink} from './recast-history.js';
 import {initCreationWizard} from './creation-wizard.js';
 import {fallbackState} from './quality-policy.js';
 import {protectedPreviewFile} from './preview-export.js';
@@ -356,6 +357,8 @@ function syncRetryControls(){
 }
 
 
+let originalTurnstileToken="";
+let originalTurnstileWidgetId=null;
 let turnstileToken="";
 let turnstileWidgetId=null;
 async function setupTurnstile(){
@@ -367,6 +370,7 @@ async function setupTurnstile(){
       if(window.turnstile)return resolve();
       const script=document.createElement('script');script.src='https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';script.defer=true;script.onload=resolve;script.onerror=reject;document.head.appendChild(script);
     });
+    originalTurnstileWidgetId=window.turnstile.render('#original-turnstile',{sitekey:config.turnstileSiteKey,theme:'dark',size:'flexible',callback:t=>{originalTurnstileToken=t;},'expired-callback':()=>{originalTurnstileToken=''}});
     turnstileWidgetId=window.turnstile.render('#turnstile-container',{sitekey:config.turnstileSiteKey,theme:'dark',size:'flexible',callback:t=>{turnstileToken=t;clearRecastError()},'expired-callback':()=>{turnstileToken=''}});
   }catch(error){console.warn('Turnstile setup skipped',error)}
 }
@@ -431,7 +435,7 @@ function escapeHtml(value){return String(value??'').replace(/[&<>"']/g,c=>({'&':
 function readRecentVersions(){
   try{
     const rows=JSON.parse(localStorage.getItem(RECENT_VERSIONS_KEY)||'[]');
-    return Array.isArray(rows)?rows.slice(0,4):[];
+    return mergeHistory(rows,JSON.parse(localStorage.getItem('recast_last_request')||'null'));
   }catch{return[]}
 }
 function writeRecentVersions(rows){
@@ -452,7 +456,8 @@ function activeRequestFromVersion(version){
     accessToken:version.accessToken,
     style:version.styleName||version.style||'Recast',
     model:version.modelUsed||null,
-    qualityMode:version.qualityMode||'high'
+    qualityMode:version.qualityMode||'high',
+    createdAt:version.createdAt
   }))}catch{showRecastError('Browser storage is unavailable. Keep this tab open to choose products.')}
   document.dispatchEvent(new Event('recast-artwork-selected'));
 }
@@ -546,7 +551,7 @@ async function renderRecentVersions(){
       <div class="recent-version-copy">
         <span>VERSION ${rows.length-i}</span>
         <strong>${escapeHtml(v.styleName||'Custom Recast')}</strong>
-        <small>${v.qualityMode==='quick'?'Standard':'High-Quality'} · ${new Date(v.createdAt||Date.now()).toLocaleString([], {month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})}</small>
+        <small>${v.qualityMode==='original'?'Original photo · no AI':v.qualityMode==='quick'?'Standard':'High-Quality'} · ${new Date(v.createdAt||Date.now()).toLocaleString([], {month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})}</small>
       </div>
       <div class="recent-version-actions">
         <button type="button" data-history-action="use">Use this version</button>
@@ -716,6 +721,8 @@ form.addEventListener('submit',async e=>{
       diagnosticId:data.clientAttemptId||'',retryable:true
     });
 
+    addRecentVersion({requestId:data.requestId,accessToken:data.accessToken,styleName:data.style,styleId:styleSelect.value,subjectType:submittedSubject,customWorld,notes:document.querySelector('#notes').value,qualityMode:data.qualityMode||lastAttemptQuality,createdAt:new Date().toISOString()});
+
     try{await renderWatermark(data.image)}catch(error){throw Object.assign(new Error('preview display failed'),{publicMessage:'Your image was created, but the preview could not be displayed correctly. Please try once more.'})}
 
     const successTitle=`${data.style} preview ready.`;
@@ -876,7 +883,7 @@ async function status(){
   }
 }
 updateQualityUI();
-restoreRecentVersionOnLoad();
+if(new URLSearchParams(location.hash.slice(1)).has('recast')){restorePrivateLink(location.href).catch(e=>{document.querySelector('#recover-status').textContent=e.message;});}else restoreRecentVersionOnLoad();
 status();
 setupTurnstile();
 refreshRenderAvailability();
@@ -909,3 +916,37 @@ async function exportPreview(native=false){
 }
 document.querySelector('#share-preview')?.addEventListener('click',()=>exportPreview());
 nativeSave?.addEventListener('click',()=>exportPreview(true));
+
+async function restorePrivateLink(value){
+  const version=readRecastLink(value,location.origin);
+  const url=new URL(`/api/request/${encodeURIComponent(version.requestId)}`,location.origin);url.searchParams.set('token',version.accessToken);
+  const response=await fetch(url),data=await response.json();
+  if(!response.ok||!data.ok)throw new Error('This private link is unavailable or no longer valid.');
+  Object.assign(version,data.request); // Safe server metadata, token stays browser-private.
+  await fetchStoredPreview(version);
+  addRecentVersion(version);await activateRecentVersion(version);
+  if(new URLSearchParams(location.hash.slice(1)).has('recast'))history.replaceState(null,'',location.pathname+location.search+'#preview-section');
+  document.querySelector('#recover-status').textContent='Your saved Recast is restored. No new render was used.';
+}
+document.querySelector('#recover-recast').addEventListener('click',()=>restorePrivateLink(document.querySelector('#recover-recast-link').value).catch(e=>{document.querySelector('#recover-status').textContent=e.message;}));
+document.querySelector('#copy-recast-link').addEventListener('click',async()=>{
+  const v=window.__recastActiveRequest;if(!v)return;
+  const link=privateRecastLink(location.origin,v),field=document.querySelector('#private-recast-link');field.value=link;field.hidden=false;
+  let copied=false;try{await navigator.clipboard.writeText(link);copied=true;}catch{}
+  document.querySelector('#recast-link-status').textContent=(copied?'Private link copied. ':'Copy the private link below. ')+'Open it in Safari or save it somewhere private. Anyone with this link can access this Recast.';
+});
+document.querySelector('#original-photo-form').addEventListener('submit',async event=>{
+  event.preventDefault();if(generationInFlight)return;
+  const form=event.currentTarget,button=form.querySelector('button'),status=document.querySelector('#original-status'),file=document.querySelector('#original-photo').files[0];
+  if(!file||!document.querySelector('#original-consent').checked)return;
+  if(file.size>12000000){status.textContent='Choose a photo under 12 MB.';return;}
+  generationInFlight=true;button.disabled=true;status.textContent='Preparing your photo without AI…';
+  try{
+    const fd=new FormData();fd.set('photo',file);fd.set('consent','yes');fd.set('turnstileToken',originalTurnstileToken);
+    const response=await fetch('/api/original-photo',{method:'POST',headers:{'x-recast-request':'1'},body:fd}),data=await response.json();
+    if(!response.ok||!data.ok||!data.persisted||data.watermarked!==true)throw new Error(data.userMessage||'Your photo could not be saved. Please try again.');
+    const version={requestId:data.requestId,accessToken:data.accessToken,styleName:'Original photo',styleId:'original',subjectType:'photo',qualityMode:'original',createdAt:data.createdAt};
+    previewCache.set(data.requestId,Promise.resolve(data.image));addRecentVersion(version);await activateRecentVersion(version);
+    status.textContent='Photo saved. Choose a product below—no AI render was used.';
+  }catch(e){status.textContent=e.message;}finally{generationInFlight=false;button.disabled=false;originalTurnstileToken='';if(window.turnstile&&originalTurnstileWidgetId!==null)window.turnstile.reset(originalTurnstileWidgetId);}
+});

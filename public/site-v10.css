@@ -689,3 +689,5 @@ body{padding-bottom:env(safe-area-inset-bottom)}
 #photo-thumbnails .photo-thumbnail{width:auto;max-width:none}
 .creation-progress{scroll-margin-top:115px}
 @media(max-width:480px){#photo-thumbnails{grid-template-columns:1fr}}
+
+#original-photo-option{padding:20px;margin:0 0 24px;border:1px solid #72deef;border-radius:16px;background:#171329}#original-photo-form{display:grid;gap:16px}#original-photo-option summary{cursor:pointer;font-weight:700}#private-recast-link,#recover-recast-link{width:100%;min-width:0}#original-photo-form input[type="checkbox"]{width:auto}

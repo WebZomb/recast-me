@@ -4,6 +4,8 @@ Updated: 2026-10-03. Keep this index and append-only session records current whe
 
 ## Start here
 
+- [RM-020: original photos and private recovery links](ASTRA-SESSION-RM-020.md). No-AI photo products, browser transfer and history recovery; 144 mocked tests pass.
+
 - [RM-019: purchase routing and stable adventure cards](ASTRA-SESSION-RM-019.md). Direct checkout script loading; 139 mocked tests pass.
 
 - [RM-018: guided creation and reference labels](ASTRA-SESSION-RM-018.md). Who → Photos → Adventure; 134 mocked tests pass.

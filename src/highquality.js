@@ -82,7 +82,7 @@ async function writeAttemptReceipt(env,attemptId,payload){
   }catch{}
 }
 
-async function verifyTurnstile(env,token,ip){
+export async function verifyTurnstile(env,token,ip){
   if(!env.TURNSTILE_SECRET_KEY)return{success:true,disabled:true};
   if(!token)return{success:false,error:"missing-token"};
   const body=new URLSearchParams({secret:String(env.TURNSTILE_SECRET_KEY),response:String(token)});
