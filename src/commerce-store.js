@@ -29,7 +29,7 @@ export function normalizeProductDesign(map,raw={}){
   const allowedLayout=mug?['single','two-sided','wrap']:['single'];
   const layout=allowedLayout.includes(String(raw.layout))?String(raw.layout):'single';
   const x=['left','center','right'].includes(String(raw.x))?String(raw.x):'center';
-  const n=Number(raw.scale),scale=Math.round(Math.max(55,Math.min(115,Number.isFinite(n)?n:(mug?92:100))));
+  const n=Number(raw.scale),scale=Math.round(Math.max(55,Math.min(250,Number.isFinite(n)?n:(mug?92:100))));
   return {version:1,layout,background:mug?'scene-fill':'none',x,scale};
 }
 export function productPrintfile(catalog,variantId,placement){
