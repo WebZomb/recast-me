@@ -225,3 +225,5 @@ Safety/commerce boundary:
 - Added customer-friendly order status labels for the zero-touch path: Design confirmed → preparing print file → production order prepared → in production → shipped.
 - The final-review UI includes separate Change image, Edit placement, and Confirm design & checkout actions so customers can correct the selection before payment without any post-purchase approval step.
 - Current order #1001 remains legacy/manual because it was purchased before the preapproval token existed; the automatic path applies only to future orders created through the new Final Review confirmation.
+
+- Final validation follow-up: social/public checkout regression expectation updated for the new mandatory Final Review gate; no application logic changed in that follow-up.
