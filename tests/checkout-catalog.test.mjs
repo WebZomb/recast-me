@@ -1,5 +1,10 @@
-import test from 'node:test';import assert from 'node:assert/strict';
+import test from 'node:test';import assert from 'node:assert/strict';import {readFileSync} from 'node:fs';
 import router from '../src/router.js';import {setup,ID,TOKEN,CLEAN,MARKED} from './security-helpers.mjs';import {hash} from '../src/commerce-store.js';
+test('approved preview pages are routed through the Worker before SPA fallback',()=>{
+ const wrangler=readFileSync(new URL('../wrangler.jsonc',import.meta.url),'utf8');
+ assert.match(wrangler,/"run_worker_first"\s*:\s*\[[^\]]*"\/api\/\*"[^\]]*"\/proof\/\*"/s);
+});
+
 test('catalog loads with product permission alone and owner diagnostics remain protected',async()=>{
  const saved=globalThis.fetch;const queries=[];
  globalThis.fetch=async(url,opts)=>{
