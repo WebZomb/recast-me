@@ -65,6 +65,21 @@ async function requireRequest(env,requestId,token){
   if(!safeEqual(meta.accessToken,token))throw Object.assign(new Error("Invalid artwork access token."),{status:403});
   return meta;
 }
+async function approvedPreviewMeta(env,proofToken){
+  const token=String(proofToken||"");
+  if(!/^[a-f0-9]{48}$/.test(token))return null;
+  return readJson(env,`commerce/checkout-previews/${token}.json`);
+}
+async function requireOrderCapability(env,requestId,token,proofToken){
+  if(proofToken){
+    const proof=await approvedPreviewMeta(env,proofToken);
+    if(!proof||proof.requestId!==requestId)throw Object.assign(new Error("Invalid private order link."),{status:403});
+    const meta=await requestMeta(env,requestId);
+    if(!meta)throw Object.assign(new Error("Artwork request not found."),{status:404});
+    return meta;
+  }
+  return requireRequest(env,requestId,token);
+}
 async function ensurePrintToken(env,meta){
   if(meta.printAccessToken)return meta;
   meta.printAccessToken=randomHex(28);meta.updatedAt=now();
