@@ -929,6 +929,7 @@ document.querySelector('#share-preview')?.addEventListener('click',()=>exportPre
 nativeSave?.addEventListener('click',()=>exportPreview(true));
 
 async function restorePrivateLink(value){
+  const incoming=new URL(value,location.origin),incomingParams=new URLSearchParams(incoming.hash.slice(1)),goShop=incomingParams.get('shop')==='1';
   const version=readRecastLink(value,location.origin);
   const url=new URL(`/api/request/${encodeURIComponent(version.requestId)}`,location.origin);url.searchParams.set('token',version.accessToken);
   const response=await fetch(url),data=await response.json();
@@ -936,7 +937,8 @@ async function restorePrivateLink(value){
   Object.assign(version,data.request); // Safe server metadata, token stays browser-private.
   await fetchStoredPreview(version);
   addRecentVersion(version);await activateRecentVersion(version);
-  if(new URLSearchParams(location.hash.slice(1)).has('recast'))history.replaceState(null,'',location.pathname+location.search+'#preview-section');
+  if(new URLSearchParams(location.hash.slice(1)).has('recast'))history.replaceState(null,'',location.pathname+location.search+(goShop?'#shop':'#preview-section'));
+  if(goShop)document.querySelector('#shop')?.scrollIntoView({block:'start'});
   document.querySelector('#recover-status').textContent='Your saved Recast is restored. No new render was used.';
 }
 document.querySelector('#recover-recast').addEventListener('click',()=>restorePrivateLink(document.querySelector('#recover-recast-link').value).catch(e=>{document.querySelector('#recover-status').textContent=e.message;}));
