@@ -57,6 +57,10 @@ function productDesign(card){
   return {product:mug?"Mug":"Generic",layout:mug?layout:"single",background:mug?"scene-fill":"none",x,scale,spacing:mug?spacing:"standard"};
 }
 function designSignature(card,sku){return JSON.stringify({sku,design:productDesign(card)})}
+function syncSpacingControl(card){
+  const wrap=card?.querySelector?.("[data-design-spacing-wrap]"),layout=card?.querySelector?.("[data-design-layout]")?.value;
+  if(wrap)wrap.hidden=layout!=="two-sided";
+}
 function requireFreshPreview(card){
   const buy=card?.querySelector?.(".recast-buy");
   if(!buy||card?.dataset?.digital==="true"||card?.dataset?.active!=="true")return;
@@ -269,7 +273,8 @@ async function loadCheckout(){
   });
   document.querySelectorAll("[data-design-layout],[data-design-x],[data-design-spacing]").forEach(control=>{
     const card=control.closest?.("[data-product-index]");
-    control.addEventListener("change",()=>resetProductPreview(card));
+    if(control.matches?.("[data-design-layout]"))syncSpacingControl(card);
+    control.addEventListener("change",()=>{syncSpacingControl(card);resetProductPreview(card);});
   });
 
   document.querySelectorAll(".recast-buy").forEach(button=>{
