@@ -134,10 +134,11 @@ function openFinalReview({req,sku,card,button}){
     <div class="final-review-summary"><div><small>PRODUCT</small><strong>${card.dataset.productTitle?.replace(/^Custom Recast /,"")||"Product"} · ${card.querySelector(".recast-variant option:checked")?.textContent||card.querySelector(".recast-variant")?.value||sku}</strong></div><div><small>ARTWORK</small><strong>${req.requestId}</strong></div><div><small>PRINT SETTINGS</small><strong>${designSummary(card)}</strong></div></div>
     <div class="final-review-note"><strong>Looks right?</strong> The preview watermark is only for protection. Your clean private artwork is used for the print file.</div>
     <p class="final-review-error" role="alert" hidden></p>
-    <div class="final-review-actions"><button type="button" class="button ghost" data-final-edit>Edit design</button><button type="button" class="button primary" data-final-confirm>Confirm design & checkout</button></div>
+    <div class="final-review-actions"><button type="button" class="button ghost" data-final-image>Change image</button><button type="button" class="button ghost" data-final-edit>Edit placement</button><button type="button" class="button primary" data-final-confirm>Confirm design & checkout</button></div>
   </section>`;
   document.body.append(modal);document.documentElement.classList.add("recast-review-open");
   modal.querySelectorAll("[data-final-close],[data-final-edit]").forEach(el=>el.addEventListener("click",()=>{closeFinalReview();card.scrollIntoView({behavior:"smooth",block:"center"});}));
+  modal.querySelector("[data-final-image]")?.addEventListener("click",()=>{closeFinalReview();document.querySelector("#recent-versions-shell")?.scrollIntoView({behavior:"smooth",block:"start"});});
   modal.querySelector("[data-final-confirm]").addEventListener("click",()=>confirmCheckout({req,sku,card,button,modal}));
   modal.querySelector("[data-final-confirm]").focus();
 }
