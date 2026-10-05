@@ -63,7 +63,7 @@ function requireFreshPreview(card){
 }
 function resetProductPreview(card,{invalidate=true}={}){
   if(!card)return;
-  const state=stateFor(card);if(invalidate)state.run++;
+  const state=stateFor(card);if(invalidate){state.run++;state.busy=false;}
   const title=card.dataset.productTitle,img=card.querySelector?.(".product-art img");
   if(img&&title){img.src=PRODUCT_ART[title];img.alt="Example design on "+title;}
   card.classList?.remove("real-mockup-ready");
@@ -72,7 +72,7 @@ function resetProductPreview(card,{invalidate=true}={}){
   const caption=card.querySelector?.(".example-design-label");if(caption)caption.textContent="Example design";
   const error=card.querySelector?.(".mockup-error");if(error){error.hidden=true;error.textContent="";}
   const preview=card.querySelector?.(".product-preview-action");
-  if(preview){preview.disabled=false;preview.textContent=state.busy?"Waiting for current preview…":"Preview my Recast on the real product";}
+  if(preview){preview.disabled=state.busy;preview.textContent=state.busy?"Waiting for current preview…":"Preview my Recast on the real product";}
   requireFreshPreview(card);
 }
 
