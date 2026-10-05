@@ -17,3 +17,11 @@ No Printful token was read, replaced or rotated. No mockup, order, payment, AI r
 Next verification: once the new main build is deployed, compare repeated `/api/health` responses while retrying the mug preview. If `printfulSecretConfigured` is false, the active Worker version lacks the secret binding. If it alternates or version IDs vary across failures/successes, investigate a split deployment. If true and stable while the mockup route still reports missing token, capture the serving version and inspect the runtime path before changing credentials.
 
 Rollback: revert the two diagnostic/config commits if needed. No storage migration or secret mutation occurred.
+
+
+## Live follow-up
+Owner opened production `/api/health` after the diagnostic deployment. It returned `ok:true`, `printfulSecretConfigured:true`, `privateArtworkStorage:true`, `shopifyConfigured:true`, and Worker version metadata ID `27e80e63-142e-42b1-a1f6-c55fa6be7b85`. This proves the currently serving version can see the Printful secret; it falsifies the simple “secret missing from current production” hypothesis.
+
+Because the earlier mockup UI received the exact backend message that is emitted only when `env.PRINTFUL_API_TOKEN` is falsy, the remaining leading hypothesis is version/deployment drift at the time of that request (or a different serving version/origin), not a missing dashboard token. A new read-only provider probe was added at commit `836d2c7280a0a5dc539859d6f0ad888251254219`: `/api/printful-health` uses the same scoped Printful helper and mug printfiles endpoint used before mockup creation, but returns only safe booleans/status/version metadata. It does not create a mockup or order and does not expose credentials or provider payloads.
+
+No token rotation, Printful write, order, AI render, payment, or physical production occurred.
