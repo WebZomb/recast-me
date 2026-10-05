@@ -57,3 +57,25 @@ Product-preview controls implemented:
 - syntax-only V8 parse checks were run on checkout.js, admin.js, recast-history.js, commerce-store.js, workflow.js and preview-security.js after the changes; all parsed successfully. This is not a full Node test suite or live Printful verification of every new layout.
 
 Important remaining risk: these new controls are verified at the product-mockup request layer, but the selected custom layout is not yet proven end-to-end through Shopify payment into the later production-draft payload. Keep explicit customer/owner print approval and production confirmation gates in place. Do not claim custom layout is production-final until one paid/controlled order path is verified. No order, payment, AI render, Printful production order, email, or social action was submitted by this session.
+
+
+## RM-028 — customer-safe product preview and checkout locking
+2026-10-05 UTC. Owner reported two customer-facing failures while changing mug settings: old product previews remained visible/mixed with new settings, and Printful returned a short rate-limit error after repeated preview requests. Owner explicitly asked to fix the flow for real customer concurrency rather than rely on refresh/wait workarounds.
+
+Implemented on main:
+- product mockup tasks are now isolated by normalized design ID, so different size/layout/position requests cannot overwrite or poll the same task record;
+- product mockup images and protected derivative caches are isolated by design as well;
+- browser uses a per-card run nonce, clears old mockup/view state immediately, ignores stale responses, and auto-retries short Printful 429 throttles with bounded delay;
+- changing variant/layout/position/size invalidates the prior proof and disables checkout until that exact configuration has a completed preview;
+- physical checkout is server-verified against the exact completed mockup record and stores hidden proof/layout metadata plus customer-friendly layout labels in Shopify line properties;
+- new fulfillment jobs persist the purchased layout/proof/mockup ID and fail closed if a new physical order lacks the reviewed layout;
+- paid customer proof regeneration is tied to the purchased layout;
+- final mug production uses the clean private artwork to rebuild the approved scene-fill/two-sided/wrap composition. It does not use the watermarked unpaid mockup source. Preview watermark/footer remains preview-only.
+- live checkout asset cache bumped to checkout.js?v=228.
+
+Validation:
+- GitHub Actions run 37335507818 completed successfully at head 15e54124370d6e90f58aa0600bbb69f6744ecbf3: mocked tests passed and Wrangler bundle dry-run passed.
+- New regression coverage includes design-isolated Printful mockup tasks, fresh-proof-required checkout, server proof verification, and clean composed mug production output.
+- The final cache-only commit 281c120927c55c36b6be08f1526d59d7a4d35cf6 does not change application logic.
+
+No AI render, Shopify payment, paid order, Printful production submission, email, or social post was executed by this customer-safety work. Live provider behavior for the new multi-layout flow still needs owner browser verification after deployment.
