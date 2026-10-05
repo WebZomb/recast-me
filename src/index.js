@@ -461,6 +461,7 @@ export default {
           privateArtworkStorage: Boolean(env.ARTWORK),
           shopifyConfigured: Boolean(env.SHOPIFY_CLIENT_ID && env.SHOPIFY_CLIENT_SECRET && env.SHOPIFY_SHOP),
           orderSyncEnabled: String(env.ORDER_SYNC_ENABLED||"false")==="true",
+          autoPrintPreapprovedEnabled: String(env.AUTO_PRINT_PREAPPROVED_ENABLED||"false")==="true",
           workerVersionId: env.CF_VERSION_METADATA?.id || null,
           workerVersionTimestamp: env.CF_VERSION_METADATA?.timestamp || null,
           mode: "MVP"
