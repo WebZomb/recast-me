@@ -4,13 +4,17 @@ import vm from 'node:vm';
 import {readFileSync} from 'node:fs';
 const source=readFileSync(new URL('../public/checkout.js',import.meta.url),'utf8');
 function setup(fetcher){
-  const listeners={},calls=[],error={hidden:true};
-  const button={dataset:{product:'0'},textContent:'Shop Mug',parentElement:{querySelector:()=>error},addEventListener:(name,fn)=>button[name]=fn};
+  const listeners={},calls=[],error={hidden:true,textContent:''},img={src:'',alt:''},caption={textContent:''};
+  const layout={value:'single'},x={value:'center'},scale={value:'92'};
+  const button={dataset:{product:'0'},textContent:'Shop Mug',disabled:false,parentElement:{querySelector:()=>error},addEventListener:(name,fn)=>button[name]=fn};
+  const preview={disabled:false,textContent:'Preview'};
+  const card={dataset:{productTitle:'Custom Recast Mug',active:'true',digital:'false'},classList:{add(){},remove(){}},
+    querySelector:s=>s==='.product-art img'?img:s==='.example-design-label'?caption:s==='.mockup-error'?error:s==='.product-preview-action'?preview:s==='.recast-buy'?button:s==='[data-design-layout]'?layout:s==='[data-design-x]'?x:s==='[data-design-scale]'?scale:null};
   const grid={innerHTML:'marketing',children:[],classList:{add(){}},replaceChildren(){this.innerHTML='';this.children=[]},append(...items){this.children.push(...items)}};
-  const document={querySelector:s=>s==='#product-grid'?grid:s==='#request-id'?{textContent:''}:s.startsWith('.recast-variant')?{value:'RECAST-MUG-15OZ'}:null,querySelectorAll:s=>s==='.recast-buy'?[button]:[],addEventListener:(name,fn)=>listeners[name]=fn,createElement:()=>({setAttribute(){},addEventListener(name,fn){this[name]=fn}})};
+  const document={querySelector:s=>s==='#product-grid'?grid:s==='#request-id'?{textContent:''}:s.startsWith('.recast-variant')?{value:'RECAST-MUG-15OZ'}:s.startsWith('[data-product-index')?card:null,querySelectorAll:s=>s==='.recast-buy'?[button]:[],addEventListener:(name,fn)=>listeners[name]=fn,createElement:()=>({children:[],setAttribute(){},addEventListener(name,fn){this[name]=fn},append(...x){this.children.push(...x)}})};
   const context={document,window:{},localStorage:{getItem:()=>JSON.stringify({requestId:'old',accessToken:'old-token'})},location:{origin:'https://recast.test'},URL,console:{warn(){}},setTimeout,fetch:async(...args)=>{calls.push(args);return fetcher(...args)}};
   vm.runInNewContext(source,context);
-  return {context,grid,button,error,calls,select:async(id='new')=>{context.window.__recastActiveRequest={requestId:id,accessToken:`${id}-token`};await listeners['recast-artwork-selected']()}};
+  return {context,grid,button,error,card,calls,select:async(id='new')=>{context.window.__recastActiveRequest={requestId:id,accessToken:`${id}-token`};await listeners['recast-artwork-selected']()}};
 }
 const catalog=()=>({ok:true,json:async()=>({ok:true,products:[{title:'Custom Recast Mug',status:'ACTIVE',variants:[{sku:'RECAST-MUG-15OZ',variantTitle:'15 oz',price:'29.99'}]}]})});
 test('static asset HTML loads checkout without Worker HTML injection',()=>{
