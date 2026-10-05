@@ -849,6 +849,25 @@ async function restoreRecentVersionOnLoad(){
   const candidate=rows.find(v=>v.requestId===existing?.requestId)||rows[0];
   try{await activateRecentVersion(candidate,{scroll:false})}catch{renderRecentVersions()}
 }
+function openApprovalFromQuery(){
+  const requestId=String(params.get('approvalRequest')||'');
+  if(!requestId)return false;
+  const version=readRecentVersions().find(v=>v?.requestId===requestId);
+  if(version?.accessToken){
+    const target=new URL('/order.html',location.origin);
+    target.searchParams.set('requestId',version.requestId);
+    target.searchParams.set('token',version.accessToken);
+    history.replaceState(null,'',location.pathname+'#preview-section');
+    location.replace(target.href);
+    return true;
+  }
+  const status=document.querySelector('#recover-status');
+  if(status){
+    status.textContent='To approve this order, open this page in the browser where you created this Recast, then use Track this Recast / downloads.';
+  }
+  document.querySelector('#preview-section')?.classList.remove('hidden');
+  return false;
+}
 
 window.addEventListener('error',async event=>{
   if(!generationInFlight)return;
@@ -884,7 +903,7 @@ async function status(){
   }
 }
 updateQualityUI();
-if(new URLSearchParams(location.hash.slice(1)).has('recast')){restorePrivateLink(location.href).catch(e=>{document.querySelector('#recover-status').textContent=e.message;});}else restoreRecentVersionOnLoad();
+if(new URLSearchParams(location.hash.slice(1)).has('recast')){restorePrivateLink(location.href).catch(e=>{document.querySelector('#recover-status').textContent=e.message;});}else if(!openApprovalFromQuery()) restoreRecentVersionOnLoad();
 status();
 setupTurnstile();
 document.querySelector('.preview-info a[href="#shop"]')?.addEventListener('click',async event=>{
