@@ -178,3 +178,20 @@ UX changes:
 - this change also improves the current #1001 Approved Preview page because the page is rendered dynamically from the saved token; no new purchase is needed.
 
 No Printful draft or production submission was performed.
+
+
+## RM-036 — one-tap post-purchase approval + immediate paid-order sync
+Owner asked where to approve the paid mug and noted Shopify/Shop still makes the order look like it is already preparing/shipping.
+
+Changes:
+- Approved Preview page now has a prominent “Complete design approval →” CTA.
+- The CTA routes back through the live Recast site with the exact Artwork ID. In the browser that created the Recast, client history finds the matching private access token and opens the existing private order page automatically.
+- Future Shopify orders now include a visible “Complete Design Approval” URL in addition to the Approved Preview URL and print-safeguard copy.
+- Approved Preview copy explicitly warns that Shopify/Shop may show an estimated arrival date before Recast approval; production remains paused until customer approval.
+- Customer order-status now performs an immediate paid-order sync when no internal job exists and live order sync is enabled, so buyers do not need to wait for the 10-minute scheduled sync before the approval page appears.
+- app.js cache bumped from v223 to v224.
+- Regression coverage updated for the post-purchase CTA and redirect.
+
+Security note: the one-tap CTA does not expose the private artwork access token from server storage. It relies on the private token already stored in the customer’s original Recast browser. If the approval link is opened in a different browser, Recast explains that the original browser/private Recast link is required.
+
+No Printful draft or production submission was performed.
