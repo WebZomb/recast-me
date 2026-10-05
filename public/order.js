@@ -17,10 +17,10 @@ function designCard(j){
  const image=`/api/order-design/${encodeURIComponent(j.id)}/preview?token=${encodeURIComponent(token)}`;
  const savedAngles=(j.approvedPreviewImages?.length?j.approvedPreviewImages:(j.approvedPreviewImage?[{title:'Product preview',url:j.approvedPreviewImage}]:[])).slice(0,3);
  const approvedSnapshot=savedAngles.length?`<div class="approved-checkout-preview"><div class="eyebrow">SAVED WITH YOUR ORDER</div><h4>Your checkout product previews</h4><div class="approved-angle-grid">${savedAngles.map((v,i)=>`<figure><img src="${esc(v.url)}" alt="${esc(v.title||`Product preview ${i+1}`)}"><figcaption>${esc(v.title||`View ${i+1}`)}</figcaption></figure>`).join('')}</div><p>These are the product mockups saved when checkout opened. ${esc(designSummary(j.productDesign))}</p><a class="button ghost" href="${esc(j.approvedPreviewUrl||savedAngles[0].url)}">Open all approved preview angles</a></div>`:'';
- return `<div class="design-panel">${approvedSnapshot}<h3>${locked?'Your approved design':'Make it yours before it prints'}</h3>
+ return `<div class="design-panel">${approvedSnapshot}<h3>${locked?(j.preapprovedCheckout?'Design confirmed at checkout':'Your approved design'):'Make it yours before it prints'}</h3>
  <img class="design-art" src="${esc(image)}" alt="Selected artwork with Recast Me preview watermark">
  <p>Artwork: ${esc(d?.selectedRequestId||requestId)}</p>
- ${locked?'<p><strong>Design locked.</strong> Your artwork is approved for printing. Changes are closed; our final fulfillment check comes next.</p>':`
+ ${locked?(j.preapprovedCheckout?'<p><strong>You’re done.</strong> This exact design was confirmed before payment. No extra approval is needed; Recast handles the print workflow automatically.</p>':'<p><strong>Design locked.</strong> Your artwork is approved for printing. Changes are closed; our final fulfillment check comes next.</p>'):`
  <p>Your order waits for you. Try your bonus previews, choose your favorite, then review it on your product. Nothing is sent to print because a timer runs out.</p>
  <label>Choose from your recent versions<select data-select="${esc(j.id)}"><option value="">Choose a saved version…</option>${saved.map((v,i)=>`<option value="${i}">${esc(v.styleName||v.style||'Recast')} · ${esc(v.requestId)}</option>`).join('')}</select></label>
  <button class="button ghost" data-action="swap" data-job="${esc(j.id)}">Use selected artwork</button>
