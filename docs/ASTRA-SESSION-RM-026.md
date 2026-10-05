@@ -164,3 +164,17 @@ Launch readiness change:
 - public /api/health now exposes only the boolean orderSyncEnabled so deployment readiness can be checked safely without admin credentials.
 
 Production remains gated: after Recast sync, the customer/order design must be approved and the clean print file finalized before a Printful draft can be created; sending the draft to production still requires explicit SEND_TO_PRODUCTION confirmation.
+
+
+## RM-035 — clarify Shopify confirmation vs. print production
+Owner showed Shopify's default Thank-you page and noted it looks like the custom mug is already finished/sending. Shopify's confirmation is payment/order confirmation only; Recast still requires design approval and explicit production confirmation.
+
+UX changes:
+- future physical checkouts add visible Shopify line properties:
+  - Recast Print Safeguard: Not sent to production until your Recast design is approved
+  - Recast Next Step: Return to Recast Me and open Track this Recast / downloads
+- the existing Approved Preview page now leads with ORDER CONFIRMED · PRINT SAFEGUARD ACTIVE and explicitly says the paid order is not sent to production yet.
+- the page explains the approval step and adds a Return to Recast Me button.
+- this change also improves the current #1001 Approved Preview page because the page is rendered dynamically from the saved token; no new purchase is needed.
+
+No Printful draft or production submission was performed.
