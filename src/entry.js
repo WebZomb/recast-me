@@ -307,9 +307,14 @@ async function orderMatch(request, env, ctx) {
   return json({ ok: true, found: false, requestId });
 }
 
-async function approvedPreviewImage(env,token){
+async function approvedPreviewImage(env,token,index=null){
   if(!/^[a-f0-9]{48}$/.test(token))return new Response("Not found",{status:404});
-  const image=await env.ARTWORK?.get(`commerce/checkout-previews/${token}.jpg`);
+  let key=`commerce/checkout-previews/${token}.jpg`;
+  if(index!==null){
+    const n=Number(index);if(!Number.isInteger(n)||n<0||n>2)return new Response("Not found",{status:404});
+    key=`commerce/checkout-previews/${token}/view-${n}.jpg`;
+  }
+  const image=await env.ARTWORK?.get(key);
   if(!image)return new Response("Not found",{status:404});
   return new Response(image.body,{headers:{"content-type":"image/jpeg","cache-control":"private, no-store","referrer-policy":"no-referrer","x-content-type-options":"nosniff"}});
 }
