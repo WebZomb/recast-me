@@ -208,7 +208,7 @@ export async function mockupStatus(request,env){
     await requireRequest(env,requestId,token);
     let record=await readJson(env,mockupKey(requestId,sku));
     if(!record)return json({ok:false,error:"Mockup task not found."},404);
-    if(record.status==="completed"&&record.images?.length)return json({ok:true,status:"completed",images:record.images,position:record.position});
+    if(record.status==="completed"&&record.images?.length)return json({ok:true,status:"completed",images:record.images,position:record.position,design:record.design||null});
     const result=await printful(env,`/mockup-generator/task?task_key=${encodeURIComponent(record.taskKey)}`,{method:"GET"});
     if(result.status==="failed"){
       record.status="failed";record.error=result.error||"Printful could not generate this mockup.";record.updatedAt=now();await putJson(env,mockupKey(requestId,sku),record);
