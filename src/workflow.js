@@ -194,13 +194,15 @@ async function persistMockups(env,record,result,request){
     const response=await fetch(item.url);
     if(!response.ok)continue;
     const bytes=await response.arrayBuffer();
-    const key=`mockups/${record.requestId}/${record.sku}/image-${index}.jpg`;
+    const folder=record.mockupId?`mockups/${record.requestId}/${record.sku}/${record.mockupId}`:`mockups/${record.requestId}/${record.sku}`;
+    const key=`${folder}/image-${index}.jpg`;
     await env.ARTWORK.put(key,bytes,{httpMetadata:{contentType:"image/jpeg"}});
-    urls.push({title:item.title,url:`${appBase(env,request)}/api/mockup/image/${encodeURIComponent(record.requestId)}/${encodeURIComponent(record.sku)}/${index}?token=${encodeURIComponent(record.mockupAccessToken)}`});
+    const query=new URLSearchParams({token:record.mockupAccessToken});if(record.mockupId)query.set('mockup',record.mockupId);
+    urls.push({title:item.title,url:`${appBase(env,request)}/api/mockup/image/${encodeURIComponent(record.requestId)}/${encodeURIComponent(record.sku)}/${index}?${query}`});
     index++;
   }
   record.images=urls;record.status="completed";record.updatedAt=now();
-  await putJson(env,mockupKey(record.requestId,record.sku),record);
+  await putJson(env,mockupKey(record.requestId,record.sku,record.mockupId||"legacy"),record);
   return record;
 }
 
