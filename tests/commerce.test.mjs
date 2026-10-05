@@ -89,7 +89,7 @@ const sku=Object.keys(FULFILLMENT).find(k=>!FULFILLMENT[k].digital);
 async function orderSetup(){
  const env=await setup();const job={id:'123-456',orderId:paid.id,lineId:'gid://shopify/LineItem/456',orderName:paid.name,requestId:ID,sku,quantity:1,product:'Poster',digital:false,status:'awaiting_customer_approval'};
  await env.ARTWORK.put(`jobs/${job.id}.json`,JSON.stringify(job));
- const services={async verifyPaid(){return paid},async proof(){return {status:'completed',images:[{title:'Product preview',url:'https://recast.test/api/mockup/image/test?token=private-mock'}]}}};
+ const services={async verifyPaid(){return paid},async proof(){return {status:'completed',position:{area_width:1800,area_height:2400,width:1800,height:2250,left:0,top:75},images:[{title:'Product preview',url:'https://recast.test/api/mockup/image/test?token=private-mock'}]}}};
  const action=(name,body={})=>customerDesignAction(new Request(`https://recast.test/api/order-design/${job.id}/${name}`,{method:'POST',headers:{'x-recast-request':'1'},body:JSON.stringify({token:TOKEN,revision:0,...body})}),env,job.id,name,services);
  return {env,job,services,action};
 }
@@ -155,7 +155,7 @@ async function shopifyMock(o,run,{testOrder=false,payment='PAID'}={}){
   const path=String(url);
   if(path.endsWith('/admin/oauth/access_token'))return Response.json({access_token:'fixture-token',expires_in:3600});
   if(path.includes('graphql.json'))return Response.json({data:{order:{...paid,test:testOrder,displayFinancialStatus:payment,lineItems:{pageInfo:{hasNextPage:false},nodes:[{id:o.job.lineId,sku:o.job.sku,quantity:o.job.quantity,customAttributes:[{key:'Artwork ID',value:ID}]}]}}}});
-  if(path==='https://api.printful.com/orders'){drafts++;const b=JSON.parse(options.body);assert.match(b.items[0].files[0].url,/\/api\/order-print\//);assert.ok(!b.items[0].files[0].url.includes('/api/print-source/'));return Response.json({result:{id:999,status:'draft'}})}
+  if(path==='https://api.printful.com/orders'){drafts++;const b=JSON.parse(options.body);assert.deepEqual(b.items[0].files[0].position,{area_width:1800,area_height:2400,width:1800,height:2250,left:0,top:75});assert.match(b.items[0].files[0].url,/\/api\/order-print\//);assert.ok(!b.items[0].files[0].url.includes('/api/print-source/'));return Response.json({result:{id:999,status:'draft'}})}
   if(path.endsWith('/orders/999/confirm')){confirmations++;return Response.json({result:{id:999,status:'pending'}})}
   throw Error('Unexpected external call: '+path);
  };

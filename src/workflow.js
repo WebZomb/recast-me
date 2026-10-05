@@ -107,6 +107,15 @@ export async function servePrintSource(request,env,requestId){
   return new Response(bytes,{headers:{"content-type":meta.previewMime||"image/jpeg","cache-control":"private, max-age=300","x-content-type-options":"nosniff"}})
 }
 
+export function mockupPosition(catalog, variantId, placement, size){
+  const variant=catalog.variant_printfiles?.find(v=>Number(v.variant_id)===Number(variantId));
+  const file=catalog.printfiles?.find(f=>Number(f.printfile_id)===Number(variant?.placements?.[placement]));
+  if(!file || ![file.width,file.height,size.width,size.height].every(n=>Number.isFinite(n)&&n>0))throw fault('print_area_missing','Printful print dimensions are unavailable for this variant.',502);
+  const scale=Math.min(file.width/size.width,file.height/size.height);
+  const width=Math.max(1,Math.floor(size.width*scale)),height=Math.max(1,Math.floor(size.height*scale));
+  return {area_width:file.width,area_height:file.height,width,height,top:Math.floor((file.height-height)/2),left:Math.floor((file.width-width)/2)};
+}
+
 export async function createMockup(request,env){
   try{
     const body=await request.json().catch(()=>({}));
@@ -119,10 +128,16 @@ export async function createMockup(request,env){
     meta=await ensurePrintToken(env,meta);
     const sourceUrl=`${appBase(env,request)}/api/print-source/${encodeURIComponent(requestId)}?token=${encodeURIComponent(meta.printAccessToken)}`;
     const savedSource=await env.ARTWORK.get(requestKey(requestId,'preview.b64'));
-    const sourceHash=await hash(await savedSource.text());
-    const payload={variant_ids:[map.printfulVariantId],format:"jpg",width:1200,files:[{placement:map.preferredPlacement||"default",image_url:sourceUrl}]};
+    if(!savedSource)throw fault('artwork_missing','The saved artwork is unavailable.',404);
+    const savedBase64=await savedSource.text(),sourceHash=await hash(savedBase64);
+    if(!env.IMAGES)throw fault('images_required','Image processing is not configured.',503);
+    const size=await env.IMAGES.info(new Blob([decodeBase64(savedBase64)]).stream());
+    const placement=map.preferredPlacement||'default';
+    const catalog=await printful(env,`/mockup-generator/printfiles/${map.printfulProductId}`,{method:'GET'});
+    const position=mockupPosition(catalog,map.printfulVariantId,placement,size);
+    const payload={variant_ids:[map.printfulVariantId],format:"jpg",width:1200,files:[{placement,image_url:sourceUrl,position}]};
     const result=await printful(env,`/mockup-generator/create-task/${map.printfulProductId}`,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(payload)});
-    const record={requestId,sku,sourceHash,taskKey:result.task_key,status:result.status||"pending",createdAt:now(),updatedAt:now(),mockupAccessToken:randomHex(24),sourceUrl,printfulProductId:map.printfulProductId,printfulVariantId:map.printfulVariantId};
+    const record={requestId,sku,sourceHash,position,taskKey:result.task_key,status:result.status||"pending",createdAt:now(),updatedAt:now(),mockupAccessToken:randomHex(24),sourceUrl,printfulProductId:map.printfulProductId,printfulVariantId:map.printfulVariantId};
     await putJson(env,mockupKey(requestId,sku),record);
     return json({ok:true,status:record.status,taskKey:record.taskKey,sku,waitSeconds:10});
   }catch(error){return json({ok:false,error:error?.message||String(error)},error.status||500)}
@@ -155,7 +170,7 @@ export async function mockupStatus(request,env){
     await requireRequest(env,requestId,token);
     let record=await readJson(env,mockupKey(requestId,sku));
     if(!record)return json({ok:false,error:"Mockup task not found."},404);
-    if(record.status==="completed"&&record.images?.length)return json({ok:true,status:"completed",images:record.images});
+    if(record.status==="completed"&&record.images?.length)return json({ok:true,status:"completed",images:record.images,position:record.position});
     const result=await printful(env,`/mockup-generator/task?task_key=${encodeURIComponent(record.taskKey)}`,{method:"GET"});
     if(result.status==="failed"){
       record.status="failed";record.error=result.error||"Printful could not generate this mockup.";record.updatedAt=now();await putJson(env,mockupKey(requestId,sku),record);
@@ -163,7 +178,7 @@ export async function mockupStatus(request,env){
     }
     if(result.status!=="completed")return json({ok:true,status:"pending",waitSeconds:10});
     record=await persistMockups(env,record,result,request);
-    return json({ok:true,status:"completed",images:record.images});
+    return json({ok:true,status:"completed",images:record.images,position:record.position});
   }catch(error){return json({ok:false,error:error?.message||String(error)},error.status||500)}
 }
 
@@ -263,7 +278,7 @@ async function prepareOrderProof(request,env,job,meta){
   const source=await env.ARTWORK.get(requestKey(meta.requestId,'preview.b64'));
   const sourceHash=await hash(await source.text());
   const existing=await readJson(env,mockupKey(meta.requestId,job.sku));
-  if(!existing||existing.sourceHash!==sourceHash){
+  if(!existing||existing.sourceHash!==sourceHash||!existing.position){
     const claim=`commerce/proof-start/${await hash(meta.requestId+'|'+job.sku+'|'+sourceHash)}.json`;
     if(!await env.ARTWORK.put(claim,JSON.stringify({startedAt:now()}),{onlyIf:new Headers({'If-None-Match':'*'})}))throw fault('proof_started','A product preview has already started. Refresh to check it; an interrupted task needs owner review.');
     const r=await createMockup(new Request(request.url,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({requestId:meta.requestId,accessToken:meta.accessToken,sku:job.sku})}),env);
@@ -403,11 +418,12 @@ export async function adminJobAction(request,env,id,action){
       if(job.printfulOrderId)return json({ok:true,job,alreadyCreated:true});
       if(job.status==='on_hold'||job.paymentRevokedAt)throw fault('order_hold','This order is on hold.');
       await verifyPaidOrder(env,job,{forProduction:true});const design=await approvedDesign(env,job);
+      if(!design.proof?.position)throw fault('proof_placement_missing','Review a product preview with verified placement before printing.');
       if(!design.finalKey)throw fault('print_not_ready','Prepare the approved print file first.');
       const map=FULFILLMENT[job.sku];const sourceUrl=`${String(env.PUBLIC_APP_URL||'').replace(/\/$/,'')}/api/order-print/${encodeURIComponent(job.id)}?token=${encodeURIComponent(design.printToken)}`;
       const claim=`commerce/production/${await hash(job.id)}-draft.json`;
       if(!await env.ARTWORK.put(claim,JSON.stringify({startedAt:now()}),{onlyIf:new Headers({'If-None-Match':'*'})}))throw fault('draft_started','Draft submission already started; review Printful before retrying.');
-      const payload={external_id:`recast-${job.id}`,recipient:job.recipient,items:[{variant_id:map.printfulVariantId,quantity:Number(job.quantity||1)*Number(map.quantity||1),files:[{type:map.orderFileType||"default",url:sourceUrl}]}]};
+      const payload={external_id:`recast-${job.id}`,recipient:job.recipient,items:[{variant_id:map.printfulVariantId,quantity:Number(job.quantity||1)*Number(map.quantity||1),files:[{type:map.orderFileType||"default",url:sourceUrl,position:design.proof.position}]}]};
       const result=await printful(env,"/orders",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(payload)});
       job.printfulOrderId=result.id;job.printfulStatus=result.status||"draft";job.printSourceUrl=sourceUrl;job.status="printful_draft_ready";job.printfulCreatedAt=now();await saveJob(env,job);return json({ok:true,job});
     }

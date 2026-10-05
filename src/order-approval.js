@@ -57,7 +57,7 @@ export async function customerDesignAction(request,env,id,action,services){
     await env.ARTWORK.put(snapshotKey,src.b64,{onlyIf:new Headers({'If-None-Match':'*'})});
     const d=await change(env,designKey(id),initial,v=>{
       editable(job,v,revision);
-      return {...v,sourceHash:src.sourceHash,snapshotKey,proof:{images:result.images,sku:job.sku,quantity:job.quantity,sourceHash:src.sourceHash},revision:v.revision+1};
+      return {...v,sourceHash:src.sourceHash,snapshotKey,proof:{images:result.images,position:result.position,sku:job.sku,quantity:job.quantity,sourceHash:src.sourceHash},revision:v.revision+1};
     });
     return privateJson({ok:true,status:'completed',design:publicDesign(d)});
   }
