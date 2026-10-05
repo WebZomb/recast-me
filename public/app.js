@@ -887,6 +887,16 @@ updateQualityUI();
 if(new URLSearchParams(location.hash.slice(1)).has('recast')){restorePrivateLink(location.href).catch(e=>{document.querySelector('#recover-status').textContent=e.message;});}else restoreRecentVersionOnLoad();
 status();
 setupTurnstile();
+document.querySelector('.preview-info a[href="#shop"]')?.addEventListener('click',async event=>{
+  let live=publicConfig.liveAppUrl;
+  if(!live){try{publicConfig=await fetch('/api/public-config').then(r=>r.json());live=publicConfig.liveAppUrl;}catch{}}
+  const active=window.__recastActiveRequest;
+  if(!live||!active?.requestId||!active?.accessToken||new URL(live).origin===location.origin)return;
+  event.preventDefault();
+  const target=new URL(privateRecastLink(live,active));
+  const params=new URLSearchParams(target.hash.slice(1));params.set('shop','1');target.hash=params.toString();
+  location.href=target.href;
+});
 refreshRenderAvailability();
 setInterval(()=>{if(!generationInFlight)refreshRenderAvailability()},30000);
 
