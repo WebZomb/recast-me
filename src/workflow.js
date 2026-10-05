@@ -14,7 +14,7 @@ function now(){return new Date().toISOString()}
 function randomHex(byteCount=18){const bytes=new Uint8Array(byteCount);crypto.getRandomValues(bytes);return[...bytes].map(b=>b.toString(16).padStart(2,"0")).join("")}
 function requestKey(id,suffix){return `requests/${id}/${suffix}`}
 function jobKey(id){return `jobs/${id}.json`}
-function mockupDesignId(design){return sanitizeId(`v${design?.version||1}-${design?.layout||'single'}-${design?.background||'none'}-${design?.x||'center'}-${design?.scale||100}`)}
+function mockupDesignId(design){return sanitizeId(`v${design?.version||1}-${design?.layout||'single'}-${design?.background||'none'}-${design?.x||'center'}-${design?.scale||100}-${design?.spacing||'standard'}`)}
 function mockupKey(id,sku,mockupId="legacy"){return mockupId==="legacy"?`mockups/${id}/${sku}/task.json`:`mockups/${id}/${sku}/${sanitizeId(mockupId)}/task.json`}
 function socialKey(id){return `social/x/${id}.json`}
 function trendKey(id){return `trends/${id}.json`}
@@ -169,7 +169,7 @@ export async function createMockup(request,env){
     const catalog=await printful(env,`/mockup-generator/printfiles/${map.printfulProductId}`,{method:'GET'});
     const position=mockupPosition(catalog,map.printfulVariantId,placement,size);
     if(design.background==='scene-fill'){
-      const q=new URLSearchParams({token:meta.printAccessToken,layout:design.layout,x:design.x,scale:String(design.scale),areaWidth:String(position.area_width),areaHeight:String(position.area_height)});
+      const q=new URLSearchParams({token:meta.printAccessToken,layout:design.layout,x:design.x,scale:String(design.scale),spacing:design.spacing||'standard',areaWidth:String(position.area_width),areaHeight:String(position.area_height)});
       sourceUrl=`${appBase(env,request)}/api/print-source/${encodeURIComponent(requestId)}?${q}`;
     }
     const payload={variant_ids:[map.printfulVariantId],format:"jpg",width:1200,files:[{placement,image_url:sourceUrl,position}]};
