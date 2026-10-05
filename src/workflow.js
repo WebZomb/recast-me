@@ -117,6 +117,15 @@ export async function servePrintSource(request,env,requestId){
   return new Response(bytes,{headers:{"content-type":meta.previewMime||"image/jpeg","cache-control":"private, max-age=300","x-content-type-options":"nosniff"}})
 }
 
+export async function serveMockupSource(request,env,requestId,sku,layoutId){
+  const url=new URL(request.url),token=url.searchParams.get('token')||'';
+  const meta=await requestMeta(env,requestId);
+  if(!meta||!safeEqual(meta.printAccessToken,token))return new Response('Not found',{status:404});
+  const object=await env.ARTWORK?.get(`mockup-sources/${requestId}/${sku}/${layoutId}.jpg`);
+  if(!object)return new Response('Not found',{status:404});
+  return new Response(object.body,{headers:{'content-type':'image/jpeg','cache-control':'private, max-age=300','x-content-type-options':'nosniff'}});
+}
+
 export function mockupPosition(catalog, variantId, placement, size, rawDesign={}){
   const variant=catalog.variant_printfiles?.find(v=>Number(v.variant_id)===Number(variantId));
   const file=catalog.printfiles?.find(f=>Number(f.printfile_id)===Number(variant?.placements?.[placement]));
