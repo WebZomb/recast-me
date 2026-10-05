@@ -196,7 +196,8 @@ export function secureApplication(application) {
           const meta=await readMeta(env,recover[1]);
           if(!meta.accessToken)throw error('not_found','This saved record has no recovery credentials.',404);
           const image=`data:image/jpeg;base64,${to64(await protectedArtwork(env,recover[1]))}`;
-          return json({ok:true,requestId:recover[1],accessToken:meta.accessToken,image,watermarked:true});
+          const liveBase=String(env.PUBLIC_APP_URL||new URL(request.url).origin).replace(/\/$/,'');
+          return json({ok:true,requestId:recover[1],accessToken:meta.accessToken,image,watermarked:true,liveBase});
         }
         if(path==='/api/admin/generation-diagnostic'&&request.method==='GET'){
           const id=url.searchParams.get('id')||'';
