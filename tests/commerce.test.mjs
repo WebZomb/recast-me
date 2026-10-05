@@ -171,6 +171,47 @@ test('Shopify reconciliation preserves approved preview snapshot and spacing for
  const data=await response.json();assert.equal(response.status,200);assert.equal(data.jobs[0].approvedPreviewUrl,`https://recast.test/proof/${previewToken}`);assert.equal(data.jobs[0].productDesign.spacing,'close');
 });
 
+test('pre-checkout confirmation becomes the approved design and auto-sends only after paid verification',async()=>{
+ const env=await setup({
+  PUBLIC_APP_URL:'https://recast.test',
+  SHOPIFY_CLIENT_ID:'fixture-client',SHOPIFY_CLIENT_SECRET:'fixture-secret',SHOPIFY_SHOP:'fixture-store',
+  PRINTFUL_API_TOKEN:'fixture-printful',AUTO_PRINT_PREAPPROVED_ENABLED:'true'
+ });
+ const design={version:3,layout:'two-sided',background:'scene-fill',x:'center',scale:110,spacing:'standard'};
+ const proofHash=await hash(CLEAN.toString('base64')+'|'+JSON.stringify(design));
+ const sourceHash=await hash(CLEAN.toString('base64'));
+ const token='b'.repeat(48),mockup='v3-two-sided-scene-fill-center-110-standard';
+ const snapshotKey=`commerce/preapprovals/${token}/source.b64`;
+ await env.ARTWORK.put(snapshotKey,CLEAN.toString('base64'));
+ await env.ARTWORK.put(`commerce/preapprovals/${token}.json`,JSON.stringify({
+  token,requestId:ID,sku:'RECAST-MUG-11OZ',mockupId:mockup,proofHash,previewToken:token,design,snapshotKey,sourceHash,
+  position:{area_width:2700,area_height:1050,width:2700,height:1050,left:0,top:0},
+  images:[{title:'Front view',url:'https://recast.test/preview'}],approvedAt:'2026-10-05T17:00:00Z',schemaVersion:1
+ }));
+ const attrs=[
+  {key:'Artwork ID',value:ID},{key:'_Recast Design',value:JSON.stringify(design)},{key:'_Recast Proof',value:proofHash},
+  {key:'_Recast Mockup',value:mockup},{key:'_Recast Preview Token',value:token},{key:'_Recast Preapproval',value:token}
+ ];
+ const order={...paid,email:'buyer@example.com',shippingAddress:{name:'Buyer',address1:'1 Test St',city:'Testville',province:'Pennsylvania',provinceCode:'PA',countryCodeV2:'US',zip:'19000'},lineItems:{pageInfo:{hasNextPage:false},nodes:[{id:'gid://shopify/LineItem/990',sku:'RECAST-MUG-11OZ',quantity:1,customAttributes:attrs}]}};
+ const original=globalThis.fetch;let drafts=0,confirmations=0;
+ globalThis.fetch=async(url,options={})=>{
+  const path=String(url);
+  if(path.includes('access_token'))return Response.json({access_token:'fixture-token',expires_in:3600});
+  if(path.includes('graphql.json'))return Response.json({data:{order}});
+  if(path==='https://api.printful.com/orders'){drafts++;const body=JSON.parse(options.body);assert.match(body.items[0].files[0].url,/\/api\/order-print\//);return Response.json({result:{id:4455,status:'draft'}})}
+  if(path.endsWith('/orders/4455/confirm')){confirmations++;return Response.json({result:{id:4455,status:'pending'}})}
+  throw Error('Unexpected external call: '+path);
+ };
+ try{
+  const result=await reconcileShopifyOrder(env,order);assert.equal(result.created,1);
+  const jobs=await env.ARTWORK.list({prefix:'jobs/'});assert.equal(jobs.objects.length,1);
+  const job=await (await env.ARTWORK.get(jobs.objects[0].key)).json();
+  assert.equal(job.preapprovedCheckout,true);assert.equal(job.preapprovalToken,token);assert.ok(job.sentToProductionAt);assert.equal(job.status,'submitted_to_printful');
+  assert.equal(drafts,1);assert.equal(confirmations,1);
+  const approved=await approvedDesign(env,job);assert.equal(approved.preapprovedAt,'2026-10-05T17:00:00Z');assert.equal(approved.proof.design.scale,110);
+ }finally{globalThis.fetch=original}
+});
+
 test('Shopify reconciliation creates one job per line, awards once, and revokes refunded entitlements',async()=>{
  const {env,wallet}=await walletSetup('192.0.2.1',await setup());
  const meta=await read(env,`requests/${ID}/request.json`);meta.creditWalletId=wallet.id;await env.ARTWORK.put(`requests/${ID}/request.json`,JSON.stringify(meta));
