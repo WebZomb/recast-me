@@ -386,7 +386,7 @@ export async function customerOrderStatus(request,env){
     const meta=await requireRequest(env,requestId,token);
     const index=await listJson(env,`commerce/request-jobs/${requestId}/`,1000);
     const jobs=index.length?(await Promise.all(index.map(row=>readJson(env,jobKey(row.id))))).filter(Boolean):(await listJson(env,'jobs/',1000)).filter(j=>j.requestId===requestId);
-    const views=await Promise.all(jobs.map(async j=>({id:j.id,orderName:j.orderName,product:j.product,sku:j.sku,status:j.status,digital:j.digital,createdAt:j.createdAt,printfulStatus:j.printfulStatus||null,trackingUrl:j.trackingUrl||null,design:j.digital?null:publicDesign(await designFor(env,j))})));
+    const views=await Promise.all(jobs.map(async j=>({id:j.id,orderName:j.orderName,product:j.product,sku:j.sku,status:j.status,digital:j.digital,createdAt:j.createdAt,printfulStatus:j.printfulStatus||null,trackingUrl:j.trackingUrl||null,approvedPreviewUrl:j.approvedPreviewToken?`${appBase(env,request)}/proof/${encodeURIComponent(j.approvedPreviewToken)}`:null,approvedPreviewImage:j.approvedPreviewToken?`${appBase(env,request)}/api/approved-preview/${encodeURIComponent(j.approvedPreviewToken)}`:null,productDesign:j.productDesign||null,design:j.digital?null:publicDesign(await designFor(env,j))})));
     return json({ok:true,creditsEnabled:creditsEnabled(env),request:{requestId,styleName:meta.styleName,paid:Boolean(meta.paid),orderName:meta.orderName||null,digitalEntitlement:meta.digitalEntitlement||null},jobs:views});
   }catch(error){return json({ok:false,error:error.message},error.status||500)}
 }
