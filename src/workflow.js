@@ -248,7 +248,12 @@ async function shopifyGraphQL(env,query,variables={}){
   const data=await response.json().catch(()=>({}));if(!response.ok||data.errors?.length)throw new Error(data.errors?.map(e=>e.message).join("; ")||`Shopify HTTP ${response.status}`);return data.data;
 }
 
-function artworkFromLine(line){return(line.customAttributes||[]).find(a=>a.key==="Artwork ID")?.value||""}
+function attrFromLine(line,key){return(line.customAttributes||[]).find(a=>a.key===key)?.value||""}
+function artworkFromLine(line){return attrFromLine(line,"Artwork ID")}
+function purchasedDesign(line,map){
+  const raw=attrFromLine(line,"Recast Layout");if(!raw)return null;
+  try{return normalizeProductDesign(map,JSON.parse(raw))}catch{return null}
+}
 function recipientFromOrder(order){
   const a=order.shippingAddress||{};return{name:a.name||[a.firstName,a.lastName].filter(Boolean).join(" "),company:a.company||undefined,address1:a.address1,address2:a.address2||undefined,city:a.city,state_code:a.provinceCode||undefined,state_name:a.province||undefined,country_code:a.countryCodeV2,zip:a.zip,phone:a.phone||undefined,email:order.email||undefined};
 }
