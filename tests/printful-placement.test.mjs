@@ -16,7 +16,7 @@ test('mockup submission sends provider dimensions and persists placement for pri
   return Response.json({result:{task_key:'test-task',status:'pending'}});
  });
  const response=await createMockup(new Request('https://recast.test/api/mockup/create',{method:'POST',body:JSON.stringify({requestId:ID,accessToken:TOKEN,sku:'RECAST-MUG-11OZ'})}),env);
- assert.equal(response.status,200,await response.text());
+ assert.equal(response.status,200);
  const data=await response.json();assert.match(data.mockupId,/^v1-/);
  const record=await(await env.ARTWORK.get(`mockups/${ID}/RECAST-MUG-11OZ/${data.mockupId}/task.json`)).json();
  assert.deepEqual(record.position,payload.files[0].position);
@@ -33,7 +33,7 @@ test('different mug layouts receive isolated provider task records',async t=>{
  });
  const submit=async design=>{
   const r=await createMockup(new Request('https://recast.test/api/mockup/create',{method:'POST',body:JSON.stringify({requestId:ID,accessToken:TOKEN,sku:'RECAST-MUG-11OZ',design})}),env);
-  assert.equal(r.status,200,await r.text());return r.json();
+  assert.equal(r.status,200);return r.json();
  };
  const single=await submit({product:'Mug',layout:'single',background:'scene-fill',x:'center',scale:92});
  const double=await submit({product:'Mug',layout:'two-sided',background:'scene-fill',x:'center',scale:115});
