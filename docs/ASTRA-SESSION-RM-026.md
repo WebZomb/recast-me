@@ -195,3 +195,27 @@ Changes:
 Security note: the one-tap CTA does not expose the private artwork access token from server storage. It relies on the private token already stored in the customer’s original Recast browser. If the approval link is opened in a different browser, Recast explains that the original browser/private Recast link is required.
 
 No Printful draft or production submission was performed.
+
+
+## RM-037 — simplified customer flow: confirm before payment, then automatic fulfillment
+Owner rejected the post-purchase approval workflow as too confusing for normal customers and asked for the simple flow: choose artwork → preview product → final confirmation → pay → print, with no extra approval after purchase.
+
+Implemented on main:
+- Physical product cards now unlock to “Continue to final review” only after the exact current mockup/settings are complete.
+- Added a full-screen Final Review dialog showing up to three actual product-render angles, Artwork ID, product/variant, and print settings. Customer can Change image, Edit placement, or Confirm design & checkout.
+- Physical checkout-link now rejects requests unless confirmDesign=true and the exact completed mockup still matches SKU, normalized design, source proof hash, and verified Printful position.
+- On confirmation, Recast freezes a clean private artwork snapshot plus exact mockup position/design/proof under an unguessable preapproval token before opening Shopify.
+- Shopify line properties for new orders say “Recast Design: Confirmed before checkout” and “Payment completes your order — no extra design approval needed”; hidden metadata includes the preapproval token.
+- Order reconciliation validates the preapproval token against the Shopify line item and frozen snapshot. Valid paid orders get an already-approved design record immediately rather than entering awaiting_customer_approval.
+- AUTO_PRINT_PREAPPROVED_ENABLED is now true. Only orders carrying a valid pre-checkout approval are eligible for this zero-touch path. After fresh Shopify payment verification, Recast builds the clean production file, creates the Printful draft, re-verifies payment/design, and confirms production automatically. Existing legacy orders without preapproval remain on the manual approval path.
+- Automatic Printful work is idempotency-claimed. If finalization/draft/confirmation fails or becomes ambiguous, the job is put into auto_print_review instead of blindly retrying billable actions.
+- New approved-preview pages detect preapproved checkouts and say “You’re done. No extra design approval is needed.” Legacy orders still show their approval CTA.
+- Customer order page shows “Design confirmed at checkout” for preapproved orders and no approval controls.
+- Health endpoint now exposes autoPrintPreapprovedEnabled as a safe boolean.
+- Regression tests updated/added for final-review gating, frozen preapproval metadata, exact print position, and a paid preapproved mug automatically reaching one Printful draft + one production confirmation.
+- Checkout assets bumped to checkout.js?v=231 and merch-v07.css?v=132; order assets bumped to v5.
+
+Safety/commerce boundary:
+- This automation applies only to future physical orders that were explicitly confirmed on the Final Review screen before checkout.
+- Existing order #1001 has no preapproval token and is therefore NOT automatically sent by this new path.
+- Production uses the clean private snapshot and approved layout; customer-facing proof images remain watermarked.
