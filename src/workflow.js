@@ -1,7 +1,7 @@
 import { FULFILLMENT } from "./entry.js";
 import { runSocialPipeline, socialReadiness } from './social.js';
 import { renderHealth } from './render-health.js';
-import { change, hash, fault, sameOrigin, privateJson } from './commerce-store.js';
+import { change, hash, fault, sameOrigin, privateJson, normalizeProductDesign, productPrintfile, composeMugLayout } from './commerce-store.js';
 import { reconcileOrderCredits, orderEligible, creditsEnabled, walletFor, creditBalance } from './render-credits.js';
 import { designFor, publicDesign, customerDesignAction, approvedDesign, finishApprovedDesign, printDesignFile } from './order-approval.js';
 import { SYNC_ORDERS_QUERY, VERIFY_ORDER_QUERY } from './order-queries.js';
