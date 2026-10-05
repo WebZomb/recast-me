@@ -460,6 +460,8 @@ export default {
           printfulSecretConfigured: Boolean(env.PRINTFUL_API_TOKEN),
           privateArtworkStorage: Boolean(env.ARTWORK),
           shopifyConfigured: Boolean(env.SHOPIFY_CLIENT_ID && env.SHOPIFY_CLIENT_SECRET && env.SHOPIFY_SHOP),
+          workerVersionId: env.CF_VERSION_METADATA?.id || null,
+          workerVersionTimestamp: env.CF_VERSION_METADATA?.timestamp || null,
           mode: "MVP"
         });
       }
