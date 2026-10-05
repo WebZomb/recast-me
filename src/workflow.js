@@ -288,8 +288,12 @@ export async function reconcileShopifyOrder(env,order){
     const legacy=sanitizeId(`${order.name}-${requestId}-${line.sku}`);
     const id=await env.ARTWORK.head(jobKey(legacy))?legacy:sanitizeId(`${order.id.split('/').pop()}-${line.id.split('/').pop()}`);
     const map=FULFILLMENT[line.sku];
+    const productDesign=map.digital?null:purchasedDesign(line,map);
+    const productProofHash=map.digital?null:attrFromLine(line,"Recast Proof");
+    const productMockupId=map.digital?null:attrFromLine(line,"Recast Mockup");
+    const layoutComplete=Boolean(map.digital||(productDesign&&productProofHash&&productMockupId));
     if(eligible){
-      const job={id,lineId:line.id,orderId:order.id,orderName:order.name,orderCreatedAt:order.createdAt,financialStatus:order.displayFinancialStatus,requestId,sku:line.sku,quantity:line.quantity,product:map.product,digital:Boolean(map.digital),recipient:recipientFromOrder(order),status:map.digital?'digital_fulfillment_pending':'awaiting_customer_approval',createdAt:now(),updatedAt:now(),printfulVariantId:map.printfulVariantId||null,printfulProductId:map.printfulProductId||null};
+      const job={id,lineId:line.id,orderId:order.id,orderName:order.name,orderCreatedAt:order.createdAt,financialStatus:order.displayFinancialStatus,requestId,sku:line.sku,quantity:line.quantity,product:map.product,digital:Boolean(map.digital),productDesignRequired:!map.digital,productDesign,productProofHash,productMockupId,recipient:recipientFromOrder(order),status:map.digital?'digital_fulfillment_pending':layoutComplete?'awaiting_customer_approval':'product_layout_review',createdAt:now(),updatedAt:now(),printfulVariantId:map.printfulVariantId||null,printfulProductId:map.printfulProductId||null};
       const put=await env.ARTWORK.put(jobKey(id),JSON.stringify(job),{onlyIf:new Headers({'If-None-Match':'*'})});if(put)created++;
       await putJson(env,`commerce/request-jobs/${requestId}/${id}.json`,{id});
     }else if(await env.ARTWORK.head(jobKey(id))){
