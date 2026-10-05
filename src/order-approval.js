@@ -101,7 +101,7 @@ export async function finishApprovedDesign(env,job){
     if(!(area.width>0&&area.height>0))throw fault('proof_placement_missing','The approved mug layout is missing its print area.',503);
     const info=await env.IMAGES.info(new Blob([bytes]).stream());
     const composed=await composeMugLayout(env,bytes,info,area,d.proof.design,4096);
-    finalBytes=composed.bytes;finishMethod='mug-layout-v1-clean';
+    finalBytes=composed.bytes;finishMethod='mug-layout-v3-clean';
   }else{
     const out=await env.IMAGES.input(new Blob([bytes]).stream()).transform({width:4096,fit:'scale-up',upscale:'interpolate'}).output({format:'image/jpeg',quality:95});
     const response=await out.response();
