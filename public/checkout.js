@@ -222,6 +222,16 @@ async function loadCheckout(){
     });
   });
 
+  document.querySelectorAll("[data-design-scale]").forEach(control=>{
+    const card=control.closest?.("[data-product-index]");
+    const label=card?.querySelector?.("[data-design-scale-label]");
+    control.addEventListener("input",()=>{if(label)label.textContent=control.value+"%";resetProductPreview(card);});
+  });
+  document.querySelectorAll("[data-design-layout],[data-design-x]").forEach(control=>{
+    const card=control.closest?.("[data-product-index]");
+    control.addEventListener("change",()=>resetProductPreview(card));
+  });
+
   document.querySelectorAll(".recast-buy").forEach(button=>{
     button.addEventListener("click",async()=>{
       const index=button.dataset.product;
