@@ -31,6 +31,7 @@
   "ai": {
     "binding": "AI"
   },
+  "images": { "binding": "IMAGES" },
   "previews": {
     "vars": {
       "PRINTFUL_STORE_ID": "18798877",
@@ -67,6 +68,5 @@
     "run_worker_first": ["/api/*"]
   }
 
-  // Production IMAGES remains intentionally unconfigured while the secure
-  // preview flow is validated. Worker Previews use previews.images above.
+  // Preserve the existing production Images binding during controlled testing.
 }

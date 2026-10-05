@@ -4,6 +4,8 @@ Updated: 2026-10-03. Keep this index and append-only session records current whe
 
 ## Start here
 
+- [RM-024: owner-directed production test preparation](ASTRA-SESSION-RM-024.md). Production configuration verified present; controlled deployment in progress.
+
 - [RM-023: visible mockup errors and preview fulfillment setup](ASTRA-SESSION-RM-023.md). Shopify live catalog verified; Printful secret still missing.
 
 - [RM-022: product catalog isolation and owner diagnostics](ASTRA-SESSION-RM-022.md). 149 mocked tests passed; live commerce verification pending.
