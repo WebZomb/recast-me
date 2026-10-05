@@ -30,7 +30,8 @@ export function normalizeProductDesign(map,raw={}){
   const layout=allowedLayout.includes(String(raw.layout))?String(raw.layout):'single';
   const x=['left','center','right'].includes(String(raw.x))?String(raw.x):'center';
   const n=Number(raw.scale),scale=Math.round(Math.max(55,Math.min(250,Number.isFinite(n)?n:(mug?92:100))));
-  return {version:2,layout,background:mug?'scene-fill':'none',x,scale};
+  const spacing=mug&&['close','standard','wide'].includes(String(raw.spacing))?String(raw.spacing):'standard';
+  return {version:3,layout,background:mug?'scene-fill':'none',x,scale,spacing};
 }
 export function productPrintfile(catalog,variantId,placement){
   const variant=catalog?.variant_printfiles?.find(v=>Number(v.variant_id)===Number(variantId));
@@ -78,8 +79,9 @@ export async function composeMugLayout(env,sourceBytes,sourceSize,area,rawDesign
   };
   let chain=background;
   if(design.layout==='two-sided'){
-    chain=add(chain,0.24,0.29,0.90);
-    chain=add(chain,0.76,0.29,0.90);
+    const centers=design.spacing==='close'?[0.31,0.69]:design.spacing==='wide'?[0.18,0.82]:[0.24,0.76];
+    chain=add(chain,centers[0],0.29,0.90);
+    chain=add(chain,centers[1],0.29,0.90);
   }else{
     const center=design.x==='left'?0.25:design.x==='right'?0.75:0.5;
     chain=add(chain,center,0.43,0.92);
