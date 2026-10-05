@@ -251,7 +251,7 @@ async function shopifyGraphQL(env,query,variables={}){
 function attrFromLine(line,key){return(line.customAttributes||[]).find(a=>a.key===key)?.value||""}
 function artworkFromLine(line){return attrFromLine(line,"Artwork ID")}
 function purchasedDesign(line,map){
-  const raw=attrFromLine(line,"Recast Layout");if(!raw)return null;
+  const raw=attrFromLine(line,"_Recast Design");if(!raw)return null;
   try{return normalizeProductDesign(map,JSON.parse(raw))}catch{return null}
 }
 function recipientFromOrder(order){
@@ -271,7 +271,7 @@ export async function verifyPaidOrder(env,job,{forProduction=false}={}){
   if(!line||line.sku!==job.sku||line.quantity!==job.quantity||artworkFromLine(line)!==job.requestId)throw fault('order_changed','The purchased item changed. An owner must review this order before printing.');
   if(!job.digital&&job.productDesignRequired){
     const liveDesign=purchasedDesign(line,FULFILLMENT[job.sku]);
-    if(!liveDesign||JSON.stringify(liveDesign)!==JSON.stringify(job.productDesign)||attrFromLine(line,"Recast Proof")!==job.productProofHash)throw fault('design_changed','The purchased product layout changed. An owner must review this order before printing.');
+    if(!liveDesign||JSON.stringify(liveDesign)!==JSON.stringify(job.productDesign)||attrFromLine(line,"_Recast Proof")!==job.productProofHash)throw fault('design_changed','The purchased product layout changed. An owner must review this order before printing.');
   }
   return order;
 }
@@ -289,8 +289,8 @@ export async function reconcileShopifyOrder(env,order){
     const id=await env.ARTWORK.head(jobKey(legacy))?legacy:sanitizeId(`${order.id.split('/').pop()}-${line.id.split('/').pop()}`);
     const map=FULFILLMENT[line.sku];
     const productDesign=map.digital?null:purchasedDesign(line,map);
-    const productProofHash=map.digital?null:attrFromLine(line,"Recast Proof");
-    const productMockupId=map.digital?null:attrFromLine(line,"Recast Mockup");
+    const productProofHash=map.digital?null:attrFromLine(line,"_Recast Proof");
+    const productMockupId=map.digital?null:attrFromLine(line,"_Recast Mockup");
     const layoutComplete=Boolean(map.digital||(productDesign&&productProofHash&&productMockupId));
     if(eligible){
       const job={id,lineId:line.id,orderId:order.id,orderName:order.name,orderCreatedAt:order.createdAt,financialStatus:order.displayFinancialStatus,requestId,sku:line.sku,quantity:line.quantity,product:map.product,digital:Boolean(map.digital),productDesignRequired:!map.digital,productDesign,productProofHash,productMockupId,recipient:recipientFromOrder(order),status:map.digital?'digital_fulfillment_pending':layoutComplete?'awaiting_customer_approval':'product_layout_review',createdAt:now(),updatedAt:now(),printfulVariantId:map.printfulVariantId||null,printfulProductId:map.printfulProductId||null};
