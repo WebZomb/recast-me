@@ -228,7 +228,7 @@ async function loadCheckout(){
     </details>`;
     const realPreview=digital?"":`${designControls}<button class="product-preview-action" data-product="${index}" type="button">Preview my Recast on the real product</button><p class="mockup-error" role="alert" hidden></p><p class="product-mockup-note">Uses the mapped Printful product and your exact Artwork ID.</p>`;
 
-    return `<div class="${classes}" data-product-index="${index}" data-product-title="${product.title}">
+    return `<div class="${classes}" data-product-index="${index}" data-product-title="${product.title}" data-active="${active}" data-digital="${digital}">
       <div class="product-art"><img src="${PRODUCT_ART[product.title]}" alt="Example design on ${product.title}" loading="lazy"><span class="example-design-label">Example design</span></div>
       <div class="product-body">
         <span class="product-badge">${meta.badge}</span>
@@ -237,8 +237,8 @@ async function loadCheckout(){
         <span class="price">${priceText}</span>
         ${select}
         ${realPreview}
-        <button class="recast-buy" data-product="${index}" ${active?"":"disabled"}>
-          ${active?meta.cta:"Not available to buy yet"}
+        <button class="recast-buy" data-product="${index}" data-buy-label="${meta.cta}" ${active&&digital?"":"disabled"}>
+          ${active?(digital?meta.cta:"Preview product before buying"):"Not available to buy yet"}
         </button>
         ${active?"":'<p class="product-mockup-note">This product is still a draft. Purchasing opens after store setup and testing.</p>'}
         <p class="checkout-error" role="alert" hidden></p>
