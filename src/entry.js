@@ -1,4 +1,5 @@
 import core, { shopifyCatalog } from "./index.js";
+import { hash, normalizeProductDesign } from "./commerce-store.js";
 
 export const FULFILLMENT = {
   "RECAST-HOODIE-S":      { printfulProductId: 380, printfulVariantId: 10779, preferredPlacement: "front", orderFileType: "front", quantity: 1, baseCost: 27.84, product: "Hoodie", color: "Black" },
