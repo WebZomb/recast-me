@@ -180,17 +180,24 @@ function htmlEscape(value){
 async function freezeApprovedPreview(request,env,{requestId,sku,mockupId,proofHash,mockup,design,accessToken}){
   const token=(await hash([requestId,sku,mockupId,proofHash,accessToken,"approved-product-preview"].join("|"))).slice(0,48);
   const imageKey=`commerce/checkout-previews/${token}.jpg`,metaKey=`commerce/checkout-previews/${token}.json`;
-  if(!await env.ARTWORK?.head(imageKey)){
-    const views=mockup.images||[];
-    const preferred=views.findIndex(v=>/front/i.test(String(v.title||"")));
-    const index=preferred>=0?preferred:0;
-    const folder=`mockups/${requestId}/${sku}/${mockupId}`;
-    const source=await env.ARTWORK?.get(`${folder}/image-${index}.jpg`);
-    if(!source)return null;
-    await env.ARTWORK.put(imageKey,source.body,{httpMetadata:{contentType:"image/jpeg",cacheControl:"private, no-store"}});
-    await env.ARTWORK.put(metaKey,JSON.stringify({token,requestId,sku,mockupId,proofHash,design,viewTitle:views[index]?.title||"Product preview",createdAt:new Date().toISOString()}),{httpMetadata:{contentType:"application/json"}});
+  const views=(mockup.images||[]).slice(0,3);
+  if(!views.length)return null;
+  const folder=`mockups/${requestId}/${sku}/${mockupId}`;
+  const savedViews=[];
+  for(let i=0;i<views.length;i++){
+    const source=await env.ARTWORK?.get(`${folder}/image-${i}.jpg`);
+    if(!source)continue;
+    const viewKey=`commerce/checkout-previews/${token}/view-${savedViews.length}.jpg`;
+    await env.ARTWORK.put(viewKey,source.body,{httpMetadata:{contentType:"image/jpeg",cacheControl:"private, no-store"}});
+    savedViews.push({index:savedViews.length,title:views[i]?.title||`View ${savedViews.length+1}`});
   }
-  return {token,url:`${liveBase(env,request)}/proof/${token}`,imageUrl:`${liveBase(env,request)}/api/approved-preview/${token}`};
+  if(!savedViews.length)return null;
+  const preferred=savedViews.find(v=>/front/i.test(String(v.title||"")))||savedViews[0];
+  const primary=await env.ARTWORK?.get(`commerce/checkout-previews/${token}/view-${preferred.index}.jpg`);
+  if(primary)await env.ARTWORK.put(imageKey,primary.body,{httpMetadata:{contentType:"image/jpeg",cacheControl:"private, no-store"}});
+  await env.ARTWORK.put(metaKey,JSON.stringify({token,requestId,sku,mockupId,proofHash,design,views:savedViews,primaryIndex:preferred.index,viewTitle:preferred.title,createdAt:new Date().toISOString()}),{httpMetadata:{contentType:"application/json"}});
+  const base=liveBase(env,request);
+  return {token,url:`${base}/proof/${token}`,imageUrl:`${base}/api/approved-preview/${token}`,images:savedViews.map(v=>({title:v.title,url:`${base}/api/approved-preview/${token}/${v.index}`}))};
 }
 
 async function checkoutLink(request, env, ctx) {
