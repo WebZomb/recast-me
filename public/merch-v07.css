@@ -87,3 +87,12 @@
   .preview-info .secondary-product strong{font-size:16px}
   .preview-info .secondary-product .product-pitch{font-size:10px;min-height:44px}
 }
+
+.product-design-controls{margin-top:12px;padding:12px;border:1px solid #37384c;border-radius:14px;background:#0d0e16}
+.product-design-controls summary{cursor:pointer;font-size:12px;font-weight:900;color:#d7d5e8;letter-spacing:.02em}
+.product-design-controls label{display:grid;gap:6px;margin-top:11px;color:#a8a7b8;font-size:11px;font-weight:800}
+.product-design-controls select,.product-design-controls input[type="range"]{width:100%}
+.product-design-controls select{min-height:42px;padding:0 11px;border:1px solid #393a4d;border-radius:10px;background:#151621;color:#fff}
+.product-design-controls input[type="range"]{accent-color:#8f5cff}
+.product-design-controls [data-design-scale-label]{color:#fff}
+.product-design-controls .product-mockup-note{margin:10px 0 0}
