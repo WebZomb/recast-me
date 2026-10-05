@@ -157,9 +157,10 @@ export async function createMockup(request,env){
     stage="artwork-source";
     const savedSource=await env.ARTWORK.get(requestKey(requestId,'preview.b64'));
     if(!savedSource)throw fault('artwork_missing','The saved artwork is unavailable.',404);
-    const savedBase64=await savedSource.text(),sourceHash=await hash(savedBase64+'|'+JSON.stringify(body.design||{}));
-    const existing=await readJson(env,mockupKey(requestId,sku));
-    if(existing?.sourceHash===sourceHash&&existing.position&&['completed','pending'].includes(existing.status))return json({ok:true,status:existing.status,taskKey:existing.taskKey,sku,design:existing.design||design,waitSeconds:10});
+    const savedBase64=await savedSource.text(),sourceHash=await hash(savedBase64+'|'+JSON.stringify(design));
+    const mockupId=mockupDesignId(design);
+    const existing=await readJson(env,mockupKey(requestId,sku,mockupId));
+    if(existing?.sourceHash===sourceHash&&existing.position&&['completed','pending'].includes(existing.status))return json({ok:true,status:existing.status,taskKey:existing.taskKey,sku,mockupId,design:existing.design||design,waitSeconds:10});
     if(!env.IMAGES)throw fault('images_required','Image processing is not configured.',503);
     stage="image-info";
     const size=await env.IMAGES.info(new Blob([decodeBase64(savedBase64)]).stream());size.design=design;
@@ -174,11 +175,11 @@ export async function createMockup(request,env){
     const payload={variant_ids:[map.printfulVariantId],format:"jpg",width:1200,files:[{placement,image_url:sourceUrl,position}]};
     stage="printful-create-task";
     const result=await printful(env,`/mockup-generator/create-task/${map.printfulProductId}`,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(payload)});
-    const record={requestId,sku,sourceHash,design,position,taskKey:result.task_key,status:result.status||"pending",createdAt:now(),updatedAt:now(),mockupAccessToken:randomHex(24),sourceUrl,printfulProductId:map.printfulProductId,printfulVariantId:map.printfulVariantId};
-    await putJson(env,mockupKey(requestId,sku),record);
-    return json({ok:true,status:record.status,taskKey:record.taskKey,sku,design:record.design,waitSeconds:10});
+    const record={requestId,sku,mockupId,sourceHash,design,position,taskKey:result.task_key,status:result.status||"pending",createdAt:now(),updatedAt:now(),mockupAccessToken:randomHex(24),sourceUrl,printfulProductId:map.printfulProductId,printfulVariantId:map.printfulVariantId};
+    await putJson(env,mockupKey(requestId,sku,mockupId),record);
+    return json({ok:true,status:record.status,taskKey:record.taskKey,sku,mockupId,design:record.design,waitSeconds:10});
   }catch(error){
-    return json({ok:false,error:error?.message||String(error),reason:error?.code||null,stage,workerVersionId:env.CF_VERSION_METADATA?.id||null},error.status||500)
+    return json({ok:false,error:error?.message||String(error),reason:error?.code||null,providerStatus:error?.printfulStatus||null,stage,workerVersionId:env.CF_VERSION_METADATA?.id||null},error.status||500)
   }
 }
 
