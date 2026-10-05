@@ -79,3 +79,16 @@ Validation:
 - The final cache-only commit 281c120927c55c36b6be08f1526d59d7a4d35cf6 does not change application logic.
 
 No AI render, Shopify payment, paid order, Printful production submission, email, or social post was executed by this customer-safety work. Live provider behavior for the new multi-layout flow still needs owner browser verification after deployment.
+
+
+## RM-029 — remove unintended third stretched mug image
+Owner live-tested the two-sided mug and showed that the previous scene-fill implementation visibly contained the intended left/right portraits plus a recognizable stretched/blurred full-size copy in the center. A browser refresh did not fix it because the completed provider mockup was valid for the same v1 design settings and was reused server-side. This was not the stale-response bug fixed in RM-028; it was the compositor itself plus an insufficient compositor-version cache key.
+
+Fixes:
+- 5594b026: non-wrap mug layouts now start from a neutral dark canvas. A maximum-blur, low-opacity artwork wash (blur 250, opacity 0.16) supplies ambient color only, then the intended portrait placement(s) are drawn. The recognizable full-size/stretch copy is removed. Two-sided now has exactly two intentional portrait placements; single has one; wrap remains one full-bleed source.
+- 94ea4bb9: product design schema/compositor version bumped from v1 to v2. This changes the mockup ID and source proof hash, forcing a new Printful task instead of reusing the previously completed stretched v1 mockup.
+- e8ecb57b: customer helper copy now accurately explains color-wash vs two-sided/full-wrap behavior.
+- tests updated to v2; 27efda76 adds regression assertions requiring blur=250/opacity=0.16 and forbidding the old blur=22 recognizable background path.
+- 6627eb17 bumps live checkout asset to checkout.js?v=229.
+
+Validation: GitHub Actions run 37341511515 for head 6627eb1713ae27fa243cd923944fee4f002b67da completed successfully. Full mocked test suite passed and Wrangler bundle dry-run passed. No AI generation, payment, paid order, or Printful production submission was performed.
