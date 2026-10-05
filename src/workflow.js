@@ -159,7 +159,7 @@ export async function createMockup(request,env){
     if(existing?.sourceHash===sourceHash&&existing.position&&['completed','pending'].includes(existing.status))return json({ok:true,status:existing.status,taskKey:existing.taskKey,sku,waitSeconds:10});
     if(!env.IMAGES)throw fault('images_required','Image processing is not configured.',503);
     stage="image-info";
-    const size=await env.IMAGES.info(new Blob([decodeBase64(savedBase64)]).stream());
+    const size=await env.IMAGES.info(new Blob([decodeBase64(savedBase64)]).stream());size.design=body.design||{};
     const placement=map.preferredPlacement||'default';
     stage="printful-catalog";
     const catalog=await printful(env,`/mockup-generator/printfiles/${map.printfulProductId}`,{method:'GET'});
