@@ -42,6 +42,14 @@ function money(n){const value=Number(n);return Number.isFinite(value)?`$${value.
 function sleep(ms){return new Promise(resolve=>setTimeout(resolve,ms))}
 let checkoutLoadId=0;
 
+function productDesign(card){
+  const mug=card?.dataset?.productTitle==="Custom Recast Mug";
+  const layout=card?.querySelector?.("[data-design-layout]")?.value||"single";
+  const x=card?.querySelector?.("[data-design-x]")?.value||"center";
+  const scale=Number(card?.querySelector?.("[data-design-scale]")?.value||(mug?92:100));
+  return {product:mug?"Mug":"Generic",layout:mug?layout:"single",background:mug?"scene-fill":"none",x,scale};
+}
+
 async function generateRealMockup({req,sku,card,button}){
   if(!sku)return;
   const errorCopy=card.querySelector(".mockup-error");
@@ -50,7 +58,7 @@ async function generateRealMockup({req,sku,card,button}){
   try{
     const start=()=>fetch("/api/mockup/create",{
       method:"POST",headers:{"content-type":"application/json","cache-control":"no-cache"},
-      body:JSON.stringify({requestId:req.requestId,accessToken:req.accessToken,sku}),
+      body:JSON.stringify({requestId:req.requestId,accessToken:req.accessToken,sku,design:productDesign(card)}),
       cache:"no-store"
     });
     let create=await start();
