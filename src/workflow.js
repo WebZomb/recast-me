@@ -164,6 +164,10 @@ export async function createMockup(request,env){
     stage="printful-catalog";
     const catalog=await printful(env,`/mockup-generator/printfiles/${map.printfulProductId}`,{method:'GET'});
     const position=mockupPosition(catalog,map.printfulVariantId,placement,size);
+    if(body.design?.background==='scene-fill'){
+      const q=new URLSearchParams({token:meta.printAccessToken,layout:String(body.design.layout||'single'),x:String(body.design.x||'center'),scale:String(body.design.scale||92),areaWidth:String(position.area_width),areaHeight:String(position.area_height)});
+      sourceUrl=`${appBase(env,request)}/api/print-source/${encodeURIComponent(requestId)}?${q}`;
+    }
     const payload={variant_ids:[map.printfulVariantId],format:"jpg",width:1200,files:[{placement,image_url:sourceUrl,position}]};
     stage="printful-create-task";
     const result=await printful(env,`/mockup-generator/create-task/${map.printfulProductId}`,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(payload)});
