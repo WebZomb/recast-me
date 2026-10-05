@@ -216,7 +216,14 @@ async function checkoutLink(request, env, ctx) {
     "Artwork ID": requestId,
     "Recast Style": recast.styleName || "",
     "Recast Subject": recast.subjectType || "",
-    ...(verifiedDesign?{"Recast Layout":JSON.stringify(verifiedDesign),"Recast Proof":proofHash,"Recast Mockup":mockupId}:{})
+    ...(verifiedDesign?{
+      "Recast Layout":verifiedDesign.layout==="two-sided"?"Same image on both sides":verifiedDesign.layout==="wrap"?"Full wrap":"One image",
+      "Recast Position":verifiedDesign.x[0].toUpperCase()+verifiedDesign.x.slice(1),
+      "Recast Size":verifiedDesign.scale+"%",
+      "_Recast Design":JSON.stringify(verifiedDesign),
+      "_Recast Proof":proofHash,
+      "_Recast Mockup":mockupId
+    }:{})
   };
   const encodedProperties = base64UrlUtf8(JSON.stringify(properties));
   const checkoutUrl = `https://${shopDomain(env)}/cart/${numericId}:1?properties=${encodeURIComponent(encodedProperties)}&ref=recast-me`;
