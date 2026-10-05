@@ -352,6 +352,15 @@ async function approvedPreviewImage(env,token,index=null){
   if(!image)return new Response("Not found",{status:404});
   return new Response(image.body,{headers:{"content-type":"image/jpeg","cache-control":"private, no-store","referrer-policy":"no-referrer","x-content-type-options":"nosniff"}});
 }
+async function approvedPreviewApprovalRedirect(env,token){
+  if(!/^[a-f0-9]{48}$/.test(token))return new Response("Not found",{status:404});
+  const meta=await env.ARTWORK?.head(`commerce/checkout-previews/${token}.json`);
+  if(!meta)return new Response("Not found",{status:404});
+  const target=new URL("/order.html",String(env.LIVE_APP_URL||env.PUBLIC_APP_URL||"https://recast-me.sergz24.workers.dev"));
+  target.searchParams.set("proof",token);
+  return new Response(null,{status:302,headers:{location:target.toString(),"cache-control":"private, no-store","referrer-policy":"no-referrer"}});
+}
+
 async function approvedPreviewPage(env,token){
   if(!/^[a-f0-9]{48}$/.test(token))return new Response("Not found",{status:404});
   const metaObject=await env.ARTWORK?.get(`commerce/checkout-previews/${token}.json`);
@@ -387,6 +396,8 @@ export default {
 
     const approvedImage=url.pathname.match(/^\/api\/approved-preview\/([a-f0-9]{48})(?:\/(\d))?$/);
     if(approvedImage&&request.method==="GET")return approvedPreviewImage(env,approvedImage[1],approvedImage[2]??null);
+    const approvalPage=url.pathname.match(/^\/proof\/([a-f0-9]{48})\/approve$/);
+    if(approvalPage&&request.method==="GET")return approvedPreviewApprovalRedirect(env,approvalPage[1]);
     const approvedPage=url.pathname.match(/^\/proof\/([a-f0-9]{48})$/);
     if(approvedPage&&request.method==="GET")return approvedPreviewPage(env,approvedPage[1]);
 
