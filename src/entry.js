@@ -354,10 +354,12 @@ async function approvedPreviewImage(env,token,index=null){
 }
 async function approvedPreviewApprovalRedirect(env,token){
   if(!/^[a-f0-9]{48}$/.test(token))return new Response("Not found",{status:404});
-  const meta=await env.ARTWORK?.head(`commerce/checkout-previews/${token}.json`);
-  if(!meta)return new Response("Not found",{status:404});
-  const target=new URL("/order.html",String(env.LIVE_APP_URL||env.PUBLIC_APP_URL||"https://recast-me.sergz24.workers.dev"));
-  target.searchParams.set("proof",token);
+  const metaObject=await env.ARTWORK?.get(`commerce/checkout-previews/${token}.json`);
+  if(!metaObject)return new Response("Not found",{status:404});
+  const meta=await metaObject.json();
+  const target=new URL("/",String(env.LIVE_APP_URL||env.PUBLIC_APP_URL||"https://recast-me.sergz24.workers.dev"));
+  target.searchParams.set("approvalRequest",String(meta.requestId||""));
+  target.hash="preview-section";
   return new Response(null,{status:302,headers:{location:target.toString(),"cache-control":"private, no-store","referrer-policy":"no-referrer"}});
 }
 
