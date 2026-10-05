@@ -318,10 +318,15 @@ export async function reconcileShopifyOrder(env,order){
     const productProofHash=map.digital?null:attrFromLine(line,"_Recast Proof");
     const productMockupId=map.digital?null:attrFromLine(line,"_Recast Mockup");
     const approvedPreviewToken=map.digital?null:attrFromLine(line,"_Recast Preview Token");
+    const preapproval=map.digital?null:await validatedPreapproval(env,line,map,requestId);
     const layoutComplete=Boolean(map.digital||(productDesign&&productProofHash&&productMockupId&&approvedPreviewToken));
+    const checkoutApproved=Boolean(!map.digital&&layoutComplete&&preapproval);
     if(eligible){
-      const job={id,lineId:line.id,orderId:order.id,orderName:order.name,orderCreatedAt:order.createdAt,financialStatus:order.displayFinancialStatus,requestId,sku:line.sku,quantity:line.quantity,product:map.product,digital:Boolean(map.digital),productDesignRequired:!map.digital,productDesign,productProofHash,productMockupId,approvedPreviewToken,recipient:recipientFromOrder(order),status:map.digital?'digital_fulfillment_pending':layoutComplete?'awaiting_customer_approval':'product_layout_review',createdAt:now(),updatedAt:now(),printfulVariantId:map.printfulVariantId||null,printfulProductId:map.printfulProductId||null};
+      const job={id,lineId:line.id,orderId:order.id,orderName:order.name,orderCreatedAt:order.createdAt,financialStatus:order.displayFinancialStatus,requestId,sku:line.sku,quantity:line.quantity,product:map.product,digital:Boolean(map.digital),productDesignRequired:!map.digital,productDesign,productProofHash,productMockupId,approvedPreviewToken,preapprovedCheckout:checkoutApproved,preapprovalToken:checkoutApproved?preapproval.token:null,recipient:recipientFromOrder(order),status:map.digital?'digital_fulfillment_pending':checkoutApproved?'design_confirmed':layoutComplete?'awaiting_customer_approval':'product_layout_review',createdAt:now(),updatedAt:now(),printfulVariantId:map.printfulVariantId||null,printfulProductId:map.printfulProductId||null};
       const put=await env.ARTWORK.put(jobKey(id),JSON.stringify(job),{onlyIf:new Headers({'If-None-Match':'*'})});if(put)created++;
+      if(checkoutApproved&&put){
+        await putJson(env,`commerce/designs/${id}.json`,{revision:1,selectedRequestId:requestId,approvedAt:preapproval.approvedAt,preapprovedAt:preapproval.approvedAt,snapshotKey:preapproval.snapshotKey,sourceHash:preapproval.sourceHash,printToken:randomHex(24),proof:{images:preapproval.images||[],position:preapproval.position,design:preapproval.design,sku:line.sku,quantity:line.quantity,sourceHash:preapproval.sourceHash}});
+      }
       await putJson(env,`commerce/request-jobs/${requestId}/${id}.json`,{id});
     }else if(await env.ARTWORK.head(jobKey(id))){
       await change(env,jobKey(id),null,j=>({...j,financialStatus:order.displayFinancialStatus,paymentRevokedAt:now(),status:j.sentToProductionAt?j.status:'payment_hold'}));
