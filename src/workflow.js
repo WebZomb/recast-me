@@ -173,7 +173,7 @@ export async function createMockup(request,env){
     const payload={variant_ids:[map.printfulVariantId],format:"jpg",width:1200,files:[{placement,image_url:sourceUrl,position}]};
     stage="printful-create-task";
     const result=await printful(env,`/mockup-generator/create-task/${map.printfulProductId}`,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(payload)});
-    const record={requestId,sku,sourceHash,position,taskKey:result.task_key,status:result.status||"pending",createdAt:now(),updatedAt:now(),mockupAccessToken:randomHex(24),sourceUrl,printfulProductId:map.printfulProductId,printfulVariantId:map.printfulVariantId};
+    const record={requestId,sku,sourceHash,design,position,taskKey:result.task_key,status:result.status||"pending",createdAt:now(),updatedAt:now(),mockupAccessToken:randomHex(24),sourceUrl,printfulProductId:map.printfulProductId,printfulVariantId:map.printfulVariantId};
     await putJson(env,mockupKey(requestId,sku),record);
     return json({ok:true,status:record.status,taskKey:record.taskKey,sku,waitSeconds:10});
   }catch(error){
