@@ -17,6 +17,12 @@ function setup(fetcher){
   return {context,grid,button,error,card,calls,select:async(id='new')=>{context.window.__recastActiveRequest={requestId:id,accessToken:`${id}-token`};await listeners['recast-artwork-selected']()}};
 }
 const catalog=()=>({ok:true,json:async()=>({ok:true,products:[{title:'Custom Recast Mug',status:'ACTIVE',variants:[{sku:'RECAST-MUG-15OZ',variantTitle:'15 oz',price:'29.99'}]}]})});
+function markPreviewReady(ui){
+  const design={product:'Mug',layout:'single',background:'scene-fill',x:'center',scale:92};
+  ui.card.dataset.mockupId='v1-single-scene-fill-center-92';
+  ui.card.dataset.mockupSignature=JSON.stringify({sku:'RECAST-MUG-15OZ',design});
+  return design;
+}
 test('static asset HTML loads checkout without Worker HTML injection',()=>{
   const html=readFileSync(new URL('../public/index.html',import.meta.url),'utf8');
   assert.match(html,/<script src="\/checkout\.js\?v=\d+" type="module"><\/script>/);
@@ -25,12 +31,19 @@ test('selected artwork beats stale storage and Mug purchase carries exact artwor
   const ui=setup(async url=>String(url).includes('checkout-link')?{ok:true,json:async()=>({ok:true,checkoutUrl:'https://shop.test/checkout'})}:catalog());
   await ui.select();assert.equal(new URL(ui.calls[0][0]).searchParams.get('requestId'),'new');
   assert.match(ui.grid.innerHTML,/Shop Mug/);assert.doesNotMatch(ui.grid.innerHTML,/href="#start"/);
-  await ui.button.click();assert.deepEqual(JSON.parse(ui.calls[1][1].body),{requestId:'new',accessToken:'new-token',sku:'RECAST-MUG-15OZ'});
+  const design=markPreviewReady(ui);await ui.button.click();
+  assert.deepEqual(JSON.parse(ui.calls[1][1].body),{requestId:'new',accessToken:'new-token',sku:'RECAST-MUG-15OZ',mockupId:'v1-single-scene-fill-center-92',design});
   assert.equal(ui.context.location.href,'https://shop.test/checkout');
+});
+test('physical checkout stays locked until the exact settings have a fresh preview',async()=>{
+  const ui=setup(async url=>String(url).includes('checkout-link')?{ok:true,json:async()=>({ok:true,checkoutUrl:'https://shop.test/checkout'})}:catalog());
+  await ui.select();await ui.button.click();
+  assert.equal(ui.calls.some(([url])=>String(url).includes('checkout-link')),false);
+  assert.equal(ui.error.hidden,false);assert.match(ui.error.textContent,/Generate and review/);
 });
 test('checkout failure is visible and retryable without losing artwork',async()=>{
   const ui=setup(async url=>String(url).includes('checkout-link')?{ok:false,json:async()=>({error:'Checkout unavailable'})}:catalog());
-  await ui.select();await ui.button.click();assert.equal(ui.error.hidden,false);assert.equal(ui.error.textContent,'Checkout unavailable');assert.equal(ui.button.disabled,false);assert.equal(ui.context.location.href,undefined);
+  await ui.select();markPreviewReady(ui);await ui.button.click();assert.equal(ui.error.hidden,false);assert.equal(ui.error.textContent,'Checkout unavailable');assert.equal(ui.button.disabled,false);assert.equal(ui.context.location.href,undefined);
 });
 test('failed catalog has retry and older response cannot replace newly selected art',async()=>{
   const ui=setup(async()=>({ok:false,json:async()=>({})}));await ui.select();assert.equal(ui.grid.children[1].textContent,'Try loading products again');
