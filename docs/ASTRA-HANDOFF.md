@@ -48,3 +48,5 @@ Do not confuse uploaded code, mocked validation, a dry-run, or a Cloudflare PR P
 For each future session, record baseline/head commits, changed files, reasons, tests actually run and their evidence, failures, costs, deployment state, unresolved items and rollback. Preserve older entries; correct claims with a dated correction. Keep secrets, customer photos, access tokens and private transcripts out of this public repository.
 
 Astra should independently inspect the diff, rerun tests, and decide accept/revise/reject/insufficient evidence for each change. Passing mocked tests does not establish live provider quality, browser behavior, purchase success or total security.
+
+Latest: [RM-025 — mug activation and Shopify trial checkout hold](ASTRA-SESSION-RM-025.md).
