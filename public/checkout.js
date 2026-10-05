@@ -82,6 +82,66 @@ function resetProductPreview(card,{invalidate=true}={}){
   requireFreshPreview(card);
 }
 
+function viewLabel(title,index){
+  const raw=String(title||"");
+  if(/^default$/i.test(raw))return "3D view";
+  if(/handle on left/i.test(raw))return "Handle left";
+  if(/front/i.test(raw))return "Front view";
+  return raw||`View ${index+1}`;
+}
+function designSummary(card){
+  const d=productDesign(card),parts=[];
+  parts.push(d.layout==="two-sided"?"Same image on both sides":d.layout==="wrap"?"Full wrap":"One image");
+  if(d.layout==="two-sided")parts.push(d.spacing==="close"?"Closer spacing":d.spacing==="wide"?"Wider spacing":"Standard spacing");
+  parts.push((d.x||"center").replace(/^./,m=>m.toUpperCase()));
+  parts.push(`${d.scale}% size`);
+  return parts.join(" · ");
+}
+function closeFinalReview(){
+  document.querySelector(".recast-final-review")?.remove();
+  document.documentElement.classList.remove("recast-review-open");
+}
+async function confirmCheckout({req,sku,card,button,modal}){
+  const state=productReviewState.get(card),errorCopy=modal.querySelector(".final-review-error"),confirm=modal.querySelector("[data-final-confirm]");
+  if(!state||card.dataset.mockupSignature!==state.signature||card.dataset.mockupId!==state.mockupId){
+    errorCopy.textContent="Your product settings changed. Close this review and generate a fresh product preview.";errorCopy.hidden=false;return;
+  }
+  confirm.disabled=true;confirm.textContent="Opening secure checkout…";errorCopy.hidden=true;
+  try{
+    const res=await fetch("/api/checkout-link",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({
+      requestId:req.requestId,accessToken:req.accessToken,sku,mockupId:state.mockupId,design:state.design,confirmDesign:true
+    })});
+    const result=await res.json().catch(()=>({}));
+    if(!res.ok||!result.ok||!result.checkoutUrl)throw new Error(result.error||"Checkout link could not be created.");
+    location.href=result.checkoutUrl;
+  }catch(error){
+    confirm.disabled=false;confirm.textContent="Confirm design & checkout";
+    errorCopy.textContent=error.message||"Checkout is temporarily unavailable. Please try again.";errorCopy.hidden=false;
+    button.disabled=false;
+  }
+}
+function openFinalReview({req,sku,card,button}){
+  const state=productReviewState.get(card);
+  if(!state||card.dataset.mockupSignature!==state.signature||card.dataset.mockupId!==state.mockupId){
+    const error=card.querySelector(".checkout-error");if(error){error.textContent="Generate and review the product preview for these exact settings first.";error.hidden=false;}requireFreshPreview(card);return;
+  }
+  closeFinalReview();
+  const modal=document.createElement("div");modal.className="recast-final-review";modal.setAttribute("role","dialog");modal.setAttribute("aria-modal","true");modal.setAttribute("aria-labelledby","recast-review-title");
+  const views=state.views.slice(0,3);
+  modal.innerHTML=`<div class="final-review-backdrop" data-final-close></div><section class="final-review-panel">
+    <div class="final-review-top"><div><span>FINAL CHECK</span><h2 id="recast-review-title">This is the design that will be printed.</h2><p>Check the image, product and placement. After you confirm, checkout is the last customer step.</p></div><button type="button" class="final-review-x" data-final-close aria-label="Close final review">×</button></div>
+    <div class="final-review-angles">${views.map((v,i)=>`<figure><img src="${v.url}" alt="${viewLabel(v.title,i)}"><figcaption>${viewLabel(v.title,i)}</figcaption></figure>`).join("")}</div>
+    <div class="final-review-summary"><div><small>PRODUCT</small><strong>${card.dataset.productTitle?.replace(/^Custom Recast /,"")||"Product"} · ${card.querySelector(".recast-variant option:checked")?.textContent||card.querySelector(".recast-variant")?.value||sku}</strong></div><div><small>ARTWORK</small><strong>${req.requestId}</strong></div><div><small>PRINT SETTINGS</small><strong>${designSummary(card)}</strong></div></div>
+    <div class="final-review-note"><strong>Looks right?</strong> The preview watermark is only for protection. Your clean private artwork is used for the print file.</div>
+    <p class="final-review-error" role="alert" hidden></p>
+    <div class="final-review-actions"><button type="button" class="button ghost" data-final-edit>Edit design</button><button type="button" class="button primary" data-final-confirm>Confirm design & checkout</button></div>
+  </section>`;
+  document.body.append(modal);document.documentElement.classList.add("recast-review-open");
+  modal.querySelectorAll("[data-final-close],[data-final-edit]").forEach(el=>el.addEventListener("click",()=>{closeFinalReview();card.scrollIntoView({behavior:"smooth",block:"center"});}));
+  modal.querySelector("[data-final-confirm]").addEventListener("click",()=>confirmCheckout({req,sku,card,button,modal}));
+  modal.querySelector("[data-final-confirm]").focus();
+}
+
 async function generateRealMockup({req,sku,card,button}){
   if(!sku||!card||!button)return;
   const state=stateFor(card),run=++state.run,design=productDesign(card),signature=JSON.stringify({sku,design});
