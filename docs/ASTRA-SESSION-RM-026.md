@@ -148,3 +148,19 @@ CI policy changed:
 This keeps validation available while preventing a cascade of failure notifications from half-finished connector commits.
 
 The first workflow edit had a duplicate pull_request YAML key and produced one final transitional failure; commit 5b4e7f38 immediately corrected the workflow. Its push was correctly marked skipped, confirming intermediate pushes are now suppressed.
+
+
+## RM-034 — first real paid order captured; live order sync enabled
+2026-10-05 UTC. Owner completed the first real Recast purchase.
+
+Shopify live verification:
+- Order #1001 (gid://shopify/Order/7208701624564) is PAID, not a test order, UNFULFILLED, quantity 1, SKU RECAST-MUG-11OZ.
+- The line item carries Artwork ID RC-MUUCF7QH-E2E541, Space Explorer / pet, Same image on both sides, Center, 110%, Standard spacing.
+- Hidden proof metadata is present and coherent: normalized v3 two-sided design, proof hash, mockup ID v3-two-sided-scene-fill-center-110-standard, and approved-preview token/link.
+- Shopify total is $32.99 with $24.99 merchandise subtotal; no Printful production action was performed by this verification.
+
+Launch readiness change:
+- wrangler ORDER_SYNC_ENABLED changed from false to true so the existing */10-minute scheduled workflow can reconcile paid Shopify orders into Recast automatically. Order sync only creates/updates internal jobs and Printful status; it does not confirm production.
+- public /api/health now exposes only the boolean orderSyncEnabled so deployment readiness can be checked safely without admin credentials.
+
+Production remains gated: after Recast sync, the customer/order design must be approved and the clean print file finalized before a Printful draft can be created; sending the draft to production still requires explicit SEND_TO_PRODUCTION confirmation.
