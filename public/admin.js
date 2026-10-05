@@ -37,7 +37,7 @@ $$('.admin-tabs button').forEach(b=>b.onclick=()=>{$$('.admin-tabs button').forE
 if(token)unlock();
 
 let recoveryCursor=null,recoveryRange=null;
-const recoveryDate=new Date();$('#recovery-date').value=`${recoveryDate.getFullYear()}-${String(recoveryDate.getMonth()+1).padStart(2,'0')}-${String(recoveryDate.getDate()).padStart(2,'0')}`;
+const recoveryDateParam=new URLSearchParams(location.search).get('recoverDate');const recoveryDate=recoveryDateParam?new Date(recoveryDateParam+'T12:00:00'):new Date();$('#recovery-date').value=`${recoveryDate.getFullYear()}-${String(recoveryDate.getMonth()+1).padStart(2,'0')}-${String(recoveryDate.getDate()).padStart(2,'0')}`;
 async function findArtwork(more=false){
   const button=more?$('#more-artwork'):$('#find-artwork');button.disabled=true;
   try{
