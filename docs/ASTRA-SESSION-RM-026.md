@@ -122,3 +122,17 @@ Fix:
 - GitHub Actions run 37348684350 for head b6c1c5510c557c68e25c18590c7c96fa2d27971e completed successfully: full mocked suite passed and Wrangler dry-run bundle passed.
 
 No checkout settings, preview token, payment, order, AI render, or Printful production submission was changed by this routing fix.
+
+
+## RM-032 — always preserve/show all product preview angles
+Owner asked that the saved Approved Product Preview always show the same three product-render angles that are available on the live mug card, rather than only the single preferred/front image.
+
+Implemented:
+- b58b1ced freezes up to the first three completed provider mockup images at checkout under the approved-preview token, stores per-view metadata, and keeps a preferred primary image for backward compatibility.
+- aa701c32 + d5c9abd3 add indexed approved-preview image delivery and self-healing/backfill for older approved-preview tokens by rehydrating the exact saved mockup task/images when available.
+- d0e0119d + e85d3e76 change /proof/{token} to display a responsive three-angle gallery, label common views as 3D view / Handle left / Front view, and provide a save link for each angle.
+- 0e7d7947 + 58007f7b + aec9cef8 expose all saved approved angles in customer order status and display them in the Recast order page “Saved with your order” section.
+- c8d20ec6 adds regression coverage that the approved preview page exposes all three angles and each indexed image endpoint returns protected/watermarked bytes.
+- order assets bumped to v4 at 01fecf03.
+Validation: GitHub Actions run 37349794575 for head 01fecf030ef890347a2843ab1c00c9483b488b1e completed successfully. Full mocked test suite passed and Wrangler dry-run bundle passed.
+No payment, order submission, AI generation, email, or Printful production submission was performed.
