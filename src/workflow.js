@@ -265,13 +265,13 @@ export async function verifyPaidOrder(env,job,{forProduction=false}={}){
   await reconcileOrderCredits(env,order);
   if(forProduction&&order.test)throw fault('test_order','Shopify test orders cannot be sent to paid print production.');
   if(!orderEligible(order,env))throw fault('payment_required','This order is not eligible for printing or bonus renders. Check its payment, refund or cancellation status.');
-  if(job.productDesignRequired&&!job.digital&&(!job.productDesign||!job.productProofHash||!job.productMockupId))throw fault('design_required','This physical order is missing its reviewed product layout and must be held for owner review.');
+  if(job.productDesignRequired&&!job.digital&&(!job.productDesign||!job.productProofHash||!job.productMockupId||!job.approvedPreviewToken))throw fault('design_required','This physical order is missing its reviewed product layout or approved preview snapshot and must be held for owner review.');
   if(order.lineItems?.pageInfo?.hasNextPage)throw fault('order_review','This large order needs an owner review.');
   const line=(order.lineItems?.nodes||[]).find(l=>job.lineId?l.id===job.lineId:(artworkFromLine(l)===job.requestId&&l.sku===job.sku));
   if(!line||line.sku!==job.sku||line.quantity!==job.quantity||artworkFromLine(line)!==job.requestId)throw fault('order_changed','The purchased item changed. An owner must review this order before printing.');
   if(!job.digital&&job.productDesignRequired){
     const liveDesign=purchasedDesign(line,FULFILLMENT[job.sku]);
-    if(!liveDesign||JSON.stringify(liveDesign)!==JSON.stringify(job.productDesign)||attrFromLine(line,"_Recast Proof")!==job.productProofHash)throw fault('design_changed','The purchased product layout changed. An owner must review this order before printing.');
+    if(!liveDesign||JSON.stringify(liveDesign)!==JSON.stringify(job.productDesign)||attrFromLine(line,"_Recast Proof")!==job.productProofHash||attrFromLine(line,"_Recast Preview Token")!==job.approvedPreviewToken)throw fault('design_changed','The purchased product layout or approved preview changed. An owner must review this order before printing.');
   }
   return order;
 }
@@ -291,9 +291,10 @@ export async function reconcileShopifyOrder(env,order){
     const productDesign=map.digital?null:purchasedDesign(line,map);
     const productProofHash=map.digital?null:attrFromLine(line,"_Recast Proof");
     const productMockupId=map.digital?null:attrFromLine(line,"_Recast Mockup");
-    const layoutComplete=Boolean(map.digital||(productDesign&&productProofHash&&productMockupId));
+    const approvedPreviewToken=map.digital?null:attrFromLine(line,"_Recast Preview Token");
+    const layoutComplete=Boolean(map.digital||(productDesign&&productProofHash&&productMockupId&&approvedPreviewToken));
     if(eligible){
-      const job={id,lineId:line.id,orderId:order.id,orderName:order.name,orderCreatedAt:order.createdAt,financialStatus:order.displayFinancialStatus,requestId,sku:line.sku,quantity:line.quantity,product:map.product,digital:Boolean(map.digital),productDesignRequired:!map.digital,productDesign,productProofHash,productMockupId,recipient:recipientFromOrder(order),status:map.digital?'digital_fulfillment_pending':layoutComplete?'awaiting_customer_approval':'product_layout_review',createdAt:now(),updatedAt:now(),printfulVariantId:map.printfulVariantId||null,printfulProductId:map.printfulProductId||null};
+      const job={id,lineId:line.id,orderId:order.id,orderName:order.name,orderCreatedAt:order.createdAt,financialStatus:order.displayFinancialStatus,requestId,sku:line.sku,quantity:line.quantity,product:map.product,digital:Boolean(map.digital),productDesignRequired:!map.digital,productDesign,productProofHash,productMockupId,approvedPreviewToken,recipient:recipientFromOrder(order),status:map.digital?'digital_fulfillment_pending':layoutComplete?'awaiting_customer_approval':'product_layout_review',createdAt:now(),updatedAt:now(),printfulVariantId:map.printfulVariantId||null,printfulProductId:map.printfulProductId||null};
       const put=await env.ARTWORK.put(jobKey(id),JSON.stringify(job),{onlyIf:new Headers({'If-None-Match':'*'})});if(put)created++;
       await putJson(env,`commerce/request-jobs/${requestId}/${id}.json`,{id});
     }else if(await env.ARTWORK.head(jobKey(id))){
