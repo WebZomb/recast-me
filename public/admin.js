@@ -53,8 +53,11 @@ async function findArtwork(more=false){
         const saved=await api('/api/admin/artwork-recovery/'+encodeURIComponent(item.requestId));
         if(!saved.watermarked)throw new Error('Protected preview unavailable');
         const img=document.createElement('img');img.src=saved.image;img.alt='Saved watermarked artwork';img.style.cssText='width:100%;max-width:380px;height:auto;display:block';
-        const link=document.createElement('a');const url=new URL('/',location.origin);url.hash=new URLSearchParams({recast:saved.requestId,key:saved.accessToken});link.href=url.href;link.textContent='Restore this exact artwork';link.className='button';
-        card.append(img,link);view.remove();
+        const params=new URLSearchParams({recast:saved.requestId,key:saved.accessToken});
+        const live=document.createElement('a');const liveUrl=new URL('/',saved.liveBase||location.origin);liveUrl.hash=params;live.href=liveUrl.href;live.textContent='Use this exact artwork on LIVE shop';live.className='button';
+        const here=document.createElement('a');const hereUrl=new URL('/',location.origin);hereUrl.hash=params;here.href=hereUrl.href;here.textContent='Restore in this environment';here.className='button secondary';
+        const note=document.createElement('p');note.className='muted';note.textContent='LIVE shop keeps this exact saved Artwork ID and does not generate a new image.';
+        card.append(img,live,here,note);view.remove();
       }catch(e){view.disabled=false;toast(e.message)}};
       card.append(heading,id,view);$('#recovery-list').append(card);
     }
