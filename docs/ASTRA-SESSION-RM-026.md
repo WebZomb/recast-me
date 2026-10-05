@@ -109,3 +109,16 @@ Implemented:
 - Customer-facing checkout asset bumped to checkout.js?v=230 (ca45d759). No payment, order, email, AI generation, or Printful production submission was made by this session.
 
 Important limitation: the standard Shopify checkout thumbnail is still the static product/variant image. This build adds the exact approved mockup as an order line property link and as the Recast order-status product preview. Replacing Shopify’s per-line checkout thumbnail with a unique customer-generated image would require checkout/app-extension behavior beyond the current cart permalink flow and was not attempted.
+
+
+## RM-031 — approved preview link routing fix
+Owner live-tested Shopify checkout and confirmed the new layout/spacing metadata was present, but tapping the visible Approved Preview URL returned to the Recast main SPA/product catalog instead of the frozen product-preview page.
+
+Root cause: Cloudflare static asset configuration used not_found_handling = single-page-application and run_worker_first only for /api/*. Therefore /proof/{token} never reached the Worker route in src/entry.js; Cloudflare Assets handled the unknown /proof path as SPA fallback and returned index.html. The proof record/image itself was valid.
+
+Fix:
+- b1771204 updates wrangler.jsonc assets.run_worker_first to ["/api/*", "/proof/*"], so approved preview pages are routed through the Worker before SPA fallback.
+- b6c1c551 adds a regression test that requires /proof/* to remain in run_worker_first.
+- GitHub Actions run 37348684350 for head b6c1c5510c557c68e25c18590c7c96fa2d27971e completed successfully: full mocked suite passed and Wrangler dry-run bundle passed.
+
+No checkout settings, preview token, payment, order, AI render, or Printful production submission was changed by this routing fix.
