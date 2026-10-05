@@ -126,6 +126,20 @@ test('print finishing preserves the snapshotted image and never runs an AI detai
  assert.ok(!o.env.IMAGES.operations.some(([name,args])=>name==='transform'&&args.upscale==='generate'));
  const count=o.env.IMAGES.operations.length;await finishApprovedDesign(o.env,o.job);assert.equal(o.env.IMAGES.operations.length,count);
 });
+test('approved mug layout produces a clean composed production file without preview watermarking',async()=>{
+ const COMPOSED=Buffer.concat([Buffer.from([255,216,255]),Buffer.alloc(240,0x43),Buffer.from([255,217])]);
+ const operations=[];const IMAGES={operations,info:async()=>({width:1024,height:1280}),input(){
+  const chain={draws:0,transform(o){operations.push(['transform',o]);return this},draw(_overlay,o){this.draws++;operations.push(['draw',o]);return this},async output(o){operations.push(['output',o]);const bytes=this.draws?COMPOSED:CLEAN;return{response:()=>new Response(bytes,{headers:{'content-type':'image/jpeg'}})}}};return chain;
+ }};
+ const env=await setup({IMAGES}),job={id:'mug-clean-layout',requestId:ID,sku:'RECAST-MUG-11OZ',quantity:1,product:'Mug',digital:false,productDesignRequired:true,productDesign:{version:1,layout:'two-sided',background:'scene-fill',x:'center',scale:115},productProofHash:'proof',productMockupId:'v1-two-sided-scene-fill-center-115'};
+ const sourceHash=await hash(CLEAN.toString('base64')),snapshotKey='commerce/artwork/mug-clean-layout/source.b64';
+ await env.ARTWORK.put(snapshotKey,CLEAN.toString('base64'));
+ await env.ARTWORK.put('commerce/designs/mug-clean-layout.json',JSON.stringify({revision:2,selectedRequestId:ID,approvedAt:'2026-10-05T00:00:00Z',snapshotKey,sourceHash,printToken:'print-clean',proof:{images:[{url:'preview'}],position:{area_width:2700,area_height:1050,width:2700,height:1050,left:0,top:0},design:job.productDesign,sku:job.sku,quantity:1,sourceHash}}));
+ const d=await finishApprovedDesign(env,job);assert.equal(d.finishMethod,'mug-layout-v1-clean');
+ const saved=await env.ARTWORK.get(d.finalKey);assert.deepEqual(Buffer.from(await saved.arrayBuffer()),COMPOSED);assert.notDeepEqual(Buffer.from(await saved.arrayBuffer()),MARKED);
+ assert.ok(operations.filter(([name])=>name==='draw').length>=2);
+});
+
 test('only the dedicated print token plus a fresh eligible payment can receive clean print bytes',async()=>{
  const o=await orderSetup();await o.action('proof');await o.action('approve',{revision:1,confirm:'APPROVE_FOR_PRINT'});const d=await finishApprovedDesign(o.env,o.job);
  const get=t=>new Request(`https://recast.test/api/order-print/${o.job.id}?token=${t}`);
