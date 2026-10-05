@@ -24,7 +24,7 @@ test('checkout requires the exact completed product proof and carries hidden pro
  };
  try{
   const env=await setup({SHOPIFY_SHOP:'test',SHOPIFY_CLIENT_ID:'test',SHOPIFY_CLIENT_SECRET:'test'});
-  const design={version:1,layout:'single',background:'scene-fill',x:'center',scale:92},mockupId='v1-single-scene-fill-center-92';
+  const design={version:2,layout:'single',background:'scene-fill',x:'center',scale:92},mockupId='v2-single-scene-fill-center-92';
   const proofHash=await hash(CLEAN.toString('base64')+'|'+JSON.stringify(design));
   await env.ARTWORK.put(`mockups/${ID}/RECAST-MUG-11OZ/${mockupId}/task.json`,JSON.stringify({requestId:ID,sku:'RECAST-MUG-11OZ',mockupId,status:'completed',sourceHash:proofHash,design,images:[{url:'private'}]}));
   const post=body=>router.fetch(new Request('https://recast.test/api/checkout-link',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)}),env,{});
