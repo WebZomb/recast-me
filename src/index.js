@@ -356,6 +356,15 @@ async function shopifyGraphQL(env, query, variables = {}) {
   return payload.data;
 }
 
+export async function shopifyCatalog(env) {
+  const data = await shopifyGraphQL(env, `query RecastCatalog {
+    products(first: 20, query: "vendor:'Recast Me'") {
+      nodes { id title handle status variants(first: 20) { nodes { id title sku price } } }
+    }
+  }`);
+  return { connected: true, recastProducts: data.products?.nodes || [] };
+}
+
 async function shopifyStatus(env) {
   try {
     const data = await shopifyGraphQL(env, `

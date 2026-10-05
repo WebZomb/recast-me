@@ -1,4 +1,4 @@
-import core from "./index.js";
+import core, { shopifyCatalog } from "./index.js";
 
 export const FULFILLMENT = {
   "RECAST-HOODIE-S":      { printfulProductId: 380, printfulVariantId: 10779, preferredPlacement: "front", orderFileType: "front", quantity: 1, baseCost: 27.84, product: "Hoodie", color: "Black" },
@@ -100,10 +100,7 @@ async function validateRecast(request, env, ctx, requestId, accessToken) {
 }
 
 async function shopifySnapshot(request, env, ctx) {
-  const response = await callCore(request, env, ctx, "/api/shopify-status");
-  const data = await response.json().catch(() => ({}));
-  if (!response.ok || !data.connected) throw new Error(data.error || "Shopify is not connected.");
-  return data;
+  return shopifyCatalog(env);
 }
 
 function flattenShopifyProducts(snapshot) {

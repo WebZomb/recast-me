@@ -29,7 +29,7 @@
 
     <section id="dashboard" class="hidden">
       <div class="dashboard-top">
-        <div><div class="eyebrow">RECAST ME V1.5</div><h1>Operations at a glance.</h1></div>
+        <div><div class="eyebrow">RECAST ME · RM-016</div><h1>Operations at a glance.</h1><p id="deployment-identity" class="muted"></p></div>
         <div class="toolbar"><button id="refresh-all">Refresh</button><button id="lock-admin" class="ghost">Lock</button></div>
       </div>
 
@@ -45,6 +45,7 @@
         <button class="active" data-tab="orders">Orders</button>
         <button data-tab="social">X Requests</button>
         <button data-tab="trends">Trend Review</button>
+        <button data-tab="recovery">Recover artwork</button>
         <button data-tab="errors">Generation Errors</button>
         <button data-tab="system">System</button>
       </nav>
@@ -65,15 +66,23 @@
       </section>
 
 
+      <section class="tab-panel" data-panel="recovery">
+        <h2>Recover saved artwork</h2><p>Owner-only search of private saved records, including artwork outside this browser’s last four. Viewing a preview never generates new AI artwork. An uncached protected preview may use image processing.</p>
+        <label>Created on <input type="date" id="recovery-date"></label><button type="button" id="find-artwork">Find saved artwork</button>
+        <p id="recovery-status" role="status"></p><div id="recovery-list" class="card-list"></div><button type="button" id="more-artwork" hidden>Search next records</button>
+      </section>
       <section class="tab-panel" data-panel="errors">
         <div class="panel-heading"><div><div class="eyebrow">AI DIAGNOSTICS</div><h2>Generation errors</h2><p>Private diagnostics for failed previews. Customer photos are not stored in this log; it only records model, stage, provider code, and failure reason.</p></div></div>
+        <label>Support reference <input id="diagnostic-reference" placeholder="GEN-…"></label><button type="button" id="find-diagnostic">Find this error</button><pre id="diagnostic-result" style="white-space:pre-wrap;overflow-wrap:anywhere"></pre>
         <div id="generation-errors-list" class="card-list"></div>
       </section>
 
       <section class="tab-panel" data-panel="system">
+        <p><a href="/print-finish.html">Compare print finishes →</a></p>
         <p><a href="/model-lab.html">Compare rendering engines →</a></p>
         <div id="render-readiness" class="glass launch-box"></div>
         <div class="panel-heading"><div><div class="eyebrow">CONNECTIONS</div><h2>Launch readiness</h2><p>Green means the backend can see that connection. Automation flags intentionally stay off until launch testing is complete.</p></div></div>
+        <button id="check-commerce" type="button">Check product connection</button><pre id="commerce-result" style="white-space:pre-wrap"></pre>
         <div id="system-list" class="system-list"></div>
         <div class="glass launch-box">
           <h3>Protected launch sequence</h3>
@@ -91,6 +100,6 @@
       <div id="toast" class="toast hidden"></div>
     </section>
   </main>
-  <script src="/admin.js" type="module"></script>
+  <script src="/admin.js?v=rm022" type="module"></script>
 </body>
 </html>

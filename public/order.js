@@ -1,5 +1,64 @@
-const params=new URLSearchParams(location.search);const requestId=params.get('requestId')||'';const token=params.get('token')||'';const card=document.querySelector('#order-card');
-function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
-async function load(){if(!requestId||!token){card.innerHTML='<p>Missing private order link information.</p>';return}const url=new URL('/api/order-status',location.origin);url.searchParams.set('requestId',requestId);url.searchParams.set('token',token);try{const r=await fetch(url);const d=await r.json().catch(()=>({}));if(!r.ok||!d.ok)throw new Error(d.error||'Could not check this Recast.');document.querySelector('#order-title').textContent=d.request.paid?'Your Recast is connected to an order.':'Your Recast is saved privately.';document.querySelector('#order-subtitle').textContent=`Artwork ID: ${requestId}`;const jobs=d.jobs||[];card.innerHTML=`<div class="order-state"><strong>${d.request.paid?'Order detected':'No paid order detected yet'}</strong><span>${d.request.orderName?esc(d.request.orderName):'Artwork saved'}</span></div><div class="order-items">${jobs.length?jobs.map(j=>`<article class="order-item"><b>${esc(j.product)}</b><p>Status: ${esc(String(j.status).replaceAll('_',' '))}${j.printfulStatus?` · Printful: ${esc(j.printfulStatus)}`:''}</p></article>`).join(''):'<article class="order-item"><b>Your artwork is ready for shopping.</b><p>After checkout is enabled and a paid order is detected, fulfillment progress will appear here.</p></article>'}</div>${d.request.digitalEntitlement?`<div class="download-box"><h3>Your digital file is unlocked.</h3><p>This link is private to this Artwork ID.</p><a class="button primary" href="/api/digital-download/${encodeURIComponent(requestId)}?token=${encodeURIComponent(token)}">Download clean Recast</a></div>`:''}<p class="order-note">Keep this private link. It contains access to the status of this specific Recast.</p>${!d.request.paid?'<button id="delete-recast" class="delete-recast" type="button">Delete this unpaid Recast</button>':''}`;const del=document.querySelector('#delete-recast');if(del)del.onclick=deleteRecast}catch(e){card.innerHTML=`<p>${esc(e.message)}</p>`}}
-async function deleteRecast(){if(!confirm('Delete this unpaid Recast and its private uploads? This cannot be undone.'))return;try{const u=new URL(`/api/recast/${encodeURIComponent(requestId)}`,location.origin);u.searchParams.set('token',token);const r=await fetch(u,{method:'DELETE'});const d=await r.json().catch(()=>({}));if(!r.ok||!d.ok)throw new Error(d.error||'Delete failed.');localStorage.removeItem('recast_last_request');card.innerHTML='<div class="order-state"><strong>Recast deleted.</strong><span>Private files removed</span></div>'}catch(e){alert(e.message)}}
+const params=new URLSearchParams(location.search),requestId=params.get('requestId')||'',token=params.get('token')||'';
+const card=document.querySelector('#order-card');
+const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let jobs=[];
+function versions(){try{return JSON.parse(localStorage.getItem('recast_recent_versions_v12')||'[]').filter(v=>v?.requestId&&v?.accessToken).slice(0,4)}catch{return[]}}
+async function api(url,body){const r=await fetch(url,body?{method:'POST',headers:{'content-type':'application/json','x-recast-request':'1'},body:JSON.stringify(body)}:undefined);const d=await r.json().catch(()=>({}));if(!r.ok||!d.ok)throw Error(d.userMessage||d.error||'We could not complete that update.');return d}
+function message(text){document.querySelector('#order-message').textContent=text}
+function designCard(j){
+ if(j.digital)return '';
+ const d=j.design,locked=Boolean(d?.approvedAt||j.printfulStatus),saved=versions();
+ const image=`/api/order-design/${encodeURIComponent(j.id)}/preview?token=${encodeURIComponent(token)}`;
+ return `<div class="design-panel"><h3>${locked?'Your approved design':'Make it yours before it prints'}</h3>
+ <img class="design-art" src="${esc(image)}" alt="Selected artwork with Recast Me preview watermark">
+ <p>Artwork: ${esc(d?.selectedRequestId||requestId)}</p>
+ ${locked?'<p><strong>Design locked.</strong> Your artwork is approved for printing. Changes are closed; our final fulfillment check comes next.</p>':`
+ <p>Your order waits for you. Try your bonus previews, choose your favorite, then review it on your product. Nothing is sent to print because a timer runs out.</p>
+ <label>Choose from your recent versions<select data-select="${esc(j.id)}"><option value="">Choose a saved version…</option>${saved.map((v,i)=>`<option value="${i}">${esc(v.styleName||v.style||'Recast')} · ${esc(v.requestId)}</option>`).join('')}</select></label>
+ <button class="button ghost" data-action="swap" data-job="${esc(j.id)}">Use selected artwork</button>
+ <button class="button ghost" data-action="proof" data-job="${esc(j.id)}">${d?.proof?'Refresh product preview':'Prepare / check product preview'}</button>
+ <div class="product-proofs">${(d?.proof?.images||[]).map(i=>`<figure><img src="${esc(i.url)}" alt="${esc(i.title||'Product preview')}"><figcaption>${esc(i.title||'Product preview')}</figcaption></figure>`).join('')}</div>
+ ${d?.proof?`<p>Review the crop and placement above. The watermark is removed for printing. We enlarge this same image without AI inventing new details. Colors and scale can vary on the physical product.</p>
+ <label class="approval-check"><input type="checkbox" data-consent="${esc(j.id)}"> I checked this design and product preview. I understand I cannot swap it after approval.</label>
+ <button class="button primary" data-action="approve" data-job="${esc(j.id)}" disabled>Approve this design for printing</button>`:'<p>Approval becomes available after your product preview is ready.</p>'}`}</div>`;
+}
+async function load(){
+ if(!requestId||!token){card.innerHTML='<p>Open the private order link saved with your artwork.</p>';return}
+ try{
+  const d=await api(`/api/order-status?requestId=${encodeURIComponent(requestId)}&token=${encodeURIComponent(token)}`);jobs=d.jobs||[];
+  document.querySelector('#order-title').textContent=d.request.paid?'Your next favorite thing.':'Your Recast is saved.';
+  document.querySelector('#order-subtitle').textContent=`Artwork ID: ${requestId}`;
+  card.innerHTML=`<div id="order-message" role="status" aria-live="polite"></div><div class="order-state"><strong>${d.request.paid?'Order detected':'Waiting for a paid order'}</strong><span>${esc(d.request.orderName||'Artwork saved')}</span></div>
+  ${d.creditsEnabled&&jobs.length?'<div class="download-box"><h3>Keep creating</h3><p id="credit-status">Each eligible paid order adds five previews, once per order. Failed previews restore your credit.</p><button id="check-bonus" class="button ghost">Check my purchase credits</button><a id="create-more" class="button primary" href="/#start">Try another idea →</a></div>':''}
+  <div class="order-items">${jobs.length?jobs.map(j=>`<article class="order-item"><h2>${esc(j.product)}</h2><p>Status: ${esc(j.design?.approvedAt&&j.status==='awaiting_customer_approval'?'Design approved — waiting for the final print check':String(j.status).replaceAll('_',' '))}${j.printfulStatus?` · ${esc(j.printfulStatus)}`:''}</p>${designCard(j)}</article>`).join(''):'<p>After payment is verified, your order and any design approval steps will appear here.</p>'}</div>
+  ${d.request.digitalEntitlement?`<div class="download-box"><h3>Your digital artwork</h3><a class="button primary" href="/api/digital-download/${encodeURIComponent(requestId)}?token=${encodeURIComponent(token)}">Download purchased artwork</a></div>`:''}
+  <p class="order-note">Keep this private order link. It gives access to this artwork and its orders.</p>${!d.request.paid?'<button id="delete-recast" class="delete-recast">Delete this unpaid Recast</button>':''}`;
+  card.querySelectorAll('[data-consent]').forEach(el=>el.onchange=()=>{card.querySelector(`[data-action="approve"][data-job="${CSS.escape(el.dataset.consent)}"]`).disabled=!el.checked});
+  card.querySelectorAll('[data-action]').forEach(el=>el.onclick=()=>act(el));
+  const more=document.querySelector('#create-more');if(more)more.onclick=()=>{try{sessionStorage.setItem('recast_order_return',location.pathname+location.search)}catch{}};
+  const bonus=document.querySelector('#check-bonus');if(bonus)bonus.onclick=async()=>{
+   bonus.disabled=true;
+   try{await api('/api/render-credits',{});for(const order of new Map(jobs.map(j=>[j.orderName,j])).values())await api(`/api/order-bonus/${encodeURIComponent(order.id)}`,{token});const b=await api('/api/render-credits');document.querySelector('#credit-status').textContent=`${b.remaining} previews remaining (${b.bonus} purchase bonus).`;message('Your preview balance is up to date.')}catch(e){message(e.message)}finally{bonus.disabled=false}
+  };
+  const del=document.querySelector('#delete-recast');if(del)del.onclick=deleteRecast;
+ }catch(e){card.innerHTML=`<p>${esc(e.message)}</p>`}
+}
+async function act(button){
+ const j=jobs.find(j=>j.id===button.dataset.job),action=button.dataset.action;
+ const body={token,revision:j.design.revision};
+ if(action==='swap'){
+  const value=card.querySelector(`[data-select="${CSS.escape(j.id)}"]`).value;
+  const selected=value!==''?versions()[Number(value)]:null;
+  if(!selected){message('Choose a saved version first.');return}
+  body.selectedRequestId=selected.requestId;body.selectedAccessToken=selected.accessToken;
+ }
+ if(action==='approve')body.confirm='APPROVE_FOR_PRINT';
+ button.disabled=true;message(action==='proof'?'Preparing your product preview…':'Saving your choice…');
+ try{const d=await api(`/api/order-design/${encodeURIComponent(j.id)}/${action}`,body);await load();message(d.status==='pending'?'Your product preview is being prepared. Check it again shortly.':action==='approve'?'Approved. Your design is locked for printing.':action==='swap'?'Artwork updated. Review a new product preview before approving.':'Your product preview is ready to review.')}
+ catch(e){message(e.message);button.disabled=false}
+}
+async function deleteRecast(){
+ if(!confirm('Delete this unpaid Recast and its private uploads? This cannot be undone.'))return;
+ try{const r=await fetch(`/api/recast/${encodeURIComponent(requestId)}?token=${encodeURIComponent(token)}`,{method:'DELETE'});const d=await r.json();if(!r.ok)throw Error(d.error||'Delete failed.');localStorage.removeItem('recast_last_request');card.innerHTML='<p>Recast deleted.</p>'}catch(e){message(e.message)}
+}
 load();

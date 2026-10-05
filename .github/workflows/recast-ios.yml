@@ -1,0 +1,25 @@
+name: Recast iOS compile check
+on:
+  workflow_dispatch:
+  pull_request:
+    paths: ['ios/**', '.github/workflows/recast-ios.yml']
+permissions:
+  contents: read
+jobs:
+  simulator-build:
+    runs-on: macos-15
+    timeout-minutes: 20
+    steps:
+      - name: Fetch exact source revision
+        run: |
+          git init .
+          git remote add origin "https://github.com/${GITHUB_REPOSITORY}.git"
+          git fetch --depth=1 origin "$GITHUB_SHA"
+          git checkout --detach FETCH_HEAD
+      - name: Install XcodeGen
+        run: brew install xcodegen
+      - name: Generate project and compile for simulator (no signing or upload)
+        run: |
+          cd ios
+          xcodegen generate
+          xcodebuild -project RecastMe.xcodeproj -scheme RecastMe -configuration Debug -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' -derivedDataPath /tmp/recast-ios-build CODE_SIGNING_ALLOWED=NO build

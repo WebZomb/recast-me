@@ -1,0 +1,35 @@
+name: Recast security validation
+on:
+  push:
+    branches: [recast/secure-previews-2026-09-29]
+  pull_request:
+    paths:
+      - 'src/**'
+      - 'tests/**'
+      - 'package*.json'
+      - 'wrangler.jsonc'
+      - '.github/workflows/recast-security.yml'
+permissions:
+  contents: read
+jobs:
+  mocked-tests-and-bundle:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    env:
+      CI: 'true'
+      WRANGLER_SEND_METRICS: 'false'
+    steps:
+      - name: Fetch this exact public revision without credentials
+        run: |
+          git init .
+          git remote add origin "https://github.com/${GITHUB_REPOSITORY}.git"
+          git fetch --depth=1 origin "${GITHUB_SHA}"
+          git checkout --detach FETCH_HEAD
+      - name: Show Node and commit
+        run: node --version && git rev-parse HEAD
+      - name: Install locked build dependencies without install scripts
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Run all mocked tests (no live providers or commerce)
+        run: npm test
+      - name: Bundle only, never deploy
+        run: npx --no-install wrangler deploy --dry-run --outdir /tmp/recast-security-bundle

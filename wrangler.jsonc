@@ -10,10 +10,11 @@
     "PRINTFUL_STORE_ID": "18798877",
     "PUBLIC_APP_URL": "https://recast-me.sergz24.workers.dev",
     "IMAGE_MODEL_HIGH_QUALITY": "@cf/black-forest-labs/flux-2-dev",
-    "IMAGE_MODEL_QUICK": "@cf/black-forest-labs/flux-2-klein-9b",
+    "IMAGE_MODEL_QUICK": "@cf/black-forest-labs/flux-2-dev",
     "IMAGE_HIGH_QUALITY_STEPS": "18",
     "IMAGE_HIGH_QUALITY_GUIDANCE": "5",
-    "IMAGE_QUICK_GUIDANCE": "4",
+    "IMAGE_QUICK_GUIDANCE": "5",
+    "IMAGE_QUICK_STEPS": "12",
     "ORDER_SYNC_ENABLED": "false",
     "X_BOT_ENABLED": "false",
     "X_USERNAME": "recastmeai",
@@ -21,10 +22,35 @@
     "X_RENDER_BATCH_SIZE": "2",
     "TREND_SCANNER_ENABLED": "false",
     "RETENTION_CLEANUP_ENABLED": "false",
-    "UNPAID_RETENTION_DAYS": "30"
+    "UNPAID_RETENTION_DAYS": "30",
+    "RENDER_CAPACITY_COOLDOWN_SECONDS": "90",
+    "RENDER_QUOTA_COOLDOWN_SECONDS": "300",
+    "RENDER_TIMEOUT_COOLDOWN_SECONDS": "300",
+    "RENDER_UNAVAILABLE_COOLDOWN_SECONDS": "60"
   },
   "ai": {
     "binding": "AI"
+  },
+  "images": { "binding": "IMAGES" },
+  "previews": {
+    "vars": {
+      "PRINTFUL_STORE_ID": "18798877",
+      "SHOPIFY_CLIENT_ID": "34095311ef89068f873eb42bfba8e597",
+      "SHOPIFY_SHOP": "b2wnfu-7g",
+      "PUBLIC_APP_URL": "https://recast-secure-previews-2026-09-29-recast-me.sergz24.workers.dev"
+    },
+    "ai": {
+      "binding": "AI"
+    },
+    "images": {
+      "binding": "IMAGES"
+    },
+    "r2_buckets": [
+      {
+        "binding": "ARTWORK",
+        "bucket_name": "recast-me-artwork"
+      }
+    ]
   },
   "r2_buckets": [
     {
@@ -42,7 +68,5 @@
     "run_worker_first": ["/api/*"]
   }
 
-  // Add the Cloudflare Images binding only when you are ready to enable
-  // billable high-resolution print finishing:
-  // "images": { "binding": "IMAGES" }
+  // Preserve the existing production Images binding during controlled testing.
 }

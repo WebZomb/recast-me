@@ -1,8 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
 import { highQualityTransform } from '../src/highquality.js';
 import core from '../src/index.js';
 import router from '../src/router.js';
+import { imageMock } from './security-helpers.mjs';
 
 // A stub carrying the JPEG signature; provider output is only passed through by these tests.
 const image=Buffer.concat([Buffer.from([0xff,0xd8,0xff]),Buffer.alloc(240,0x54),Buffer.from([0xff,0xd9])]).toString('base64');
@@ -21,7 +23,7 @@ class ArtworkBucket {
     };
   }
 }
-function envFor(run){return {ARTWORK:new ArtworkBucket(),AI:{run}}}
+function envFor(run){return {ARTWORK:new ArtworkBucket(),AI:{run},IMAGES:imageMock()}}
 function submission({style='custom',world='A floating garden with glowing waterfalls',notes='Make my pet the captain',quality='high',photo=original,branch=null}={}){
   const form=new FormData();
   form.set('style',style);form.set('subject','pet');form.set('customWorld',world);
@@ -78,13 +80,13 @@ test('refining a saved version includes original pet image and the previous rend
   assert.equal(calls.length,2);
 });
 
-test('quick mode reports provider capacity instead of downgrading to a weaker model',async()=>{
+test('standard mode reports provider capacity without changing away from FLUX.2 dev',async()=>{
   const models=[];
   const env=envFor(async model=>{models.push(model);throw new Error('3040 out of capacity')});
   const response=await highQualityTransform(submission({quality:'quick'}),env);
   assert.equal(response.status,503);
   assert.equal((await response.json()).reason,'capacity');
-  assert.deepEqual(models,['@cf/black-forest-labs/flux-2-klein-9b']);
+  assert.deepEqual(models,['@cf/black-forest-labs/flux-2-dev']);
 });
 
 test('generated image is not reported saved when R2 fails',async()=>{
@@ -113,11 +115,14 @@ test('preset pet renders restyle the pet and ignore stale custom world text',asy
   });
   const result=await (await highQualityTransform(submission({style:'game',world:'A floating garden with glowing waterfalls',notes:''}),env)).json();
   assert.match(prompt,/heroic pet harness/i);
+  assert.match(prompt,/PET IDENTITY IS NON-NEGOTIABLE/i);
+  assert.match(prompt,/exact head and muzzle shape/i);
+  assert.match(prompt,/Do not widen or shorten the muzzle/i);
   assert.match(prompt,/never appear as an unchanged photo cutout/i);
   assert.doesNotMatch(prompt,/floating garden/i);
   const saved=JSON.parse(String(env.ARTWORK.objects.get(`requests/${result.requestId}/request.json`)));
   assert.equal(saved.customWorld,'');
-  assert.equal(saved.promptVersion,'v1.4');
+  assert.equal(saved.promptVersion,'identity-references-v3');
 });
 
 test('provider-wide free allowance is reported as shared capacity, not a visitor limit',async()=>{
@@ -129,12 +134,28 @@ test('provider-wide free allowance is reported as shared capacity, not a visitor
   assert.match(result.userMessage,/site-wide limit, not your personal render count/i);
 });
 
-test('high-quality busy rejection retries once on the same model and preserves quality',async()=>{
+test('high-quality busy rejection does not automatically spend a second provider submission',async()=>{
   const models=[];
   const env=envFor(async model=>{models.push(model);if(models.length===1)throw new Error('3040 out of capacity');return {image};});
   const response=await highQualityTransform(submission(),env);
-  assert.equal(response.status,200);
-  assert.deepEqual(models,['@cf/black-forest-labs/flux-2-dev','@cf/black-forest-labs/flux-2-dev']);
+  assert.equal(response.status,503);
+  const result=await response.json();
+  assert.equal(result.reason,'capacity');
+  assert.deepEqual(models,['@cf/black-forest-labs/flux-2-dev']);
+});
+
+test('provider timeout is distinct from capacity and does not auto-retry',async()=>{
+  let calls=0;const env=envFor(async()=>{calls++;throw new Error('upstream request timed out')});
+  const response=await highQualityTransform(submission(),env);assert.equal(response.status,504);
+  const result=await response.json();assert.equal(result.reason,'timeout');assert.equal(calls,1);
+  assert.match(result.userMessage,/timed out/i);
+});
+
+test('generation source has no local Promise.race attempt timer',()=>{
+  const source=readFileSync(new URL('../src/highquality.js',import.meta.url),'utf8');
+  assert.doesNotMatch(source,/function\s+withAttemptTimeout/);
+  assert.doesNotMatch(source,/new Error\(["']attempt timeout/);
+  assert.doesNotMatch(source,/return\s+await\s+Promise\.race/);
 });
 
 test('a recent quota failure blocks repeat paid calls briefly, then permits a fresh attempt',async()=>{
@@ -143,7 +164,7 @@ test('a recent quota failure blocks repeat paid calls briefly, then permits a fr
   await highQualityTransform(submission(),env);
   assert.equal((await highQualityTransform(submission(),env)).status,429);
   assert.equal(calls,1);
-  env.ARTWORK.objects.set('system/render-health.json',JSON.stringify({status:'failed',reason:'quota',retryAt:'2000-01-01'}));
+  env.ARTWORK.objects.set('system/render-health-high.json',JSON.stringify({mode:'high',status:'failed',reason:'quota',retryAt:'2000-01-01'}));
   env.AI.run=async()=>{calls++;return {image};};
   assert.equal((await highQualityTransform(submission(),env)).status,200);assert.equal(calls,2);
 });
@@ -158,4 +179,34 @@ test('owner comparison runs allowlisted klein4 without changing public engine co
  const req=new Request('https://recast.test/api/admin/model-test?model=klein4',{method:'POST',headers:{Authorization:'Bearer private-test'},body:await submission().formData()});
  const res=await router.fetch(req,env,{});assert.equal(res.status,200);assert.deepEqual(calls,['@cf/black-forest-labs/flux-2-klein-4b']);assert.equal(env.IMAGE_MODEL_QUICK,'@cf/black-forest-labs/flux-2-klein-9b');
  const bad=await router.fetch(new Request('https://recast.test/api/admin/model-test?model=unapproved',{method:'POST',headers:{Authorization:'Bearer private-test'},body:new FormData()}),env,{});assert.equal(bad.status,400);assert.equal(calls.length,1);
+});
+
+test('Workers AI calls request immediate busy rejection instead of entering a capacity queue',async()=>{
+  const options=[];const env=envFor(async(_model,_input,runOptions)=>{options.push(runOptions);return {image}});
+  const response=await highQualityTransform(submission(),env);assert.equal(response.status,200);
+  assert.deepEqual(options,[{rejectIfBusy:true}]);
+});
+
+// Inspect actual multipart prompts on both initial and moderation-retry calls.
+test('Royal multi-reference retries retain animal anatomy and do not count photos as subjects',async()=>{
+  const prompts=[];
+  const env=envFor(async(model,{multipart})=>{
+    assert.equal(model,'@cf/black-forest-labs/flux-2-dev');
+    const form=await new Response(multipart.body,{headers:{'content-type':multipart.contentType}}).formData();
+    prompts.push(String(form.get('prompt')));
+    if(prompts.length===1)throw new Error('3030 moderation');
+    return {image};
+  });
+  const form=await submission({style:'royal',notes:''}).formData();
+  form.set('subject','person and pet');form.set('image_1',original);form.set('referenceLabels','["person1","pet"]');
+  const response=await highQualityTransform(new Request('https://recast.test/api/transform-v2',{method:'POST',body:form}),env);
+  assert.equal(response.status,200);assert.equal(prompts.length,2);
+  for(const prompt of prompts){
+    assert.match(prompt,/Input image 0 \(photo 1\) shows person 1/);
+    assert.match(prompt,/Input image 1 \(photo 2\) shows the same pet/);
+    assert.match(prompt,/Never give a pet human hands/);
+    assert.match(prompt,/photo.*same individual/);
+    assert.match(prompt,/natural age, hair and beard, body build/);
+    assert.doesNotMatch(prompt,/Preserve all 2 reference subjects/);
+  }
 });

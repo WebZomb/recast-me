@@ -1,0 +1,19 @@
+# RM-018 — guided creation and explicit reference labels
+
+2026-10-04. Remote baseline efccc3628e9af2ccfcdebc290006995a2d9706f3 (RM-017); local baseline 2a32357. Result: commit introducing this record, then any verification follow-up. Preview branch only, main unmerged. Prior remote RM-016 evidence appendix preserved through base-tree uploads.
+
+Owner authorized completing Who → Photos → Adventure. Reordered creator into three visible steps with progress/back navigation preserving fields. Subject buttons and family count guide upload copy; multi-subject photo labels require an explicit choice, including everyone together and repeated angles of the same individual. Four-photo cap remains. Adventure picture buttons, See more, Surprise me, preset settings without typing, optional personal notes. Custom environment remains available. Existing HQ-first conditional Standard behavior, purchase/security controls, last-four versions and models retained.
+
+Reference labels are enum-validated server-side and compiled into photo/index-specific identity and proportion guidance on both main and safer prompts. Prompt version identity-references-v3. Family count 2–8 with group photos supported. No identity recognition or guaranteed likeness claimed. Existing 500px upload limit inspected, not raised because that changes metered reference cost; upload copy asks for close photos/cropping. Matching new example artwork by subject is not implemented; existing illustrations retained. No paid AI/Images, order or print calls initiated.
+
+Files: public/index.html, app.js, creation-wizard.js, site-v10.css; src/highquality.js, reference-labels.js; generator/reference-label tests; handoff. 134 mocked tests pass, JS syntax and diff checks pass. These are not live likeness tests. Local Chromium install failed downloading its archive; use cloud-browser preview for observed navigation evidence, append results separately. Mobile Safari and full photo/submit journey remain unverified until explicitly checked. Budget/credits activation and commerce/App Store holds unchanged.
+
+Rollback: revert RM-018 source only; no ledger/storage migration. Keep RM-017 guards and preview security. Existing saved results are not regenerated. Do not merge production based only on tests.
+
+## Observed preview checks
+
+Application 381eba2f7a636e1e1a5022fccf5006f367dfba5f deployed and opened in cloud Chrome. Verified Who buttons, person+pet guidance, empty-upload block, public demo upload, explicit Together label, adventure cards, HQ default with no picker, and retained photo/label/adventure after Back. No Create/consent action taken. Screenshot exposed a narrow photo label; follow-up widens photo tiles and scrolls to progress rather than the section introduction. Existing 500px input is unchanged; actual identity quality and iPhone layout still need owner acceptance. Local test also now checks reference mapping in actual main/moderation-retry multipart prompts; 134 mocked tests still pass.
+
+Follow-up also retains prior selections when picking another photo in a separate picker visit; duplicate file selections are ignored and the total remains capped at four. Original File objects keep their subject labels when another photo is added.
+
+Final application upload: 5a62f827bb0d6e0af4c0dd21363ac24393cb006b. Cloudflare Preview deployment 4b1a40a9-bc0e-433c-b6e2-2aa371fec67f succeeded at 2026-10-04T20:19:42.731Z. Security CI 37231644398 succeeded. iOS compile CI 37231644384 was still in progress; no iOS release claim. Final local 134-test rerun passed. Cloud-browser family-count visibility also checked. Source and demo photo selections were browser-local until rendering; no generation submitted. Local application commit 8ff6120 differs from remote commit history/metadata; use remote SHA as deployment authority. Follow-up UI picker retention was source-reviewed, not rerun through the slow cloud file chooser. Phone Safari still requires acceptance.
