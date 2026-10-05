@@ -144,7 +144,7 @@ export async function createMockup(request,env){
     const requestId=String(body.requestId||"");const accessToken=String(body.accessToken||"");const sku=String(body.sku||"");
     stage="artwork-access";
     let meta=await requireRequest(env,requestId,accessToken);
-    const map=FULFILLMENT[sku];
+    const map=FULFILLMENT[sku]; // product layout is normalized after SKU validation
     if(!map)return json({ok:false,error:"Unknown Recast product."},400);
     if(map.digital)return json({ok:false,error:"Digital products do not need a physical mockup."},400);
     if(!map.printfulProductId||!map.printfulVariantId)return json({ok:false,error:"This product is not mapped to Printful yet."},500);
