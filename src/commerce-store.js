@@ -38,3 +38,45 @@ export function productPrintfile(catalog,variantId,placement){
   if(!file||![file.width,file.height].every(n=>Number.isFinite(n)&&n>0))throw fault('print_area_missing','Printful print dimensions are unavailable for this variant.',502);
   return file;
 }
+
+function fitDimensions(sw,sh,mw,mh){
+  const factor=Math.min(mw/sw,mh/sh);
+  return {width:Math.max(1,Math.round(sw*factor)),height:Math.max(1,Math.round(sh*factor))};
+}
+async function jpegBytes(chain){
+  const out=await chain.output({format:'image/jpeg',quality:93});
+  const response=out.response();
+  if(!response.ok)throw fault('product_compose_failed','Product artwork composition failed.',502);
+  const bytes=new Uint8Array(await response.arrayBuffer());
+  if(bytes.length<100||bytes[0]!==255||bytes[1]!==216||bytes[2]!==255)throw fault('product_compose_invalid','Product artwork composition returned invalid image data.',502);
+  return bytes;
+}
+export async function composeMugLayout(env,sourceBytes,sourceSize,area,rawDesign={},targetWidth=1600){
+  if(!env.IMAGES?.input)throw fault('images_required','Image processing is not configured.',503);
+  const design=normalizeProductDesign({product:'Mug'},rawDesign);
+  const outWidth=Math.max(800,Math.round(targetWidth));
+  const outHeight=Math.max(240,Math.round(outWidth*area.height/area.width));
+  const stream=()=>new Blob([sourceBytes],{type:'image/jpeg'}).stream();
+  if(design.layout==='wrap'){
+    const chain=env.IMAGES.input(stream()).transform({width:outWidth,height:outHeight,fit:'cover'});
+    return {bytes:await jpegBytes(chain),design,outputSize:{width:outWidth,height:outHeight}};
+  }
+  const background=env.IMAGES.input(stream()).transform({width:outWidth,height:outHeight,fit:'cover',blur:22});
+  const add=(chain,center,maxWidth,maxHeight)=>{
+    const factor=design.scale/100;
+    const d=fitDimensions(sourceSize.width,sourceSize.height,outWidth*maxWidth*factor,outHeight*maxHeight*factor);
+    const left=Math.round(Math.max(0,Math.min(outWidth-d.width,center*outWidth-d.width/2)));
+    const top=Math.round((outHeight-d.height)/2);
+    const overlay=env.IMAGES.input(stream()).transform({width:d.width,height:d.height,fit:'cover'});
+    return chain.draw(overlay,{left,top});
+  };
+  let chain=background;
+  if(design.layout==='two-sided'){
+    chain=add(chain,0.24,0.29,0.90);
+    chain=add(chain,0.76,0.29,0.90);
+  }else{
+    const center=design.x==='left'?0.25:design.x==='right'?0.75:0.5;
+    chain=add(chain,center,0.43,0.92);
+  }
+  return {bytes:await jpegBytes(chain),design,outputSize:{width:outWidth,height:outHeight}};
+}
