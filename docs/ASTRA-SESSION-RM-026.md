@@ -136,3 +136,15 @@ Implemented:
 - order assets bumped to v4 at 01fecf03.
 Validation: GitHub Actions run 37349794575 for head 01fecf030ef890347a2843ab1c00c9483b488b1e completed successfully. Full mocked test suite passed and Wrangler dry-run bundle passed.
 No payment, order submission, AI generation, email, or Printful production submission was performed.
+
+
+## RM-033 — reduce GitHub Actions email noise
+Owner reported the rapid sequence of GitHub Actions failure emails was too much and not useful during active iterative edits. Cause: every connector file update creates a separate commit on main, and the CI workflow was running the full suite on every intermediate commit; temporarily broken in-between states could finish and trigger failure emails before the batch was complete.
+
+CI policy changed:
+- normal push commits still create a GitHub workflow event, but the validation job is skipped unless the commit message starts with `validate:`.
+- pull-request and manual workflow_dispatch runs still execute the full validation job.
+- after a build batch, use one final `validate:` commit to run the complete mocked test suite + Wrangler dry-run once.
+This keeps validation available while preventing a cascade of failure notifications from half-finished connector commits.
+
+The first workflow edit had a duplicate pull_request YAML key and produced one final transitional failure; commit 5b4e7f38 immediately corrected the workflow. Its push was correctly marked skipped, confirming intermediate pushes are now suppressed.
