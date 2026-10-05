@@ -36,3 +36,24 @@ Implemented:
 - `e0d9cf5523078cf544e8465fe89b04db0b7cfcd5`: bump checkout module cache key to 225 so mobile Safari receives the new retry/diagnostic logic.
 
 Source review after writes confirmed the intended blocks are present. Full Node suite/Worker bundle were not independently executed in this turn because no authenticated Cloudflare/online desktop test environment was available; do not claim those tests passed. No new Printful mockup, order, payment, AI render or physical production was submitted by the assistant.
+
+
+## RM-027 continuation — exact artwork recovery + product layout controls
+Owner clarified Astra is unavailable until Saturday and asked this session to continue building, recover the exact saved Space Explorer dog image, fix preview-to-live transfer, and improve product composition rather than waiting.
+
+Recovered prior evidence: the main Control Center already has owner-only saved-artwork recovery behind ADMIN_TOKEN. Earlier production work recorded that the exact Oct 4 ~17:38 Eastern seated Space Explorer dog was restored from private storage unchanged, without AI regeneration. Current file-history screenshots visually match the desired seated astronaut dog. The separate close-up Space Explorer ID RC-MUUHHS7P-CC02B2 is NOT the same pixels, so it must not be substituted.
+
+Recovery changes:
+- 79f8dce7 / 8532ece3: recovery-detail returns live host metadata and the admin card exposes “Use this exact artwork on LIVE shop” while keeping the token browser-private.
+- 16567959: private Recast links can be read across only the trusted preview/live Recast workers.dev hosts; unrelated origins remain rejected.
+- 3b4b8db3 + admin cache bumps b7bb1384 / 7620f60d: owner recovery accepts recoverDate in the admin URL and current admin assets are refreshed.
+No ADMIN_TOKEN or artwork access token was read, copied, or committed.
+
+Product-preview controls implemented:
+- commerce-store helpers normalize layout settings and can compose a mug print surface using the saved artwork: scene-fill background, single portrait, same portrait on two sides, or full-wrap/full-bleed (265138dd, 89a92af1, 3958a477).
+- workflow accepts scale/X placement settings, includes layout settings in mockup cache identity, and for scene-fill mugs sends a composed full-area protected source to Printful (37a48459, f6345699, 2272d6ad, e281dbfa, 317ee72d, 9abc81fc, 169392c4, 67d58ece, 949db419, 947ea9f8, 608ee449, 3da61483).
+- preview-security composes from the exact clean private saved artwork, then flattens the unpaid watermark before Printful sees the mockup source; clean pixels remain private (7b219755, 67a9779d).
+- checkout UI sends design settings, adds mug layout choices One image / Same image on both sides / Full wrap, left-center-right placement, and size slider; other physical products get bounded placement/size controls. The old real-product preview is invalidated when settings change (a3f67bd4, 68cbb931, f0fc6e40, f2b88cfd, 70aaf6cb). Styling added at 68633a6b. Current live cache keys are checkout.js?v=227, app.js?v=222, merch-v07.css?v=131 (67f2c532).
+- syntax-only V8 parse checks were run on checkout.js, admin.js, recast-history.js, commerce-store.js, workflow.js and preview-security.js after the changes; all parsed successfully. This is not a full Node test suite or live Printful verification of every new layout.
+
+Important remaining risk: these new controls are verified at the product-mockup request layer, but the selected custom layout is not yet proven end-to-end through Shopify payment into the later production-draft payload. Keep explicit customer/owner print approval and production confirmation gates in place. Do not claim custom layout is production-final until one paid/controlled order path is verified. No order, payment, AI render, Printful production order, email, or social action was submitted by this session.
