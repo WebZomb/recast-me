@@ -23,3 +23,18 @@ export function sameOrigin(request){
   if(request.headers.get('x-recast-request')!=='1' || (request.headers.get('origin') && request.headers.get('origin')!==new URL(request.url).origin))throw fault('origin_required','Please use the Recast Me page to make this change.',403);
 }
 export function privateJson(data,status=200,extra={}){return Response.json(data,{status,headers:{'cache-control':'private, no-store','referrer-policy':'no-referrer',...extra}})}
+
+export function normalizeProductDesign(map,raw={}){
+  const mug=map?.product==='Mug';
+  const allowedLayout=mug?['single','two-sided','wrap']:['single'];
+  const layout=allowedLayout.includes(String(raw.layout))?String(raw.layout):'single';
+  const x=['left','center','right'].includes(String(raw.x))?String(raw.x):'center';
+  const n=Number(raw.scale),scale=Math.round(Math.max(55,Math.min(115,Number.isFinite(n)?n:(mug?92:100))));
+  return {version:1,layout,background:mug?'scene-fill':'none',x,scale};
+}
+export function productPrintfile(catalog,variantId,placement){
+  const variant=catalog?.variant_printfiles?.find(v=>Number(v.variant_id)===Number(variantId));
+  const file=catalog?.printfiles?.find(f=>Number(f.printfile_id)===Number(variant?.placements?.[placement]));
+  if(!file||![file.width,file.height].every(n=>Number.isFinite(n)&&n>0))throw fault('print_area_missing','Printful print dimensions are unavailable for this variant.',502);
+  return file;
+}
