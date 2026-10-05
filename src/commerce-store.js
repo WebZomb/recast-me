@@ -39,6 +39,7 @@ export function productPrintfile(catalog,variantId,placement){
   return file;
 }
 
+const MUG_BG_PNG=new Uint8Array([137,80,78,71,13,10,26,10,0,0,0,13,73,72,68,82,0,0,0,1,0,0,0,1,8,2,0,0,0,144,119,83,222,0,0,0,12,73,68,65,84,120,218,99,224,17,144,1,0,0,100,0,57,1,178,224,122,0,0,0,0,73,69,78,68,174,66,96,130]);
 function fitDimensions(sw,sh,mw,mh){
   const factor=Math.min(mw/sw,mh/sh);
   return {width:Math.max(1,Math.round(sw*factor)),height:Math.max(1,Math.round(sh*factor))};
@@ -61,7 +62,12 @@ export async function composeMugLayout(env,sourceBytes,sourceSize,area,rawDesign
     const chain=env.IMAGES.input(stream()).transform({width:outWidth,height:outHeight,fit:'cover'});
     return {bytes:await jpegBytes(chain),design,outputSize:{width:outWidth,height:outHeight}};
   }
-  const background=env.IMAGES.input(stream()).transform({width:outWidth,height:outHeight,fit:'cover',blur:22});
+  // Non-wrap layouts use a neutral dark canvas, then only a very soft low-opacity
+  // color wash from the artwork. This prevents a third stretched/blurred copy of the
+  // subject appearing between the intended portrait placements.
+  let background=env.IMAGES.input(new Blob([MUG_BG_PNG],{type:'image/png'}).stream()).transform({width:outWidth,height:outHeight,fit:'cover'});
+  const wash=env.IMAGES.input(stream()).transform({width:outWidth,height:outHeight,fit:'cover',blur:250,saturation:0.65,gamma:1.6});
+  background=background.draw(wash,{left:0,top:0,opacity:0.16});
   const add=(chain,center,maxWidth,maxHeight)=>{
     const factor=design.scale/100;
     const d=fitDimensions(sourceSize.width,sourceSize.height,outWidth*maxWidth*factor,outHeight*maxHeight*factor);
