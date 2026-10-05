@@ -364,7 +364,7 @@ let turnstileWidgetId=null;
 let publicConfig={};
 async function setupTurnstile(){
   try{
-    const config=await fetch('/api/public-config').then(r=>r.json());
+    const config=await fetch('/api/public-config').then(r=>r.json());publicConfig=config||{};
     if(!config?.turnstileSiteKey)return;
     const container=document.querySelector('#turnstile-container');container?.classList.remove('hidden');
     await new Promise((resolve,reject)=>{
