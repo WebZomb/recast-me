@@ -4,6 +4,8 @@ Updated: 2026-10-03. Keep this index and append-only session records current whe
 
 ## Start here
 
+- [RM-023: visible mockup errors and preview fulfillment setup](ASTRA-SESSION-RM-023.md). Shopify live catalog verified; Printful secret still missing.
+
 - [RM-022: product catalog isolation and owner diagnostics](ASTRA-SESSION-RM-022.md). 149 mocked tests passed; live commerce verification pending.
 
 - [RM-021: owner artwork recovery and explicit rejection errors](ASTRA-SESSION-RM-021.md). Date/cursor-based recovery and exact diagnostic lookup; 148 mocked tests pass.

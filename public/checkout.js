@@ -44,7 +44,8 @@ let checkoutLoadId=0;
 
 async function generateRealMockup({req,sku,card,button}){
   if(!sku)return;
-  const original=button.textContent;
+  const errorCopy=card.querySelector(".mockup-error");
+  if(errorCopy){errorCopy.hidden=true;errorCopy.textContent="";}
   button.disabled=true;button.textContent="Preparing real product preview…";
   try{
     let create=await fetch("/api/mockup/create",{
@@ -74,7 +75,9 @@ async function generateRealMockup({req,sku,card,button}){
     throw new Error("The real product preview is still processing. Tap again in a moment.");
   }catch(error){
     button.disabled=false;button.textContent="Try real product preview again";
-    button.title=error?.message||String(error);
+    const message=error?.message||String(error);
+    button.title=message;
+    if(errorCopy){errorCopy.textContent=message;errorCopy.hidden=false;}
   }
 }
 
@@ -121,7 +124,7 @@ async function loadCheckout(){
           ${variants.map(v=>`<option value="${v.sku}">${v.variantTitle} · ${money(v.price)}</option>`).join("")}
          </select>`
       : `<input type="hidden" class="recast-variant" data-product="${index}" value="${first?.sku||""}">`;
-    const realPreview=digital?"":`<button class="product-preview-action" data-product="${index}" type="button">Preview my Recast on the real product</button><p class="product-mockup-note">Uses the mapped Printful product and your exact Artwork ID.</p>`;
+    const realPreview=digital?"":`<button class="product-preview-action" data-product="${index}" type="button">Preview my Recast on the real product</button><p class="mockup-error" role="alert" hidden></p><p class="product-mockup-note">Uses the mapped Printful product and your exact Artwork ID.</p>`;
 
     return `<div class="${classes}" data-product-index="${index}" data-product-title="${product.title}">
       <div class="product-art"><img src="${PRODUCT_ART[product.title]}" alt="Example design on ${product.title}" loading="lazy"><span class="example-design-label">Example design</span></div>
@@ -133,8 +136,9 @@ async function loadCheckout(){
         ${select}
         ${realPreview}
         <button class="recast-buy" data-product="${index}" ${active?"":"disabled"}>
-          ${active?meta.cta:"Checkout stays locked until launch"}
+          ${active?meta.cta:"Not available to buy yet"}
         </button>
+        ${active?"":'<p class="product-mockup-note">This product is still a draft. Purchasing opens after store setup and testing.</p>'}
         <p class="checkout-error" role="alert" hidden></p>
       </div>
     </div>`;

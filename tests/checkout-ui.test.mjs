@@ -36,3 +36,11 @@ test('failed catalog has retry and older response cannot replace newly selected 
 test('stale product button cannot buy previous artwork after selection changed',async()=>{
   const ui=setup(async()=>catalog());await ui.select('first');ui.context.window.__recastActiveRequest={requestId:'second',accessToken:'second-token'};await ui.button.click();assert.equal(ui.calls.some(([url])=>String(url).includes('checkout-link')),false);
 });
+
+test('mockup failure is visible in an inline alert on touch devices',async()=>{
+ const app=setup(async()=>({ok:false,json:async()=>({error:'Printful is not connected.'})}));
+ const alert={hidden:true,textContent:''};const button={textContent:'Preview',disabled:false};
+ app.context.mockupArgs={req:{requestId:'saved',accessToken:'test'},sku:'RECAST-MUG-11OZ',card:{querySelector:()=>alert},button};
+ await vm.runInNewContext('generateRealMockup(mockupArgs)',app.context);
+ assert.equal(alert.hidden,false);assert.equal(alert.textContent,'Printful is not connected.');assert.equal(button.disabled,false);
+});

@@ -33,6 +33,7 @@
   },
   "previews": {
     "vars": {
+      "PRINTFUL_STORE_ID": "18798877",
       "SHOPIFY_CLIENT_ID": "34095311ef89068f873eb42bfba8e597",
       "SHOPIFY_SHOP": "b2wnfu-7g",
       "PUBLIC_APP_URL": "https://recast-secure-previews-2026-09-29-recast-me.sergz24.workers.dev"

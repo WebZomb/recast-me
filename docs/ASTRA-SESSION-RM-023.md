@@ -1,0 +1,7 @@
+# RM-023 — visible product-preview failures
+
+2026-10-05 UTC. Baseline remote 82058350728c5facd3cce0887b3baf64e8169cc8, local ef2a16d. Owner added Shopify secret: live owner commerce check verified shop/clientId/clientSecret true, connected true, 12 products. Browser catalog now loads all 12 with variants/prices; checkout disabled for draft products. This corrects RM-022 pending connection status.
+
+Owner screenshot shows mockup retry button but no visible reason. Live owner status still reports Printful unconfigured. Mockup error had been stored only in button title, inaccessible on touch devices. Added inline role=alert error below product-preview button, cleared before retry; changed disabled purchase copy to Not available to buy yet with explicit draft explanation. Added existing known PRINTFUL_STORE_ID to previews.vars; PRINTFUL_API_TOKEN remains owner-required secret, not read or committed. Product statuses and launch/print gates unchanged.
+
+Files: public/checkout.js, public/index.html cache version, wrangler.jsonc, tests/checkout-ui.test.mjs, cumulative notes. 150 mocked tests passed, zero failures, diff whitespace check passed. New regression verifies failed mockup response becomes visible alert and retry re-enables. No new AI/Images, Printful mockup, purchase or print submitted by agent. Actual provider mockup remains blocked by missing secret. Production unmerged. Rollback these UI/config changes; no storage migration. Deployment evidence pending upload.
