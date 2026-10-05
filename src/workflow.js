@@ -208,14 +208,14 @@ async function persistMockups(env,record,result,request){
 
 export async function mockupStatus(request,env){
   try{
-    const url=new URL(request.url);const requestId=String(url.searchParams.get("requestId")||"");const token=String(url.searchParams.get("token")||"");const sku=String(url.searchParams.get("sku")||"");
+    const url=new URL(request.url);const requestId=String(url.searchParams.get("requestId")||"");const token=String(url.searchParams.get("token")||"");const sku=String(url.searchParams.get("sku")||"");const mockupId=String(url.searchParams.get("mockup")||"legacy");
     await requireRequest(env,requestId,token);
-    let record=await readJson(env,mockupKey(requestId,sku));
+    let record=await readJson(env,mockupKey(requestId,sku,mockupId));
     if(!record)return json({ok:false,error:"Mockup task not found."},404);
     if(record.status==="completed"&&record.images?.length)return json({ok:true,status:"completed",images:record.images,position:record.position,design:record.design||null});
     const result=await printful(env,`/mockup-generator/task?task_key=${encodeURIComponent(record.taskKey)}`,{method:"GET"});
     if(result.status==="failed"){
-      record.status="failed";record.error=result.error||"Printful could not generate this mockup.";record.updatedAt=now();await putJson(env,mockupKey(requestId,sku),record);
+      record.status="failed";record.error=result.error||"Printful could not generate this mockup.";record.updatedAt=now();await putJson(env,mockupKey(requestId,sku,mockupId),record);
       return json({ok:false,status:"failed",error:record.error},502);
     }
     if(result.status!=="completed")return json({ok:true,status:"pending",waitSeconds:10});
@@ -225,10 +225,11 @@ export async function mockupStatus(request,env){
 }
 
 export async function serveMockupImage(request,env,requestId,sku,index){
-  const url=new URL(request.url);const token=url.searchParams.get("token")||"";
-  const record=await readJson(env,mockupKey(requestId,sku));
+  const url=new URL(request.url);const token=url.searchParams.get("token")||"";const mockupId=String(url.searchParams.get("mockup")||"legacy");
+  const record=await readJson(env,mockupKey(requestId,sku,mockupId));
   if(!record||!safeEqual(record.mockupAccessToken,token))return new Response("Not found",{status:404});
-  const object=await env.ARTWORK?.get(`mockups/${requestId}/${sku}/image-${index}.jpg`);
+  const folder=mockupId==="legacy"?`mockups/${requestId}/${sku}`:`mockups/${requestId}/${sku}/${mockupId}`;
+  const object=await env.ARTWORK?.get(`${folder}/image-${index}.jpg`);
   if(!object)return new Response("Not found",{status:404});
   return new Response(object.body,{headers:{"content-type":"image/jpeg","cache-control":"private, max-age=3600","x-content-type-options":"nosniff"}})
 }
