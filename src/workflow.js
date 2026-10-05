@@ -332,17 +332,19 @@ export async function syncPaidOrders(env){
 
 async function prepareOrderProof(request,env,job,meta){
   if(appBase(env,request)!==new URL(request.url).origin)throw fault('proof_host','The owner must configure this deployment’s public URL before product previews can be made.',503);
+  const map=FULFILLMENT[job.sku],design=normalizeProductDesign(map,job.productDesign||{});
   const source=await env.ARTWORK.get(requestKey(meta.requestId,'preview.b64'));
-  const sourceHash=await hash(await source.text());
-  const existing=await readJson(env,mockupKey(meta.requestId,job.sku));
-  if(!existing||existing.sourceHash!==sourceHash||!existing.position){
+  const sourceHash=await hash((await source.text())+'|'+JSON.stringify(design));
+  const mockupId=job.productMockupId||mockupDesignId(design);
+  const existing=await readJson(env,mockupKey(meta.requestId,job.sku,mockupId));
+  if(!existing||existing.sourceHash!==sourceHash||!existing.position||JSON.stringify(existing.design||{})!==JSON.stringify(design)){
     const claim=`commerce/proof-start/${await hash(meta.requestId+'|'+job.sku+'|'+sourceHash)}.json`;
     if(!await env.ARTWORK.put(claim,JSON.stringify({startedAt:now()}),{onlyIf:new Headers({'If-None-Match':'*'})}))throw fault('proof_started','A product preview has already started. Refresh to check it; an interrupted task needs owner review.');
-    const r=await createMockup(new Request(request.url,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({requestId:meta.requestId,accessToken:meta.accessToken,sku:job.sku})}),env);
+    const r=await createMockup(new Request(request.url,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({requestId:meta.requestId,accessToken:meta.accessToken,sku:job.sku,design})}),env);
     const result=await r.json();if(!r.ok)throw fault('proof_failed',result.error||'The product preview could not start.',502);
     return result;
   }
-  const url=new URL('/api/mockup/status',request.url);url.searchParams.set('requestId',meta.requestId);url.searchParams.set('token',meta.accessToken);url.searchParams.set('sku',job.sku);
+  const url=new URL('/api/mockup/status',request.url);url.searchParams.set('requestId',meta.requestId);url.searchParams.set('token',meta.accessToken);url.searchParams.set('sku',job.sku);url.searchParams.set('mockup',mockupId);
   const r=await mockupStatus(new Request(url),env),result=await r.json();
   if(!r.ok)throw fault('proof_failed',result.error||'The product preview did not finish.',502);
   return result;
