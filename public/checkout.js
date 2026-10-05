@@ -177,7 +177,7 @@ async function loadCheckout(){
       <summary>Adjust design placement</summary>
       ${isMug?`<label>Print layout<select data-design-layout><option value="single">One image</option><option value="two-sided">Same image on both sides</option><option value="wrap">Full wrap / full bleed</option></select></label>`:""}
       <label>Image position<select data-design-x><option value="left">Left</option><option value="center" selected>Center</option><option value="right">Right</option></select></label>
-      <label>Image size <strong data-design-scale-label>${isMug?92:100}%</strong><input data-design-scale type="range" min="55" max="${isMug?115:130}" step="5" value="${isMug?92:100}"></label>
+      <label>Image size <strong data-design-scale-label>${isMug?92:100}%</strong><input data-design-scale type="range" min="55" max="${isMug?115:100}" step="5" value="${isMug?92:100}"></label>
       ${isMug?'<p class="product-mockup-note">Scene-fill background removes the empty white band while keeping the full portrait visible. Two-sided repeats the portrait on both sides; Full wrap fills the printable area.</p>':'<p class="product-mockup-note">Adjust size and left/center/right placement before generating the real product preview.</p>'}
     </details>`;
     const realPreview=digital?"":`${designControls}<button class="product-preview-action" data-product="${index}" type="button">Preview my Recast on the real product</button><p class="mockup-error" role="alert" hidden></p><p class="product-mockup-note">Uses the mapped Printful product and your exact Artwork ID.</p>`;
