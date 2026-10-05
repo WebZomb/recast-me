@@ -41,7 +41,13 @@ function showCatalogError(message){
 function money(n){const value=Number(n);return Number.isFinite(value)?`$${value.toFixed(2)}`:n}
 function sleep(ms){return new Promise(resolve=>setTimeout(resolve,ms))}
 let checkoutLoadId=0;
+const mockupState=new WeakMap();
 
+function stateFor(card){
+  let state=mockupState.get(card);
+  if(!state){state={run:0,busy:false,cooldownUntil:0};mockupState.set(card,state);}
+  return state;
+}
 function productDesign(card){
   const mug=card?.dataset?.productTitle==="Custom Recast Mug";
   const layout=card?.querySelector?.("[data-design-layout]")?.value||"single";
