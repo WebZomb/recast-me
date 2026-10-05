@@ -253,7 +253,7 @@ async function checkoutLink(request, env, ctx) {
     if(!source)return json({ok:false,error:"The selected artwork is unavailable."},404);
     const sourceBase64=await source.text();
     proofHash=await hash(sourceBase64+'|'+JSON.stringify(verifiedDesign));
-    if(mockup.status!=="completed"||mockup.sourceHash!==proofHash||JSON.stringify(mockup.design||{})!==JSON.stringify(verifiedDesign)){
+    if(mockup.status!=="completed"||!mockup.position||mockup.sourceHash!==proofHash||JSON.stringify(mockup.design||{})!==JSON.stringify(verifiedDesign)){
       return json({ok:false,error:"Your product settings changed after the preview. Generate and review a fresh preview before checkout."},409);
     }
     approvedPreview=await freezeApprovedPreview(request,env,{requestId,sku,mockupId,proofHash,mockup,design:verifiedDesign,accessToken});
