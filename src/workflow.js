@@ -328,6 +328,10 @@ export async function reconcileShopifyOrder(env,order){
         await putJson(env,`commerce/designs/${id}.json`,{revision:1,selectedRequestId:requestId,approvedAt:preapproval.approvedAt,preapprovedAt:preapproval.approvedAt,snapshotKey:preapproval.snapshotKey,sourceHash:preapproval.sourceHash,printToken:randomHex(24),proof:{images:preapproval.images||[],position:preapproval.position,design:preapproval.design,sku:line.sku,quantity:line.quantity,sourceHash:preapproval.sourceHash}});
       }
       await putJson(env,`commerce/request-jobs/${requestId}/${id}.json`,{id});
+      if(checkoutApproved&&String(env.AUTO_PRINT_PREAPPROVED_ENABLED||"false")==="true"){
+        const currentJob=put?job:await loadJob(env,id);
+        await autoProcessPreapprovedJob(env,currentJob).catch(()=>null);
+      }
     }else if(await env.ARTWORK.head(jobKey(id))){
       await change(env,jobKey(id),null,j=>({...j,financialStatus:order.displayFinancialStatus,paymentRevokedAt:now(),status:j.sentToProductionAt?j.status:'payment_hold'}));
     }
