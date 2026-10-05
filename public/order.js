@@ -5,11 +5,18 @@ let jobs=[];
 function versions(){try{return JSON.parse(localStorage.getItem('recast_recent_versions_v12')||'[]').filter(v=>v?.requestId&&v?.accessToken).slice(0,4)}catch{return[]}}
 async function api(url,body){const r=await fetch(url,body?{method:'POST',headers:{'content-type':'application/json','x-recast-request':'1'},body:JSON.stringify(body)}:undefined);const d=await r.json().catch(()=>({}));if(!r.ok||!d.ok)throw Error(d.userMessage||d.error||'We could not complete that update.');return d}
 function message(text){document.querySelector('#order-message').textContent=text}
+function designSummary(design){
+ if(!design)return '';
+ const layout=design.layout==='two-sided'?'Same image on both sides':design.layout==='wrap'?'Full wrap':'One image';
+ const spacing=design.layout==='two-sided'?(design.spacing==='close'?'Closer together':design.spacing==='wide'?'Farther apart':'Standard'):null;
+ return [layout,design.x?design.x[0].toUpperCase()+design.x.slice(1):null,design.scale?`${design.scale}%`:null,spacing].filter(Boolean).join(' · ');
+}
 function designCard(j){
  if(j.digital)return '';
  const d=j.design,locked=Boolean(d?.approvedAt||j.printfulStatus),saved=versions();
  const image=`/api/order-design/${encodeURIComponent(j.id)}/preview?token=${encodeURIComponent(token)}`;
- return `<div class="design-panel"><h3>${locked?'Your approved design':'Make it yours before it prints'}</h3>
+ const approvedSnapshot=j.approvedPreviewImage?`<div class="approved-checkout-preview"><div class="eyebrow">SAVED WITH YOUR ORDER</div><h4>Your checkout product preview</h4><a href="${esc(j.approvedPreviewUrl||j.approvedPreviewImage)}"><img src="${esc(j.approvedPreviewImage)}" alt="The exact product preview saved at checkout"></a><p>This is the product mockup saved when checkout opened. ${esc(designSummary(j.productDesign))}</p><a class="button ghost" href="${esc(j.approvedPreviewUrl||j.approvedPreviewImage)}">Open approved preview</a></div>`:'';
+ return `<div class="design-panel">${approvedSnapshot}<h3>${locked?'Your approved design':'Make it yours before it prints'}</h3>
  <img class="design-art" src="${esc(image)}" alt="Selected artwork with Recast Me preview watermark">
  <p>Artwork: ${esc(d?.selectedRequestId||requestId)}</p>
  ${locked?'<p><strong>Design locked.</strong> Your artwork is approved for printing. Changes are closed; our final fulfillment check comes next.</p>':`
