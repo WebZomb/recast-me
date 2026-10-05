@@ -307,6 +307,34 @@ async function orderMatch(request, env, ctx) {
   return json({ ok: true, found: false, requestId });
 }
 
+function previewAngleLabel(title,index){
+  const raw=String(title||"");
+  if(/^default$/i.test(raw))return "3D view";
+  if(/handle on left/i.test(raw))return "Handle left";
+  if(/front/i.test(raw))return "Front view";
+  return raw||`View ${index+1}`;
+}
+async function ensureApprovedPreviewViews(env,token,meta){
+  if(Array.isArray(meta.views)&&meta.views.length)return meta;
+  if(!meta.requestId||!meta.sku||!meta.mockupId)return meta;
+  const mockupObject=await env.ARTWORK?.get(`mockups/${meta.requestId}/${meta.sku}/${meta.mockupId}/task.json`);
+  if(!mockupObject)return meta;
+  const mockup=await mockupObject.json(),sourceViews=(mockup.images||[]).slice(0,3),folder=`mockups/${meta.requestId}/${meta.sku}/${meta.mockupId}`,views=[];
+  for(let i=0;i<sourceViews.length;i++){
+    const source=await env.ARTWORK?.get(`${folder}/image-${i}.jpg`);if(!source)continue;
+    const index=views.length;
+    await env.ARTWORK.put(`commerce/checkout-previews/${token}/view-${index}.jpg`,source.body,{httpMetadata:{contentType:"image/jpeg",cacheControl:"private, no-store"}});
+    views.push({index,title:sourceViews[i]?.title||`View ${index+1}`});
+  }
+  if(!views.length)return meta;
+  const preferred=views.find(v=>/front/i.test(String(v.title||"")))||views[0];
+  const primary=await env.ARTWORK.get(`commerce/checkout-previews/${token}/view-${preferred.index}.jpg`);
+  if(primary)await env.ARTWORK.put(`commerce/checkout-previews/${token}.jpg`,primary.body,{httpMetadata:{contentType:"image/jpeg",cacheControl:"private, no-store"}});
+  meta={...meta,views,primaryIndex:preferred.index,viewTitle:preferred.title};
+  await env.ARTWORK.put(`commerce/checkout-previews/${token}.json`,JSON.stringify(meta),{httpMetadata:{contentType:"application/json"}});
+  return meta;
+}
+
 async function approvedPreviewImage(env,token,index=null){
   if(!/^[a-f0-9]{48}$/.test(token))return new Response("Not found",{status:404});
   let key=`commerce/checkout-previews/${token}.jpg`;
