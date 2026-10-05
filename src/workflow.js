@@ -130,6 +130,8 @@ export async function createMockup(request,env){
     const savedSource=await env.ARTWORK.get(requestKey(requestId,'preview.b64'));
     if(!savedSource)throw fault('artwork_missing','The saved artwork is unavailable.',404);
     const savedBase64=await savedSource.text(),sourceHash=await hash(savedBase64);
+    const existing=await readJson(env,mockupKey(requestId,sku));
+    if(existing?.sourceHash===sourceHash&&existing.position&&['completed','pending'].includes(existing.status))return json({ok:true,status:existing.status,taskKey:existing.taskKey,sku,waitSeconds:10});
     if(!env.IMAGES)throw fault('images_required','Image processing is not configured.',503);
     const size=await env.IMAGES.info(new Blob([decodeBase64(savedBase64)]).stream());
     const placement=map.preferredPlacement||'default';

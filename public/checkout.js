@@ -63,7 +63,24 @@ async function generateRealMockup({req,sku,card,button}){
       const response=await fetch(url);data=await response.json().catch(()=>({}));
       if(response.ok&&data.status==="completed"&&data.images?.length){
         const img=card.querySelector(".product-art img");
-        img.src=data.images[0].url;img.alt="Your Recast on the actual product mockup";
+        const views=data.images;
+        const preferred=views.findIndex(view=>/front/i.test(view.title||''));
+        const selected=preferred>=0?preferred:0;
+        img.src=views[selected].url;img.alt="Your Recast on the actual product mockup";
+        card.querySelector('.mockup-views')?.remove();
+        if(views.length>1){
+          const controls=document.createElement('div');controls.className='mockup-views';
+          controls.style.cssText='display:flex;gap:8px;flex-wrap:wrap;padding:12px';
+          controls.setAttribute('aria-label','Product preview angles');
+          views.forEach((view,index)=>{
+            const choice=document.createElement('button');choice.type='button';choice.className='button secondary';
+            choice.style.cssText='min-height:44px;padding:8px 12px;font-size:14px';
+            choice.textContent=view.title||`View ${index+1}`;choice.setAttribute('aria-pressed',String(index===selected));
+            choice.addEventListener('click',()=>{img.src=view.url;for(const other of controls.children)other.setAttribute('aria-pressed',String(other===choice));});
+            controls.append(choice);
+          });
+          card.querySelector('.product-art').after(controls);
+        }
         const caption=card.querySelector('.example-design-label');
         if(caption)caption.textContent='Your artwork · product preview';
         button.textContent="Real product preview ready ✓";
@@ -159,6 +176,7 @@ async function loadCheckout(){
       const title=card?.dataset.productTitle;const img=card?.querySelector(".product-art img");
       if(img&&title)img.src=PRODUCT_ART[title];
       card?.classList.remove("real-mockup-ready");
+      card?.querySelector(".mockup-views")?.remove();
       const caption=card?.querySelector('.example-design-label');
       if(caption)caption.textContent='Example design';
       const preview=card?.querySelector(".product-preview-action");if(preview){preview.disabled=false;preview.textContent="Preview my Recast on the real product"}
