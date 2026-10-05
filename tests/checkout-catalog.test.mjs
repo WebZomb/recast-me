@@ -31,7 +31,7 @@ test('checkout requires the exact completed product proof and carries hidden pro
   const env=await setup({SHOPIFY_SHOP:'test',SHOPIFY_CLIENT_ID:'test',SHOPIFY_CLIENT_SECRET:'test'});
   const design={version:3,layout:'single',background:'scene-fill',x:'center',scale:92,spacing:'standard'},mockupId='v3-single-scene-fill-center-92-standard';
   const proofHash=await hash(CLEAN.toString('base64')+'|'+JSON.stringify(design));
-  await env.ARTWORK.put(`mockups/${ID}/RECAST-MUG-11OZ/${mockupId}/task.json`,JSON.stringify({requestId:ID,sku:'RECAST-MUG-11OZ',mockupId,status:'completed',sourceHash:proofHash,design,images:[{title:'default',url:'private-0'},{title:'Handle on Left',url:'private-1'},{title:'Front view',url:'private-2'}]}));
+  await env.ARTWORK.put(`mockups/${ID}/RECAST-MUG-11OZ/${mockupId}/task.json`,JSON.stringify({requestId:ID,sku:'RECAST-MUG-11OZ',mockupId,status:'completed',sourceHash:proofHash,design,position:{area_width:2700,area_height:1050,width:2700,height:1050,left:0,top:0},images:[{title:'default',url:'private-0'},{title:'Handle on Left',url:'private-1'},{title:'Front view',url:'private-2'}]}));
   for(let i=0;i<3;i++)await env.ARTWORK.put(`mockups/${ID}/RECAST-MUG-11OZ/${mockupId}/image-${i}.jpg`,CLEAN,{httpMetadata:{contentType:'image/jpeg'}});
   const post=body=>router.fetch(new Request('https://recast.test/api/checkout-link',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)}),env,{});
   const unconfirmed=await post({requestId:ID,accessToken:TOKEN,sku:'RECAST-MUG-11OZ',mockupId,design});assert.equal(unconfirmed.status,409);assert.match((await unconfirmed.json()).error,/Confirm the final product design/i);
