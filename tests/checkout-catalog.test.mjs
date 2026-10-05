@@ -39,9 +39,10 @@ test('checkout requires the exact completed product proof and carries hidden pro
   const props=new URL(data.checkoutUrl).searchParams.get('properties');
   const decoded=JSON.parse(Buffer.from(props.replace(/-/g,'+').replace(/_/g,'/'),'base64').toString());
   assert.equal(decoded['_Recast Proof'],proofHash);assert.equal(decoded['_Recast Mockup'],mockupId);assert.equal(decoded['Recast Layout'],'One image');
+  assert.match(decoded['Recast Print Safeguard'],/Not sent to production/i);assert.match(decoded['Recast Next Step'],/Track this Recast/i);
   assert.match(decoded['Approved Preview'],/^https:\/\/recast\.test\/proof\/[a-f0-9]{48}$/);assert.match(decoded['_Recast Preview Token'],/^[a-f0-9]{48}$/);
   const page=await router.fetch(new Request(decoded['Approved Preview']),env,{});assert.equal(page.status,200);const html=await page.text();
-  assert.match(html,/APPROVED PRODUCT PREVIEW/);assert.match(html,/3D view/);assert.match(html,/Handle left/);assert.match(html,/Front view/);
+  assert.match(html,/ORDER CONFIRMED/);assert.match(html,/not sent to production yet/i);assert.match(html,/Track this Recast \/ downloads/);assert.match(html,/3D view/);assert.match(html,/Handle left/);assert.match(html,/Front view/);
   assert.equal((html.match(/class="angle"/g)||[]).length,3);
   for(let i=0;i<3;i++){const image=await router.fetch(new Request(`https://recast.test/api/approved-preview/${decoded['_Recast Preview Token']}/${i}`),env,{});assert.equal(image.status,200);assert.deepEqual(Buffer.from(await image.arrayBuffer()),MARKED);}
   const primary=await router.fetch(new Request(`https://recast.test/api/approved-preview/${decoded['_Recast Preview Token']}`),env,{});assert.equal(primary.status,200);
