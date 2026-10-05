@@ -17,7 +17,7 @@ test('mockup submission sends provider dimensions and persists placement for pri
  });
  const response=await createMockup(new Request('https://recast.test/api/mockup/create',{method:'POST',body:JSON.stringify({requestId:ID,accessToken:TOKEN,sku:'RECAST-MUG-11OZ'})}),env);
  assert.equal(response.status,200);
- const data=await response.json();assert.match(data.mockupId,/^v1-/);
+ const data=await response.json();assert.match(data.mockupId,/^v2-/);
  const record=await(await env.ARTWORK.get(`mockups/${ID}/RECAST-MUG-11OZ/${data.mockupId}/task.json`)).json();
  assert.deepEqual(record.position,payload.files[0].position);
  assert.match(payload.files[0].image_url,/\/api\/print-source\//);
