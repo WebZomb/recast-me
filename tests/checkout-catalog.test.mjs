@@ -34,20 +34,21 @@ test('checkout requires the exact completed product proof and carries hidden pro
   await env.ARTWORK.put(`mockups/${ID}/RECAST-MUG-11OZ/${mockupId}/task.json`,JSON.stringify({requestId:ID,sku:'RECAST-MUG-11OZ',mockupId,status:'completed',sourceHash:proofHash,design,images:[{title:'default',url:'private-0'},{title:'Handle on Left',url:'private-1'},{title:'Front view',url:'private-2'}]}));
   for(let i=0;i<3;i++)await env.ARTWORK.put(`mockups/${ID}/RECAST-MUG-11OZ/${mockupId}/image-${i}.jpg`,CLEAN,{httpMetadata:{contentType:'image/jpeg'}});
   const post=body=>router.fetch(new Request('https://recast.test/api/checkout-link',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)}),env,{});
-  const ok=await post({requestId:ID,accessToken:TOKEN,sku:'RECAST-MUG-11OZ',mockupId,design});
+  const unconfirmed=await post({requestId:ID,accessToken:TOKEN,sku:'RECAST-MUG-11OZ',mockupId,design});assert.equal(unconfirmed.status,409);assert.match((await unconfirmed.json()).error,/Confirm the final product design/i);
+  const ok=await post({requestId:ID,accessToken:TOKEN,sku:'RECAST-MUG-11OZ',mockupId,design,confirmDesign:true});
   const data=await ok.json();assert.equal(ok.status,200,data.error);assert.equal(data.ok,true);
   const props=new URL(data.checkoutUrl).searchParams.get('properties');
   const decoded=JSON.parse(Buffer.from(props.replace(/-/g,'+').replace(/_/g,'/'),'base64').toString());
   assert.equal(decoded['_Recast Proof'],proofHash);assert.equal(decoded['_Recast Mockup'],mockupId);assert.equal(decoded['Recast Layout'],'One image');
-  assert.match(decoded['Recast Print Safeguard'],/Not sent to production/i);assert.match(decoded['Recast Next Step'],/Complete your Recast design approval/i);assert.match(decoded['Complete Design Approval'],/\/proof\/[a-f0-9]{48}\/approve$/);
+  assert.equal(decoded['Recast Design'],'Confirmed before checkout');assert.match(decoded['Recast Next Step'],/no extra design approval needed/i);assert.match(decoded['_Recast Preapproval'],/^[a-f0-9]{48}$/);
   assert.match(decoded['Approved Preview'],/^https:\/\/recast\.test\/proof\/[a-f0-9]{48}$/);assert.match(decoded['_Recast Preview Token'],/^[a-f0-9]{48}$/);
   const page=await router.fetch(new Request(decoded['Approved Preview']),env,{});assert.equal(page.status,200);const html=await page.text();
-  assert.match(html,/ORDER CONFIRMED/);assert.match(html,/not sent to production yet/i);assert.match(html,/Complete design approval/);assert.match(html,/estimated arrival date/i);assert.match(html,/3D view/);assert.match(html,/Handle left/);assert.match(html,/Front view/);
-  const approval=await router.fetch(new Request(decoded['Complete Design Approval']),env,{});assert.equal(approval.status,302);const location=approval.headers.get('location');assert.match(location,/approvalRequest=/);assert.match(location,/#preview-section$/);
+  assert.match(html,/DESIGN CONFIRMED BEFORE CHECKOUT/);assert.match(html,/No extra design approval is needed/i);assert.match(html,/nothing else from you/i);assert.match(html,/3D view/);assert.match(html,/Handle left/);assert.match(html,/Front view/);
+  const preapproval=await env.ARTWORK.get(`commerce/preapprovals/${decoded['_Recast Preapproval']}.json`);assert.ok(preapproval);const pre=await preapproval.json();assert.equal(pre.requestId,ID);assert.equal(pre.mockupId,mockupId);assert.deepEqual(pre.design,design);assert.ok(await env.ARTWORK.head(pre.snapshotKey));
   assert.equal((html.match(/class="angle"/g)||[]).length,3);
   for(let i=0;i<3;i++){const image=await router.fetch(new Request(`https://recast.test/api/approved-preview/${decoded['_Recast Preview Token']}/${i}`),env,{});assert.equal(image.status,200);assert.deepEqual(Buffer.from(await image.arrayBuffer()),MARKED);}
   const primary=await router.fetch(new Request(`https://recast.test/api/approved-preview/${decoded['_Recast Preview Token']}`),env,{});assert.equal(primary.status,200);
-  const stale=await post({requestId:ID,accessToken:TOKEN,sku:'RECAST-MUG-11OZ',mockupId,design:{...design,scale:100}});
+  const stale=await post({requestId:ID,accessToken:TOKEN,sku:'RECAST-MUG-11OZ',mockupId,design:{...design,scale:100},confirmDesign:true});
   assert.equal(stale.status,409);assert.match((await stale.json()).error,/changed|fresh/i);
  }finally{globalThis.fetch=saved;}
 });
