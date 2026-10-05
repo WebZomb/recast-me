@@ -218,7 +218,7 @@ async function checkoutLink(request, env, ctx) {
   const numericId = numericVariantId(row.variantId);
   if (!numericId) return json({ ok: false, error: "Could not parse the Shopify variant ID." }, 500);
 
-  let verifiedDesign=null,proofHash=null,mockupId=null;
+  let verifiedDesign=null,proofHash=null,mockupId=null,approvedPreview=null;
   if(!FULFILLMENT[sku].digital){
     verifiedDesign=normalizeProductDesign(FULFILLMENT[sku],body.design||{});
     mockupId=String(body.mockupId||"");
@@ -232,6 +232,7 @@ async function checkoutLink(request, env, ctx) {
     if(mockup.status!=="completed"||mockup.sourceHash!==proofHash||JSON.stringify(mockup.design||{})!==JSON.stringify(verifiedDesign)){
       return json({ok:false,error:"Your product settings changed after the preview. Generate and review a fresh preview before checkout."},409);
     }
+    approvedPreview=await freezeApprovedPreview(request,env,{requestId,sku,mockupId,proofHash,mockup,design:verifiedDesign,accessToken});
   }
 
   const properties = {
@@ -242,9 +243,12 @@ async function checkoutLink(request, env, ctx) {
       "Recast Layout":verifiedDesign.layout==="two-sided"?"Same image on both sides":verifiedDesign.layout==="wrap"?"Full wrap":"One image",
       "Recast Position":verifiedDesign.x[0].toUpperCase()+verifiedDesign.x.slice(1),
       "Recast Size":verifiedDesign.scale+"%",
+      ...(verifiedDesign.layout==="two-sided"?{"Recast Spacing":verifiedDesign.spacing==="close"?"Closer together":verifiedDesign.spacing==="wide"?"Farther apart":"Standard"}:{}),
+      ...(approvedPreview?{"Approved Preview":approvedPreview.url}:{}),
       "_Recast Design":JSON.stringify(verifiedDesign),
       "_Recast Proof":proofHash,
-      "_Recast Mockup":mockupId
+      "_Recast Mockup":mockupId,
+      ...(approvedPreview?{"_Recast Preview Token":approvedPreview.token}:{})
     }:{})
   };
   const encodedProperties = base64UrlUtf8(JSON.stringify(properties));
@@ -258,7 +262,8 @@ async function checkoutLink(request, env, ctx) {
     product: row.title,
     variant: row.variantTitle,
     price: row.price,
-    fulfillment: FULFILLMENT[sku]
+    fulfillment: FULFILLMENT[sku],
+    approvedPreviewUrl: approvedPreview?.url || null
   });
 }
 
