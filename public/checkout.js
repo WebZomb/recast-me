@@ -50,6 +50,16 @@ function productDesign(card){
   return {product:mug?"Mug":"Generic",layout:mug?layout:"single",background:mug?"scene-fill":"none",x,scale};
 }
 
+function resetProductPreview(card){
+  if(!card)return;
+  const title=card.dataset.productTitle,img=card.querySelector?.(".product-art img");
+  if(img&&title)img.src=PRODUCT_ART[title];
+  card.classList?.remove("real-mockup-ready");
+  card.querySelector?.(".mockup-views")?.remove?.();
+  const caption=card.querySelector?.(".example-design-label");if(caption)caption.textContent="Example design";
+  const preview=card.querySelector?.(".product-preview-action");if(preview){preview.disabled=false;preview.textContent="Preview my Recast on the real product";}
+}
+
 async function generateRealMockup({req,sku,card,button}){
   if(!sku)return;
   const errorCopy=card.querySelector(".mockup-error");
