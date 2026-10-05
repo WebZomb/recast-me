@@ -7,3 +7,9 @@
 .approved-checkout-preview img{display:block;width:100%;max-height:520px;object-fit:contain;border-radius:14px;background:#fff}
 .approved-checkout-preview p{font-size:14px;line-height:1.55;color:#aaa8bd;margin:12px 0}
 .approved-checkout-preview .eyebrow{color:#8feaff}
+
+.approved-angle-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:14px 0}
+.approved-angle-grid figure{margin:0}
+.approved-angle-grid img{display:block;width:100%;aspect-ratio:1/1;object-fit:contain;background:#fff;border-radius:12px}
+.approved-angle-grid figcaption{font-size:12px;color:#c7c5d7;margin-top:6px;text-align:center}
+@media(max-width:620px){.approved-angle-grid{grid-template-columns:1fr}.approved-angle-grid img{aspect-ratio:auto;max-height:520px}}
