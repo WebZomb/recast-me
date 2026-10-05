@@ -265,10 +265,11 @@ export async function verifyPaidOrder(env,job,{forProduction=false}={}){
   await reconcileOrderCredits(env,order);
   if(forProduction&&order.test)throw fault('test_order','Shopify test orders cannot be sent to paid print production.');
   if(!orderEligible(order,env))throw fault('payment_required','This order is not eligible for printing or bonus renders. Check its payment, refund or cancellation status.');
+  if(job.productDesignRequired&&!job.digital&&(!job.productDesign||!job.productProofHash||!job.productMockupId))throw fault('design_required','This physical order is missing its reviewed product layout and must be held for owner review.');
   if(order.lineItems?.pageInfo?.hasNextPage)throw fault('order_review','This large order needs an owner review.');
   const line=(order.lineItems?.nodes||[]).find(l=>job.lineId?l.id===job.lineId:(artworkFromLine(l)===job.requestId&&l.sku===job.sku));
   if(!line||line.sku!==job.sku||line.quantity!==job.quantity||artworkFromLine(line)!==job.requestId)throw fault('order_changed','The purchased item changed. An owner must review this order before printing.');
-  if(!job.digital&&job.productDesign){
+  if(!job.digital&&job.productDesignRequired){
     const liveDesign=purchasedDesign(line,FULFILLMENT[job.sku]);
     if(!liveDesign||JSON.stringify(liveDesign)!==JSON.stringify(job.productDesign)||attrFromLine(line,"Recast Proof")!==job.productProofHash)throw fault('design_changed','The purchased product layout changed. An owner must review this order before printing.');
   }
