@@ -240,8 +240,9 @@ async function checkoutLink(request, env, ctx) {
   const numericId = numericVariantId(row.variantId);
   if (!numericId) return json({ ok: false, error: "Could not parse the Shopify variant ID." }, 500);
 
-  let verifiedDesign=null,proofHash=null,mockupId=null,approvedPreview=null;
+  let verifiedDesign=null,proofHash=null,mockupId=null,approvedPreview=null,checkoutApproval=null;
   if(!FULFILLMENT[sku].digital){
+    if(body.confirmDesign!==true)return json({ok:false,error:"Confirm the final product design before checkout."},409);
     verifiedDesign=normalizeProductDesign(FULFILLMENT[sku],body.design||{});
     mockupId=String(body.mockupId||"");
     if(!/^[a-zA-Z0-9._-]{1,180}$/.test(mockupId))return json({ok:false,error:"Generate a fresh product preview before checkout."},409);
@@ -250,11 +251,13 @@ async function checkoutLink(request, env, ctx) {
     const mockup=await mockupObject.json();
     const source=await env.ARTWORK?.get(`requests/${requestId}/preview.b64`);
     if(!source)return json({ok:false,error:"The selected artwork is unavailable."},404);
-    proofHash=await hash((await source.text())+'|'+JSON.stringify(verifiedDesign));
+    const sourceBase64=await source.text();
+    proofHash=await hash(sourceBase64+'|'+JSON.stringify(verifiedDesign));
     if(mockup.status!=="completed"||mockup.sourceHash!==proofHash||JSON.stringify(mockup.design||{})!==JSON.stringify(verifiedDesign)){
       return json({ok:false,error:"Your product settings changed after the preview. Generate and review a fresh preview before checkout."},409);
     }
     approvedPreview=await freezeApprovedPreview(request,env,{requestId,sku,mockupId,proofHash,mockup,design:verifiedDesign,accessToken});
+    checkoutApproval=await freezeCheckoutApproval(env,{requestId,sku,mockupId,proofHash,mockup,design:verifiedDesign,approvedPreview,sourceBase64});
   }
 
   const properties = {
@@ -266,13 +269,14 @@ async function checkoutLink(request, env, ctx) {
       "Recast Position":verifiedDesign.x[0].toUpperCase()+verifiedDesign.x.slice(1),
       "Recast Size":verifiedDesign.scale+"%",
       ...(verifiedDesign.layout==="two-sided"?{"Recast Spacing":verifiedDesign.spacing==="close"?"Closer together":verifiedDesign.spacing==="wide"?"Farther apart":"Standard"}:{}),
-      "Recast Print Safeguard":"Not sent to production until your Recast design is approved",
-      "Recast Next Step":"Complete your Recast design approval before production",
-      ...(approvedPreview?{"Complete Design Approval":approvedPreview.url+"/approve","Approved Preview":approvedPreview.url}:{}),
+      "Recast Design":"Confirmed before checkout",
+      "Recast Next Step":"Payment completes your order — no extra design approval needed",
+      ...(approvedPreview?{"Approved Preview":approvedPreview.url}:{}),
       "_Recast Design":JSON.stringify(verifiedDesign),
       "_Recast Proof":proofHash,
       "_Recast Mockup":mockupId,
-      ...(approvedPreview?{"_Recast Preview Token":approvedPreview.token}:{})
+      ...(approvedPreview?{"_Recast Preview Token":approvedPreview.token}:{}),
+      ...(checkoutApproval?{"_Recast Preapproval":checkoutApproval.token}:{})
     }:{})
   };
   const encodedProperties = base64UrlUtf8(JSON.stringify(properties));
