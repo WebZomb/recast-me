@@ -53,7 +53,8 @@ function productDesign(card){
   const layout=card?.querySelector?.("[data-design-layout]")?.value||"single";
   const x=card?.querySelector?.("[data-design-x]")?.value||"center";
   const scale=Number(card?.querySelector?.("[data-design-scale]")?.value||(mug?92:100));
-  return {product:mug?"Mug":"Generic",layout:mug?layout:"single",background:mug?"scene-fill":"none",x,scale};
+  const spacing=card?.querySelector?.("[data-design-spacing]")?.value||"standard";
+  return {product:mug?"Mug":"Generic",layout:mug?layout:"single",background:mug?"scene-fill":"none",x,scale,spacing:mug?spacing:"standard"};
 }
 function designSignature(card,sku){return JSON.stringify({sku,design:productDesign(card)})}
 function requireFreshPreview(card){
@@ -221,7 +222,7 @@ async function loadCheckout(){
     const isMug=product.title==="Custom Recast Mug";
     const designControls=digital?"":`<details class="product-design-controls" ${isMug?"open":""}>
       <summary>Adjust design placement</summary>
-      ${isMug?`<label>Print layout<select data-design-layout><option value="single">One image</option><option value="two-sided">Same image on both sides</option><option value="wrap">Full wrap / full bleed</option></select></label>`:""}
+      ${isMug?`<label>Print layout<select data-design-layout><option value="single">One image</option><option value="two-sided">Same image on both sides</option><option value="wrap">Full wrap / full bleed</option></select></label><label data-design-spacing-wrap hidden>Two-sided spacing<select data-design-spacing><option value="close">Closer together</option><option value="standard" selected>Standard</option><option value="wide">Farther apart</option></select></label>`:""}
       <label>Image position<select data-design-x><option value="left">Left</option><option value="center" selected>Center</option><option value="right">Right</option></select></label>
       <label>Image size <strong data-design-scale-label>${isMug?92:100}%</strong><input data-design-scale type="range" min="55" max="${isMug?115:100}" step="5" value="${isMug?92:100}"></label>
       ${isMug?'<p class="product-mockup-note">A soft color-wash fills unused mug space without stretching a third copy of your picture. Two-sided uses exactly two portrait placements; Full wrap uses one full-bleed image.</p>':'<p class="product-mockup-note">Adjust size and left/center/right placement before generating the real product preview.</p>'}
@@ -266,7 +267,7 @@ async function loadCheckout(){
     const label=card?.querySelector?.("[data-design-scale-label]");
     control.addEventListener("input",()=>{if(label)label.textContent=control.value+"%";resetProductPreview(card);});
   });
-  document.querySelectorAll("[data-design-layout],[data-design-x]").forEach(control=>{
+  document.querySelectorAll("[data-design-layout],[data-design-x],[data-design-spacing]").forEach(control=>{
     const card=control.closest?.("[data-product-index]");
     control.addEventListener("change",()=>resetProductPreview(card));
   });
