@@ -48,12 +48,25 @@ async function generateRealMockup({req,sku,card,button}){
   if(errorCopy){errorCopy.hidden=true;errorCopy.textContent="";}
   button.disabled=true;button.textContent="Preparing real product preview…";
   try{
-    let create=await fetch("/api/mockup/create",{
-      method:"POST",headers:{"content-type":"application/json"},
-      body:JSON.stringify({requestId:req.requestId,accessToken:req.accessToken,sku})
+    const start=()=>fetch("/api/mockup/create",{
+      method:"POST",headers:{"content-type":"application/json","cache-control":"no-cache"},
+      body:JSON.stringify({requestId:req.requestId,accessToken:req.accessToken,sku}),
+      cache:"no-store"
     });
+    let create=await start();
     let data=await create.json().catch(()=>({}));
-    if(!create.ok||!data.ok)throw new Error(data.error||"Could not start the product preview.");
+    // A deployment split can briefly route one request to an older Worker version.
+    // Retry only the explicit missing-binding failure; that error occurs before any
+    // provider task is created, so this cannot duplicate a Printful mockup task.
+    if(create.status===503&&data.reason==="printful_binding_missing"){
+      await sleep(1200);
+      create=await start();
+      data=await create.json().catch(()=>({}));
+    }
+    if(!create.ok||!data.ok){
+      const details=[data.error||"Could not start the product preview.",data.stage?("Stage: "+data.stage):"",data.workerVersionId?("Worker: "+data.workerVersionId):""].filter(Boolean).join(" · ");
+      throw new Error(details);
+    }
 
     for(let attempt=0;attempt<10;attempt++){
       button.textContent=`Building real mockup${attempt?"…":"…"}`;
