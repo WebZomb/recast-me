@@ -121,6 +121,6 @@ test('public checkout cannot bypass the reviewed physical-product proof or subst
     throw new Error('Unexpected network request');
   });
   const response=await socialRoutes(new Request(`https://recast.test/api/social/${job.shareId}/checkout`,{method:'POST',body:JSON.stringify({sku:'RECAST-MUG-11OZ',requestId:'another-artwork',accessToken:'attacker-choice'})}),env,{});
-  const data=await response.json();assert.equal(data.ok,false);assert.match(data.error,/preview|fresh/i);
+  const data=await response.json();assert.equal(data.ok,false);assert.match(data.error,/preview|fresh|confirm the final product design/i);
   assert.ok(!JSON.stringify(data).includes('another-artwork'));assert.ok(!JSON.stringify(data).includes('attacker-choice'));
 });
