@@ -288,7 +288,8 @@ export function secureApplication(application) {
           // Authentication was already checked by the original route.
           const routeHash = await digest(path);
           const mock = path.match(/^\/api\/mockup\/image\/(RC-[A-Z0-9-]+)\/([^/]+)\/(\d+)$/);
-          const key = mock ? `mockups/${artworkId(mock[1])}/${encodeURIComponent(decodeURIComponent(mock[2]))}/protected-${mock[3]}-${SECURITY_VERSION}.jpg` : `security/public-previews/${routeHash}.jpg`;
+          const mockupVariant=String(url.searchParams.get('mockup')||'legacy').replace(/[^a-zA-Z0-9._-]/g,'').slice(0,180)||'legacy';
+          const key = mock ? `mockups/${artworkId(mock[1])}/${encodeURIComponent(decodeURIComponent(mock[2]))}/${mockupVariant}/protected-${mock[3]}-${SECURITY_VERSION}.jpg` : `security/public-previews/${routeHash}.jpg`;
           return imageResponse(await derivative(env, key, bytes));
         }
         return hardened(response);
