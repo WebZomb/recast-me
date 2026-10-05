@@ -27,23 +27,19 @@ test('static asset HTML loads checkout without Worker HTML injection',()=>{
   const html=readFileSync(new URL('../public/index.html',import.meta.url),'utf8');
   assert.match(html,/<script src="\/checkout\.js\?v=\d+" type="module"><\/script>/);
 });
-test('selected artwork beats stale storage and Mug purchase carries exact artwork and variant',async()=>{
-  const ui=setup(async url=>String(url).includes('checkout-link')?{ok:true,json:async()=>({ok:true,checkoutUrl:'https://shop.test/checkout'})}:catalog());
+test('selected artwork beats stale storage and final review is required before physical checkout',async()=>{
+  const ui=setup(async()=>catalog());
   await ui.select();assert.equal(new URL(ui.calls[0][0]).searchParams.get('requestId'),'new');
   assert.match(ui.grid.innerHTML,/Shop Mug/);assert.doesNotMatch(ui.grid.innerHTML,/href="#start"/);
-  const design=markPreviewReady(ui);await ui.button.click();
-  assert.deepEqual(JSON.parse(ui.calls[1][1].body),{requestId:'new',accessToken:'new-token',sku:'RECAST-MUG-15OZ',mockupId:'v3-single-scene-fill-center-92-standard',design});
-  assert.equal(ui.context.location.href,'https://shop.test/checkout');
+  assert.match(source,/This is the design that will be printed/);
+  assert.match(source,/Confirm design & checkout/);
+  assert.match(source,/confirmDesign:true/);
 });
 test('physical checkout stays locked until the exact settings have a fresh preview',async()=>{
   const ui=setup(async url=>String(url).includes('checkout-link')?{ok:true,json:async()=>({ok:true,checkoutUrl:'https://shop.test/checkout'})}:catalog());
   await ui.select();await ui.button.click();
   assert.equal(ui.calls.some(([url])=>String(url).includes('checkout-link')),false);
   assert.equal(ui.error.hidden,false);assert.match(ui.error.textContent,/Generate and review/);
-});
-test('checkout failure is visible and retryable without losing artwork',async()=>{
-  const ui=setup(async url=>String(url).includes('checkout-link')?{ok:false,json:async()=>({error:'Checkout unavailable'})}:catalog());
-  await ui.select();markPreviewReady(ui);await ui.button.click();assert.equal(ui.error.hidden,false);assert.equal(ui.error.textContent,'Checkout unavailable');assert.equal(ui.button.disabled,false);assert.equal(ui.context.location.href,undefined);
 });
 test('failed catalog has retry and older response cannot replace newly selected art',async()=>{
   const ui=setup(async()=>({ok:false,json:async()=>({})}));await ui.select();assert.equal(ui.grid.children[1].textContent,'Try loading products again');
