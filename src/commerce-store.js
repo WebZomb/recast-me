@@ -30,7 +30,7 @@ export function normalizeProductDesign(map,raw={}){
   const layout=allowedLayout.includes(String(raw.layout))?String(raw.layout):'single';
   const x=['left','center','right'].includes(String(raw.x))?String(raw.x):'center';
   const n=Number(raw.scale),scale=Math.round(Math.max(55,Math.min(250,Number.isFinite(n)?n:(mug?92:100))));
-  return {version:1,layout,background:mug?'scene-fill':'none',x,scale};
+  return {version:2,layout,background:mug?'scene-fill':'none',x,scale};
 }
 export function productPrintfile(catalog,variantId,placement){
   const variant=catalog?.variant_printfiles?.find(v=>Number(v.variant_id)===Number(variantId));
