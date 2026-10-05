@@ -5,7 +5,7 @@ import {creditRoute,walletFor,bindCustomerCredits,creditBalance,reserveCustomerR
 import {reserveBudget,guardedEnvironment} from '../src/render-controls.js';
 import {hash,read} from '../src/commerce-store.js';
 import {customerDesignAction,designFor,approvedDesign,finishApprovedDesign,printDesignFile} from '../src/order-approval.js';
-import {reconcileShopifyOrder,verifyPaidOrder,adminJobAction,routeWorkflow} from '../src/workflow.js';
+import {reconcileShopifyOrder,verifyPaidOrder,adminJobAction,routeWorkflow,customerOrderStatus} from '../src/workflow.js';
 import {secureApplication} from '../src/preview-security.js';
 import {FULFILLMENT} from '../src/entry.js';
 const salt='test-only-ip-salt-with-at-least-32-characters';
@@ -156,6 +156,21 @@ test('order-design customer previews are still watermarked, even after purchase 
  const r=await app.fetch(new Request(`https://recast.test/api/order-design/${o.job.id}/preview?token=${TOKEN}`),o.env);
  assert.deepEqual(Buffer.from(await r.arrayBuffer()),MARKED);
 });
+test('Shopify reconciliation preserves approved preview snapshot and spacing for the customer order page',async()=>{
+ const env=await setup({PUBLIC_APP_URL:'https://recast.test'});
+ const design={version:3,layout:'two-sided',background:'scene-fill',x:'center',scale:110,spacing:'close'};
+ const previewToken='a'.repeat(48),proof='proof-hash',mockup='v3-two-sided-scene-fill-center-110-close';
+ const order={...paid,lineItems:{pageInfo:{hasNextPage:false},nodes:[{id:'gid://shopify/LineItem/789',sku:'RECAST-MUG-11OZ',quantity:1,customAttributes:[
+  {key:'Artwork ID',value:ID},{key:'_Recast Design',value:JSON.stringify(design)},{key:'_Recast Proof',value:proof},{key:'_Recast Mockup',value:mockup},{key:'_Recast Preview Token',value:previewToken}
+ ]}]}};
+ await reconcileShopifyOrder(env,order);
+ const listed=await env.ARTWORK.list({prefix:'jobs/'});assert.equal(listed.objects.length,1);
+ const job=await (await env.ARTWORK.get(listed.objects[0].key)).json();
+ assert.deepEqual(job.productDesign,design);assert.equal(job.approvedPreviewToken,previewToken);assert.equal(job.status,'awaiting_customer_approval');
+ const response=await customerOrderStatus(new Request(`https://recast.test/api/order-status?requestId=${ID}&token=${TOKEN}`),env);
+ const data=await response.json();assert.equal(response.status,200);assert.equal(data.jobs[0].approvedPreviewUrl,`https://recast.test/proof/${previewToken}`);assert.equal(data.jobs[0].productDesign.spacing,'close');
+});
+
 test('Shopify reconciliation creates one job per line, awards once, and revokes refunded entitlements',async()=>{
  const {env,wallet}=await walletSetup('192.0.2.1',await setup());
  const meta=await read(env,`requests/${ID}/request.json`);meta.creditWalletId=wallet.id;await env.ARTWORK.put(`requests/${ID}/request.json`,JSON.stringify(meta));
