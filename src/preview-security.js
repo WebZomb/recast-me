@@ -4,7 +4,7 @@ import { WATERMARK_TILE_BASE64, WATERMARK_FOOTER_BASE64 } from './watermark-tile
 import { digest, guardedEnvironment, renderControlStatus, budgetStatus, submissionFingerprint } from './render-controls.js';
 
 import { creditRoute, bindCustomerCredits, creditsEnabled, settleCustomerRender } from './render-credits.js';
-import { sameOrigin } from './commerce-store.js';
+import { sameOrigin, composeMugLayout } from './commerce-store.js';
 import { serveApprovedPrint } from './workflow.js';
 
 export const SECURITY_VERSION = 'rm-preview-4';
