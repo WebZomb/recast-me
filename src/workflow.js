@@ -150,7 +150,7 @@ export async function createMockup(request,env){
     if(!map.printfulProductId||!map.printfulVariantId)return json({ok:false,error:"This product is not mapped to Printful yet."},500);
     stage="print-token";
     meta=await ensurePrintToken(env,meta);
-    const sourceUrl=`${appBase(env,request)}/api/print-source/${encodeURIComponent(requestId)}?token=${encodeURIComponent(meta.printAccessToken)}`;
+    let sourceUrl=`${appBase(env,request)}/api/print-source/${encodeURIComponent(requestId)}?token=${encodeURIComponent(meta.printAccessToken)}`;
     stage="artwork-source";
     const savedSource=await env.ARTWORK.get(requestKey(requestId,'preview.b64'));
     if(!savedSource)throw fault('artwork_missing','The saved artwork is unavailable.',404);
