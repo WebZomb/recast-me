@@ -111,7 +111,7 @@ test('OAuth refresh persists rotated credentials privately and uses the refreshe
   assert.equal(refreshes,1);assert.equal((await (await env.ARTWORK.get('system/x-oauth.json')).json()).refreshToken,'new-refresh');
 });
 
-test('public checkout uses the shared artwork and cannot substitute another Artwork ID',async t=>{
+test('public checkout cannot bypass the reviewed physical-product proof or substitute another Artwork ID',async t=>{
   const {env}=setup(t);await runSocialPipeline(env);
   const job=await (await env.ARTWORK.get('social/x/1234.json')).json();
   Object.assign(env,{SHOPIFY_SHOP:'test',SHOPIFY_CLIENT_ID:'client',SHOPIFY_CLIENT_SECRET:'secret'});
@@ -121,8 +121,6 @@ test('public checkout uses the shared artwork and cannot substitute another Artw
     throw new Error('Unexpected network request');
   });
   const response=await socialRoutes(new Request(`https://recast.test/api/social/${job.shareId}/checkout`,{method:'POST',body:JSON.stringify({sku:'RECAST-MUG-11OZ',requestId:'another-artwork',accessToken:'attacker-choice'})}),env,{});
-  const data=await response.json();assert.equal(data.ok,true);
-  const url=new URL(data.checkoutUrl);const properties=JSON.parse(Buffer.from(url.searchParams.get('properties'),'base64url'));
-  assert.equal(properties['Artwork ID'],job.requestId);
-  assert.equal(url.hostname,'test.myshopify.com');
+  const data=await response.json();assert.equal(data.ok,false);assert.match(data.error,/preview|fresh/i);
+  assert.ok(!JSON.stringify(data).includes('another-artwork'));assert.ok(!JSON.stringify(data).includes('attacker-choice'));
 });
