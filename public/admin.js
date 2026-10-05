@@ -1,5 +1,5 @@
 const deploymentLabel=document.querySelector('#deployment-identity');
-if(deploymentLabel)deploymentLabel.textContent=`${location.hostname==='recast-me.sergz24.workers.dev'?'Production':'Preview / alternate host'} · ${location.hostname} · RM-021`;
+if(deploymentLabel)deploymentLabel.textContent=`${location.hostname==='recast-me.sergz24.workers.dev'?'Production':'Preview / alternate host'} · ${location.hostname} · RM-022`;
 const $=s=>document.querySelector(s);const $$=s=>[...document.querySelectorAll(s)];
 const tokenKey='recast_admin_token';let token=sessionStorage.getItem(tokenKey)||'';
 function headers(json=false){return{Authorization:`Bearer ${token}`,...(json?{'content-type':'application/json'}:{})}}
@@ -65,3 +65,5 @@ async function findArtwork(more=false){
 $('#find-artwork').onclick=()=>findArtwork();$('#more-artwork').onclick=()=>findArtwork(true);
 $('#find-diagnostic').onclick=async()=>{try{const data=await api('/api/admin/generation-diagnostic?id='+encodeURIComponent($('#diagnostic-reference').value.trim()));$('#diagnostic-result').textContent=JSON.stringify(data.diagnostic,null,2);}catch(e){$('#diagnostic-result').textContent=e.message;}};
 $('#lock-admin').addEventListener('click',()=>{$('#recovery-list').replaceChildren();$('#diagnostic-result').textContent='';});
+
+$('#check-commerce').onclick=async()=>{const el=$('#commerce-result');el.textContent='Checking product connection…';try{el.textContent=JSON.stringify(await api('/api/admin/commerce-check'),null,2)}catch(e){el.textContent=e.message}};

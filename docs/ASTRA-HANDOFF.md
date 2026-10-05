@@ -4,6 +4,8 @@ Updated: 2026-10-03. Keep this index and append-only session records current whe
 
 ## Start here
 
+- [RM-022: product catalog isolation and owner diagnostics](ASTRA-SESSION-RM-022.md). 149 mocked tests passed; live commerce verification pending.
+
 - [RM-021: owner artwork recovery and explicit rejection errors](ASTRA-SESSION-RM-021.md). Date/cursor-based recovery and exact diagnostic lookup; 148 mocked tests pass.
 
 - [RM-020: original photos and private recovery links](ASTRA-SESSION-RM-020.md). No-AI photo products, browser transfer and history recovery; 144 mocked tests pass.

@@ -1,3 +1,4 @@
+import { shopifyCatalog } from "./index.js";
 import {saveOriginalPhoto} from './original-photo.js';
 import { WATERMARK_TILE_BASE64, WATERMARK_FOOTER_BASE64 } from './watermark-tile.js';
 import { digest, guardedEnvironment, renderControlStatus, budgetStatus, submissionFingerprint } from './render-controls.js';
@@ -169,6 +170,11 @@ export function secureApplication(application) {
         // Public diagnostic routes previously exposed operational order data or
         // bypassed normal rendering. Internal service calls are not HTTP routes.
         if (path.startsWith('/api/admin/') || ['/api/shopify-status', '/api/printful-status', '/api/storage-test', '/api/ai-test'].includes(path)) requireOwner(request, env);
+        if(path==='/api/admin/commerce-check'&&request.method==='GET'){
+          const configured={shop:Boolean(env.SHOPIFY_SHOP),clientId:Boolean(env.SHOPIFY_CLIENT_ID),clientSecret:Boolean(env.SHOPIFY_CLIENT_SECRET)};
+          try{const catalog=await shopifyCatalog(env);return json({ok:true,configured,connected:true,productCount:catalog.recastProducts.length});}
+          catch(cause){return json({ok:true,configured,connected:false,detail:String(cause.message||cause)});}
+        }
         if(path==='/api/admin/artwork-recovery'&&request.method==='GET'){
           if(!env.ARTWORK)throw error('storage_unavailable','Private storage is unavailable.');
           const from=Date.parse(url.searchParams.get('from')),to=Date.parse(url.searchParams.get('to'));
