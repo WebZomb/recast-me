@@ -95,16 +95,25 @@ export async function finishApprovedDesign(env,job){
   const claim=`commerce/finishes/${await hash(job.id)}/${d.sourceHash}.claim`;
   const claimed=await env.ARTWORK.put(claim,'started',{onlyIf:new Headers({'If-None-Match':'*'})});
   if(!claimed)throw fault('finish_in_progress','Print finishing has already started. Check its saved result before retrying.');
-  const out=await env.IMAGES.input(new Blob([bytes]).stream()).transform({width:4096,fit:'scale-up',upscale:'interpolate'}).output({format:'image/jpeg',quality:95});
-  const response=await out.response();
-  if(!response.ok)throw fault('finish_failed','Print finishing did not complete.',502);
-  const finalBytes=new Uint8Array(await response.arrayBuffer());
+  let finalBytes,finishMethod='preserve-interpolate';
+  if(job.product==='Mug'&&d.proof?.design?.background==='scene-fill'){
+    const area={width:Number(d.proof.position?.area_width),height:Number(d.proof.position?.area_height)};
+    if(!(area.width>0&&area.height>0))throw fault('proof_placement_missing','The approved mug layout is missing its print area.',503);
+    const info=await env.IMAGES.info(new Blob([bytes]).stream());
+    const composed=await composeMugLayout(env,bytes,info,area,d.proof.design,4096);
+    finalBytes=composed.bytes;finishMethod='mug-layout-v1-clean';
+  }else{
+    const out=await env.IMAGES.input(new Blob([bytes]).stream()).transform({width:4096,fit:'scale-up',upscale:'interpolate'}).output({format:'image/jpeg',quality:95});
+    const response=await out.response();
+    if(!response.ok)throw fault('finish_failed','Print finishing did not complete.',502);
+    finalBytes=new Uint8Array(await response.arrayBuffer());
+  }
   if(finalBytes[0]!==255||finalBytes[1]!==216||finalBytes[2]!==255)throw fault('finish_invalid','Print finishing returned an invalid image.',502);
   const finalHash=[...new Uint8Array(await crypto.subtle.digest('SHA-256',finalBytes))].map(b=>b.toString(16).padStart(2,'0')).join('');
   const finalKey=`commerce/finishes/${await hash(job.id)}/${finalHash}.jpg`;
   await env.ARTWORK.put(finalKey,finalBytes,{onlyIf:new Headers({'If-None-Match':'*'}),httpMetadata:{contentType:'image/jpeg'}});
   return change(env,designKey(job.id),null,v=>{
     if(v?.sourceHash!==d.sourceHash||v?.approvedAt!==d.approvedAt)throw fault('design_changed','Approved design changed unexpectedly.',503);
-    return {...v,finalKey,finalHash,finishMethod:'preserve-interpolate',finishedAt:new Date().toISOString()};
+    return {...v,finalKey,finalHash,finishMethod,finishedAt:new Date().toISOString()};
   });
 }
