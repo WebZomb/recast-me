@@ -268,6 +268,10 @@ export async function verifyPaidOrder(env,job,{forProduction=false}={}){
   if(order.lineItems?.pageInfo?.hasNextPage)throw fault('order_review','This large order needs an owner review.');
   const line=(order.lineItems?.nodes||[]).find(l=>job.lineId?l.id===job.lineId:(artworkFromLine(l)===job.requestId&&l.sku===job.sku));
   if(!line||line.sku!==job.sku||line.quantity!==job.quantity||artworkFromLine(line)!==job.requestId)throw fault('order_changed','The purchased item changed. An owner must review this order before printing.');
+  if(!job.digital&&job.productDesign){
+    const liveDesign=purchasedDesign(line,FULFILLMENT[job.sku]);
+    if(!liveDesign||JSON.stringify(liveDesign)!==JSON.stringify(job.productDesign)||attrFromLine(line,"Recast Proof")!==job.productProofHash)throw fault('design_changed','The purchased product layout changed. An owner must review this order before printing.');
+  }
   return order;
 }
 
