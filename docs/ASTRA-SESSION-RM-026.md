@@ -92,3 +92,20 @@ Fixes:
 - 6627eb17 bumps live checkout asset to checkout.js?v=229.
 
 Validation: GitHub Actions run 37341511515 for head 6627eb1713ae27fa243cd923944fee4f002b67da completed successfully. Full mocked test suite passed and Wrangler bundle dry-run passed. No AI generation, payment, paid order, or Printful production submission was performed.
+
+
+## RM-030 — two-sided spacing + approved product preview saved with the order
+2026-10-05 UTC. Owner asked for closer/standard/wider spacing on two-sided mugs and for the exact rendered product mockup to stay with the order so buyers have more confidence about what they approved.
+
+Implemented:
+- product design schema bumped to v3 with spacing = close | standard | wide. Two-sided mug composition centers are now close [0.31, 0.69], standard [0.24, 0.76], and wide [0.18, 0.82]. Mockup IDs include spacing, so changing spacing always creates/reuses only the exact matching task (cb80b5cb, 50fad8b5, 58084938).
+- Checkout UI adds a Two-sided spacing selector that appears only when Same image on both sides is selected. Spacing participates in the client proof signature and server proof hash (1658f6b8, 1eb23f3a).
+- At checkout, the exact completed provider mockup is frozen to private R2 under an unguessable 48-hex token derived from the artwork access capability and proof. The preferred Front view is copied when available. Shopify line properties now carry customer-readable Layout / Position / Size / Spacing plus a visible Approved Preview URL; hidden properties carry the normalized design, proof hash, mockup ID, and preview token (656995da, 46c156ca).
+- Added /proof/{token} and /api/approved-preview/{token}. The proof page is noindex/no-referrer, shows the exact watermarked product preview saved when checkout opened, lists its settings, explains that production uses clean private artwork, and lets the customer save the preview image (3eb42fb6, 4f87c10f, c2d04cd8).
+- Fulfillment reconciliation stores approvedPreviewToken and re-verifies it against Shopify before production. New physical orders without the exact reviewed layout/proof/mockup/preview token fail closed for owner review. Customer order status now returns the frozen preview URL/image and the purchased productDesign (28b2902a, 64b515e8).
+- public/order.js now shows a prominent “Saved with your order” product mockup block with the exact checkout snapshot and selected layout summary; order assets bumped to v3 (e0abe077, 391088a7, a1baf8aa, e5ebd884).
+- Clean mug production compositor label advanced to mug-layout-v3-clean. The frozen customer preview remains watermarked; production still composes from clean private artwork and never from the preview image (dbbf08d2).
+- Regression tests added/updated for spacing-isolated tasks, proof freezing and delivery, Shopify approved-preview metadata, customer order preview persistence, and v3 clean production. Run 37344049028 at head 8ab8795b completed successfully: full mocked test suite passed and Wrangler dry-run bundle passed.
+- Customer-facing checkout asset bumped to checkout.js?v=230 (ca45d759). No payment, order, email, AI generation, or Printful production submission was made by this session.
+
+Important limitation: the standard Shopify checkout thumbnail is still the static product/variant image. This build adds the exact approved mockup as an order line property link and as the Recast order-status product preview. Replacing Shopify’s per-line checkout thumbnail with a unique customer-generated image would require checkout/app-extension behavior beyond the current cart permalink flow and was not attempted.
