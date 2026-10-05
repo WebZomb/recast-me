@@ -219,3 +219,9 @@ Safety/commerce boundary:
 - This automation applies only to future physical orders that were explicitly confirmed on the Final Review screen before checkout.
 - Existing order #1001 has no preapproval token and is therefore NOT automatically sent by this new path.
 - Production uses the clean private snapshot and approved layout; customer-facing proof images remain watermarked.
+
+
+### RM-037 follow-up
+- Added customer-friendly order status labels for the zero-touch path: Design confirmed → preparing print file → production order prepared → in production → shipped.
+- The final-review UI includes separate Change image, Edit placement, and Confirm design & checkout actions so customers can correct the selection before payment without any post-purchase approval step.
+- Current order #1001 remains legacy/manual because it was purchased before the preapproval token existed; the automatic path applies only to future orders created through the new Final Review confirmation.
