@@ -25,3 +25,14 @@ Owner opened production `/api/health` after the diagnostic deployment. It return
 Because the earlier mockup UI received the exact backend message that is emitted only when `env.PRINTFUL_API_TOKEN` is falsy, the remaining leading hypothesis is version/deployment drift at the time of that request (or a different serving version/origin), not a missing dashboard token. A new read-only provider probe was added at commit `836d2c7280a0a5dc539859d6f0ad888251254219`: `/api/printful-health` uses the same scoped Printful helper and mug printfiles endpoint used before mockup creation, but returns only safe booleans/status/version metadata. It does not create a mockup or order and does not expose credentials or provider payloads.
 
 No token rotation, Printful write, order, AI render, payment, or physical production occurred.
+
+
+## Mockup-route hardening after provider health passed
+Owner live screenshot of `/api/printful-health` returned `ok:true`, `secretConfigured:true`, `storeScopeConfigured:true`, `providerReachable:true` on Worker version `0387f277-64f4-4b9e-8255-0966a0cdff0f`. This verifies the same scoped Printful helper can read the mug printfiles endpoint from production. Therefore the token, store scope, and current provider connection are healthy.
+
+Implemented:
+- `283457648f542bb2d395c71f9d7f4f949b95ff0d`: classify an absent runtime binding as `printful_binding_missing`; add safe stage + Worker-version diagnostics to mockup-create failures. No credentials or customer tokens are returned.
+- `195b9eb39ed38d98201485d18e2a5ea07c6b3d25`: browser retries exactly once only for the explicit 503 missing-binding failure. This is safe against duplicate Printful mockup tasks because the backend throws that error before any provider task submission. Other failures are not automatically retried; their stage/version is shown inline.
+- `e0d9cf5523078cf544e8465fe89b04db0b7cfcd5`: bump checkout module cache key to 225 so mobile Safari receives the new retry/diagnostic logic.
+
+Source review after writes confirmed the intended blocks are present. Full Node suite/Worker bundle were not independently executed in this turn because no authenticated Cloudflare/online desktop test environment was available; do not claim those tests passed. No new Printful mockup, order, payment, AI render or physical production was submitted by the assistant.
