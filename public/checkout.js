@@ -257,14 +257,7 @@ async function loadCheckout(){
 
   document.querySelectorAll("select.recast-variant").forEach(select=>{
     select.addEventListener("change",()=>{
-      const index=select.dataset.product;const card=document.querySelector(`[data-product-index="${index}"]`);
-      const title=card?.dataset.productTitle;const img=card?.querySelector(".product-art img");
-      if(img&&title)img.src=PRODUCT_ART[title];
-      card?.classList.remove("real-mockup-ready");
-      card?.querySelector(".mockup-views")?.remove();
-      const caption=card?.querySelector('.example-design-label');
-      if(caption)caption.textContent='Example design';
-      const preview=card?.querySelector(".product-preview-action");if(preview){preview.disabled=false;preview.textContent="Preview my Recast on the real product"}
+      const index=select.dataset.product;resetProductPreview(document.querySelector(`[data-product-index="${index}"]`));
     });
   });
 
