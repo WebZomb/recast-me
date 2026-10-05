@@ -341,6 +341,10 @@ async function approvedPreviewImage(env,token,index=null){
   if(index!==null){
     const n=Number(index);if(!Number.isInteger(n)||n<0||n>2)return new Response("Not found",{status:404});
     key=`commerce/checkout-previews/${token}/view-${n}.jpg`;
+    if(!await env.ARTWORK?.head(key)){
+      const metaObject=await env.ARTWORK?.get(`commerce/checkout-previews/${token}.json`);
+      if(metaObject)await ensureApprovedPreviewViews(env,token,await metaObject.json());
+    }
   }
   const image=await env.ARTWORK?.get(key);
   if(!image)return new Response("Not found",{status:404});
