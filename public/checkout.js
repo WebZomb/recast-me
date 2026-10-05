@@ -42,6 +42,7 @@ function money(n){const value=Number(n);return Number.isFinite(value)?`$${value.
 function sleep(ms){return new Promise(resolve=>setTimeout(resolve,ms))}
 let checkoutLoadId=0;
 const mockupState=new WeakMap();
+const productReviewState=new WeakMap();
 
 function stateFor(card){
   let state=mockupState.get(card);
@@ -73,7 +74,7 @@ function resetProductPreview(card,{invalidate=true}={}){
   if(img&&title){img.src=PRODUCT_ART[title];img.alt="Example design on "+title;}
   card.classList?.remove("real-mockup-ready");
   card.querySelector?.(".mockup-views")?.remove?.();
-  delete card.dataset.mockupSignature;delete card.dataset.mockupId;
+  delete card.dataset.mockupSignature;delete card.dataset.mockupId;productReviewState.delete(card);
   const caption=card.querySelector?.(".example-design-label");if(caption)caption.textContent="Example design";
   const error=card.querySelector?.(".mockup-error");if(error){error.hidden=true;error.textContent="";}
   const preview=card.querySelector?.(".product-preview-action");
@@ -160,11 +161,12 @@ async function generateRealMockup({req,sku,card,button}){
         }
         const caption=card.querySelector(".example-design-label");if(caption)caption.textContent="Your artwork · product preview";
         card.dataset.mockupSignature=signature;card.dataset.mockupId=mockupId;
+        productReviewState.set(card,{sku,design,mockupId,views:views.slice(0,3),signature});
         card.classList.add("real-mockup-ready");
         state.busy=false;
         button.disabled=true;button.textContent="Real product preview ready ✓";
         const buy=card.querySelector(".recast-buy");
-        if(buy&&card.dataset.active==="true"){buy.disabled=false;buy.textContent=buy.dataset.buyLabel||"Shop product";}
+        if(buy&&card.dataset.active==="true"){buy.disabled=false;buy.textContent="Continue to final review";}
         return;
       }
       if(data.status==="failed"||(!response.ok&&response.status!==202))throw new Error(data.error||"Printful could not finish this mockup.");
