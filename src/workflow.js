@@ -298,6 +298,7 @@ export async function verifyPaidOrder(env,job,{forProduction=false}={}){
   if(!job.digital&&job.productDesignRequired){
     const liveDesign=purchasedDesign(line,FULFILLMENT[job.sku]);
     if(!liveDesign||JSON.stringify(liveDesign)!==JSON.stringify(job.productDesign)||attrFromLine(line,"_Recast Proof")!==job.productProofHash||attrFromLine(line,"_Recast Preview Token")!==job.approvedPreviewToken)throw fault('design_changed','The purchased product layout or approved preview changed. An owner must review this order before printing.');
+    if(job.preapprovedCheckout&&attrFromLine(line,"_Recast Preapproval")!==job.preapprovalToken)throw fault('design_changed','The pre-checkout design confirmation changed. An owner must review this order before printing.');
   }
   return order;
 }
