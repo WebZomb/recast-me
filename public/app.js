@@ -274,7 +274,7 @@ function friendlyGenerationError(data,error){
   if(error?.name==='AbortError') return `${label} was still processing after several minutes, so this page stopped waiting. Keep this page open briefly and check Recent Versions before starting another attempt.`;
   if(data?.reviewRequired) return 'This request needs a quick human review before generation.';
   if(data?.code===3036 || data?.reason==='quota') return 'Recast Me has reached its shared AI capacity for today. This is a site-wide limit, not your personal render count. Your photo and settings are still here; nothing was charged.';
-  if(data?.code===3030 || data?.reason==='moderation') return `${label} could not complete that exact photo and wording combination. Try again, edit the direction, or switch quality.`;
+  if(data?.code===3030 || data?.reason==='moderation') return `${label} was declined by the image provider’s safety filter. This is not a busy-server message. Your saved pictures are still available; use an existing version or contact support with the reference below.`;
   if(data?.reason==='timeout') return `${label} timed out before the provider returned the artwork. Your photo and settings are still here — wait for Ready before trying again.`;
   if(data?.reason==='capacity') return `${label} received a confirmed busy response. Your photo and settings are still here — wait for Ready or choose another ready quality.`;
   if(data?.reason==='unavailable') return `${label} is temporarily unavailable. Your photo and settings are still here — wait for Ready before trying again.`;
@@ -714,7 +714,7 @@ form.addEventListener('submit',async e=>{
     data=await res.json().catch(()=>({}));
 
     if(res.status===202&&data.reviewRequired) throw Object.assign(new Error(friendlyGenerationError(data)),{publicMessage:friendlyGenerationError(data),diagnosticId:data.diagnosticId||'',retryable:false});
-    if(!res.ok) throw Object.assign(new Error(friendlyGenerationError(data)),{publicMessage:friendlyGenerationError(data),diagnosticId:data.diagnosticId||'',retryable:data.retryable!==false});
+    if(!res.ok) throw Object.assign(new Error(friendlyGenerationError(data)),{publicMessage:friendlyGenerationError(data),diagnosticId:data.diagnosticId||'',retryable:data.reason==='moderation'?false:data.retryable!==false});
     if(data.watermarked!==true||typeof data.image!=='string'||!data.image.startsWith('data:image/')) throw Object.assign(new Error('invalid preview'),{publicMessage:'The image engine returned an incomplete preview. Please try again.',retryable:true});
     if(!data.persisted)throw Object.assign(new Error('storage unavailable'),{
       publicMessage:'The artwork was generated, but private storage did not save it. Your last saved version is still available. Please try again in a moment.',

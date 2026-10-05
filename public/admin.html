@@ -45,6 +45,7 @@
         <button class="active" data-tab="orders">Orders</button>
         <button data-tab="social">X Requests</button>
         <button data-tab="trends">Trend Review</button>
+        <button data-tab="recovery">Recover artwork</button>
         <button data-tab="errors">Generation Errors</button>
         <button data-tab="system">System</button>
       </nav>
@@ -65,8 +66,14 @@
       </section>
 
 
+      <section class="tab-panel" data-panel="recovery">
+        <h2>Recover saved artwork</h2><p>Owner-only search of private saved records, including artwork outside this browser’s last four. Viewing a preview never generates new AI artwork. An uncached protected preview may use image processing.</p>
+        <label>Created on <input type="date" id="recovery-date"></label><button type="button" id="find-artwork">Find saved artwork</button>
+        <p id="recovery-status" role="status"></p><div id="recovery-list" class="card-list"></div><button type="button" id="more-artwork" hidden>Search next records</button>
+      </section>
       <section class="tab-panel" data-panel="errors">
         <div class="panel-heading"><div><div class="eyebrow">AI DIAGNOSTICS</div><h2>Generation errors</h2><p>Private diagnostics for failed previews. Customer photos are not stored in this log; it only records model, stage, provider code, and failure reason.</p></div></div>
+        <label>Support reference <input id="diagnostic-reference" placeholder="GEN-…"></label><button type="button" id="find-diagnostic">Find this error</button><pre id="diagnostic-result" style="white-space:pre-wrap;overflow-wrap:anywhere"></pre>
         <div id="generation-errors-list" class="card-list"></div>
       </section>
 
@@ -92,6 +99,6 @@
       <div id="toast" class="toast hidden"></div>
     </section>
   </main>
-  <script src="/admin.js?v=rm016" type="module"></script>
+  <script src="/admin.js?v=rm021" type="module"></script>
 </body>
 </html>

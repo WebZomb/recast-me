@@ -1,5 +1,5 @@
 const deploymentLabel=document.querySelector('#deployment-identity');
-if(deploymentLabel)deploymentLabel.textContent=`${location.hostname==='recast-me.sergz24.workers.dev'?'Production':'Preview / alternate host'} · ${location.hostname} · RM-016`;
+if(deploymentLabel)deploymentLabel.textContent=`${location.hostname==='recast-me.sergz24.workers.dev'?'Production':'Preview / alternate host'} · ${location.hostname} · RM-021`;
 const $=s=>document.querySelector(s);const $$=s=>[...document.querySelectorAll(s)];
 const tokenKey='recast_admin_token';let token=sessionStorage.getItem(tokenKey)||'';
 function headers(json=false){return{Authorization:`Bearer ${token}`,...(json?{'content-type':'application/json'}:{})}}
@@ -35,3 +35,33 @@ $('#poll-x').onclick=async()=>{try{const d=await api('/api/admin/poll-x',{method
 $('#scan-trends').onclick=async()=>{try{const d=await api('/api/admin/scan-trends',{method:'POST',body:{}});toast(d.disabled?'Trend scanner is disabled.':`Trend scan saved ${d.saved||0} ideas.`);refresh()}catch(e){toast(e.message)}};
 $$('.admin-tabs button').forEach(b=>b.onclick=()=>{$$('.admin-tabs button').forEach(x=>x.classList.toggle('active',x===b));$$('.tab-panel').forEach(p=>p.classList.toggle('active',p.dataset.panel===b.dataset.tab))});
 if(token)unlock();
+
+let recoveryCursor=null,recoveryRange=null;
+const recoveryDate=new Date();$('#recovery-date').value=`${recoveryDate.getFullYear()}-${String(recoveryDate.getMonth()+1).padStart(2,'0')}-${String(recoveryDate.getDate()).padStart(2,'0')}`;
+async function findArtwork(more=false){
+  const button=more?$('#more-artwork'):$('#find-artwork');button.disabled=true;
+  try{
+    if(!more){const start=new Date($('#recovery-date').value+'T00:00:00'),end=new Date(start);end.setDate(end.getDate()+1);recoveryRange={from:start.toISOString(),to:end.toISOString()};recoveryCursor=null;$('#recovery-list').replaceChildren();}
+    const query=new URLSearchParams(recoveryRange);if(recoveryCursor)query.set('cursor',recoveryCursor);
+    const data=await api('/api/admin/artwork-recovery?'+query);recoveryCursor=data.cursor;
+    for(const item of data.items){
+      const card=document.createElement('article');card.className='glass op-card';
+      const heading=document.createElement('h3');heading.textContent=`${item.styleName||'Saved artwork'} · ${new Date(item.createdAt).toLocaleString()}`;
+      const id=document.createElement('p');id.textContent=item.requestId;
+      const view=document.createElement('button');view.type='button';view.textContent='View saved preview';
+      view.onclick=async()=>{view.disabled=true;try{
+        const saved=await api('/api/admin/artwork-recovery/'+encodeURIComponent(item.requestId));
+        if(!saved.watermarked)throw new Error('Protected preview unavailable');
+        const img=document.createElement('img');img.src=saved.image;img.alt='Saved watermarked artwork';img.style.cssText='width:100%;max-width:380px;height:auto;display:block';
+        const link=document.createElement('a');const url=new URL('/',location.origin);url.hash=new URLSearchParams({recast:saved.requestId,key:saved.accessToken});link.href=url.href;link.textContent='Restore this exact artwork';link.className='button';
+        card.append(img,link);view.remove();
+      }catch(e){view.disabled=false;toast(e.message)}};
+      card.append(heading,id,view);$('#recovery-list').append(card);
+    }
+    $('#more-artwork').hidden=!recoveryCursor;
+    $('#recovery-status').textContent=recoveryCursor?'More stored records are available. Search next records if your picture is not listed yet.':'Search complete. If your picture is absent, check its original date and deployment.';
+  }catch(e){$('#recovery-status').textContent=e.message;}finally{button.disabled=false;}
+}
+$('#find-artwork').onclick=()=>findArtwork();$('#more-artwork').onclick=()=>findArtwork(true);
+$('#find-diagnostic').onclick=async()=>{try{const data=await api('/api/admin/generation-diagnostic?id='+encodeURIComponent($('#diagnostic-reference').value.trim()));$('#diagnostic-result').textContent=JSON.stringify(data.diagnostic,null,2);}catch(e){$('#diagnostic-result').textContent=e.message;}};
+$('#lock-admin').addEventListener('click',()=>{$('#recovery-list').replaceChildren();$('#diagnostic-result').textContent='';});

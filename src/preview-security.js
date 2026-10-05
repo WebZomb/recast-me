@@ -169,6 +169,36 @@ export function secureApplication(application) {
         // Public diagnostic routes previously exposed operational order data or
         // bypassed normal rendering. Internal service calls are not HTTP routes.
         if (path.startsWith('/api/admin/') || ['/api/shopify-status', '/api/printful-status', '/api/storage-test', '/api/ai-test'].includes(path)) requireOwner(request, env);
+        if(path==='/api/admin/artwork-recovery'&&request.method==='GET'){
+          if(!env.ARTWORK)throw error('storage_unavailable','Private storage is unavailable.');
+          const from=Date.parse(url.searchParams.get('from')),to=Date.parse(url.searchParams.get('to'));
+          if(!Number.isFinite(from)||!Number.isFinite(to)||to<=from||to-from>7*86400000)throw error('date_required','Choose a date range of up to seven days.',400);
+          const page=await env.ARTWORK.list({prefix:'requests/',limit:500,...(url.searchParams.get('cursor')?{cursor:url.searchParams.get('cursor')}:{})});
+          const items=[];
+          for(const object of page.objects||[]){
+            if(!/^requests\/RC-[A-Z0-9-]{8,60}\/request\.json$/.test(object.key))continue;
+            const stored=await env.ARTWORK.get(object.key);if(!stored)continue;
+            let meta;try{meta=await stored.json()}catch{continue}
+            const time=Date.parse(meta.createdAt);if(!(time>=from&&time<to))continue;
+            items.push(pick(meta,['requestId','styleName','createdAt','qualityMode','status']));
+          }
+          items.sort((a,b)=>String(b.createdAt).localeCompare(String(a.createdAt)));
+          return json({ok:true,items,cursor:page.truncated?page.cursor:null});
+        }
+        const recover=path.match(/^\/api\/admin\/artwork-recovery\/(RC-[A-Z0-9-]{8,60})$/);
+        if(recover&&request.method==='GET'){
+          const meta=await readMeta(env,recover[1]);
+          if(!meta.accessToken)throw error('not_found','This saved record has no recovery credentials.',404);
+          const image=`data:image/jpeg;base64,${to64(await protectedArtwork(env,recover[1]))}`;
+          return json({ok:true,requestId:recover[1],accessToken:meta.accessToken,image,watermarked:true});
+        }
+        if(path==='/api/admin/generation-diagnostic'&&request.method==='GET'){
+          const id=url.searchParams.get('id')||'';
+          if(!/^GEN-[A-Z0-9-]{5,80}$/.test(id))throw error('bad_id','Enter a GEN support reference.',400);
+          const object=await env.ARTWORK?.get(`diagnostics/generation/${id}.json`);
+          if(!object)throw error('not_found','This diagnostic was not found in this deployment.',404);
+          return json({ok:true,diagnostic:await object.json()});
+        }
         if (path === '/api/ai-test') return json({ error: 'use_model_lab', userMessage: 'Use the authenticated model comparison page.' }, 410);
         if (path === '/api/admin/render-controls' && request.method === 'GET') {
           return json({ ok: true, securityVersion: SECURITY_VERSION, imageProcessingConfigured: Boolean(env.IMAGES?.input && env.IMAGES?.info), renderControls: renderControlStatus(env), budgetReservations: budgetStatus(env), monetaryBudgetEnforced: false });
