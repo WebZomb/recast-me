@@ -352,14 +352,15 @@ async function loadCheckout(){
       if(!digital&&(card?.dataset?.mockupSignature!==signature||!card?.dataset?.mockupId)){
         errorCopy.textContent="Generate and review the product preview for these exact settings before checkout.";errorCopy.hidden=false;requireFreshPreview(card);return;
       }
+      if(!digital){openFinalReview({req,sku,card,button});return;}
       button.disabled=true;const previous=button.textContent;button.textContent="Opening Shopify…";
       try{
-        const res=await fetch("/api/checkout-link",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({requestId:req.requestId,accessToken:req.accessToken,sku,mockupId:digital?null:card.dataset.mockupId,design:digital?null:productDesign(card)})});
+        const res=await fetch("/api/checkout-link",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({requestId:req.requestId,accessToken:req.accessToken,sku})});
         const result=await res.json().catch(()=>({}));
         if(!res.ok||!result.ok||!result.checkoutUrl)throw new Error(result.error||"Checkout link could not be created.");
         location.href=result.checkoutUrl;
       }catch(error){
-        if(digital||card?.dataset?.mockupSignature===signature){button.disabled=false;button.textContent=previous}else requireFreshPreview(card);
+        button.disabled=false;button.textContent=previous;
         errorCopy.textContent=error.message||"Checkout is temporarily unavailable. Please try again.";errorCopy.hidden=false;
       }
     })
