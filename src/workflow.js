@@ -131,6 +131,7 @@ export function mockupPosition(catalog, variantId, placement, size, rawDesign=nu
   const file=catalog.printfiles?.find(f=>Number(f.printfile_id)===Number(variant?.placements?.[placement]));
   const design=normalizeProductDesign({product:size?.product||'Generic'},rawDesign||size?.design||{});
   if(!file || ![file.width,file.height,size.width,size.height].every(n=>Number.isFinite(n)&&n>0))throw fault('print_area_missing','Printful print dimensions are unavailable for this variant.',502);
+  if(size?.design?.background==='scene-fill')return {area_width:file.width,area_height:file.height,width:file.width,height:file.height,top:0,left:0};
   const scale=Math.min(file.width/size.width,file.height/size.height)*(design.scale/100);
   const width=Math.max(1,Math.floor(size.width*scale)),height=Math.max(1,Math.floor(size.height*scale));
   const center=design.x==='left'?0.25:design.x==='right'?0.75:0.5;
