@@ -55,15 +55,25 @@ function productDesign(card){
   const scale=Number(card?.querySelector?.("[data-design-scale]")?.value||(mug?92:100));
   return {product:mug?"Mug":"Generic",layout:mug?layout:"single",background:mug?"scene-fill":"none",x,scale};
 }
-
-function resetProductPreview(card){
+function designSignature(card,sku){return JSON.stringify({sku,design:productDesign(card)})}
+function requireFreshPreview(card){
+  const buy=card?.querySelector?.(".recast-buy");
+  if(!buy||card?.dataset?.digital==="true"||card?.dataset?.active!=="true")return;
+  buy.disabled=true;buy.textContent="Preview product before buying";
+}
+function resetProductPreview(card,{invalidate=true}={}){
   if(!card)return;
+  const state=stateFor(card);if(invalidate)state.run++;
   const title=card.dataset.productTitle,img=card.querySelector?.(".product-art img");
-  if(img&&title)img.src=PRODUCT_ART[title];
+  if(img&&title){img.src=PRODUCT_ART[title];img.alt="Example design on "+title;}
   card.classList?.remove("real-mockup-ready");
   card.querySelector?.(".mockup-views")?.remove?.();
+  delete card.dataset.mockupSignature;delete card.dataset.mockupId;
   const caption=card.querySelector?.(".example-design-label");if(caption)caption.textContent="Example design";
-  const preview=card.querySelector?.(".product-preview-action");if(preview){preview.disabled=false;preview.textContent="Preview my Recast on the real product";}
+  const error=card.querySelector?.(".mockup-error");if(error){error.hidden=true;error.textContent="";}
+  const preview=card.querySelector?.(".product-preview-action");
+  if(preview){preview.disabled=false;preview.textContent=state.busy?"Waiting for current preview…":"Preview my Recast on the real product";}
+  requireFreshPreview(card);
 }
 
 async function generateRealMockup({req,sku,card,button}){
