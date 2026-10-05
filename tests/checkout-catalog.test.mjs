@@ -1,5 +1,5 @@
 import test from 'node:test';import assert from 'node:assert/strict';
-import router from '../src/router.js';import {setup,ID,TOKEN,CLEAN} from './security-helpers.mjs';import {hash} from '../src/commerce-store.js';
+import router from '../src/router.js';import {setup,ID,TOKEN,CLEAN,MARKED} from './security-helpers.mjs';import {hash} from '../src/commerce-store.js';
 test('catalog loads with product permission alone and owner diagnostics remain protected',async()=>{
  const saved=globalThis.fetch;const queries=[];
  globalThis.fetch=async(url,opts)=>{
@@ -36,7 +36,7 @@ test('checkout requires the exact completed product proof and carries hidden pro
   assert.equal(decoded['_Recast Proof'],proofHash);assert.equal(decoded['_Recast Mockup'],mockupId);assert.equal(decoded['Recast Layout'],'One image');
   assert.match(decoded['Approved Preview'],/^https:\/\/recast\.test\/proof\/[a-f0-9]{48}$/);assert.match(decoded['_Recast Preview Token'],/^[a-f0-9]{48}$/);
   const page=await router.fetch(new Request(decoded['Approved Preview']),env,{});assert.equal(page.status,200);assert.match(await page.text(),/Approved Recast Product Preview|APPROVED PRODUCT PREVIEW/);
-  const image=await router.fetch(new Request(`https://recast.test/api/approved-preview/${decoded['_Recast Preview Token']}`),env,{});assert.equal(image.status,200);assert.deepEqual(Buffer.from(await image.arrayBuffer()),CLEAN);
+  const image=await router.fetch(new Request(`https://recast.test/api/approved-preview/${decoded['_Recast Preview Token']}`),env,{});assert.equal(image.status,200);assert.deepEqual(Buffer.from(await image.arrayBuffer()),MARKED);
   const stale=await post({requestId:ID,accessToken:TOKEN,sku:'RECAST-MUG-11OZ',mockupId,design:{...design,scale:100}});
   assert.equal(stale.status,409);assert.match((await stale.json()).error,/changed|fresh/i);
  }finally{globalThis.fetch=saved;}
