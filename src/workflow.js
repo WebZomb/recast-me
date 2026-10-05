@@ -149,6 +149,7 @@ export async function createMockup(request,env){
     if(!map)return json({ok:false,error:"Unknown Recast product."},400);
     if(map.digital)return json({ok:false,error:"Digital products do not need a physical mockup."},400);
     if(!map.printfulProductId||!map.printfulVariantId)return json({ok:false,error:"This product is not mapped to Printful yet."},500);
+    const design=normalizeProductDesign(map,body.design||{});
     stage="print-token";
     meta=await ensurePrintToken(env,meta);
     let sourceUrl=`${appBase(env,request)}/api/print-source/${encodeURIComponent(requestId)}?token=${encodeURIComponent(meta.printAccessToken)}`;
