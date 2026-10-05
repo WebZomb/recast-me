@@ -78,7 +78,7 @@ function printfulHeaders(env,extra={}){
   return headers;
 }
 async function printful(env,path,options={}){
-  if(!env.PRINTFUL_API_TOKEN)throw Object.assign(new Error("Printful is not connected."),{status:503});
+  if(!env.PRINTFUL_API_TOKEN)throw Object.assign(new Error("Printful is not connected."),{status:503,code:"printful_binding_missing"});
   const response=await fetch(`${PRINTFUL_API}${path}`,{
     ...options,
     headers:printfulHeaders(env,options.headers||{})
@@ -127,32 +127,41 @@ export function mockupPosition(catalog, variantId, placement, size){
 }
 
 export async function createMockup(request,env){
+  let stage="request";
   try{
     const body=await request.json().catch(()=>({}));
     const requestId=String(body.requestId||"");const accessToken=String(body.accessToken||"");const sku=String(body.sku||"");
+    stage="artwork-access";
     let meta=await requireRequest(env,requestId,accessToken);
     const map=FULFILLMENT[sku];
     if(!map)return json({ok:false,error:"Unknown Recast product."},400);
     if(map.digital)return json({ok:false,error:"Digital products do not need a physical mockup."},400);
     if(!map.printfulProductId||!map.printfulVariantId)return json({ok:false,error:"This product is not mapped to Printful yet."},500);
+    stage="print-token";
     meta=await ensurePrintToken(env,meta);
     const sourceUrl=`${appBase(env,request)}/api/print-source/${encodeURIComponent(requestId)}?token=${encodeURIComponent(meta.printAccessToken)}`;
+    stage="artwork-source";
     const savedSource=await env.ARTWORK.get(requestKey(requestId,'preview.b64'));
     if(!savedSource)throw fault('artwork_missing','The saved artwork is unavailable.',404);
     const savedBase64=await savedSource.text(),sourceHash=await hash(savedBase64);
     const existing=await readJson(env,mockupKey(requestId,sku));
     if(existing?.sourceHash===sourceHash&&existing.position&&['completed','pending'].includes(existing.status))return json({ok:true,status:existing.status,taskKey:existing.taskKey,sku,waitSeconds:10});
     if(!env.IMAGES)throw fault('images_required','Image processing is not configured.',503);
+    stage="image-info";
     const size=await env.IMAGES.info(new Blob([decodeBase64(savedBase64)]).stream());
     const placement=map.preferredPlacement||'default';
+    stage="printful-catalog";
     const catalog=await printful(env,`/mockup-generator/printfiles/${map.printfulProductId}`,{method:'GET'});
     const position=mockupPosition(catalog,map.printfulVariantId,placement,size);
     const payload={variant_ids:[map.printfulVariantId],format:"jpg",width:1200,files:[{placement,image_url:sourceUrl,position}]};
+    stage="printful-create-task";
     const result=await printful(env,`/mockup-generator/create-task/${map.printfulProductId}`,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(payload)});
     const record={requestId,sku,sourceHash,position,taskKey:result.task_key,status:result.status||"pending",createdAt:now(),updatedAt:now(),mockupAccessToken:randomHex(24),sourceUrl,printfulProductId:map.printfulProductId,printfulVariantId:map.printfulVariantId};
     await putJson(env,mockupKey(requestId,sku),record);
     return json({ok:true,status:record.status,taskKey:record.taskKey,sku,waitSeconds:10});
-  }catch(error){return json({ok:false,error:error?.message||String(error)},error.status||500)}
+  }catch(error){
+    return json({ok:false,error:error?.message||String(error),reason:error?.code||null,stage,workerVersionId:env.CF_VERSION_METADATA?.id||null},error.status||500)
+  }
 }
 
 async function persistMockups(env,record,result,request){
