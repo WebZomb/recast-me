@@ -91,6 +91,16 @@ async function printful(env,path,options={}){
   return data.result??data;
 }
 
+export async function printfulHealth(env){
+  const base={secretConfigured:Boolean(env.PRINTFUL_API_TOKEN),storeScopeConfigured:Boolean(env.PRINTFUL_STORE_ID),workerVersionId:env.CF_VERSION_METADATA?.id||null};
+  try{
+    await printful(env,"/mockup-generator/printfiles/19",{method:"GET"});
+    return json({ok:true,...base,providerReachable:true});
+  }catch(error){
+    return json({ok:false,...base,providerReachable:false,providerStatus:error.printfulStatus||null},error.status||503);
+  }
+}
+
 export async function servePrintSource(request,env,requestId){
   const url=new URL(request.url);const token=url.searchParams.get("token")||"";
   const meta=await requestMeta(env,requestId);
@@ -505,6 +515,7 @@ export async function scheduledWorkflow(controller,env,ctx){
 export async function routeWorkflow(request,env,ctx){
   const url=new URL(request.url);const p=url.pathname;
   if(p==="/api/client-diagnostic"&&request.method==="POST")return clientDiagnostic(request,env);
+  if(p==="/api/printful-health"&&request.method==="GET")return printfulHealth(env);
   if(p==="/api/mockup/create"&&request.method==="POST")return createMockup(request,env);
   if(p==="/api/mockup/status"&&request.method==="GET")return mockupStatus(request,env);
   let m=p.match(/^\/api\/print-source\/([^/]+)$/);if(m&&request.method==="GET")return servePrintSource(request,env,decodeURIComponent(m[1]));
