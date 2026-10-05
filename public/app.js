@@ -361,6 +361,7 @@ let originalTurnstileToken="";
 let originalTurnstileWidgetId=null;
 let turnstileToken="";
 let turnstileWidgetId=null;
+let publicConfig={};
 async function setupTurnstile(){
   try{
     const config=await fetch('/api/public-config').then(r=>r.json());
