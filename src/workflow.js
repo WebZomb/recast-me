@@ -14,7 +14,8 @@ function now(){return new Date().toISOString()}
 function randomHex(byteCount=18){const bytes=new Uint8Array(byteCount);crypto.getRandomValues(bytes);return[...bytes].map(b=>b.toString(16).padStart(2,"0")).join("")}
 function requestKey(id,suffix){return `requests/${id}/${suffix}`}
 function jobKey(id){return `jobs/${id}.json`}
-function mockupKey(id,sku){return `mockups/${id}/${sku}/task.json`}
+function mockupDesignId(design){return sanitizeId(`v${design?.version||1}-${design?.layout||'single'}-${design?.background||'none'}-${design?.x||'center'}-${design?.scale||100}`)}
+function mockupKey(id,sku,mockupId="legacy"){return mockupId==="legacy"?`mockups/${id}/${sku}/task.json`:`mockups/${id}/${sku}/${sanitizeId(mockupId)}/task.json`}
 function socialKey(id){return `social/x/${id}.json`}
 function trendKey(id){return `trends/${id}.json`}
 function sanitizeId(value){return String(value||"").replace(/[^a-zA-Z0-9._-]+/g,"-").slice(0,180)}
