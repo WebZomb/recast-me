@@ -37,7 +37,7 @@ const application = {
       return new Response(JSON.stringify(snapshot),{status:snapshot.ok?200:503,headers:{"content-type":"application/json; charset=utf-8","cache-control":"no-store"}});
     }
     if (url.pathname === "/api/public-config" && request.method === "GET") {
-      return new Response(JSON.stringify({turnstileSiteKey: env.TURNSTILE_SITE_KEY || null}), {headers:{"content-type":"application/json; charset=utf-8","cache-control":"no-store"}});
+      return new Response(JSON.stringify({turnstileSiteKey: env.TURNSTILE_SITE_KEY || null,liveAppUrl: env.LIVE_APP_URL || env.PUBLIC_APP_URL || null}), {headers:{"content-type":"application/json; charset=utf-8","cache-control":"no-store"}});
     }
 
     const workflowResponse = await routeWorkflow(request, env, ctx);
