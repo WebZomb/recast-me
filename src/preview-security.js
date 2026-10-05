@@ -221,7 +221,17 @@ export function secureApplication(application) {
         if (match && request.method === 'GET') {
           const id = artworkId(match[1]), meta = await readMeta(env, id);
           if (!equal(meta.printAccessToken, url.searchParams.get('token'))) return json({ error: 'not_found' }, 404);
-          if (url.searchParams.get('final') !== '1') return imageResponse(await protectedArtwork(env, id));
+          if (url.searchParams.get('final') !== '1') {
+            const areaWidth=Number(url.searchParams.get('areaWidth')),areaHeight=Number(url.searchParams.get('areaHeight'));
+            if(Number.isFinite(areaWidth)&&Number.isFinite(areaHeight)&&areaWidth>0&&areaHeight>0&&areaWidth<=12000&&areaHeight<=12000){
+              const object=await env.ARTWORK.get(`requests/${id}/preview.b64`);
+              if(!object)throw error('not_found','Saved artwork is unavailable.',404);
+              const source=from64(await object.text()),info=await env.IMAGES.info(new Blob([source]).stream());
+              const composed=await composeMugLayout(env,source,info,{width:areaWidth,height:areaHeight},{layout:url.searchParams.get('layout')||'single',x:url.searchParams.get('x')||'center',scale:url.searchParams.get('scale')||92});
+              return imageResponse(await watermarkBytes(env,composed.bytes));
+            }
+            return imageResponse(await protectedArtwork(env,id));
+          }
           if (!paid(meta)) return json({ error: 'paid_fulfillment_required' }, 403);
           const object = await env.ARTWORK.get(`requests/${id}/final-print.jpg`);
           if (!object) return json({ error: 'print_not_ready' }, 404);
