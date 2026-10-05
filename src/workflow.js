@@ -117,7 +117,7 @@ export async function servePrintSource(request,env,requestId){
   return new Response(bytes,{headers:{"content-type":meta.previewMime||"image/jpeg","cache-control":"private, max-age=300","x-content-type-options":"nosniff"}})
 }
 
-export function mockupPosition(catalog, variantId, placement, size){
+export function mockupPosition(catalog, variantId, placement, size, rawDesign={}){
   const variant=catalog.variant_printfiles?.find(v=>Number(v.variant_id)===Number(variantId));
   const file=catalog.printfiles?.find(f=>Number(f.printfile_id)===Number(variant?.placements?.[placement]));
   if(!file || ![file.width,file.height,size.width,size.height].every(n=>Number.isFinite(n)&&n>0))throw fault('print_area_missing','Printful print dimensions are unavailable for this variant.',502);
