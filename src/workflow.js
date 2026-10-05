@@ -269,6 +269,17 @@ function purchasedDesign(line,map){
   const raw=attrFromLine(line,"_Recast Design");if(!raw)return null;
   try{return normalizeProductDesign(map,JSON.parse(raw))}catch{return null}
 }
+function preapprovalTokenFromLine(line){return attrFromLine(line,"_Recast Preapproval")}
+async function validatedPreapproval(env,line,map,requestId){
+  if(map.digital)return null;
+  const token=preapprovalTokenFromLine(line);if(!/^[a-f0-9]{48}$/.test(token))return null;
+  const row=await readJson(env,`commerce/preapprovals/${token}.json`);if(!row)return null;
+  const design=purchasedDesign(line,map),proof=attrFromLine(line,"_Recast Proof"),mockup=attrFromLine(line,"_Recast Mockup"),preview=attrFromLine(line,"_Recast Preview Token");
+  if(row.requestId!==requestId||row.sku!==line.sku||row.proofHash!==proof||row.mockupId!==mockup||row.previewToken!==preview)return null;
+  if(!design||JSON.stringify(design)!==JSON.stringify(row.design))return null;
+  if(!row.snapshotKey||!await env.ARTWORK?.head(row.snapshotKey))return null;
+  return row;
+}
 function recipientFromOrder(order){
   const a=order.shippingAddress||{};return{name:a.name||[a.firstName,a.lastName].filter(Boolean).join(" "),company:a.company||undefined,address1:a.address1,address2:a.address2||undefined,city:a.city,state_code:a.provinceCode||undefined,state_name:a.province||undefined,country_code:a.countryCodeV2,zip:a.zip,phone:a.phone||undefined,email:order.email||undefined};
 }
