@@ -200,6 +200,21 @@ async function freezeApprovedPreview(request,env,{requestId,sku,mockupId,proofHa
   return {token,url:`${base}/proof/${token}`,imageUrl:`${base}/api/approved-preview/${token}`,images:savedViews.map(v=>({title:v.title,url:`${base}/api/approved-preview/${token}/${v.index}`}))};
 }
 
+async function freezeCheckoutApproval(env,{requestId,sku,mockupId,proofHash,mockup,design,approvedPreview,sourceBase64}){
+  if(!approvedPreview?.token)throw new Error("Approved product preview is required.");
+  const token=approvedPreview.token;
+  const snapshotKey=`commerce/preapprovals/${token}/source.b64`;
+  const recordKey=`commerce/preapprovals/${token}.json`;
+  if(!await env.ARTWORK?.head(snapshotKey))await env.ARTWORK.put(snapshotKey,sourceBase64,{httpMetadata:{contentType:"text/plain"}});
+  const record={
+    token,requestId,sku,mockupId,proofHash,previewToken:token,design,snapshotKey,
+    sourceHash:await hash(sourceBase64),position:mockup.position,images:approvedPreview.images||[],
+    approvedAt:new Date().toISOString(),schemaVersion:1
+  };
+  await env.ARTWORK.put(recordKey,JSON.stringify(record),{httpMetadata:{contentType:"application/json"}});
+  return record;
+}
+
 async function checkoutLink(request, env, ctx) {
   const body = await request.json().catch(() => ({}));
   const requestId = String(body.requestId || "");
