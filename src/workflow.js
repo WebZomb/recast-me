@@ -501,6 +501,56 @@ async function finalizePrintArt(env,job){
   job.printReadyAt=design.finishedAt;job.printReadyMethod=design.finishMethod;job.status='ready_for_printful_draft';await saveJob(env,job);return job;
 }
 
+async function finalizePhysicalJob(env,job){
+  if(job.digital){job.printReadyAt=now();job.status='digital_ready';await saveJob(env,job);return job}
+  await verifyPaidOrder(env,job,{forProduction:true});
+  const design=await finishApprovedDesign(env,job);
+  job.artApprovedAt ||= design.approvedAt||now();
+  job.printReadyAt=design.finishedAt;job.printReadyMethod=design.finishMethod;job.status='ready_for_printful_draft';
+  return saveJob(env,job);
+}
+async function createPrintfulDraftForJob(env,job){
+  if(job.digital)throw fault('physical_only','Digital products do not use Printful.',400);
+  if(job.printfulOrderId)return job;
+  if(job.status==='on_hold'||job.paymentRevokedAt)throw fault('order_hold','This order is on hold.');
+  await verifyPaidOrder(env,job,{forProduction:true});
+  const design=await approvedDesign(env,job);
+  if(!design.proof?.position)throw fault('proof_placement_missing','Review a product preview with verified placement before printing.');
+  if(!design.finalKey)throw fault('print_not_ready','Prepare the approved print file first.');
+  const map=FULFILLMENT[job.sku];const sourceUrl=`${String(env.PUBLIC_APP_URL||'').replace(/\/$/,'')}/api/order-print/${encodeURIComponent(job.id)}?token=${encodeURIComponent(design.printToken)}`;
+  const claim=`commerce/production/${await hash(job.id)}-draft.json`;
+  if(!await env.ARTWORK.put(claim,JSON.stringify({startedAt:now()}),{onlyIf:new Headers({'If-None-Match':'*'})}))throw fault('draft_started','Draft submission already started; review Printful before retrying.');
+  const payload={external_id:`recast-${job.id}`,recipient:job.recipient,items:[{variant_id:map.printfulVariantId,quantity:Number(job.quantity||1)*Number(map.quantity||1),files:[{type:map.orderFileType||"default",url:sourceUrl,position:design.proof.position}]}]};
+  const result=await printful(env,"/orders",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(payload)});
+  job.printfulOrderId=result.id;job.printfulStatus=result.status||"draft";job.printSourceUrl=sourceUrl;job.status="printful_draft_ready";job.printfulCreatedAt=now();
+  return saveJob(env,job);
+}
+async function sendPrintfulProductionForJob(env,job){
+  if(!job.printfulOrderId)throw fault('draft_required','Create a Printful draft first.',409);
+  if(job.sentToProductionAt)return job;
+  if(job.status==='on_hold'||job.paymentRevokedAt)throw fault('order_hold','This order is on hold.');
+  await verifyPaidOrder(env,job,{forProduction:true});await approvedDesign(env,job);
+  const claim=`commerce/production/${await hash(job.id)}-confirm.json`;
+  if(!await env.ARTWORK.put(claim,JSON.stringify({startedAt:now()}),{onlyIf:new Headers({'If-None-Match':'*'})}))throw fault('production_started','Production submission already started; review Printful before retrying.');
+  const result=await printful(env,`/orders/${encodeURIComponent(job.printfulOrderId)}/confirm`,{method:"POST"});
+  job.status="submitted_to_printful";job.printfulStatus=result.status||"pending";job.sentToProductionAt=now();
+  return saveJob(env,job);
+}
+async function autoProcessPreapprovedJob(env,job){
+  if(!job.preapprovedCheckout||String(env.AUTO_PRINT_PREAPPROVED_ENABLED||"false")!=="true")return job;
+  if(job.sentToProductionAt)return job;
+  try{
+    if(!job.printReadyAt)job=await finalizePhysicalJob(env,job);
+    if(!job.printfulOrderId)job=await createPrintfulDraftForJob(env,job);
+    if(!job.sentToProductionAt)job=await sendPrintfulProductionForJob(env,job);
+    job.autoPrintCompletedAt=now();delete job.autoPrintError;return saveJob(env,job);
+  }catch(error){
+    job.autoPrintError=error.message||String(error);job.autoPrintFailedAt=now();
+    if(!job.sentToProductionAt&&job.status!=='on_hold')job.status='auto_print_review';
+    await saveJob(env,job);throw error;
+  }
+}
+
 export async function adminJobAction(request,env,id,action){
   try{
     requireAdmin(request,env);let job=await loadJob(env,id);
