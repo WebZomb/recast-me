@@ -171,6 +171,28 @@ async function checkoutOptions(request, env, ctx) {
   });
 }
 
+function liveBase(env,request){
+  return String(env.LIVE_APP_URL||env.PUBLIC_APP_URL||new URL(request.url).origin).replace(/\/$/,"");
+}
+function htmlEscape(value){
+  return String(value??"").replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]));
+}
+async function freezeApprovedPreview(request,env,{requestId,sku,mockupId,proofHash,mockup,design,accessToken}){
+  const token=(await hash([requestId,sku,mockupId,proofHash,accessToken,"approved-product-preview"].join("|"))).slice(0,48);
+  const imageKey=`commerce/checkout-previews/${token}.jpg`,metaKey=`commerce/checkout-previews/${token}.json`;
+  if(!await env.ARTWORK?.head(imageKey)){
+    const views=mockup.images||[];
+    const preferred=views.findIndex(v=>/front/i.test(String(v.title||"")));
+    const index=preferred>=0?preferred:0;
+    const folder=`mockups/${requestId}/${sku}/${mockupId}`;
+    const source=await env.ARTWORK?.get(`${folder}/image-${index}.jpg`);
+    if(!source)return null;
+    await env.ARTWORK.put(imageKey,source.body,{httpMetadata:{contentType:"image/jpeg",cacheControl:"private, no-store"}});
+    await env.ARTWORK.put(metaKey,JSON.stringify({token,requestId,sku,mockupId,proofHash,design,viewTitle:views[index]?.title||"Product preview",createdAt:new Date().toISOString()}),{httpMetadata:{contentType:"application/json"}});
+  }
+  return {token,url:`${liveBase(env,request)}/proof/${token}`,imageUrl:`${liveBase(env,request)}/api/approved-preview/${token}`};
+}
+
 async function checkoutLink(request, env, ctx) {
   const body = await request.json().catch(() => ({}));
   const requestId = String(body.requestId || "");
