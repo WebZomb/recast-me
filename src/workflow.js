@@ -216,7 +216,7 @@ export async function mockupStatus(request,env){
     }
     if(result.status!=="completed")return json({ok:true,status:"pending",waitSeconds:10});
     record=await persistMockups(env,record,result,request);
-    return json({ok:true,status:"completed",images:record.images,position:record.position});
+    return json({ok:true,status:"completed",images:record.images,position:record.position,design:record.design||null});
   }catch(error){return json({ok:false,error:error?.message||String(error)},error.status||500)}
 }
 
