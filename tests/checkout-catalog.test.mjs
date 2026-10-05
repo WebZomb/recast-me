@@ -31,8 +31,8 @@ test('checkout requires the exact completed product proof and carries hidden pro
   const env=await setup({SHOPIFY_SHOP:'test',SHOPIFY_CLIENT_ID:'test',SHOPIFY_CLIENT_SECRET:'test'});
   const design={version:3,layout:'single',background:'scene-fill',x:'center',scale:92,spacing:'standard'},mockupId='v3-single-scene-fill-center-92-standard';
   const proofHash=await hash(CLEAN.toString('base64')+'|'+JSON.stringify(design));
-  await env.ARTWORK.put(`mockups/${ID}/RECAST-MUG-11OZ/${mockupId}/task.json`,JSON.stringify({requestId:ID,sku:'RECAST-MUG-11OZ',mockupId,status:'completed',sourceHash:proofHash,design,images:[{title:'Front view',url:'private'}]}));
-  await env.ARTWORK.put(`mockups/${ID}/RECAST-MUG-11OZ/${mockupId}/image-0.jpg`,CLEAN,{httpMetadata:{contentType:'image/jpeg'}});
+  await env.ARTWORK.put(`mockups/${ID}/RECAST-MUG-11OZ/${mockupId}/task.json`,JSON.stringify({requestId:ID,sku:'RECAST-MUG-11OZ',mockupId,status:'completed',sourceHash:proofHash,design,images:[{title:'default',url:'private-0'},{title:'Handle on Left',url:'private-1'},{title:'Front view',url:'private-2'}]}));
+  for(let i=0;i<3;i++)await env.ARTWORK.put(`mockups/${ID}/RECAST-MUG-11OZ/${mockupId}/image-${i}.jpg`,CLEAN,{httpMetadata:{contentType:'image/jpeg'}});
   const post=body=>router.fetch(new Request('https://recast.test/api/checkout-link',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)}),env,{});
   const ok=await post({requestId:ID,accessToken:TOKEN,sku:'RECAST-MUG-11OZ',mockupId,design});
   const data=await ok.json();assert.equal(ok.status,200,data.error);assert.equal(data.ok,true);
@@ -40,8 +40,11 @@ test('checkout requires the exact completed product proof and carries hidden pro
   const decoded=JSON.parse(Buffer.from(props.replace(/-/g,'+').replace(/_/g,'/'),'base64').toString());
   assert.equal(decoded['_Recast Proof'],proofHash);assert.equal(decoded['_Recast Mockup'],mockupId);assert.equal(decoded['Recast Layout'],'One image');
   assert.match(decoded['Approved Preview'],/^https:\/\/recast\.test\/proof\/[a-f0-9]{48}$/);assert.match(decoded['_Recast Preview Token'],/^[a-f0-9]{48}$/);
-  const page=await router.fetch(new Request(decoded['Approved Preview']),env,{});assert.equal(page.status,200);assert.match(await page.text(),/Approved Recast Product Preview|APPROVED PRODUCT PREVIEW/);
-  const image=await router.fetch(new Request(`https://recast.test/api/approved-preview/${decoded['_Recast Preview Token']}`),env,{});assert.equal(image.status,200);assert.deepEqual(Buffer.from(await image.arrayBuffer()),MARKED);
+  const page=await router.fetch(new Request(decoded['Approved Preview']),env,{});assert.equal(page.status,200);const html=await page.text();
+  assert.match(html,/APPROVED PRODUCT PREVIEW/);assert.match(html,/3D view/);assert.match(html,/Handle left/);assert.match(html,/Front view/);
+  assert.equal((html.match(/class="angle"/g)||[]).length,3);
+  for(let i=0;i<3;i++){const image=await router.fetch(new Request(`https://recast.test/api/approved-preview/${decoded['_Recast Preview Token']}/${i}`),env,{});assert.equal(image.status,200);assert.deepEqual(Buffer.from(await image.arrayBuffer()),MARKED);}
+  const primary=await router.fetch(new Request(`https://recast.test/api/approved-preview/${decoded['_Recast Preview Token']}`),env,{});assert.equal(primary.status,200);
   const stale=await post({requestId:ID,accessToken:TOKEN,sku:'RECAST-MUG-11OZ',mockupId,design:{...design,scale:100}});
   assert.equal(stale.status,409);assert.match((await stale.json()).error,/changed|fresh/i);
  }finally{globalThis.fetch=saved;}
