@@ -333,6 +333,11 @@ export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
 
+    const approvedImage=url.pathname.match(/^\/api\/approved-preview\/([a-f0-9]{48})$/);
+    if(approvedImage&&request.method==="GET")return approvedPreviewImage(env,approvedImage[1]);
+    const approvedPage=url.pathname.match(/^\/proof\/([a-f0-9]{48})$/);
+    if(approvedPage&&request.method==="GET")return approvedPreviewPage(env,approvedPage[1]);
+
     if (url.pathname === "/api/fulfillment-map" && request.method === "GET") {
       return json({ ok: true, mapping: FULFILLMENT });
     }
