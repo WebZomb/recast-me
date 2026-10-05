@@ -227,7 +227,7 @@ export function secureApplication(application) {
               const object=await env.ARTWORK.get(`requests/${id}/preview.b64`);
               if(!object)throw error('not_found','Saved artwork is unavailable.',404);
               const source=from64(await object.text()),info=await env.IMAGES.info(new Blob([source]).stream());
-              const composed=await composeMugLayout(env,source,info,{width:areaWidth,height:areaHeight},{layout:url.searchParams.get('layout')||'single',x:url.searchParams.get('x')||'center',scale:url.searchParams.get('scale')||92});
+              const composed=await composeMugLayout(env,source,info,{width:areaWidth,height:areaHeight},{layout:url.searchParams.get('layout')||'single',x:url.searchParams.get('x')||'center',scale:url.searchParams.get('scale')||92,spacing:url.searchParams.get('spacing')||'standard'});
               return imageResponse(await watermarkBytes(env,composed.bytes));
             }
             return imageResponse(await protectedArtwork(env,id));
