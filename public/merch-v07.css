@@ -117,7 +117,7 @@ html.recast-review-open,html.recast-review-open body{overflow:hidden}
 .final-review-note{margin:14px 0;padding:14px;border-radius:14px;background:#17142a;color:#bcbacd;line-height:1.5;font-size:13px}
 .final-review-note strong{color:#fff}
 .final-review-error{color:#ffb8c6;background:#2a1018;border:1px solid #6d2f43;border-radius:12px;padding:11px}
-.final-review-actions{display:grid;grid-template-columns:.75fr 1.25fr;gap:10px;margin-top:14px}
+.final-review-actions{display:grid;grid-template-columns:.7fr .8fr 1.35fr;gap:10px;margin-top:14px}
 .final-review-actions .button{margin:0!important;min-height:52px!important}
 .final-review-actions .primary{background:linear-gradient(90deg,#8f43ff,#20c7ef)!important;color:#fff!important;border:0!important}
 @media(max-width:700px){
