@@ -1,4 +1,4 @@
-import {change,read,hash,equal,randomToken,fault,sameOrigin,privateJson} from './commerce-store.js';
+import {change,read,hash,equal,randomToken,fault,sameOrigin,privateJson,composeMugLayout} from './commerce-store.js';
 const designKey=id=>`commerce/designs/${id}.json`;
 const validId=v=>typeof v==='string'&&/^[a-zA-Z0-9._-]{1,180}$/.test(v);
 export async function authorizedArtwork(env,id,token){
@@ -57,7 +57,7 @@ export async function customerDesignAction(request,env,id,action,services){
     await env.ARTWORK.put(snapshotKey,src.b64,{onlyIf:new Headers({'If-None-Match':'*'})});
     const d=await change(env,designKey(id),initial,v=>{
       editable(job,v,revision);
-      return {...v,sourceHash:src.sourceHash,snapshotKey,proof:{images:result.images,position:result.position,sku:job.sku,quantity:job.quantity,sourceHash:src.sourceHash},revision:v.revision+1};
+      return {...v,sourceHash:src.sourceHash,snapshotKey,proof:{images:result.images,position:result.position,design:result.design||job.productDesign||null,sku:job.sku,quantity:job.quantity,sourceHash:src.sourceHash},revision:v.revision+1};
     });
     return privateJson({ok:true,status:'completed',design:publicDesign(d)});
   }
@@ -66,6 +66,7 @@ export async function customerDesignAction(request,env,id,action,services){
     const d=await change(env,designKey(id),initial,v=>{
       editable(job,v,revision);
       if(!v.proof||v.proof.sku!==job.sku||v.proof.quantity!==job.quantity||v.proof.sourceHash!==v.sourceHash||!v.snapshotKey)throw fault('proof_required','Review the product preview for this design first.');
+      if(job.productDesignRequired&&JSON.stringify(v.proof.design||null)!==JSON.stringify(job.productDesign||null))throw fault('proof_layout_changed','The reviewed product layout no longer matches the purchased layout.');
       return {...v,approvedAt:new Date().toISOString(),printToken:randomToken(),revision:v.revision+1};
     });
     return privateJson({ok:true,design:publicDesign(d)});
