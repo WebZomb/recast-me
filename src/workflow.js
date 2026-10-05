@@ -399,8 +399,13 @@ export async function customerOrderStatus(request,env){
   try{
     const url=new URL(request.url);const requestId=String(url.searchParams.get("requestId")||"");const token=String(url.searchParams.get("token")||"");
     const meta=await requireRequest(env,requestId,token);
-    const index=await listJson(env,`commerce/request-jobs/${requestId}/`,1000);
-    const jobs=index.length?(await Promise.all(index.map(row=>readJson(env,jobKey(row.id))))).filter(Boolean):(await listJson(env,'jobs/',1000)).filter(j=>j.requestId===requestId);
+    let index=await listJson(env,`commerce/request-jobs/${requestId}/`,1000);
+    let jobs=index.length?(await Promise.all(index.map(row=>readJson(env,jobKey(row.id))))).filter(Boolean):(await listJson(env,'jobs/',1000)).filter(j=>j.requestId===requestId);
+    if(!jobs.length&&String(env.ORDER_SYNC_ENABLED||"false")==="true"){
+      await syncPaidOrders(env).catch(()=>null);
+      index=await listJson(env,`commerce/request-jobs/${requestId}/`,1000);
+      jobs=index.length?(await Promise.all(index.map(row=>readJson(env,jobKey(row.id))))).filter(Boolean):(await listJson(env,'jobs/',1000)).filter(j=>j.requestId===requestId);
+    }
     const views=await Promise.all(jobs.map(async j=>{
       let approvedPreviewImages=[];
       if(j.approvedPreviewToken){
