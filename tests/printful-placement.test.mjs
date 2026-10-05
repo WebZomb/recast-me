@@ -17,7 +17,7 @@ test('mockup submission sends provider dimensions and persists placement for pri
  });
  const response=await createMockup(new Request('https://recast.test/api/mockup/create',{method:'POST',body:JSON.stringify({requestId:ID,accessToken:TOKEN,sku:'RECAST-MUG-11OZ'})}),env);
  assert.equal(response.status,200);
- const data=await response.json();assert.match(data.mockupId,/^v2-/);
+ const data=await response.json();assert.match(data.mockupId,/^v3-/);
  const record=await(await env.ARTWORK.get(`mockups/${ID}/RECAST-MUG-11OZ/${data.mockupId}/task.json`)).json();
  assert.deepEqual(record.position,payload.files[0].position);
  assert.match(payload.files[0].image_url,/\/api\/print-source\//);
@@ -40,4 +40,21 @@ test('different mug layouts receive isolated provider task records',async t=>{
  assert.notEqual(single.mockupId,double.mockupId);assert.equal(tasks,2);
  assert.ok(await env.ARTWORK.get(`mockups/${ID}/RECAST-MUG-11OZ/${single.mockupId}/task.json`));
  assert.ok(await env.ARTWORK.get(`mockups/${ID}/RECAST-MUG-11OZ/${double.mockupId}/task.json`));
+});
+
+
+test('two-sided spacing changes isolate mockup identity',async t=>{
+ const env=await setup({PRINTFUL_API_TOKEN:'test-only',PRINTFUL_STORE_ID:'123'});let tasks=0;
+ t.mock.method(globalThis,'fetch',async url=>{
+  if(String(url).endsWith('/printfiles/19'))return Response.json({result:catalog});
+  if(String(url).endsWith('/create-task/19'))return Response.json({result:{task_key:'spacing-'+(++tasks),status:'pending'}});
+  throw Error('unexpected '+url);
+ });
+ const send=async spacing=>{
+  const design={product:'Mug',layout:'two-sided',background:'scene-fill',x:'center',scale:100,spacing};
+  const r=await createMockup(new Request('https://recast.test/api/mockup/create',{method:'POST',body:JSON.stringify({requestId:ID,accessToken:TOKEN,sku:'RECAST-MUG-11OZ',design})}),env);
+  assert.equal(r.status,200);return r.json();
+ };
+ const close=await send('close'),wide=await send('wide');
+ assert.notEqual(close.mockupId,wide.mockupId);assert.match(close.mockupId,/close$/);assert.match(wide.mockupId,/wide$/);assert.equal(tasks,2);
 });
