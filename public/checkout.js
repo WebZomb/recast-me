@@ -77,71 +77,101 @@ function resetProductPreview(card,{invalidate=true}={}){
 }
 
 async function generateRealMockup({req,sku,card,button}){
-  if(!sku)return;
+  if(!sku||!card||!button)return;
+  const state=stateFor(card),run=++state.run,design=productDesign(card),signature=JSON.stringify({sku,design});
+  state.busy=true;
+  resetProductPreview(card,{invalidate:false});
   const errorCopy=card.querySelector(".mockup-error");
-  if(errorCopy){errorCopy.hidden=true;errorCopy.textContent="";}
   button.disabled=true;button.textContent="Preparing real product preview…";
+  const current=()=>stateFor(card).run===run&&designSignature(card,sku)===signature;
+  const safeWait=async ms=>{await sleep(ms);return current()};
   try{
-    const start=()=>fetch("/api/mockup/create",{
+    const initialWait=Math.max(0,state.cooldownUntil-Date.now());
+    if(initialWait){
+      button.textContent="Preparing preview…";
+      if(!await safeWait(initialWait))return;
+    }
+    const startRequest=()=>fetch("/api/mockup/create",{
       method:"POST",headers:{"content-type":"application/json","cache-control":"no-cache"},
-      body:JSON.stringify({requestId:req.requestId,accessToken:req.accessToken,sku,design:productDesign(card)}),
+      body:JSON.stringify({requestId:req.requestId,accessToken:req.accessToken,sku,design}),
       cache:"no-store"
     });
-    let create=await start();
-    let data=await create.json().catch(()=>({}));
-    // A deployment split can briefly route one request to an older Worker version.
-    // Retry only the explicit missing-binding failure; that error occurs before any
-    // provider task is created, so this cannot duplicate a Printful mockup task.
-    if(create.status===503&&data.reason==="printful_binding_missing"){
-      await sleep(1200);
-      create=await start();
+    let create,data;
+    for(let attempt=0;attempt<3;attempt++){
+      if(!current())return;
+      state.cooldownUntil=Date.now()+2500;
+      create=await startRequest();
       data=await create.json().catch(()=>({}));
+      if(create.ok&&data.ok)break;
+      const missingBinding=create.status===503&&data.reason==="printful_binding_missing";
+      const rateLimited=data.providerStatus===429||/too many requests|try again after\s+\d+\s+seconds?/i.test(String(data.error||""));
+      if(missingBinding&&attempt===0){
+        button.textContent="Refreshing product connection…";
+        if(!await safeWait(1200))return;
+        continue;
+      }
+      if(rateLimited&&attempt<2){
+        const seconds=Math.max(3,Math.min(8,Number(String(data.error||"").match(/after\s+(\d+)\s+seconds?/i)?.[1]||3)));
+        state.cooldownUntil=Date.now()+seconds*1000;
+        button.textContent=`Printful is busy · retrying in ${seconds}s…`;
+        if(!await safeWait(seconds*1000))return;
+        continue;
+      }
+      break;
     }
-    if(!create.ok||!data.ok){
-      const details=[data.error||"Could not start the product preview.",data.stage?("Stage: "+data.stage):"",data.workerVersionId?("Worker: "+data.workerVersionId):""].filter(Boolean).join(" · ");
+    if(!current())return;
+    if(!create?.ok||!data?.ok){
+      const details=[data?.error||"Could not start the product preview.",data?.stage?("Stage: "+data.stage):"",data?.workerVersionId?("Worker: "+data.workerVersionId):""].filter(Boolean).join(" · ");
       throw new Error(details);
     }
-
+    const mockupId=data.mockupId||"legacy";
     for(let attempt=0;attempt<10;attempt++){
-      button.textContent=`Building real mockup${attempt?"…":"…"}`;
-      await sleep(attempt===0?10000:8000);
+      if(!current())return;
+      button.textContent=attempt?"Building updated mockup…":"Building real mockup…";
+      if(!await safeWait(attempt===0?10000:8000))return;
       const url=new URL("/api/mockup/status",location.origin);
-      url.searchParams.set("requestId",req.requestId);url.searchParams.set("token",req.accessToken);url.searchParams.set("sku",sku);
-      const response=await fetch(url);data=await response.json().catch(()=>({}));
+      url.searchParams.set("requestId",req.requestId);url.searchParams.set("token",req.accessToken);url.searchParams.set("sku",sku);url.searchParams.set("mockup",mockupId);
+      const response=await fetch(url,{cache:"no-store"});data=await response.json().catch(()=>({}));
+      if(!current())return;
       if(response.ok&&data.status==="completed"&&data.images?.length){
-        const img=card.querySelector(".product-art img");
-        const views=data.images;
-        const preferred=views.findIndex(view=>/front/i.test(view.title||''));
-        const selected=preferred>=0?preferred:0;
+        const img=card.querySelector(".product-art img"),views=data.images;
+        const preferred=views.findIndex(view=>/front/i.test(view.title||"")),selected=preferred>=0?preferred:0;
         img.src=views[selected].url;img.alt="Your Recast on the actual product mockup";
-        card.querySelector('.mockup-views')?.remove();
+        card.querySelector(".mockup-views")?.remove();
         if(views.length>1){
-          const controls=document.createElement('div');controls.className='mockup-views';
-          controls.style.cssText='display:flex;gap:8px;flex-wrap:wrap;padding:12px';
-          controls.setAttribute('aria-label','Product preview angles');
+          const controls=document.createElement("div");controls.className="mockup-views";
+          controls.style.cssText="display:flex;gap:8px;flex-wrap:wrap;padding:12px";
+          controls.setAttribute("aria-label","Product preview camera angles");
           views.forEach((view,index)=>{
-            const choice=document.createElement('button');choice.type='button';choice.className='button secondary';
-            choice.style.cssText='min-height:44px;padding:8px 12px;font-size:14px';
-            choice.textContent=view.title||`View ${index+1}`;choice.setAttribute('aria-pressed',String(index===selected));
-            choice.addEventListener('click',()=>{img.src=view.url;for(const other of controls.children)other.setAttribute('aria-pressed',String(other===choice));});
+            const choice=document.createElement("button");choice.type="button";choice.className="button secondary";
+            choice.style.cssText="min-height:44px;padding:8px 12px;font-size:14px";
+            const raw=String(view.title||"");
+            choice.textContent=/^default$/i.test(raw)?"3D view":/handle on left/i.test(raw)?"Handle left":/front/i.test(raw)?"Front view":raw||`View ${index+1}`;
+            choice.setAttribute("aria-pressed",String(index===selected));
+            choice.addEventListener("click",()=>{img.src=view.url;for(const other of controls.children)other.setAttribute("aria-pressed",String(other===choice));});
             controls.append(choice);
           });
-          card.querySelector('.product-art').after(controls);
+          card.querySelector(".product-art").after(controls);
         }
-        const caption=card.querySelector('.example-design-label');
-        if(caption)caption.textContent='Your artwork · product preview';
-        button.textContent="Real product preview ready ✓";
+        const caption=card.querySelector(".example-design-label");if(caption)caption.textContent="Your artwork · product preview";
+        card.dataset.mockupSignature=signature;card.dataset.mockupId=mockupId;
         card.classList.add("real-mockup-ready");
+        state.busy=false;
+        button.disabled=true;button.textContent="Real product preview ready ✓";
+        const buy=card.querySelector(".recast-buy");
+        if(buy&&card.dataset.active==="true"){buy.disabled=false;buy.textContent=buy.dataset.buyLabel||"Shop product";}
         return;
       }
       if(data.status==="failed"||(!response.ok&&response.status!==202))throw new Error(data.error||"Printful could not finish this mockup.");
     }
-    throw new Error("The real product preview is still processing. Tap again in a moment.");
+    throw new Error("The real product preview is still processing. Please try again in a moment.");
   }catch(error){
+    if(!current())return;
+    state.busy=false;
     button.disabled=false;button.textContent="Try real product preview again";
-    const message=error?.message||String(error);
-    button.title=message;
+    const message=error?.message||String(error);button.title=message;
     if(errorCopy){errorCopy.textContent=message;errorCopy.hidden=false;}
+    requireFreshPreview(card);
   }
 }
 
