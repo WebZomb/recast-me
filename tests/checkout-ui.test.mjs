@@ -19,7 +19,7 @@ function setup(fetcher){
 const catalog=()=>({ok:true,json:async()=>({ok:true,products:[{title:'Custom Recast Mug',status:'ACTIVE',variants:[{sku:'RECAST-MUG-15OZ',variantTitle:'15 oz',price:'29.99'}]}]})});
 function markPreviewReady(ui){
   const design={product:'Mug',layout:'single',background:'scene-fill',x:'center',scale:92};
-  ui.card.dataset.mockupId='v1-single-scene-fill-center-92';
+  ui.card.dataset.mockupId='v2-single-scene-fill-center-92';
   ui.card.dataset.mockupSignature=JSON.stringify({sku:'RECAST-MUG-15OZ',design});
   return design;
 }
@@ -32,7 +32,7 @@ test('selected artwork beats stale storage and Mug purchase carries exact artwor
   await ui.select();assert.equal(new URL(ui.calls[0][0]).searchParams.get('requestId'),'new');
   assert.match(ui.grid.innerHTML,/Shop Mug/);assert.doesNotMatch(ui.grid.innerHTML,/href="#start"/);
   const design=markPreviewReady(ui);await ui.button.click();
-  assert.deepEqual(JSON.parse(ui.calls[1][1].body),{requestId:'new',accessToken:'new-token',sku:'RECAST-MUG-15OZ',mockupId:'v1-single-scene-fill-center-92',design});
+  assert.deepEqual(JSON.parse(ui.calls[1][1].body),{requestId:'new',accessToken:'new-token',sku:'RECAST-MUG-15OZ',mockupId:'v2-single-scene-fill-center-92',design});
   assert.equal(ui.context.location.href,'https://shop.test/checkout');
 });
 test('physical checkout stays locked until the exact settings have a fresh preview',async()=>{
