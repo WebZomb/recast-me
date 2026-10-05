@@ -196,10 +196,27 @@ async function checkoutLink(request, env, ctx) {
   const numericId = numericVariantId(row.variantId);
   if (!numericId) return json({ ok: false, error: "Could not parse the Shopify variant ID." }, 500);
 
+  let verifiedDesign=null,proofHash=null,mockupId=null;
+  if(!FULFILLMENT[sku].digital){
+    verifiedDesign=normalizeProductDesign(FULFILLMENT[sku],body.design||{});
+    mockupId=String(body.mockupId||"");
+    if(!/^[a-zA-Z0-9._-]{1,180}$/.test(mockupId))return json({ok:false,error:"Generate a fresh product preview before checkout."},409);
+    const mockupObject=await env.ARTWORK?.get(`mockups/${requestId}/${sku}/${mockupId}/task.json`);
+    if(!mockupObject)return json({ok:false,error:"This product preview is no longer current. Generate it again before checkout."},409);
+    const mockup=await mockupObject.json();
+    const source=await env.ARTWORK?.get(`requests/${requestId}/preview.b64`);
+    if(!source)return json({ok:false,error:"The selected artwork is unavailable."},404);
+    proofHash=await hash((await source.text())+'|'+JSON.stringify(verifiedDesign));
+    if(mockup.status!=="completed"||mockup.sourceHash!==proofHash||JSON.stringify(mockup.design||{})!==JSON.stringify(verifiedDesign)){
+      return json({ok:false,error:"Your product settings changed after the preview. Generate and review a fresh preview before checkout."},409);
+    }
+  }
+
   const properties = {
     "Artwork ID": requestId,
     "Recast Style": recast.styleName || "",
-    "Recast Subject": recast.subjectType || ""
+    "Recast Subject": recast.subjectType || "",
+    ...(verifiedDesign?{"Recast Layout":JSON.stringify(verifiedDesign),"Recast Proof":proofHash,"Recast Mockup":mockupId}:{})
   };
   const encodedProperties = base64UrlUtf8(JSON.stringify(properties));
   const checkoutUrl = `https://${shopDomain(env)}/cart/${numericId}:1?properties=${encodeURIComponent(encodedProperties)}&ref=recast-me`;
