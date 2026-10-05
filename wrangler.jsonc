@@ -22,7 +22,7 @@
     "IMAGE_HIGH_QUALITY_GUIDANCE": "5",
     "IMAGE_QUICK_GUIDANCE": "5",
     "IMAGE_QUICK_STEPS": "12",
-    "ORDER_SYNC_ENABLED": "false",
+    "ORDER_SYNC_ENABLED": "true",
     "X_BOT_ENABLED": "false",
     "X_USERNAME": "recastmeai",
     "X_BOT_APPROVED": "false",
