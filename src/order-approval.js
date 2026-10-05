@@ -1,6 +1,17 @@
 import {change,read,hash,equal,randomToken,fault,sameOrigin,privateJson,composeMugLayout} from './commerce-store.js';
 const designKey=id=>`commerce/designs/${id}.json`;
 const validId=v=>typeof v==='string'&&/^[a-zA-Z0-9._-]{1,180}$/.test(v);
+async function authorizedOrderCapability(env,requestId,body){
+  if(body?.proofToken){
+    const token=String(body.proofToken||"");
+    if(!/^[a-f0-9]{48}$/.test(token))throw fault('order_access','Use the private order link for this order.',403);
+    const preview=await read(env,`commerce/checkout-previews/${token}.json`);
+    if(!preview||preview.requestId!==requestId)throw fault('order_access','Use the private order link for this order.',403);
+    return true;
+  }
+  await authorizedArtwork(env,requestId,body?.token);
+  return true;
+}
 export async function authorizedArtwork(env,id,token){
   if(!validId(id))throw fault('bad_artwork','Invalid artwork.',400);
   const meta=await read(env,`requests/${id}/request.json`);
@@ -33,7 +44,7 @@ export async function customerDesignAction(request,env,id,action,services){
   const job=await read(env,`jobs/${id}.json`);
   if(!job)throw fault('order_missing','Order not found.',404);
   const body=await request.json();
-  await authorizedArtwork(env,job.requestId,body.token);
+  await authorizedOrderCapability(env,job.requestId,body);
   await services.verifyPaid(env,job);
   const initial=await designFor(env,job),revision=Number(body.revision);
   editable(job,initial,revision);
