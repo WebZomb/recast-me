@@ -15,7 +15,8 @@ function designCard(j){
  if(j.digital)return '';
  const d=j.design,locked=Boolean(d?.approvedAt||j.printfulStatus),saved=versions();
  const image=`/api/order-design/${encodeURIComponent(j.id)}/preview?token=${encodeURIComponent(token)}`;
- const approvedSnapshot=j.approvedPreviewImage?`<div class="approved-checkout-preview"><div class="eyebrow">SAVED WITH YOUR ORDER</div><h4>Your checkout product preview</h4><a href="${esc(j.approvedPreviewUrl||j.approvedPreviewImage)}"><img src="${esc(j.approvedPreviewImage)}" alt="The exact product preview saved at checkout"></a><p>This is the product mockup saved when checkout opened. ${esc(designSummary(j.productDesign))}</p><a class="button ghost" href="${esc(j.approvedPreviewUrl||j.approvedPreviewImage)}">Open approved preview</a></div>`:'';
+ const savedAngles=(j.approvedPreviewImages?.length?j.approvedPreviewImages:(j.approvedPreviewImage?[{title:'Product preview',url:j.approvedPreviewImage}]:[])).slice(0,3);
+ const approvedSnapshot=savedAngles.length?`<div class="approved-checkout-preview"><div class="eyebrow">SAVED WITH YOUR ORDER</div><h4>Your checkout product previews</h4><div class="approved-angle-grid">${savedAngles.map((v,i)=>`<figure><img src="${esc(v.url)}" alt="${esc(v.title||`Product preview ${i+1}`)}"><figcaption>${esc(v.title||`View ${i+1}`)}</figcaption></figure>`).join('')}</div><p>These are the product mockups saved when checkout opened. ${esc(designSummary(j.productDesign))}</p><a class="button ghost" href="${esc(j.approvedPreviewUrl||savedAngles[0].url)}">Open all approved preview angles</a></div>`:'';
  return `<div class="design-panel">${approvedSnapshot}<h3>${locked?'Your approved design':'Make it yours before it prints'}</h3>
  <img class="design-art" src="${esc(image)}" alt="Selected artwork with Recast Me preview watermark">
  <p>Artwork: ${esc(d?.selectedRequestId||requestId)}</p>
