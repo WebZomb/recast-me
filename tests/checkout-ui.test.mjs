@@ -57,7 +57,7 @@ test('stale product button cannot buy previous artwork after selection changed',
 test('mockup failure is visible in an inline alert on touch devices',async()=>{
  const app=setup(async()=>({ok:false,json:async()=>({error:'Printful is not connected.'})}));
  const alert={hidden:true,textContent:''};const button={textContent:'Preview',disabled:false};
- app.context.mockupArgs={req:{requestId:'saved',accessToken:'test'},sku:'RECAST-MUG-11OZ',card:{querySelector:()=>alert},button};
+ app.context.mockupArgs={req:{requestId:'saved',accessToken:'test'},sku:'RECAST-MUG-11OZ',card:{dataset:{productTitle:'Custom Recast Mug',active:'false',digital:'false'},classList:{add(){},remove(){}},querySelector:()=>alert},button};
  await vm.runInNewContext('generateRealMockup(mockupArgs)',app.context);
  assert.equal(alert.hidden,false);assert.equal(alert.textContent,'Printful is not connected.');assert.equal(button.disabled,false);
 });
