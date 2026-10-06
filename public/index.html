@@ -7,25 +7,27 @@
   <meta name="theme-color" content="#07070b" />
   <meta name="description" content="Turn a favorite photo into a whole new world, preview it on real products, and check out with confidence." />
   <title>Recast Me — Recast your world.</title>
+  <link rel="preconnect" href="https://cdn.shopify.com" crossorigin />
   <link rel="stylesheet" href="/styles.css?v=130" />
   <link rel="stylesheet" href="/merch-v07.css?v=134" />
   <link rel="stylesheet" href="/site-v10.css?v=233" />
+  <link rel="stylesheet" href="/launch-v49.css?v=249" />
 </head>
-<body>
+<body data-launch-build="RM-049">
   <a class="skip-link" href="#start">Skip to create your Recast</a>
   <header class="site-header">
     <a class="brand" href="#home" aria-label="Recast Me home">
       <span class="brand-mark" aria-hidden="true"><span>R</span><span>M</span></span>
       <span>RECAST ME</span>
     </a>
-    <nav>
+    <nav aria-label="Main navigation">
       <a href="#how">How it works</a>
       <a href="#styles">Worlds</a>
       <a href="#shop">Products</a>
       <a href="#start" class="nav-cta">Start a Recast <span aria-hidden="true">→</span></a>
     </nav>
   </header>
-
+  <noscript><p style="padding:20px;color:white;background:#151329">Please enable JavaScript to create your Recast, explore products, and preview your design before checkout.</p></noscript>
   <main>
     <section class="hero" id="home">
       <div class="hero-glow hero-glow-a"></div>
@@ -47,7 +49,6 @@
           <span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 8 4.5v9L12 21l-8-4.5v-9L12 3Z"/><path d="m4 7.5 8 4.5 8-4.5M12 12v9"/></svg>Made to order</span>
         </div>
       </div>
-
       <div class="hero-demo hero-showcase hero-live-stage" aria-label="Your photo becomes a Recast and then a product">
         <div class="hero-live-flow">
           <article class="hero-live-card hero-live-source">
@@ -69,7 +70,6 @@
         <div class="hero-live-tagline"><span>SAME PHOTOS.</span><strong>BIGGER POSSIBILITIES.</strong><i aria-hidden="true"></i></div>
       </div>
     </section>
-
     <section class="section worlds" id="styles">
       <div class="section-kicker compact-kicker">
         <div>
@@ -81,7 +81,6 @@
       <div class="style-grid" id="style-grid"></div>
       <a class="button ghost section-compact-cta" href="#start">See all worlds in the creator →</a>
     </section>
-
     <section class="section process compact-process" id="how">
       <div class="section-heading compact-process-heading">
         <div class="eyebrow">HOW IT WORKS</div>
@@ -90,22 +89,21 @@
       </div>
       <div class="process-ribbon" aria-label="Three-step Recast process">
         <article class="process-node">
-          <div class="process-node-art upload-node-art"><img src="/assets/jack-russell-source-v18.webp" alt=""></div>
+          <div class="process-node-art upload-node-art"><img src="/assets/jack-russell-source-v18.webp" alt="" loading="lazy"></div>
           <div class="process-node-copy"><span>01</span><h3>Upload</h3><p>Add a clear photo. Your source stays private.</p></div>
         </article>
         <div class="process-ribbon-arrow" aria-hidden="true">→</div>
         <article class="process-node">
-          <div class="process-node-art recast-node-art"><img src="/assets/world-game-v18.webp" alt=""></div>
+          <div class="process-node-art recast-node-art"><img src="/assets/world-game-v18.webp" alt="" loading="lazy"></div>
           <div class="process-node-copy"><span>02</span><h3>Recast</h3><p>Pick a world and choose your favorite result.</p></div>
         </article>
         <div class="process-ribbon-arrow" aria-hidden="true">→</div>
         <article class="process-node">
-          <div class="process-node-art product-node-art"><img src="https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-neon-mug-cutout-v48.png?v=1791266555" alt=""></div>
+          <div class="process-node-art product-node-art"><img src="https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-neon-mug-cutout-v48.png?v=1791266555" alt="" loading="lazy"></div>
           <div class="process-node-copy"><span>03</span><h3>Preview & buy</h3><p>Confirm the product preview, then checkout. Done.</p></div>
         </article>
       </div>
     </section>
-
     <section class="section create-section" id="start">
       <div class="create-shell">
         <div class="create-intro">
@@ -117,7 +115,6 @@
             <p>Your source photos and clean artwork stay private.</p>
           </div>
         </div>
-
         <div class="create-card">
           <div class="create-main-path">
             <span>CREATE WITH AI</span>
@@ -152,7 +149,6 @@
               <span id="file-summary" class="file-summary" role="status">No photos selected</span>
             </label>
             <div id="photo-thumbnails" class="photo-thumbnails" aria-label="Selected photos"></div>
-
 <p id="photo-step-error" role="status"></p><div class="wizard-actions"><button type="button" class="button ghost" data-go-step="0">Back</button><button type="button" class="button primary" data-go-step="2">Next: pick an adventure →</button></div></div>
 <div data-create-step="2" hidden>            <fieldset class="creative-step environment-step">
               <legend><span>03</span> Pick your adventure</legend>
@@ -175,7 +171,6 @@
             <p id="prefill-note" class="prefill-note"></p>
             <div id="branch-note" class="branch-note hidden"></div>
             <div class="consent"><input id="consent" type="checkbox" required><label for="consent">I have permission to use these photos. I agree to send my selected photos and descriptions to Cloudflare Workers AI to create my Recast. <a href="/privacy.html" target="_blank" rel="noopener">Photo privacy &amp; AI policy</a>.</label></div>
-
             <input type="radio" name="qualityMode" value="high" checked hidden>
             <input type="radio" name="qualityMode" value="quick" hidden>
             <aside id="quality-fallback" hidden aria-live="polite">
@@ -185,7 +180,6 @@
               <button type="button" class="button ghost" id="choose-high" hidden>Back to High Quality</button>
               <a id="credit-purchase-link" href="#shop" hidden>Choose an item from a saved Recast →</a>
             </aside>
-
             <p id="render-credits" role="status" aria-live="polite" hidden></p>
             <p id="return-to-order" hidden><a class="button ghost" href="/order.html">Return to my order and choose its design →</a></p>
             <div id="turnstile-container" class="turnstile-container hidden"></div>
@@ -219,7 +213,6 @@
         </div>
       </div>
     </section>
-
     <section class="section preview-section hidden" id="preview-section">
       <div class="section-heading preview-heading">
         <div class="eyebrow">YOUR RECAST</div>
@@ -267,7 +260,6 @@
           <input id="private-recast-link" aria-label="Private Recast link" readonly hidden>
         </div>
       </div>
-
       <section id="recent-versions-shell" class="recent-versions-shell hidden" aria-live="polite">
         <div class="recent-versions-heading">
           <div>
@@ -280,15 +272,14 @@
         <div id="recent-versions-grid" class="recent-versions-grid"></div>
       </section>
     </section>
-
     <section class="section shop-showcase" id="shop">
       <div class="section-kicker compact-kicker">
         <div><div class="eyebrow">MAKE IT REAL</div><h2>Put your Recast on something real.</h2></div>
         <p>Preview the design on the product before you buy.</p>
       </div>
+      <p class="launch-shop-note">Browse every product below. Create a Recast to preview your own design.</p>
       <div id="product-grid" class="catalog-preview merch-catalog-shell"></div>
     </section>
-
     <section class="section status-section debug-only hidden" id="debug-status">
       <div class="section-heading"><div class="eyebrow">SYSTEM STATUS</div><h2>Production connections.</h2></div>
       <div class="status-grid">
@@ -298,21 +289,18 @@
         <div><span id="storage-dot" class="dot"></span><strong>Private storage</strong><small id="storage-status">Checking…</small></div>
       </div>
     </section>
-
     <section class="section policies" id="policies">
       <details><summary>Are my photos private?</summary><p>Yes. Source photos and clean artwork stay private and are used for your Recast and fulfillment.</p></details>
       <details><summary>Will the watermark print?</summary><p>No. The watermark protects previews only. Purchased products use the clean private artwork.</p></details>
       <details><summary>What if a custom product arrives damaged?</summary><p>Damaged, defective, or incorrectly produced custom items are eligible for review and replacement.</p></details>
     </section>
   </main>
-
   <footer>
     <div class="brand compact-brand"><span class="brand-mark"><span>R</span><span>M</span></span><span>RECAST ME</span></div>
     <p>Your photo. Your Recast. Your product.</p>
     <a href="/privacy.html">Privacy &amp; photo help</a>
     <span>© 2026 Recast Me</span>
   </footer>
-
   <script src="/app.js?v=230" type="module"></script>
   <script src="/checkout.js?v=240" type="module"></script>
 </body>
