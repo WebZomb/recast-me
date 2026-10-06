@@ -27,7 +27,7 @@ test('production config and public audit use canonical domain',()=>{
 test('purchase UI applies defaults quietly and puts compact edit after final-review action',()=>{
   const c=readFileSync(new URL('../public/checkout.js',import.meta.url),'utf8');
   assert.ok(!c.includes('Recommended setup applied'));assert.ok(!c.includes('Preview recommended design'));assert.ok(c.includes('Preview on product'));
-  const button=c.indexOf('class="recast-buy"'),edit=c.indexOf('${designControls}',button);assert.ok(button>=0&&edit>button);
+  const button=c.indexOf('class="recast-buy"'),edit=c.indexOf('compact-product-edit',button);assert.ok(button>=0&&edit>button);
 });
 test('catalog mug uses the same lifestyle asset family as the other examples',()=>{
   for(const p of ['../public/app.js','../public/checkout.js']){const src=readFileSync(new URL(p,import.meta.url),'utf8');assert.ok(src.includes('product-mug-v16.webp'));assert.ok(!src.includes('recast-neon-mug-cutout-v48.png'));}
