@@ -272,3 +272,5 @@ T-Shirt and Hoodie remain DRAFT intentionally until front-print placement/appare
 All activated physical SKUs already have explicit Printful product/variant mappings in src/entry.js. The customer does not manually send artwork to Printful; live product previews are generated through the existing Printful mockup API from the selected private Artwork ID and placement settings.
 
 No new paid order, AI render, or Printful production submission was performed during this polish/activation work.
+
+- RM-039 validation fixture updated from the removed step-card markup to the new process-node ribbon markup; no application logic changed in this follow-up.
