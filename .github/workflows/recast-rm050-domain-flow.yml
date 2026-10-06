@@ -20,7 +20,7 @@ jobs:
           git fetch --depth=1 origin "${GITHUB_SHA}"
           git checkout --detach FETCH_HEAD
       - name: Apply scoped owner-requested changes
-        run: node scripts/apply-rm050-domain-flow.mjs
+        run: |\n          node scripts/apply-rm050-domain-flow.mjs\n          node scripts/fix-rm050-validation.mjs
       - name: Install locked dependencies
         run: npm ci --ignore-scripts --no-audit --no-fund
       - name: Run full tests
