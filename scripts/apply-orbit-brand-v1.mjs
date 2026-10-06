@@ -7,7 +7,7 @@ export const HEADER='https://cdn.shopify.com/s/files/1/0854/3810/3796/files/reca
 export const ICON='https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recastmeai-approved-orbit-icon-v1.png?v=1791313742';
 export const SOCIAL='https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recastmeai-approved-orbit-stacked-v1.png?v=1791313709';
 const oldMark=/<span\b[^>]*class=["'][^"']*\bbrand-mark\b[^"']*["'][^>]*>\s*<span[^>]*>R<\/span>\s*<span[^>]*>M<\/span>\s*<\/span>\s*<span[^>]*>RECAST ME<\/span>/g;
-const newMark=`<img class="recast-brand-logo" src="${HEADER}&amp;width=800" width="580" height="144" alt="Recast Me Ai" decoding="async">`;
+const newMark=`<img class="recast-brand-logo" src="${HEADER}&amp;width=800" width="691" height="144" alt="Recast Me Ai" decoding="async">`;
 
 export function brandHtml(input,{home=false}={}){
   const changed=input.replace(oldMark,newMark);
