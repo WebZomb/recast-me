@@ -50,3 +50,5 @@ For each future session, record baseline/head commits, changed files, reasons, t
 Astra should independently inspect the diff, rerun tests, and decide accept/revise/reject/insufficient evidence for each change. Passing mocked tests does not establish live provider quality, browser behavior, purchase success or total security.
 
 Latest: [RM-025 — mug activation and Shopify trial checkout hold](ASTRA-SESSION-RM-025.md).
+
+Latest: [RM-027 — launch polish, production browser audit, and fulfillment-state correction](ASTRA-SESSION-RM-027.md).
