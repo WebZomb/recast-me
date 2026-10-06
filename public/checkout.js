@@ -31,6 +31,7 @@ const PRODUCT_META = {
   "Recast Pack": {order:91,badge:"DIGITAL PACK",pitch:"The complete digital set with useful crops and formats.",tier:"digital",cta:"Get Recast Pack"}
 };
 
+const PRIMARY_PRODUCT_TITLES=new Set(["Custom Recast Mug","Custom Recast Blanket","Custom Recast Poster","Custom Recast Canvas"]);
 const PRODUCT_DESIGN_PRESETS = {
   "Custom Recast Mug": {product:"Mug",layout:"two-sided",fill:"ambient",x:"center",scale:110,spacing:"standard",label:"Best setup · two-sided wrap"},
   "Custom Recast Tumbler": {product:"Tumbler",layout:"two-sided",fill:"ambient",x:"center",scale:108,spacing:"standard",label:"Best setup · two-sided wrap"},
@@ -309,8 +310,11 @@ async function loadCheckout(){
   }
 
   const ordered=[...(data.products||[])]
-    .filter(product=>PRODUCT_META[product.title])
-    .sort((a,b)=>(PRODUCT_META[a.title]?.order??50)-(PRODUCT_META[b.title]?.order??50));
+    .filter(product=>PRODUCT_META[product.title]&&product.status==="ACTIVE")
+    .sort((a,b)=>{
+      const ap=PRIMARY_PRODUCT_TITLES.has(a.title)?0:1,bp=PRIMARY_PRODUCT_TITLES.has(b.title)?0:1;
+      return ap-bp||((PRODUCT_META[a.title]?.order??50)-(PRODUCT_META[b.title]?.order??50));
+    });
 
   if(!ordered.length){showCatalogError("No products are available for this Recast yet. Your artwork is saved.");return;}
 
@@ -323,7 +327,8 @@ async function loadCheckout(){
     const active=product.status==="ACTIVE"&&variants.length>0;
     const featured=meta.tier==="featured";
     const digital=meta.tier==="digital";
-    const classes=["product",featured?"featured-product":"secondary-product",digital?"digital-product":""].filter(Boolean).join(" ");
+    const extra=!PRIMARY_PRODUCT_TITLES.has(product.title);
+    const classes=["product",featured?"featured-product":"secondary-product",digital?"digital-product":"",extra?"catalog-extra-product":""].filter(Boolean).join(" ");
     const select=variants.length>1
       ? `<select class="recast-variant" data-product="${index}">
           ${variants.map(v=>`<option value="${v.sku}">${v.variantTitle} · ${money(v.price)}</option>`).join("")}
@@ -349,7 +354,9 @@ async function loadCheckout(){
         <p class="checkout-error" role="alert" hidden></p>
       </div>
     </div>`;
-  }).join("");
+  }).join("")+`<button type="button" class="catalog-more-toggle">See more products</button>`;
+  const moreToggle=grid.querySelector?.(".catalog-more-toggle");
+  moreToggle?.addEventListener("click",()=>{grid.classList.add("show-all-products");moreToggle.remove();});
 
   document.querySelectorAll(".product-preview-action").forEach(button=>{
     button.addEventListener("click",async()=>{
