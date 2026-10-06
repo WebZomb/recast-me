@@ -629,3 +629,66 @@ test('RM0505 lock compare-and-swap blocks recovery if the stale claim changes af
   assert.equal((await read(o.env,`jobs/${o.job.id}.json`)).status,'on_hold');
  }finally{globalThis.fetch=original}
 });
+
+
+test('RM0507 owner release of an inspected recovered draft revalidates it and submits production exactly once',async()=>{
+ const o=await orderSetup();
+ await o.action('proof');await o.action('approve',{revision:1,confirm:'APPROVE_FOR_PRINT'});
+ await finishApprovedDesign(o.env,o.job);
+ const externalId='rm-1234567890abcdef1234567890abc';
+ Object.assign(o.job,{
+  artApprovedAt:paid.updatedAt,printReadyAt:paid.updatedAt,status:'on_hold',
+  recoveredPrintfulDraftAt:'2026-10-06T23:27:48.274Z',
+  printfulOrderId:4242,printfulExternalId:externalId,printfulStatus:'draft',
+  holdReason:'Recovered Printful draft #4242 — inspect the draft before paid production.'
+ });
+ await o.env.ARTWORK.put(`jobs/${o.job.id}.json`,JSON.stringify(o.job));
+ Object.assign(o.env,{SHOPIFY_CLIENT_ID:'fixture-client',SHOPIFY_CLIENT_SECRET:'fixture-secret',SHOPIFY_SHOP:'fixture-store',PRINTFUL_API_TOKEN:'fixture-printful',PRINTFUL_STORE_ID:'123'});
+ const line={id:o.job.lineId,sku:o.job.sku,quantity:o.job.quantity,customAttributes:[{key:'Artwork ID',value:ID}]};
+ const order={...paid,lineItems:{pageInfo:{hasNextPage:false},nodes:[line]}};
+ const original=globalThis.fetch;let checks=0,confirms=0;
+ globalThis.fetch=async(url,options={})=>{
+  const path=String(url);
+  if(path.includes('access_token'))return Response.json({access_token:'fixture-token',expires_in:3600});
+  if(path.includes('graphql.json')){
+   const body=JSON.parse(options.body);
+   if(body.query.includes('RecastOrderTags'))return Response.json({data:{tagsAdd:{node:{id:order.id},userErrors:[]}}});
+   return Response.json({data:{order}});
+  }
+  if(path==='https://api.printful.com/orders/4242'&&options.method==='GET'){checks++;return Response.json({result:{id:4242,external_id:externalId,store:123,status:'draft'}});}
+  if(path==='https://api.printful.com/orders/4242/confirm'&&options.method==='POST'){confirms++;return Response.json({result:{id:4242,status:'pending'}});}
+  throw Error('Unexpected external call: '+path);
+ };
+ try{
+  let r=await adminJobAction(adminRequest({confirm:'WRONG'}),o.env,o.job.id,'release-recovered-draft');assert.equal(r.status,409);assert.equal(checks,0);assert.equal(confirms,0);
+  r=await adminJobAction(adminRequest({confirm:'SEND_INSPECTED_RECOVERED_DRAFT'}),o.env,o.job.id,'release-recovered-draft');assert.equal(r.status,200);
+  const body=await r.json();assert.equal(body.productionSubmitted,true);assert.equal(body.printfulOrderId,'4242');
+  let saved=await read(o.env,`jobs/${o.job.id}.json`);assert.equal(saved.status,'submitted_to_printful');assert.ok(saved.sentToProductionAt);assert.ok(saved.recoveredDraftReleasedAt);assert.equal(saved.holdReason,undefined);
+  assert.equal(checks,1);assert.equal(confirms,1);
+  r=await adminJobAction(adminRequest({confirm:'SEND_INSPECTED_RECOVERED_DRAFT'}),o.env,o.job.id,'release-recovered-draft');assert.equal(r.status,200);
+  assert.equal((await r.json()).alreadySent,true);assert.equal(checks,1);assert.equal(confirms,1);
+ }finally{globalThis.fetch=original}
+});
+
+test('RM0507 recovered release blocks a changed Printful draft before paid production',async()=>{
+ const o=await orderSetup();
+ await o.action('proof');await o.action('approve',{revision:1,confirm:'APPROVE_FOR_PRINT'});await finishApprovedDesign(o.env,o.job);
+ Object.assign(o.job,{artApprovedAt:paid.updatedAt,printReadyAt:paid.updatedAt,status:'on_hold',recoveredPrintfulDraftAt:paid.updatedAt,printfulOrderId:4242,printfulExternalId:'rm-1234567890abcdef1234567890abc'});
+ await o.env.ARTWORK.put(`jobs/${o.job.id}.json`,JSON.stringify(o.job));
+ Object.assign(o.env,{SHOPIFY_CLIENT_ID:'fixture-client',SHOPIFY_CLIENT_SECRET:'fixture-secret',SHOPIFY_SHOP:'fixture-store',PRINTFUL_API_TOKEN:'fixture-printful',PRINTFUL_STORE_ID:'123'});
+ const order={...paid,lineItems:{pageInfo:{hasNextPage:false},nodes:[{id:o.job.lineId,sku:o.job.sku,quantity:o.job.quantity,customAttributes:[{key:'Artwork ID',value:ID}]}]}};
+ const original=globalThis.fetch;let confirms=0;
+ globalThis.fetch=async(url,options={})=>{
+  const path=String(url);
+  if(path.includes('access_token'))return Response.json({access_token:'fixture-token',expires_in:3600});
+  if(path.includes('graphql.json'))return Response.json({data:{order}});
+  if(path==='https://api.printful.com/orders/4242')return Response.json({result:{id:4242,external_id:'some-other-order',store:123,status:'draft'}});
+  if(path.includes('/confirm')){confirms++;throw Error('must not confirm mismatched draft');}
+  throw Error('Unexpected external call: '+path);
+ };
+ try{
+  const r=await adminJobAction(adminRequest({confirm:'SEND_INSPECTED_RECOVERED_DRAFT'}),o.env,o.job.id,'release-recovered-draft');assert.equal(r.status,409);
+  assert.match((await r.json()).error,/no longer matches/i);assert.equal(confirms,0);
+  const saved=await read(o.env,`jobs/${o.job.id}.json`);assert.equal(saved.status,'on_hold');assert.equal(saved.sentToProductionAt,undefined);
+ }finally{globalThis.fetch=original}
+});
