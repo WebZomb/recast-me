@@ -751,7 +751,8 @@ export async function retryLegacyOwnerReleaseCandidates(env){
       job.digital ||
       job.sentToProductionAt ||
       job.preapprovedCheckout ||
-      job.legacyReleaseRecoveryV1At ||
+      job.status==='on_hold' ||
+      job.paymentRevokedAt ||
       !job.orderId ||
       !job.requestId ||
       !job.sku ||
@@ -760,17 +761,23 @@ export async function retryLegacyOwnerReleaseCandidates(env){
       !job.productMockupId ||
       !job.approvedPreviewToken
     )continue;
-    if(!["awaiting_customer_approval","owner_release_review","art_approved_needs_high_res","ready_for_printful_draft"].includes(String(job.status||"")))continue;
     checked++;
     try{
       const data=await shopifyGraphQL(env,VERIFY_ORDER_QUERY,{id:job.orderId});
       const order=data?.order;
       if(!order||!Array.isArray(order.tags)||!order.tags.includes("RECAST_SEND_PRODUCTION"))continue;
-      // Persist the one-time recovery pass before any external production action.
-      job.legacyReleaseRecoveryV1At=now();
+      job.legacyReleaseRecoveryLastAttemptAt=now();
+      job.legacyReleaseRecoveryAttempts=Number(job.legacyReleaseRecoveryAttempts||0)+1;
       await saveJob(env,job);
       job=await processOwnerReleasedLegacyJob(env,job);
-      if(job.sentToProductionAt)released++;
+      if(job.sentToProductionAt){
+        job.legacyReleaseRecoveryV1At ||= now();
+        await addShopifyOrderTags(env,job.orderId,["RECAST_LEGACY_RECOVERY_MATCHED"]);
+        await saveJob(env,job);
+        released++;
+      }else if(job.status==='owner_release_review'){
+        await addShopifyOrderTags(env,job.orderId,["RECAST_LEGACY_RECOVERY_BLOCKED"]);
+      }
     }catch(error){
       job.legacyReleaseRecoveryError=error.message||String(error);
       job.legacyReleaseRecoveryFailedAt=now();
