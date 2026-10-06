@@ -282,6 +282,58 @@ async function addShopifyOrderTags(env,orderId,tags=[]){
   }
 }
 
+async function createShopifyShipmentFulfillment(env,job,shipment){
+  if(job.shopifyFulfillmentId)return job.shopifyFulfillmentId;
+  if(!job.orderId||!job.lineId)throw new Error("Shopify fulfillment is missing its order or line reference.");
+  const data=await shopifyGraphQL(env,`query RecastFulfillmentOrders($id:ID!){
+    order(id:$id){
+      fulfillmentOrders(first:20){
+        nodes{
+          id
+          status
+          lineItems(first:100){nodes{id remainingQuantity lineItem{id}}}
+        }
+      }
+    }
+  }`,{id:job.orderId});
+  const groups=[];let remaining=Math.max(1,Number(job.quantity||1));
+  for(const order of data?.order?.fulfillmentOrders?.nodes||[]){
+    if(remaining<=0)break;
+    if(["CLOSED","CANCELLED"].includes(String(order.status||"").toUpperCase()))continue;
+    const items=[];
+    for(const item of order.lineItems?.nodes||[]){
+      if(item?.lineItem?.id!==job.lineId)continue;
+      const qty=Math.min(remaining,Math.max(0,Number(item.remainingQuantity||0)));
+      if(qty>0){items.push({id:item.id,quantity:qty});remaining-=qty;}
+    }
+    if(items.length)groups.push({fulfillmentOrderId:order.id,fulfillmentOrderLineItems:items});
+  }
+  if(!groups.length){
+    // A manual fulfillment may already have closed this line. Do not create a duplicate.
+    job.shopifyFulfillmentAlreadyClosedAt ||= now();
+    return null;
+  }
+  if(remaining>0)throw new Error("Shopify does not expose enough remaining quantity to mirror this shipment safely.");
+  const tracking={};
+  const carrier=String(shipment?.carrier||"Printful").trim();if(carrier)tracking.company=carrier;
+  const number=String(shipment?.tracking_number||"").trim();if(number)tracking.number=number;
+  const url=String(shipment?.tracking_url||"").trim();if(url)tracking.url=url;
+  const mutation=await shopifyGraphQL(env,`mutation RecastCreateFulfillment($fulfillment:FulfillmentInput!){
+    fulfillmentCreate(fulfillment:$fulfillment){
+      fulfillment{id status trackingInfo(first:10){company number url}}
+      userErrors{field message}
+    }
+  }`,{fulfillment:{lineItemsByFulfillmentOrder:groups,notifyCustomer:true,...(Object.keys(tracking).length?{trackingInfo:tracking}:{})}});
+  const errors=mutation?.fulfillmentCreate?.userErrors||[];
+  if(errors.length)throw new Error(errors.map(e=>e.message).join("; "));
+  const fulfillment=mutation?.fulfillmentCreate?.fulfillment;
+  if(!fulfillment?.id)throw new Error("Shopify did not return a fulfillment record.");
+  job.shopifyFulfillmentId=fulfillment.id;
+  job.shopifyFulfilledAt=now();
+  delete job.shopifyFulfillmentError;
+  return fulfillment.id;
+}
+
 function attrFromLine(line,key){return(line.customAttributes||[]).find(a=>a.key===key)?.value||""}
 function artworkFromLine(line){return attrFromLine(line,"Artwork ID")}
 function purchasedDesign(line,map){
@@ -425,7 +477,7 @@ export async function syncPrintfulJobs(env){
       job.printfulStatus=order.status||job.printfulStatus;
       const shipment=(order.shipments||[])[0]||null;
       if(shipment){job.trackingNumber=shipment.tracking_number||job.trackingNumber||null;job.trackingUrl=shipment.tracking_url||job.trackingUrl||null;job.carrier=shipment.carrier||job.carrier||null;job.shippedAt=shipment.shipped_at||job.shippedAt||null}
-      if(order.status==="fulfilled")job.status="shipped";
+      if(order.status==="fulfilled"||shipment?.shipped_at)job.status="shipped";
       else if(order.status==="failed")job.status="printful_failed";
       else if(order.status==="canceled")job.status="canceled";
       else if(job.sentToProductionAt)job.status="in_printful_production";
@@ -434,6 +486,10 @@ export async function syncPrintfulJobs(env){
       if(job.status==="in_printful_production")visibleTags.push("RECAST_IN_PRODUCTION");
       if(job.status==="shipped")visibleTags.push("RECAST_SHIPPED");
       if(job.status==="printful_failed")visibleTags.push("RECAST_PRINTFUL_REVIEW");
+      if(job.status==="shipped"&&!job.shopifyFulfillmentId&&!job.shopifyFulfillmentAlreadyClosedAt){
+        try{await createShopifyShipmentFulfillment(env,job,shipment);}
+        catch(error){job.shopifyFulfillmentError=error.message||String(error);job.shopifyFulfillmentFailedAt=now();visibleTags.push("RECAST_SHOPIFY_FULFILLMENT_REVIEW");}
+      }
       await addShopifyOrderTags(env,job.orderId,visibleTags);
       await saveJob(env,job);updated++;
       const meta=await requestMeta(env,job.requestId);if(meta){meta.fulfillment=job.status;meta.updatedAt=now();await putJson(env,requestKey(job.requestId,"request.json"),meta)}
@@ -583,6 +639,7 @@ async function autoProcessPreapprovedJob(env,job){
   }catch(error){
     job.autoPrintError=error.message||String(error);job.autoPrintFailedAt=now();
     if(!job.sentToProductionAt&&job.status!=='on_hold')job.status='auto_print_review';
+    await addShopifyOrderTags(env,job.orderId,["RECAST_PRINTFUL_REVIEW"]);
     await saveJob(env,job);throw error;
   }
 }
@@ -600,6 +657,7 @@ async function processOwnerReleasedLegacyJob(env,job){
   }catch(error){
     job.ownerReleaseError=error.message||String(error);job.ownerReleaseFailedAt=now();
     if(!job.sentToProductionAt&&job.status!=='on_hold')job.status='owner_release_review';
+    await addShopifyOrderTags(env,job.orderId,["RECAST_PRINTFUL_REVIEW"]);
     await saveJob(env,job);throw error;
   }
 }
