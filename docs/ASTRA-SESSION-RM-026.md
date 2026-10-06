@@ -287,3 +287,21 @@ Implemented recommended layouts per product, generalized clean/mockup compositio
 - RM-040 UX follow-up: active-Recast product chooser now shows the four strongest products first (Mug, Blanket, Poster, Canvas), hides DRAFT products, and places the remaining active products behind one See more products button.
 
 - RM-040 hero follow-up: replaced the external SVG hero with a direct HTML/CSS mug cutout using the same Recast dog artwork, improving Safari reliability and making the final product the visual focal point.
+
+
+### RM-040 finalized
+- Recommended layouts are now product-specific and normalized server-side as design schema v4:
+  - Mug: two-sided composition, 110%, ambient blended wrap.
+  - Tumbler: two-sided composition, 108%, ambient blended wrap.
+  - Blanket: full-bleed cover of the entire printable area.
+  - Poster / Framed Poster / Canvas / Magnet / Coaster: full-bleed cover by default.
+- Customer product cards show “Recommended setup applied” and a single Preview recommended design action. Position/layout/fill/size controls are collapsed behind Edit design.
+- Edit design can switch from the recommended crop to Keep whole image, with blended artwork colors, dark fill, light fill, or artwork-edge fill.
+- Both Printful mockups and clean production files use the same v4 compositor. This closes the prior mismatch where the mockup could show one placement while the paid clean file used a different raw source.
+- Blanket and flat products now send a product-composed source that owns the full Printful area, eliminating the white side bands caused by placing portrait art with contain-style dimensions.
+- Mug/tumbler recommended mode keeps the two intentional subject placements and blended center/handle-safe area rather than a stretched third copy.
+- Active-Recast catalog now hides DRAFT products and shows Mug, Blanket, Poster, and Canvas first; other active items sit behind See more products.
+- Homepage product payoff now uses an oversized HTML/CSS mug cutout containing world-game-v18.webp, avoiding external-resource SVG issues on Safari.
+- Final validation runs 37409764254 and 37410098154 passed the full mocked test suite and Wrangler dry-run bundle. Final simplified chooser run 37409906143 also passed.
+- No live Printful production order or paid checkout was created during RM-040.
+- Existing paid order #1001 was checked after this work and remains Shopify PAID / UNFULFILLED with no Shopify fulfillment record. It is a legacy pre-v4 order and was not auto-sent by the new future-order pipeline.
