@@ -1,12 +1,25 @@
 import {readFileSync,writeFileSync} from 'node:fs';
-function rep(path,oldText,newText){const s=readFileSync(path,'utf8');if(s.split(oldText).length!==2)throw Error('Expected one exact integration point: '+path+' '+oldText.slice(0,65));writeFileSync(path,s.replace(oldText,()=>newText));}
+function rep(path,oldText,newText,count=1){const s=readFileSync(path,'utf8');if(s.split(oldText).length!==count+1)throw Error('Expected '+count+' exact integration points: '+path+' '+oldText.slice(0,65));writeFileSync(path,s.replaceAll(oldText,()=>newText));}
 const w='src/workflow.js';
 let s=readFileSync(w,'utf8');s="import {printfulReferenceForNewDraft} from './printful-reference.js';\n"+s;writeFileSync(w,s);
-rep(w,
- "  const claim=`commerce/production/${await hash(job.id)}-draft.json`;\n  if(!await env.ARTWORK.put(claim,JSON.stringify({startedAt:now()}),{onlyIf:new Headers({'If-None-Match':'*'})}))throw fault('draft_started','Draft submission already started; review Printful before retrying.');\n  const payload={external_id:`recast-${job.id}`",
- "  const claim=`commerce/production/${await hash(job.id)}-draft.json`;\n  // Never migrate a reference after a possibly accepted attempt. Keep the old lock.\n  if(await env.ARTWORK.head(claim))throw fault('draft_started','Draft submission already started; review Printful before retrying.');\n  const externalId=await printfulReferenceForNewDraft(job);\n  if(!await env.ARTWORK.put(claim,JSON.stringify({startedAt:now(),externalId,referenceVersion:2}),{onlyIf:new Headers({'If-None-Match':'*'})}))throw fault('draft_started','Draft submission already started; review Printful before retrying.');\n  const payload={external_id:externalId");
-rep(w,'  job.printfulOrderId=result.id;job.printfulStatus=result.status||"draft";',
- '  job.printfulExternalId=externalId;job.printfulOrderId=result.id;job.printfulStatus=result.status||"draft";');
+for(const pad of ['  ','      ']){
+ const oldLines=[
+  'const claim=`commerce/production/${await hash(job.id)}-draft.json`;',
+  "if(!await env.ARTWORK.put(claim,JSON.stringify({startedAt:now()}),{onlyIf:new Headers({'If-None-Match':'*'})}))throw fault('draft_started','Draft submission already started; review Printful before retrying.');",
+  'const payload={external_id:`recast-${job.id}`'
+ ];
+ const newLines=[
+  oldLines[0],
+  '// Existing attempts keep their exact reference and duplicate-submission lock.',
+  "if(await env.ARTWORK.head(claim))throw fault('draft_started','Draft submission already started; review Printful before retrying.');",
+  'const externalId=await printfulReferenceForNewDraft(job);',
+  "if(!await env.ARTWORK.put(claim,JSON.stringify({startedAt:now(),externalId,referenceVersion:2}),{onlyIf:new Headers({'If-None-Match':'*'})}))throw fault('draft_started','Draft submission already started; review Printful before retrying.');",
+  'const payload={external_id:externalId'
+ ];
+ rep(w,oldLines.map(x=>pad+x).join('\n'),newLines.map(x=>pad+x).join('\n'));
+}
+rep(w,'job.printfulOrderId=result.id;job.printfulStatus=result.status||"draft";',
+ 'job.printfulExternalId=externalId;job.printfulOrderId=result.id;job.printfulStatus=result.status||"draft";',2);
 rep(w,'  await addShopifyOrderTags(env,job.orderId,["RECAST_PRINTFUL_DRAFT"]);',
  '  // Persist the provider result before a separate Shopify tagging call can fail.\n  await saveJob(env,job);\n  await addShopifyOrderTags(env,job.orderId,["RECAST_PRINTFUL_DRAFT"]);');
 rep('public/admin.js','./printful-diagnostics.js?v=rm0503','./printful-diagnostics.js?v=rm0504');
