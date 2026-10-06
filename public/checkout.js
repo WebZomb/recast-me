@@ -83,7 +83,7 @@ function designControlsMarkup(title,preset){
     <div class="design-edit-body">
       <label>Layout<select data-design-layout>${layoutOptions}</select></label>
       ${spacing}
-      <label data-design-fill-wrap hidden>Background fill<select data-design-fill><option value="ambient" selected>Blend artwork colors</option><option value="dark">Dark fill</option><option value="full-bleed">Artwork edge fill</option></select></label>
+      <label data-design-fill-wrap hidden>Background fill<select data-design-fill><option value="ambient" selected>Blend artwork colors</option><option value="dark">Dark fill</option><option value="light">Light fill</option><option value="full-bleed">Artwork edge fill</option></select></label>
       <label data-design-position-wrap>Image position<select data-design-x><option value="left">Left</option><option value="center" selected>Center</option><option value="right">Right</option></select></label>
       <label data-design-scale-wrap>Image size <strong data-design-scale-label>${preset.scale}%</strong><input data-design-scale type="range" min="75" max="125" step="5" value="${preset.scale}"></label>
       <p class="product-mockup-note">Recommended setup is already applied. Edit only if you want a different crop or composition.</p>
@@ -134,7 +134,7 @@ function designSummary(card){
   const d=productDesign(card),parts=[];
   parts.push(d.layout==="two-sided"?"Two-sided wrap":d.layout==="wrap"?"Full wrap":d.layout==="cover"?"Full bleed":d.layout==="fit"?"Keep whole image":"One image");
   if(d.layout==="two-sided")parts.push(d.spacing==="close"?"Closer spacing":d.spacing==="wide"?"Wider spacing":"Standard spacing");
-  if(d.layout==="fit")parts.push(d.fill==="dark"?"Dark fill":d.fill==="full-bleed"?"Artwork fill":"Blended fill");
+  if(d.layout==="fit")parts.push(d.fill==="dark"?"Dark fill":d.fill==="light"?"Light fill":d.fill==="full-bleed"?"Artwork fill":"Blended fill");
   parts.push((d.x||"center").replace(/^./,m=>m.toUpperCase()));
   if(d.scale!==100)parts.push(`${d.scale}% size`);
   return parts.join(" · ");
