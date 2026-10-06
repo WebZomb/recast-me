@@ -5,7 +5,7 @@ import {creditRoute,walletFor,bindCustomerCredits,creditBalance,reserveCustomerR
 import {reserveBudget,guardedEnvironment} from '../src/render-controls.js';
 import {hash,read,normalizeProductDesign} from '../src/commerce-store.js';
 import {customerDesignAction,designFor,approvedDesign,finishApprovedDesign,printDesignFile} from '../src/order-approval.js';
-import {reconcileShopifyOrder,verifyPaidOrder,adminJobAction,routeWorkflow,customerOrderStatus} from '../src/workflow.js';
+import {reconcileShopifyOrder,verifyPaidOrder,adminJobAction,routeWorkflow,customerOrderStatus,syncPrintfulJobs} from '../src/workflow.js';
 import {secureApplication} from '../src/preview-security.js';
 import {FULFILLMENT} from '../src/entry.js';
 const salt='test-only-ip-salt-with-at-least-32-characters';
@@ -258,6 +258,69 @@ test('explicit Shopify owner release sends an already-approved legacy order with
   await reconcileShopifyOrder(env,order);
   const saved=await (await env.ARTWORK.get(`jobs/${id}.json`)).json();
   assert.equal(saved.status,'submitted_to_printful');assert.ok(saved.sentToProductionAt);assert.equal(drafts,1);assert.equal(confirms,1);
+ }finally{globalThis.fetch=original}
+});
+
+
+test('legacy owner release with no preserved approval is surfaced for review and never contacts Printful',async()=>{
+ const env=await setup({SHOPIFY_CLIENT_ID:'fixture-client',SHOPIFY_CLIENT_SECRET:'fixture-secret',SHOPIFY_SHOP:'fixture-store',PRINTFUL_API_TOKEN:'fixture-printful'});
+ const design={version:3,layout:'two-sided',background:'scene-fill',x:'center',scale:110,spacing:'standard'};
+ const order={...paid,tags:['RECAST_SEND_PRODUCTION'],lineItems:{pageInfo:{hasNextPage:false},nodes:[{id:'gid://shopify/LineItem/legacy-hold',sku:'RECAST-MUG-11OZ',quantity:1,customAttributes:[
+  {key:'Artwork ID',value:ID},{key:'_Recast Design',value:JSON.stringify(design)},{key:'_Recast Proof',value:'legacy-proof'},
+  {key:'_Recast Mockup',value:'v3-two-sided-scene-fill-center-110-standard'},{key:'_Recast Preview Token',value:'d'.repeat(48)}
+ ]}]}};
+ const original=globalThis.fetch;let printfulCalls=0,reviewTagged=false;
+ globalThis.fetch=async(url,options={})=>{
+  const path=String(url);
+  if(path.includes('access_token'))return Response.json({access_token:'fixture-token',expires_in:3600});
+  if(path.includes('graphql.json')){
+   const body=JSON.parse(options.body);
+   if(body.query.includes('RecastOrderTags')){reviewTagged=body.variables.tags.includes('RECAST_PRINTFUL_REVIEW');return Response.json({data:{tagsAdd:{node:{id:order.id},userErrors:[]}}});}
+   throw Error('Unexpected Shopify operation');
+  }
+  if(path.startsWith('https://api.printful.com/')){printfulCalls++;throw Error('Printful must not be contacted');}
+  throw Error('Unexpected external call: '+path);
+ };
+ try{
+  await reconcileShopifyOrder(env,order);
+  const listed=await env.ARTWORK.list({prefix:'jobs/'}),job=await (await env.ARTWORK.get(listed.objects[0].key)).json();
+  assert.equal(job.status,'owner_release_review');assert.match(job.ownerReleaseError,/no preserved approved design/i);
+  assert.equal(reviewTagged,true);assert.equal(printfulCalls,0);
+ }finally{globalThis.fetch=original}
+});
+
+test('Printful shipment creates one Shopify fulfillment with tracking and stays idempotent',async()=>{
+ const env=await setup({SHOPIFY_CLIENT_ID:'fixture-client',SHOPIFY_CLIENT_SECRET:'fixture-secret',SHOPIFY_SHOP:'fixture-store',PRINTFUL_API_TOKEN:'fixture-printful'});
+ const job={id:'shipment-job',lineId:'gid://shopify/LineItem/ship-1',orderId:paid.id,orderName:'#1001',requestId:ID,sku:'RECAST-MUG-11OZ',quantity:1,product:'Mug',digital:false,status:'submitted_to_printful',sentToProductionAt:'2026-10-05T21:00:00Z',printfulOrderId:555,createdAt:paid.createdAt,updatedAt:paid.updatedAt};
+ await env.ARTWORK.put('jobs/shipment-job.json',JSON.stringify(job));
+ const original=globalThis.fetch;let fulfillmentCreates=0;const tagSets=[];
+ globalThis.fetch=async(url,options={})=>{
+  const path=String(url);
+  if(path.includes('access_token'))return Response.json({access_token:'fixture-token',expires_in:3600});
+  if(path==='https://api.printful.com/orders/555')return Response.json({result:{id:555,status:'fulfilled',shipments:[{tracking_number:'TRACK123',tracking_url:'https://tracking.example/TRACK123',carrier:'USPS',shipped_at:'2026-10-06T10:00:00Z'}]}});
+  if(path.includes('graphql.json')){
+   const body=JSON.parse(options.body);
+   if(body.query.includes('RecastFulfillmentOrders'))return Response.json({data:{order:{fulfillmentOrders:{nodes:[{id:'gid://shopify/FulfillmentOrder/fo1',status:'OPEN',lineItems:{nodes:[{id:'gid://shopify/FulfillmentOrderLineItem/fol1',remainingQuantity:1,lineItem:{id:job.lineId}}]}}]}}}});
+   if(body.query.includes('RecastCreateFulfillment')){
+    fulfillmentCreates++;
+    assert.equal(body.variables.fulfillment.notifyCustomer,true);
+    assert.deepEqual(body.variables.fulfillment.trackingInfo,{company:'USPS',number:'TRACK123',url:'https://tracking.example/TRACK123'});
+    assert.deepEqual(body.variables.fulfillment.lineItemsByFulfillmentOrder,[{fulfillmentOrderId:'gid://shopify/FulfillmentOrder/fo1',fulfillmentOrderLineItems:[{id:'gid://shopify/FulfillmentOrderLineItem/fol1',quantity:1}]}]);
+    return Response.json({data:{fulfillmentCreate:{fulfillment:{id:'gid://shopify/Fulfillment/f1',status:'SUCCESS',trackingInfo:[{company:'USPS',number:'TRACK123',url:'https://tracking.example/TRACK123'}]},userErrors:[]}}});
+   }
+   if(body.query.includes('RecastOrderTags')){tagSets.push(body.variables.tags);return Response.json({data:{tagsAdd:{node:{id:job.orderId},userErrors:[]}}});}
+   throw Error('Unexpected Shopify operation');
+  }
+  throw Error('Unexpected external call: '+path);
+ };
+ try{
+  assert.equal((await syncPrintfulJobs(env)).updated,1);
+  let saved=await (await env.ARTWORK.get('jobs/shipment-job.json')).json();
+  assert.equal(saved.status,'shipped');assert.equal(saved.trackingNumber,'TRACK123');assert.equal(saved.shopifyFulfillmentId,'gid://shopify/Fulfillment/f1');
+  assert.ok(tagSets.at(-1).includes('RECAST_SHIPPED'));
+  assert.equal((await syncPrintfulJobs(env)).updated,1);
+  saved=await (await env.ARTWORK.get('jobs/shipment-job.json')).json();
+  assert.equal(saved.shopifyFulfillmentId,'gid://shopify/Fulfillment/f1');assert.equal(fulfillmentCreates,1);
  }finally{globalThis.fetch=original}
 });
 
