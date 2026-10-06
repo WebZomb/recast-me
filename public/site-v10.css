@@ -928,3 +928,14 @@ body{padding-bottom:env(safe-area-inset-bottom)}
   .product-design-controls summary{align-items:flex-start}
   .product-design-controls summary small{max-width:58%}
 }
+
+
+/* RM-040: keep the active-Recast product chooser short on mobile. */
+.checkout-catalog .catalog-extra-product{display:none!important}
+.checkout-catalog.show-all-products .catalog-extra-product{display:flex!important}
+.catalog-more-toggle{
+  grid-column:1/-1;min-height:50px;border:1px solid #38364d;border-radius:15px;
+  background:#10111b;color:#e6e5ef;font:inherit;font-weight:850;cursor:pointer
+}
+.catalog-more-toggle::after{content:"  +" ;color:#80e4f4}
+.checkout-catalog.show-all-products .catalog-more-toggle{display:none}
