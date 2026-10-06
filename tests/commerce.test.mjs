@@ -5,7 +5,7 @@ import {creditRoute,walletFor,bindCustomerCredits,creditBalance,reserveCustomerR
 import {reserveBudget,guardedEnvironment} from '../src/render-controls.js';
 import {hash,read,normalizeProductDesign} from '../src/commerce-store.js';
 import {customerDesignAction,designFor,approvedDesign,finishApprovedDesign,printDesignFile} from '../src/order-approval.js';
-import {reconcileShopifyOrder,verifyPaidOrder,adminJobAction,routeWorkflow,customerOrderStatus,syncPrintfulJobs} from '../src/workflow.js';
+import {reconcileShopifyOrder,verifyPaidOrder,adminJobAction,routeWorkflow,customerOrderStatus,syncPrintfulJobs,retryLegacyOwnerReleaseCandidates} from '../src/workflow.js';
 import {secureApplication} from '../src/preview-security.js';
 import {FULFILLMENT} from '../src/entry.js';
 const salt='test-only-ip-salt-with-at-least-32-characters';
@@ -276,6 +276,48 @@ test('legacy checkout preview can be cryptographically recovered and released to
   const approved=await approvedDesign(env,saved);
   assert.ok(approved.approvedAt);assert.equal(approved.legacyPreviewCreatedAt,'2026-10-05T18:25:00Z');assert.equal(approved.proof.sourceHash,await hash(sourceBase64));
   assert.equal(drafts,1);assert.equal(confirms,1);
+ }finally{globalThis.fetch=original}
+});
+
+test('existing legacy job is retried after deployment only when Shopify still carries explicit production release',async()=>{
+ const env=await setup({
+  PUBLIC_APP_URL:'https://recast.test',
+  SHOPIFY_CLIENT_ID:'fixture-client',SHOPIFY_CLIENT_SECRET:'fixture-secret',SHOPIFY_SHOP:'fixture-store',
+  PRINTFUL_API_TOKEN:'fixture-printful'
+ });
+ const sku='RECAST-MUG-11OZ';
+ const design=normalizeProductDesign(FULFILLMENT[sku],{version:3,layout:'two-sided',background:'scene-fill',x:'center',scale:110,spacing:'standard'});
+ const sourceBase64=CLEAN.toString('base64'),sourceHash=await hash(sourceBase64);
+ const proofHash=await hash(sourceBase64+'|'+JSON.stringify(design));
+ const token='f'.repeat(48),mockupId='v3-two-sided-scene-fill-center-110-standard';
+ const position={area_width:2700,area_height:1050,width:2700,height:1050,left:0,top:0};
+ await env.ARTWORK.put(`mockups/${ID}/${sku}/${mockupId}/task.json`,JSON.stringify({status:'completed',sourceHash:proofHash,design,position,images:[{title:'Front'}]}));
+ await env.ARTWORK.put(`commerce/checkout-previews/${token}.json`,JSON.stringify({token,requestId:ID,sku,mockupId,proofHash,design,views:[{index:0,title:'Front'}],createdAt:'2026-10-05T18:25:00Z'}));
+ await env.ARTWORK.put(`commerce/checkout-previews/${token}.jpg`,CLEAN,{httpMetadata:{contentType:'image/jpeg'}});
+ const lineId='gid://shopify/LineItem/existing-legacy';
+ const job={id:'existing-legacy-job',lineId,orderId:paid.id,orderName:'#1001',orderCreatedAt:paid.createdAt,financialStatus:'PAID',requestId:ID,sku,quantity:1,product:'Mug',digital:false,productDesignRequired:true,productDesign:design,productProofHash:proofHash,productMockupId:mockupId,approvedPreviewToken:token,preapprovedCheckout:false,recipient:{name:'Buyer',address1:'1 Test St',city:'Testville',state_code:'PA',country_code:'US',zip:'19000'},status:'awaiting_customer_approval',createdAt:paid.createdAt,updatedAt:paid.updatedAt,printfulVariantId:1320,printfulProductId:19};
+ await env.ARTWORK.put('jobs/existing-legacy-job.json',JSON.stringify(job));
+ const order={...paid,tags:['RECAST_SEND_PRODUCTION'],email:'buyer@example.com',shippingAddress:{name:'Buyer',address1:'1 Test St',city:'Testville',province:'Pennsylvania',provinceCode:'PA',countryCodeV2:'US',zip:'19000'},lineItems:{pageInfo:{hasNextPage:false},nodes:[{id:lineId,sku,quantity:1,customAttributes:[{key:'Artwork ID',value:ID},{key:'_Recast Design',value:JSON.stringify(design)},{key:'_Recast Proof',value:proofHash},{key:'_Recast Mockup',value:mockupId},{key:'_Recast Preview Token',value:token}]}]}};
+ const original=globalThis.fetch;let drafts=0,confirms=0;
+ globalThis.fetch=async(url,options={})=>{
+  const path=String(url);
+  if(path.includes('access_token'))return Response.json({access_token:'fixture-token',expires_in:3600});
+  if(path.includes('graphql.json')){
+   const body=JSON.parse(options.body);
+   if(body.query.includes('RecastOrderTags'))return Response.json({data:{tagsAdd:{node:{id:order.id},userErrors:[]}}});
+   return Response.json({data:{order}});
+  }
+  if(path==='https://api.printful.com/orders'){drafts++;return Response.json({result:{id:9901,status:'draft'}})}
+  if(path.endsWith('/orders/9901/confirm')){confirms++;return Response.json({result:{id:9901,status:'pending'}})}
+  throw Error('Unexpected external call: '+path);
+ };
+ try{
+  const result=await retryLegacyOwnerReleaseCandidates(env);assert.equal(result.checked,1);assert.equal(result.released,1);
+  const saved=await (await env.ARTWORK.get('jobs/existing-legacy-job.json')).json();
+  assert.equal(saved.status,'submitted_to_printful');assert.equal(saved.printfulOrderId,9901);assert.ok(saved.legacyReleaseRecoveryV1At);assert.ok(saved.legacyApprovalRecoveredAt);
+  assert.equal(drafts,1);assert.equal(confirms,1);
+  const again=await retryLegacyOwnerReleaseCandidates(env);assert.equal(again.checked,0);assert.equal(again.released,0);assert.equal(drafts,1);assert.equal(confirms,1);
+  assert.equal((await approvedDesign(env,saved)).sourceHash,sourceHash);
  }finally{globalThis.fetch=original}
 });
 
