@@ -582,7 +582,7 @@ export async function adminJobs(request,env){try{requireAdmin(request,env);const
 export async function adminGenerationErrors(request,env){try{requireAdmin(request,env);const server=await listJson(env,"diagnostics/generation/",100);const client=await listJson(env,"diagnostics/client/",100);const attempts=await listJson(env,"diagnostics/attempts/",100);const errors=[...server,...client,...attempts.filter(x=>x.status==="failed")];errors.sort((a,b)=>String(b.createdAt||b.failedAt||b.updatedAt).localeCompare(String(a.createdAt||a.failedAt||a.updatedAt)));return json({ok:true,errors:errors.slice(0,75)})}catch(error){return json({ok:false,error:error.message},error.status||500)}}
 export async function adminTrends(request,env){try{requireAdmin(request,env);const rows=await listJson(env,"trends/",100);rows.sort((a,b)=>String(b.createdAt).localeCompare(String(a.createdAt)));return json({ok:true,trends:rows})}catch(error){return json({ok:false,error:error.message},error.status||500)}}
 export async function adminSocial(request,env){try{requireAdmin(request,env);const rows=await listJson(env,"social/x/",100);const listed=await env.ARTWORK?.list({prefix:"requests/",limit:1000});const byTweet=new Map();for(const object of listed?.objects||[]){if(!object.key.endsWith("/request.json"))continue;const meta=await readJson(env,object.key);if(meta?.sourceTweet)byTweet.set(String(meta.sourceTweet),meta)}for(const row of rows){const meta=byTweet.get(String(row.tweetId));if(meta){row.recastRequestId=meta.requestId;row.converted=true;row.paid=Boolean(meta.paid)}}rows.sort((a,b)=>String(b.createdAt).localeCompare(String(a.createdAt)));return json({ok:true,requests:rows})}catch(error){return json({ok:false,error:error.message},error.status||500)}}
-export async function adminSyncOrders(request,env){try{requireAdmin(request,env);const orders=await syncPaidOrders(env);const printful=await syncPrintfulJobs(env);return json({ok:true,created:orders.created||0,seen:orders.seen||0,printfulUpdated:printful.updated||0})}catch(error){return json({ok:false,error:error.message},error.status||500)}}
+export async function adminSyncOrders(request,env){try{requireAdmin(request,env);const orders=await syncPaidOrders(env);const legacy=await retryLegacyOwnerReleaseCandidates(env);const printful=await syncPrintfulJobs(env);return json({ok:true,created:orders.created||0,seen:orders.seen||0,legacyChecked:legacy.checked||0,legacyReleased:legacy.released||0,printfulUpdated:printful.updated||0})}catch(error){return json({ok:false,error:error.message},error.status||500)}}
 
 async function finalizePrintArt(env,job){
   if(job.digital){job.printReadyAt=now();job.status='digital_ready';await saveJob(env,job);return job}
@@ -742,6 +742,45 @@ async function processOwnerReleasedLegacyJob(env,job){
   }
 }
 
+export async function retryLegacyOwnerReleaseCandidates(env){
+  if(!env.ARTWORK||!env.SHOPIFY_CLIENT_ID||!env.SHOPIFY_CLIENT_SECRET)return{ok:false,checked:0,released:0};
+  const jobs=await listJson(env,"jobs/",100);
+  let checked=0,released=0;
+  for(let job of jobs){
+    if(
+      job.digital ||
+      job.sentToProductionAt ||
+      job.preapprovedCheckout ||
+      job.legacyReleaseRecoveryV1At ||
+      !job.orderId ||
+      !job.requestId ||
+      !job.sku ||
+      !job.productDesign ||
+      !job.productProofHash ||
+      !job.productMockupId ||
+      !job.approvedPreviewToken
+    )continue;
+    if(!["awaiting_customer_approval","owner_release_review","art_approved_needs_high_res","ready_for_printful_draft"].includes(String(job.status||"")))continue;
+    checked++;
+    try{
+      const data=await shopifyGraphQL(env,VERIFY_ORDER_QUERY,{id:job.orderId});
+      const order=data?.order;
+      if(!order||!Array.isArray(order.tags)||!order.tags.includes("RECAST_SEND_PRODUCTION"))continue;
+      // Persist the one-time recovery pass before any external production action.
+      job.legacyReleaseRecoveryV1At=now();
+      await saveJob(env,job);
+      job=await processOwnerReleasedLegacyJob(env,job);
+      if(job.sentToProductionAt)released++;
+    }catch(error){
+      job.legacyReleaseRecoveryError=error.message||String(error);
+      job.legacyReleaseRecoveryFailedAt=now();
+      await saveJob(env,job);
+    }
+  }
+  return{ok:true,checked,released};
+}
+
+
 export async function adminJobAction(request,env,id,action){
   try{
     requireAdmin(request,env);let job=await loadJob(env,id);
@@ -839,7 +878,12 @@ export async function cleanupExpiredUnpaid(env){
 export async function scheduledWorkflow(controller,env,ctx){
   if(controller.cron==='* * * * *')return pollXMentions(env);
   const tasks=[];
-  if(String(env.ORDER_SYNC_ENABLED||"false")==="true"){tasks.push(syncPaidOrders(env));tasks.push(syncPrintfulJobs(env));}
+  if(String(env.ORDER_SYNC_ENABLED||"false")==="true")tasks.push((async()=>{
+    const orders=await syncPaidOrders(env);
+    const legacy=await retryLegacyOwnerReleaseCandidates(env);
+    const printful=await syncPrintfulJobs(env);
+    return{orders,legacy,printful};
+  })());
   if(String(env.TREND_SCANNER_ENABLED||"false")==="true")tasks.push(scanTrends(env));
   if(String(env.RETENTION_CLEANUP_ENABLED||"false")==="true")tasks.push(cleanupExpiredUnpaid(env));
   const results=await Promise.allSettled(tasks);return results
