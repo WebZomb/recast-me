@@ -890,6 +890,32 @@ export async function adminJobAction(request,env,id,action){
       const result=await printful(env,"/orders",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(payload)});
       job.printfulExternalId=externalId;job.printfulOrderId=result.id;job.printfulStatus=result.status||"draft";job.printSourceUrl=sourceUrl;job.status="printful_draft_ready";job.printfulCreatedAt=now();await saveJob(env,job);return json({ok:true,job});
     }
+    if(action==="release-recovered-draft"){
+      const body=await request.json().catch(()=>({}));
+      if(body.confirm!=="SEND_INSPECTED_RECOVERED_DRAFT")return json({ok:false,error:"Explicit inspected-draft production confirmation is required."},409);
+      if(job.digital)return json({ok:false,error:"Digital products do not use Printful."},400);
+      if(job.sentToProductionAt)return json({ok:true,job,alreadySent:true});
+      if(job.status!=="on_hold"||!job.recoveredPrintfulDraftAt||!job.printfulOrderId||!job.printfulExternalId)return json({ok:false,error:"Only a recovered Printful draft that is still on hold can use this release."},409);
+      if(job.paymentRevokedAt)throw fault('order_hold','This order is no longer eligible for production.');
+      await verifyPaidOrder(env,job,{forProduction:true});
+      const design=await approvedDesign(env,job);
+      if(!design?.finalKey||!design?.proof?.position)throw fault('print_not_ready','The exact approved print file or placement is unavailable.',409);
+      const current=await printful(env,`/orders/${encodeURIComponent(job.printfulOrderId)}`,{method:"GET"});
+      if(String(current?.id)!==String(job.printfulOrderId)||current?.external_id!==job.printfulExternalId)return json({ok:false,error:"The Printful draft no longer matches this Recast order. Production was not started."},409);
+      if(current?.store!==undefined&&String(current.store)!==String(env.PRINTFUL_STORE_ID||""))return json({ok:false,error:"The Printful draft belongs to a different configured store. Production was not started."},409);
+      if(String(current?.status||"").toLowerCase()!=="draft")return json({ok:false,error:`Printful reports this order as ${String(current?.status||"unknown")}, not draft. Review it before any release.`},409);
+      const claim=`commerce/production/${await hash(job.id)}-confirm.json`;
+      const startedAt=now();
+      if(!await env.ARTWORK.put(claim,JSON.stringify({startedAt,printfulOrderId:String(job.printfulOrderId),externalId:job.printfulExternalId,recoveredDraft:true}),{onlyIf:new Headers({'If-None-Match':'*'})}))throw fault('production_started','Production submission already started; review Printful before retrying.');
+      let result;
+      try{result=await printful(env,`/orders/${encodeURIComponent(job.printfulOrderId)}/confirm`,{method:"POST"});}
+      catch(error){job.status="on_hold";job.holdReason="Production confirmation result is unknown. Keep this recovered draft on hold and inspect Printful before any retry.";job.recoveredReleaseError=error.message||String(error);job.recoveredReleaseFailedAt=now();await saveJob(env,job);throw error;}
+      job.status="submitted_to_printful";job.printfulStatus=result.status||"pending";job.sentToProductionAt=now();job.recoveredDraftReleasedAt=job.sentToProductionAt;
+      delete job.holdReason;delete job.recoveredReleaseError;
+      await saveJob(env,job);
+      try{await addShopifyOrderTags(env,job.orderId,["RECAST_PRINTFUL_SUBMITTED","RECAST_RECOVERED_RELEASED"])}catch(error){job.recoveredReleaseTagWarning=error.message||String(error);await saveJob(env,job)}
+      return json({ok:true,released:true,printfulOrderId:String(job.printfulOrderId),productionSubmitted:true,job});
+    }
     if(action==="send-production"){
       const body=await request.json().catch(()=>({}));if(body.confirm!=="SEND_TO_PRODUCTION")return json({ok:false,error:"Explicit production confirmation is required."},409);
       if(!job.printfulOrderId)return json({ok:false,error:"Create a Printful draft first."},409);
@@ -1015,7 +1041,7 @@ export async function routeWorkflow(request,env,ctx){
   if(p==="/api/admin/trends"&&request.method==="GET")return adminTrends(request,env);
   if(p==="/api/admin/social"&&request.method==="GET")return adminSocial(request,env);
   if(p==="/api/admin/sync-orders"&&request.method==="POST")return adminSyncOrders(request,env);
-  m=p.match(/^\/api\/admin\/job\/([^/]+)\/(approve-art|finalize-art|hold|create-draft|recover-missing-draft|send-production)$/);if(m&&request.method==="POST")return adminJobAction(request,env,decodeURIComponent(m[1]),m[2]);
+  m=p.match(/^\/api\/admin\/job\/([^/]+)\/(approve-art|finalize-art|hold|create-draft|recover-missing-draft|release-recovered-draft|send-production)$/);if(m&&request.method==="POST")return adminJobAction(request,env,decodeURIComponent(m[1]),m[2]);
   if(p==="/api/admin/poll-x"&&request.method==="POST"){try{requireAdmin(request,env);return json(await pollXMentions(env))}catch(error){return json({ok:false,error:error.message},error.status||500)}}
   if(p==="/api/admin/scan-trends"&&request.method==="POST"){try{requireAdmin(request,env);return json(await scanTrends(env))}catch(error){return json({ok:false,error:error.message},error.status||500)}}
   m=p.match(/^\/api\/admin\/trend\/([^/]+)\/(approve|reject)$/);if(m&&request.method==="POST")return adminTrendAction(request,env,decodeURIComponent(m[1]),m[2]);
