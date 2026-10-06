@@ -36,6 +36,17 @@ test('homepage polish keeps alternates separate and preview utilities collapsed'
   assert.doesNotMatch(html,/Choose a product for your Recast →/);
 });
 
+test('live homepage uses the correct Recast step image and original mug merchandising example',()=>{
+  const html=readFileSync(new URL('../public/index.html',import.meta.url),'utf8');
+  const app=readFileSync(new URL('../public/app.js',import.meta.url),'utf8');
+  const checkout=readFileSync(new URL('../public/checkout.js',import.meta.url),'utf8');
+  assert.doesNotMatch(html,/\/div>/);
+  assert.match(html,/recast-node-art"><img src="\/assets\/world-game-v18\.webp"/);
+  assert.match(html,/product-node-art"><img src="\/assets\/product-mug-v16\.webp"/);
+  assert.match(app,/image:"\/assets\/product-mug-v16\.webp"/);
+  assert.match(checkout,/"Custom Recast Mug":"\/assets\/product-mug-v16\.webp"/);
+});
+
 test('homepage is compact and explains photo to Recast to product',()=>{
   const html=readFileSync(new URL('../public/index.html',import.meta.url),'utf8');
   const app=readFileSync(new URL('../public/app.js',import.meta.url),'utf8');
