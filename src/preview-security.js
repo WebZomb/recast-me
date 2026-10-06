@@ -4,7 +4,7 @@ import { WATERMARK_TILE_BASE64, WATERMARK_FOOTER_BASE64 } from './watermark-tile
 import { digest, guardedEnvironment, renderControlStatus, budgetStatus, submissionFingerprint } from './render-controls.js';
 
 import { creditRoute, bindCustomerCredits, creditsEnabled, settleCustomerRender } from './render-credits.js';
-import { sameOrigin, composeMugLayout } from './commerce-store.js';
+import { sameOrigin, composeProductLayout } from './commerce-store.js';
 import { serveApprovedPrint } from './workflow.js';
 
 export const SECURITY_VERSION = 'rm-preview-4';
@@ -227,7 +227,16 @@ export function secureApplication(application) {
               const object=await env.ARTWORK.get(`requests/${id}/preview.b64`);
               if(!object)throw error('not_found','Saved artwork is unavailable.',404);
               const source=from64(await object.text()),info=await env.IMAGES.info(new Blob([source]).stream());
-              const composed=await composeMugLayout(env,source,info,{width:areaWidth,height:areaHeight},{layout:url.searchParams.get('layout')||'single',x:url.searchParams.get('x')||'center',scale:url.searchParams.get('scale')||92,spacing:url.searchParams.get('spacing')||'standard'});
+              const product=url.searchParams.get('product')||'Mug';
+              const design={
+                product,
+                layout:url.searchParams.get('layout')||undefined,
+                fill:url.searchParams.get('fill')||undefined,
+                x:url.searchParams.get('x')||'center',
+                scale:url.searchParams.get('scale')||undefined,
+                spacing:url.searchParams.get('spacing')||'standard'
+              };
+              const composed=await composeProductLayout(env,source,info,{width:areaWidth,height:areaHeight},{product},design);
               return imageResponse(await watermarkBytes(env,composed.bytes));
             }
             return imageResponse(await protectedArtwork(env,id));
