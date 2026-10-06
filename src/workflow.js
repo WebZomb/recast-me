@@ -1,7 +1,7 @@
 import { FULFILLMENT } from "./entry.js";
 import { runSocialPipeline, socialReadiness } from './social.js';
 import { renderHealth } from './render-health.js';
-import { change, hash, fault, sameOrigin, privateJson, normalizeProductDesign, productPrintfile, composeMugLayout } from './commerce-store.js';
+import { change, hash, fault, sameOrigin, privateJson, normalizeProductDesign, productPrintfile, composeMugLayout, composeProductLayout } from './commerce-store.js';
 import { reconcileOrderCredits, orderEligible, creditsEnabled, walletFor, creditBalance } from './render-credits.js';
 import { designFor, publicDesign, customerDesignAction, approvedDesign, finishApprovedDesign, printDesignFile } from './order-approval.js';
 import { SYNC_ORDERS_QUERY, VERIFY_ORDER_QUERY } from './order-queries.js';
@@ -14,7 +14,7 @@ function now(){return new Date().toISOString()}
 function randomHex(byteCount=18){const bytes=new Uint8Array(byteCount);crypto.getRandomValues(bytes);return[...bytes].map(b=>b.toString(16).padStart(2,"0")).join("")}
 function requestKey(id,suffix){return `requests/${id}/${suffix}`}
 function jobKey(id){return `jobs/${id}.json`}
-function mockupDesignId(design){return sanitizeId(`v${design?.version||1}-${design?.layout||'single'}-${design?.background||'none'}-${design?.x||'center'}-${design?.scale||100}-${design?.spacing||'standard'}`)}
+function mockupDesignId(design){return sanitizeId(`v${design?.version||1}-${design?.product||'Generic'}-${design?.layout||'fit'}-${design?.fill||design?.background||'none'}-${design?.x||'center'}-${design?.scale||100}-${design?.spacing||'standard'}`)}
 function mockupKey(id,sku,mockupId="legacy"){return mockupId==="legacy"?`mockups/${id}/${sku}/task.json`:`mockups/${id}/${sku}/${sanitizeId(mockupId)}/task.json`}
 function socialKey(id){return `social/x/${id}.json`}
 function trendKey(id){return `trends/${id}.json`}
@@ -147,7 +147,7 @@ export function mockupPosition(catalog, variantId, placement, size, rawDesign=nu
   const file=catalog.printfiles?.find(f=>Number(f.printfile_id)===Number(variant?.placements?.[placement]));
   const design=normalizeProductDesign({product:size?.product||'Generic'},rawDesign||size?.design||{});
   if(!file || ![file.width,file.height,size.width,size.height].every(n=>Number.isFinite(n)&&n>0))throw fault('print_area_missing','Printful print dimensions are unavailable for this variant.',502);
-  if(size?.design?.background==='scene-fill')return {area_width:file.width,area_height:file.height,width:file.width,height:file.height,top:0,left:0};
+  if(Number(design.version)>=4||['scene-fill','full-bleed','ambient','dark','light'].includes(size?.design?.background))return {area_width:file.width,area_height:file.height,width:file.width,height:file.height,top:0,left:0};
   const scale=Math.min(file.width/size.width,file.height/size.height)*(design.scale/100);
   const width=Math.max(1,Math.floor(size.width*scale)),height=Math.max(1,Math.floor(size.height*scale));
   const center=design.x==='left'?0.25:design.x==='right'?0.75:0.5;
@@ -183,8 +183,12 @@ export async function createMockup(request,env){
     stage="printful-catalog";
     const catalog=await printful(env,`/mockup-generator/printfiles/${map.printfulProductId}`,{method:'GET'});
     const position=mockupPosition(catalog,map.printfulVariantId,placement,size);
-    if(design.background==='scene-fill'){
-      const q=new URLSearchParams({token:meta.printAccessToken,layout:design.layout,x:design.x,scale:String(design.scale),spacing:design.spacing||'standard',areaWidth:String(position.area_width),areaHeight:String(position.area_height)});
+    if(Number(design.version)>=4||design.background==='scene-fill'){
+      const q=new URLSearchParams({
+        token:meta.printAccessToken,product:design.product||map.product,layout:design.layout,
+        fill:design.fill||design.background||'ambient',x:design.x,scale:String(design.scale),
+        spacing:design.spacing||'standard',areaWidth:String(position.area_width),areaHeight:String(position.area_height)
+      });
       sourceUrl=`${appBase(env,request)}/api/print-source/${encodeURIComponent(requestId)}?${q}`;
     }
     const payload={variant_ids:[map.printfulVariantId],format:"jpg",width:1200,files:[{placement,image_url:sourceUrl,position}]};
