@@ -228,6 +228,39 @@ test('pre-checkout confirmation becomes the approved design and auto-sends only 
  }finally{globalThis.fetch=original}
 });
 
+test('explicit Shopify owner release sends an already-approved legacy order without reopening customer approval',async()=>{
+ const env=await setup({
+  PUBLIC_APP_URL:'https://recast.test',
+  SHOPIFY_CLIENT_ID:'fixture-client',SHOPIFY_CLIENT_SECRET:'fixture-secret',SHOPIFY_SHOP:'fixture-store',
+  PRINTFUL_API_TOKEN:'fixture-printful'
+ });
+ const design={version:3,layout:'two-sided',background:'scene-fill',x:'center',scale:110,spacing:'standard'};
+ const line={id:'gid://shopify/LineItem/17002516447476',sku:'RECAST-MUG-11OZ',quantity:1,customAttributes:[
+  {key:'Artwork ID',value:ID},{key:'_Recast Design',value:JSON.stringify(design)},{key:'_Recast Proof',value:'legacy-proof'},
+  {key:'_Recast Mockup',value:'v3-two-sided-scene-fill-center-110-standard'},{key:'_Recast Preview Token',value:'c'.repeat(48)}
+ ]};
+ const order={...paid,name:'#1001',tags:['RECAST_SEND_PRODUCTION'],email:'buyer@example.com',shippingAddress:{name:'Buyer',address1:'1 Test St',city:'Testville',province:'Pennsylvania',provinceCode:'PA',countryCodeV2:'US',zip:'19000'},lineItems:{pageInfo:{hasNextPage:false},nodes:[line]}};
+ const id='-1001-'+ID+'-RECAST-MUG-11OZ',snapshotKey='commerce/artwork/legacy-release/source.b64',sourceHash=await hash(CLEAN.toString('base64'));
+ await env.ARTWORK.put(snapshotKey,CLEAN.toString('base64'));
+ const job={id,lineId:line.id,orderId:paid.id,orderName:'#1001',orderCreatedAt:paid.createdAt,financialStatus:'PAID',requestId:ID,sku:line.sku,quantity:1,product:'Mug',digital:false,productDesignRequired:true,productDesign:design,productProofHash:'legacy-proof',productMockupId:'v3-two-sided-scene-fill-center-110-standard',approvedPreviewToken:'c'.repeat(48),recipient:{name:'Buyer',address1:'1 Test St',city:'Testville',state_code:'PA',country_code:'US',zip:'19000'},status:'art_approved_needs_high_res',createdAt:paid.createdAt,updatedAt:paid.updatedAt,printfulVariantId:1320,printfulProductId:19};
+ await env.ARTWORK.put(`jobs/${id}.json`,JSON.stringify(job));
+ await env.ARTWORK.put(`commerce/designs/${id}.json`,JSON.stringify({revision:2,selectedRequestId:ID,approvedAt:'2026-10-05T20:00:00Z',snapshotKey,sourceHash,printToken:'legacy-print',proof:{images:[{url:'preview'}],position:{area_width:2700,area_height:1050,width:2700,height:1050,left:0,top:0},design,sku:line.sku,quantity:1,sourceHash}}));
+ const original=globalThis.fetch;let drafts=0,confirms=0;
+ globalThis.fetch=async(url,options={})=>{
+  const path=String(url);
+  if(path.includes('access_token'))return Response.json({access_token:'fixture-token',expires_in:3600});
+  if(path.includes('graphql.json'))return Response.json({data:{order}});
+  if(path==='https://api.printful.com/orders'){drafts++;return Response.json({result:{id:777,status:'draft'}})}
+  if(path.endsWith('/orders/777/confirm')){confirms++;return Response.json({result:{id:777,status:'pending'}})}
+  throw Error('Unexpected external call: '+path);
+ };
+ try{
+  await reconcileShopifyOrder(env,order);
+  const saved=await (await env.ARTWORK.get(`jobs/${id}.json`)).json();
+  assert.equal(saved.status,'submitted_to_printful');assert.ok(saved.sentToProductionAt);assert.equal(drafts,1);assert.equal(confirms,1);
+ }finally{globalThis.fetch=original}
+});
+
 test('Shopify reconciliation creates one job per line, awards once, and revokes refunded entitlements',async()=>{
  const {env,wallet}=await walletSetup('192.0.2.1',await setup());
  const meta=await read(env,`requests/${ID}/request.json`);meta.creditWalletId=wallet.id;await env.ARTWORK.put(`requests/${ID}/request.json`,JSON.stringify(meta));
