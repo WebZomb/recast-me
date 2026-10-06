@@ -265,9 +265,10 @@ async function checkoutLink(request, env, ctx) {
     "Recast Style": recast.styleName || "",
     "Recast Subject": recast.subjectType || "",
     ...(verifiedDesign?{
-      "Recast Layout":verifiedDesign.layout==="two-sided"?"Same image on both sides":verifiedDesign.layout==="wrap"?"Full wrap":"One image",
+      "Recast Layout":verifiedDesign.layout==="two-sided"?"Best setup · image on both sides":verifiedDesign.layout==="wrap"?"Full wrap":verifiedDesign.layout==="cover"?"Best setup · full bleed":verifiedDesign.layout==="fit"?"Keep whole image":"One image",
       "Recast Position":verifiedDesign.x[0].toUpperCase()+verifiedDesign.x.slice(1),
       "Recast Size":verifiedDesign.scale+"%",
+      ...(verifiedDesign.layout==="fit"?{"Recast Fill":verifiedDesign.fill==="dark"?"Dark fill":verifiedDesign.fill==="full-bleed"?"Artwork edge fill":"Blended artwork colors"}:{}),
       ...(verifiedDesign.layout==="two-sided"?{"Recast Spacing":verifiedDesign.spacing==="close"?"Closer together":verifiedDesign.spacing==="wide"?"Farther apart":"Standard"}:{}),
       "Recast Design":"Confirmed before checkout",
       "Recast Next Step":"Payment completes your order — no extra design approval needed",
