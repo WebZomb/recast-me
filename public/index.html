@@ -9,7 +9,7 @@
   <title>Recast Me — Recast your world.</title>
   <link rel="stylesheet" href="/styles.css?v=130" />
   <link rel="stylesheet" href="/merch-v07.css?v=133" />
-  <link rel="stylesheet" href="/site-v10.css?v=222" />
+  <link rel="stylesheet" href="/site-v10.css?v=223" />
 </head>
 <body>
   <a class="skip-link" href="#start">Skip to create your Recast</a>
@@ -59,12 +59,10 @@
           <div class="demo-meta"><span>02</span><b>YOUR RECAST</b></div>
         </div>
         <div class="hero-flow-arrow" aria-hidden="true">→</div>
-        <div class="demo-card demo-card-product">
-          <div class="blanket-mockup" aria-label="Example blanket using the same Recast artwork">
-            <img src="/assets/world-game-v18.webp" alt="The Recast artwork printed on a blanket" fetchpriority="high" />
-            <span class="blanket-fold" aria-hidden="true"></span>
-          </div>
-          <div class="demo-meta"><span>03</span><b>YOUR PRODUCT</b></div>
+        <div class="hero-product-stage" aria-label="Example Recast product">
+          <span class="product-wow-glow" aria-hidden="true"></span>
+          <img src="/assets/product-mug-v16.webp" alt="A personalized mug as the finished Recast product" fetchpriority="high" />
+          <div class="product-stage-label"><span>03</span><b>YOUR PRODUCT</b></div>
         </div>
         <p class="hero-demo-note">Upload → Recast → preview it on a real product before checkout.</p>
       </div>
@@ -83,35 +81,25 @@
     </section>
 
     <section class="section process compact-process" id="how">
-      <div class="section-heading">
+      <div class="section-heading compact-process-heading">
         <div class="eyebrow">HOW IT WORKS</div>
-        <h2>Photo → Recast → product.</h2>
+        <h2>Three steps. That’s it.</h2>
+        <p>Choose a photo, create the version you love, then see it on the product before you pay.</p>
       </div>
-      <div class="steps premium-steps compact-steps">
-        <article class="step-card">
-          <b>01</b>
-          <div class="step-visual upload-visual" aria-hidden="true">
-            <div class="mini-photo mini-photo-front"><img src="/assets/jack-russell-source-v18.webp" alt=""></div>
-            <span class="mini-lock">PRIVATE</span>
-          </div>
-          <h3>Upload</h3>
-          <p>Add a clear photo. Your references stay private.</p>
+      <div class="process-ribbon" aria-label="Three-step Recast process">
+        <article class="process-node">
+          <div class="process-node-art upload-node-art"><img src="/assets/jack-russell-source-v18.webp" alt=""></div>
+          <div class="process-node-copy"><span>01</span><h3>Upload</h3><p>Add a clear photo. Your source stays private.</p></div>
         </article>
-        <article class="step-card">
-          <b>02</b>
-          <div class="step-visual world-visual" aria-hidden="true">
-            <img src="/assets/world-space-v18.webp" alt=""><img src="/assets/world-fantasy-v18.webp" alt="">
-          </div>
-          <h3>Recast</h3>
-          <p>Choose a world and pick your favorite version.</p>
+        <div class="process-ribbon-arrow" aria-hidden="true">→</div>
+        <article class="process-node">
+          <div class="process-node-art recast-node-art"><img src="/assets/world-space-v18.webp" alt=""></div>
+          <div class="process-node-copy"><span>02</span><h3>Recast</h3><p>Pick a world and choose your favorite result.</p></div>
         </article>
-        <article class="step-card">
-          <b>03</b>
-          <div class="step-visual merch-mini" aria-hidden="true">
-            <img src="/assets/product-mug-v16.webp" alt=""><img src="/assets/product-blanket-v16.webp" alt=""><img src="/assets/product-canvas-v16.webp" alt="">
-          </div>
-          <h3>Preview & buy</h3>
-          <p>See it on the product, confirm the design, then checkout.</p>
+        <div class="process-ribbon-arrow" aria-hidden="true">→</div>
+        <article class="process-node">
+          <div class="process-node-art product-node-art"><img src="/assets/product-mug-v16.webp" alt=""></div>
+          <div class="process-node-copy"><span>03</span><h3>Preview & buy</h3><p>Confirm the product preview, then checkout. Done.</p></div>
         </article>
       </div>
     </section>
@@ -129,14 +117,10 @@
         </div>
 
         <div class="create-card">
-          <details><summary>Missing a saved Recast?</summary><p>Open the browser and exact site address where you created it. Select the picture and tap “Open this Recast in another browser.” Keep that private link for recovery; an Artwork ID alone cannot unlock a picture.</p><label>Paste a private Recast link <input id="recover-recast-link" type="url"></label><button type="button" id="recover-recast">Restore my Recast</button><p id="recover-status" role="status"></p></details>
-          <details id="original-photo-option"><summary>Use my photo as-is · no AI</summary>
-            <p>Put your own photo on a product. No adventure or AI credits needed. We keep the composition, prepare a print copy, and watermark only the preview.</p>
-            <form id="original-photo-form"><label>Choose one photo <input id="original-photo" type="file" accept="image/jpeg,image/png,image/webp" required></label>
-            <p>JPEG, PNG, or WebP · up to 12 MB. Use the full-resolution photo for better prints.</p>
-            <label><input id="original-consent" type="checkbox" required> I have permission to use this photo and agree to private storage and image processing. No AI generation.</label>
-            <div id="original-turnstile"></div><button class="button primary full" type="submit">Use this photo →</button><p id="original-status" role="status"></p></form>
-          </details>
+          <div class="create-main-path">
+            <span>CREATE WITH AI</span>
+            <strong>Three quick steps</strong>
+          </div>
           <form id="recast-form">
             <p id="render-availability" class="prefill-note" role="status" hidden></p>
 <nav class="creation-progress" aria-label="Creation steps"><button type="button" data-go-step="0">1 · Who</button><button type="button" data-go-step="1">2 · Photos</button><button type="button" data-go-step="2">3 · Adventure</button></nav>
@@ -209,6 +193,27 @@
 <button type="button" class="button ghost" data-go-step="1">Back to photos</button>
 </div>
           </form>
+          <div class="alternate-divider" aria-hidden="true"><span>OR</span></div>
+          <div class="alternate-paths">
+            <details class="alternate-option">
+              <summary>Continue a saved Recast</summary>
+              <p>Paste the private Recast link you saved earlier.</p>
+              <label>Private Recast link <input id="recover-recast-link" type="url"></label>
+              <button type="button" id="recover-recast" class="button ghost">Restore my Recast</button>
+              <p id="recover-status" role="status"></p>
+            </details>
+            <details id="original-photo-option" class="alternate-option">
+              <summary>Use my photo as-is · no AI</summary>
+              <p>Skip the transformation and put your original photo directly on a product.</p>
+              <form id="original-photo-form">
+                <label>Choose one photo <input id="original-photo" type="file" accept="image/jpeg,image/png,image/webp" required></label>
+                <label><input id="original-consent" type="checkbox" required> I have permission to use this photo and agree to private storage and image processing.</label>
+                <div id="original-turnstile"></div>
+                <button class="button primary full" type="submit">Use this photo →</button>
+                <p id="original-status" role="status"></p>
+              </form>
+            </details>
+          </div>
         </div>
       </div>
     </section>
@@ -242,16 +247,22 @@
             </div>
           </div>
         </div>
-        <div class="preview-info">
-          <div class="callout"><strong>WATERMARKED PREVIEW</strong><p>Your clean artwork stays private. Purchase options below stay tied to this exact Artwork ID.</p></div>
-          <a class="button primary" href="#shop">Choose a product for your Recast →</a>
-          <button type="button" id="share-preview" class="button ghost">Save / share watermarked preview</button>
-          <button type="button" id="save-native-preview" class="button ghost" hidden>Save to My Recasts</button>
+        <div class="preview-info preview-info-simple">
+          <div class="preview-protection"><strong>Preview only</strong><span>The watermark does not print.</span></div>
+          <a class="button primary preview-product-cta" href="#shop">Choose a product →</a>
+          <a class="button ghost preview-version-cta" href="#recent-versions-shell">Pick another version</a>
+          <details class="preview-more">
+            <summary>More options</summary>
+            <div class="preview-more-actions">
+              <button type="button" id="share-preview" class="button ghost">Save / share preview</button>
+              <button type="button" id="save-native-preview" class="button ghost" hidden>Save to My Recasts</button>
+              <button type="button" id="copy-recast-link" class="button ghost">Open in another browser</button>
+              <a id="order-status-link" class="button ghost order-status-link hidden" href="#">Track order / downloads</a>
+            </div>
+          </details>
           <p id="preview-export-status" role="status" aria-live="polite"></p>
-          <button type="button" id="copy-recast-link" class="button ghost">Open this Recast in another browser</button>
-          <p id="recast-link-status" role="status"></p><input id="private-recast-link" aria-label="Private Recast link" readonly hidden>
-          <a id="order-status-link" class="button ghost order-status-link hidden" href="#">Track this Recast / downloads</a>
-
+          <p id="recast-link-status" role="status"></p>
+          <input id="private-recast-link" aria-label="Private Recast link" readonly hidden>
         </div>
       </div>
 
@@ -260,9 +271,9 @@
           <div>
             <div class="eyebrow">RECENT VERSIONS</div>
             <h3>Pick the one you love.</h3>
-            <p>Your last 4 saved pictures are listed in this browser. Safari and in-app browsers can have different histories. Use the private Recast link to move a picture between browsers.</p>
+            <p>Your last 4 successful Recasts in this browser.</p>
           </div>
-          <span>SUCCESSFUL RENDERS ONLY</span>
+          <span>YOUR RECENT RECASTS</span>
         </div>
         <div id="recent-versions-grid" class="recent-versions-grid"></div>
       </section>
@@ -300,7 +311,7 @@
     <span>© 2026 Recast Me</span>
   </footer>
 
-  <script src="/app.js?v=225" type="module"></script>
+  <script src="/app.js?v=226" type="module"></script>
   <script src="/checkout.js?v=232" type="module"></script>
 </body>
 </html>
