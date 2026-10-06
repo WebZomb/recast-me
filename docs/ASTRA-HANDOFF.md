@@ -66,3 +66,5 @@ Latest fulfillment diagnostics: [RM-050.3 — read-only Printful order lookup an
 Latest: [RM-050.4 — Workers-compatible order lookup and bounded Printful references](ASTRA-SESSION-RM-0504.md).
 
 Latest: [RM-050.5 — verified-empty-store missing-draft recovery](ASTRA-SESSION-RM-0505.md).
+
+Latest: [RM-050.7 — inspected recovered-draft release](ASTRA-SESSION-RM-0507.md).
