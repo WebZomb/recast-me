@@ -28,7 +28,7 @@ test('homepage polish keeps alternates separate and preview utilities collapsed'
   const aiPos=html.indexOf('CREATE WITH AI'),formPos=html.indexOf('<form id="recast-form">'),orPos=html.indexOf('class="alternate-divider"'),savedPos=html.indexOf('Continue a saved Recast');
   assert.ok(aiPos>=0&&formPos>aiPos&&orPos>formPos&&savedPos>orPos);
   assert.match(html,/class="hero-product-stage"/);
-  assert.match(html,/hero-product-mug-v20\.svg/);
+  assert.match(html,/class="hero-mug-cutout"/);assert.match(html,/world-game-v18\.webp/);
   assert.match(html,/class="process-ribbon"/);
   assert.match(html,/class="preview-more"/);
   assert.match(html,/Choose a product →/);
