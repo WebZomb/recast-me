@@ -644,11 +644,85 @@ async function autoProcessPreapprovedJob(env,job){
   }
 }
 
+async function recoverLegacyApprovedDesign(env,job){
+  const existing=await designFor(env,job);
+  if(existing?.approvedAt)return existing;
+  if(job.digital||!job.productDesign||!job.productProofHash||!job.productMockupId||!job.approvedPreviewToken)return null;
+
+  const token=String(job.approvedPreviewToken||"");
+  if(!/^[a-f0-9]{48}$/.test(token))return null;
+
+  const preview=await readJson(env,`commerce/checkout-previews/${token}.json`);
+  if(!preview)return null;
+
+  const normalized=normalizeProductDesign(FULFILLMENT[job.sku],job.productDesign);
+  if(
+    preview.requestId!==job.requestId ||
+    preview.sku!==job.sku ||
+    preview.mockupId!==job.productMockupId ||
+    preview.proofHash!==job.productProofHash ||
+    JSON.stringify(preview.design||{})!==JSON.stringify(normalized)
+  )return null;
+
+  // Require the exact preview artifact the customer saw to still exist.
+  const previewImage=await env.ARTWORK?.head(`commerce/checkout-previews/${token}.jpg`);
+  if(!previewImage)return null;
+
+  const sourceObject=await env.ARTWORK?.get(requestKey(job.requestId,"preview.b64"));
+  if(!sourceObject)return null;
+  const sourceBase64=await sourceObject.text();
+  const sourceHash=await hash(sourceBase64);
+  const proofHash=await hash(sourceBase64+'|'+JSON.stringify(normalized));
+  if(proofHash!==job.productProofHash)return null;
+
+  const mockup=await readJson(env,`mockups/${job.requestId}/${job.sku}/${job.productMockupId}/task.json`);
+  if(
+    !mockup ||
+    mockup.status!=="completed" ||
+    !mockup.position ||
+    mockup.sourceHash!==proofHash ||
+    JSON.stringify(mockup.design||{})!==JSON.stringify(normalized)
+  )return null;
+
+  const snapshotKey=`commerce/artwork/${await hash(job.id)}/${sourceHash}.b64`;
+  if(!await env.ARTWORK?.head(snapshotKey)){
+    await env.ARTWORK.put(snapshotKey,sourceBase64,{httpMetadata:{contentType:"text/plain"}});
+  }
+
+  const recoveredAt=now();
+  const recovered={
+    revision:1,
+    selectedRequestId:job.requestId,
+    sourceHash,
+    snapshotKey,
+    approvedAt:recoveredAt,
+    legacyRecoveredAt:recoveredAt,
+    legacyPreviewCreatedAt:preview.createdAt||null,
+    printToken:randomHex(24),
+    proof:{
+      images:[],
+      position:mockup.position,
+      design:normalized,
+      sku:job.sku,
+      quantity:job.quantity,
+      sourceHash
+    }
+  };
+  await putJson(env,`commerce/designs/${job.id}.json`,recovered);
+  job.legacyApprovalRecoveredAt=recoveredAt;
+  job.status='art_approved_needs_high_res';
+  await saveJob(env,job);
+  return recovered;
+}
+
 async function processOwnerReleasedLegacyJob(env,job){
   if(job.digital||job.sentToProductionAt)return job;
-  const design=await designFor(env,job);
+  let design=await designFor(env,job);
   if(!design?.approvedAt){
-    job.ownerReleaseError="The legacy order has no preserved approved design record. Production was not started.";
+    design=await recoverLegacyApprovedDesign(env,job);
+  }
+  if(!design?.approvedAt){
+    job.ownerReleaseError="The legacy order could not be matched to its exact saved product preview and artwork. Production was not started.";
     job.ownerReleaseFailedAt=now();
     if(job.status!=='on_hold')job.status='owner_release_review';
     await addShopifyOrderTags(env,job.orderId,["RECAST_PRINTFUL_REVIEW"]);
