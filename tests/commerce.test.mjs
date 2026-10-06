@@ -541,3 +541,91 @@ test('RM0504 existing invalid-ID attempt remains locked byte-for-byte and never 
   assert.equal(counts().drafts,0);assert.equal(counts().confirmations,0);assert.equal(await(await o.env.ARTWORK.get(key)).text(),original);
  });
 });
+
+test('RM0505 verified empty-store recovery replaces one stale legacy lock, creates one draft, and holds production',async()=>{
+ const o=await orderSetup();await o.env.ARTWORK.delete(`jobs/${o.job.id}.json`);
+ o.job.id='1111111111111-22222222222222';o.job.lineId='gid://shopify/LineItem/22222222222222';
+ await o.env.ARTWORK.put(`jobs/${o.job.id}.json`,JSON.stringify(o.job));
+ await o.action('proof');await o.action('approve',{revision:1,confirm:'APPROVE_FOR_PRINT'});await finishApprovedDesign(o.env,o.job);
+ Object.assign(o.job,{artApprovedAt:paid.updatedAt,printReadyAt:paid.updatedAt,status:'owner_release_review',ownerReleaseError:'Draft submission already started; review Printful before retrying.'});
+ await o.env.ARTWORK.put(`jobs/${o.job.id}.json`,JSON.stringify(o.job));
+ const claimKey=`commerce/production/${await hash(o.job.id)}-draft.json`,legacy='{"startedAt":"2026-10-06T04:10:22.701Z"}';
+ await o.env.ARTWORK.put(claimKey,legacy);
+ const designBefore=await (await o.env.ARTWORK.get(`commerce/designs/${o.job.id}.json`)).text();
+ Object.assign(o.env,{SHOPIFY_CLIENT_ID:'fixture-client',SHOPIFY_CLIENT_SECRET:'fixture-secret',SHOPIFY_SHOP:'fixture-store',PRINTFUL_API_TOKEN:'fixture-printful',PRINTFUL_STORE_ID:'123',PUBLIC_APP_URL:'https://recast.test'});
+ const original=globalThis.fetch;let providerReads=0,drafts=0,confirms=0;
+ globalThis.fetch=async(url,options={})=>{
+  const path=String(url);
+  if(path.endsWith('/admin/oauth/access_token'))return Response.json({access_token:'fixture-token',expires_in:3600});
+  if(path.includes('graphql.json')){
+   const body=JSON.parse(options.body);
+   if(body.query.includes('RecastOrderTags'))return Response.json({data:{tagsAdd:{node:{id:paid.id},userErrors:[]}}});
+   return Response.json({data:{order:{...paid,lineItems:{pageInfo:{hasNextPage:false},nodes:[{id:o.job.lineId,sku:o.job.sku,quantity:o.job.quantity,customAttributes:[{key:'Artwork ID',value:ID}]}]}}}});
+  }
+  if(path===`https://api.printful.com/orders/@recast-${o.job.id}`){providerReads++;assert.equal(options.redirect,'manual');return Response.json({code:400,result:'invalid reference'},{status:400});}
+  if(path==='https://api.printful.com/orders?limit=100&offset=0'){providerReads++;return Response.json({code:200,result:[],paging:{total:0,offset:0,limit:100}},{status:200});}
+  if(path==='https://api.printful.com/orders'&&options.method==='POST'){
+   drafts++;const body=JSON.parse(options.body);assert.match(body.external_id,/^rm-[a-f0-9]{29}$/);assert.ok(body.external_id.length<=32);
+   return Response.json({result:{id:4242,status:'draft'}});
+  }
+  if(path.includes('/confirm')){confirms++;throw Error('Production confirmation must never occur during recovery');}
+  throw Error('Unexpected external call: '+path);
+ };
+ try{
+  const r=await adminJobAction(adminRequest({confirm:'RECOVER_MISSING_DRAFT'}),o.env,o.job.id,'recover-missing-draft');
+  assert.equal(r.status,200);const body=await r.json();assert.equal(body.recovered,true);assert.equal(body.productionSubmitted,false);assert.equal(body.printfulOrderId,'4242');
+  const saved=await read(o.env,`jobs/${o.job.id}.json`),claim=await read(o.env,claimKey);
+  assert.equal(saved.status,'on_hold');assert.equal(saved.printfulOrderId,4242);assert.match(saved.holdReason,/inspect the draft/i);
+  assert.equal(saved.printfulExternalId,claim.externalId);assert.equal(claim.referenceVersion,3);assert.equal(claim.recovery,true);assert.equal(claim.recoveredFrom.externalId,`recast-${o.job.id}`);
+  assert.equal(providerReads,2);assert.equal(drafts,1);assert.equal(confirms,0);
+  assert.equal(await (await o.env.ARTWORK.get(`commerce/designs/${o.job.id}.json`)).text(),designBefore);
+ }finally{globalThis.fetch=original}
+});
+
+test('RM0505 recovery refuses a non-empty Printful store and preserves the legacy lock byte-for-byte',async()=>{
+ const o=await orderSetup();await o.env.ARTWORK.delete(`jobs/${o.job.id}.json`);
+ o.job.id='1111111111111-22222222222222';o.job.lineId='gid://shopify/LineItem/22222222222222';
+ await o.env.ARTWORK.put(`jobs/${o.job.id}.json`,JSON.stringify({...o.job,artApprovedAt:paid.updatedAt,printReadyAt:paid.updatedAt,status:'owner_release_review'}));
+ const claimKey=`commerce/production/${await hash(o.job.id)}-draft.json`,legacy='{"startedAt":"2026-10-06T04:10:22.701Z"}';await o.env.ARTWORK.put(claimKey,legacy);
+ Object.assign(o.env,{PRINTFUL_API_TOKEN:'fixture-printful',PRINTFUL_STORE_ID:'123'});
+ const original=globalThis.fetch;let posts=0;
+ globalThis.fetch=async(url,options={})=>{
+  const path=String(url);
+  if(path.includes('/orders/@'))return Response.json({code:400,result:'invalid reference'},{status:400});
+  if(path.includes('/orders?'))return Response.json({code:200,result:[{id:9,store:123,external_id:'unrelated',status:'draft'}],paging:{total:1,offset:0,limit:100}},{status:200});
+  if(options.method==='POST'){posts++;throw Error('No provider write allowed');}
+  throw Error('Unexpected call '+path);
+ };
+ try{
+  const r=await adminJobAction(adminRequest({confirm:'RECOVER_MISSING_DRAFT'}),o.env,o.job.id,'recover-missing-draft');assert.equal(r.status,409);
+  assert.match((await r.json()).error,/zero-order snapshot/i);assert.equal(posts,0);
+  assert.equal(await(await o.env.ARTWORK.get(claimKey)).text(),legacy);
+  assert.equal((await read(o.env,`jobs/${o.job.id}.json`)).status,'owner_release_review');
+ }finally{globalThis.fetch=original}
+});
+
+test('RM0505 lock compare-and-swap blocks recovery if the stale claim changes after provider verification',async()=>{
+ const o=await orderSetup();await o.env.ARTWORK.delete(`jobs/${o.job.id}.json`);
+ o.job.id='1111111111111-22222222222222';o.job.lineId='gid://shopify/LineItem/22222222222222';
+ await o.env.ARTWORK.put(`jobs/${o.job.id}.json`,JSON.stringify(o.job));
+ await o.action('proof');await o.action('approve',{revision:1,confirm:'APPROVE_FOR_PRINT'});await finishApprovedDesign(o.env,o.job);
+ Object.assign(o.job,{artApprovedAt:paid.updatedAt,printReadyAt:paid.updatedAt,status:'owner_release_review'});await o.env.ARTWORK.put(`jobs/${o.job.id}.json`,JSON.stringify(o.job));
+ const claimKey=`commerce/production/${await hash(o.job.id)}-draft.json`;await o.env.ARTWORK.put(claimKey,'{"startedAt":"2026-10-06T04:10:22.701Z"}');
+ Object.assign(o.env,{SHOPIFY_CLIENT_ID:'fixture-client',SHOPIFY_CLIENT_SECRET:'fixture-secret',SHOPIFY_SHOP:'fixture-store',PRINTFUL_API_TOKEN:'fixture-printful',PRINTFUL_STORE_ID:'123',PUBLIC_APP_URL:'https://recast.test'});
+ const original=globalThis.fetch;let posts=0;
+ globalThis.fetch=async(url,options={})=>{
+  const path=String(url);
+  if(path.endsWith('/admin/oauth/access_token'))return Response.json({access_token:'fixture-token',expires_in:3600});
+  if(path.includes('graphql.json'))return Response.json({data:{order:{...paid,lineItems:{pageInfo:{hasNextPage:false},nodes:[{id:o.job.lineId,sku:o.job.sku,quantity:o.job.quantity,customAttributes:[{key:'Artwork ID',value:ID}]}]}}}});
+  if(path.includes('/orders/@'))return Response.json({code:400,result:'invalid reference'},{status:400});
+  if(path.includes('/orders?')){await o.env.ARTWORK.put(claimKey,'{"startedAt":"someone-else-changed-this"}');return Response.json({code:200,result:[],paging:{total:0,offset:0,limit:100}},{status:200});}
+  if(path==='https://api.printful.com/orders'){posts++;throw Error('No POST after a changed lock');}
+  throw Error('Unexpected call '+path);
+ };
+ try{
+  const r=await adminJobAction(adminRequest({confirm:'RECOVER_MISSING_DRAFT'}),o.env,o.job.id,'recover-missing-draft');assert.equal(r.status,409);
+  assert.match((await r.json()).error,/saved attempt changed/i);assert.equal(posts,0);
+  assert.equal(await(await o.env.ARTWORK.get(claimKey)).text(),'{"startedAt":"someone-else-changed-this"}');
+  assert.equal((await read(o.env,`jobs/${o.job.id}.json`)).status,'on_hold');
+ }finally{globalThis.fetch=original}
+});
