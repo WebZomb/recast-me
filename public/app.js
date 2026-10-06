@@ -38,7 +38,7 @@ const PRODUCT_CATALOG = [
 
   {name:"T-Shirt",price:"from $34.99",asset:"tshirt",image:"/assets/product-tshirt-v16.webp",badge:"WEAR IT",pitch:"An easy everyday way to show off your Recast.",tier:"secondary"},
   {name:"Blanket",price:"from $74.99",asset:"blanket",image:"/assets/product-blanket-v16.webp",badge:"COZY PICK",pitch:"Big, soft, personal — especially good for pets and gifts.",tier:"secondary"},
-  {name:"Mug",price:"from $24.99",asset:"mug",image:"https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-me-hero-wow-mug.png?v=1791260332",badge:"GIFTABLE",pitch:"A personalized gift that gets used every day.",tier:"secondary"},
+  {name:"Mug",price:"from $24.99",asset:"mug",image:"/assets/product-mug-v16.webp",badge:"GIFTABLE",pitch:"A personalized gift that gets used every day.",tier:"secondary"},
   {name:"Tumbler",price:"$49.99",asset:"tumbler",image:"/assets/product-tumbler-v16.webp",badge:"TAKE IT WITH YOU",pitch:"Your Recast on a 20 oz everyday tumbler.",tier:"secondary"},
   {name:"Magnet 3-Pack",price:"$24.99",asset:"magnet",image:"/assets/product-magnet-v16.webp",badge:"ADD-ON",pitch:"Three matching magnets for a smaller, easy add-on.",tier:"secondary"},
   {name:"Coaster 4-Pack",price:"$39.99",asset:"coaster",image:"/assets/product-coaster-v16.webp",badge:"ADD-ON",pitch:"Four matching cork-back coasters featuring your artwork.",tier:"secondary"},
