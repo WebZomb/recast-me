@@ -8,7 +8,7 @@ const PRODUCT_ART = {
   "Custom Recast Canvas":"/assets/product-canvas-v16.webp",
   "Custom Recast T-Shirt":"/assets/product-tshirt-v16.webp",
   "Custom Recast Blanket":"/assets/product-blanket-v16.webp",
-  "Custom Recast Mug":"/assets/product-mug-v16.webp",
+  "Custom Recast Mug":"https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-neon-mug-cutout-v48.png?v=1791266555",
   "Custom Recast Tumbler":"/assets/product-tumbler-v16.webp",
   "Custom Recast Magnet 3-Pack":"/assets/product-magnet-v16.webp",
   "Custom Recast Coaster 4-Pack":"/assets/product-coaster-v16.webp",
