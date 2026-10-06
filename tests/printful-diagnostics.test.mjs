@@ -26,7 +26,7 @@ test('diagnostic rejects POST and path injection without reads',async()=>{
 });
 test('matching order uses scoped GET and returns only allowlisted non-secret fields',async t=>{
   const o=setup();let calls=0;t.mock.method(globalThis,'fetch',async(url,options)=>{
-    calls++;assert.equal(url,'https://api.printful.com/orders/@recast-test-job');assert.equal(options.method,'GET');assert.equal(options.redirect,'error');assert.equal(options.headers['X-PF-Store-ID'],'123');
+    calls++;assert.equal(url,'https://api.printful.com/orders/@recast-test-job');assert.equal(options.method,'GET');assert.equal(options.redirect,'manual');assert.equal(options.headers['X-PF-Store-ID'],'123');
     return json(200,{id:999,external_id:'recast-test-job',status:'draft',recipient:{email:'private@example.test'},items:[{files:[{url:'https://private.test?token=print-secret'}]}]});
   });
   const d=await check(o);assert.equal(d.state,'found');assert.equal(d.order.id,'999');assert.equal(d.draftAttemptRecorded,true);assert.equal(d.readOnly,true);assert.equal(calls,1);assert.equal(o.counters.writes,0);
@@ -46,10 +46,10 @@ test('an HTML 404 or interrupted lookup never proves the order absent',async t=>
   const o=setup();t.mock.method(globalThis,'fetch',async()=>new Response('Not found',{status:404}));assert.equal((await check(o)).state,'unknown');
   t.mock.method(globalThis,'fetch',async()=>{throw new Error('network secret')});assert.equal((await check(o)).state,'unknown');assert.equal(o.counters.writes,0);
 });
-test('too-long external IDs are explicitly flagged without changing or truncating the reference',async t=>{
-  const id='1234567890123-12345678901234',o=setup({job:{id}});
-  t.mock.method(globalThis,'fetch',async url=>{assert.ok(url.endsWith('@recast-'+id));return json(400,'Invalid external ID');});
-  const d=await check(o,request(id));assert.equal(d.externalId,'recast-'+id);assert.equal(d.externalIdLength,35);assert.equal(d.externalIdValid,false);assert.equal(d.state,'lookup_rejected');assert.equal(o.counters.writes,0);
+test('too-long historical references stay unchanged through the bounded order-list check',async t=>{
+ const id='1234567890123-12345678901234',o=setup({job:{id}});let calls=0;
+ t.mock.method(globalThis,'fetch',async url=>{calls++;if(url.includes('/orders?'))return Response.json({code:200,result:[],paging:{total:0,offset:0,limit:100}});assert.ok(url.endsWith('@recast-'+id));return json(400,'Invalid external ID');});
+ const d=await check(o,request(id));assert.equal(d.externalId,'recast-'+id);assert.equal(d.externalIdLength,35);assert.equal(d.externalIdValid,false);assert.equal(d.state,'not_found_here');assert.equal(calls,2);assert.equal(o.counters.writes,0);
 });
 test('missing or invalid provider configuration never sends a cross-store lookup',async t=>{
   t.mock.method(globalThis,'fetch',async()=>{throw new Error('No provider call expected');});

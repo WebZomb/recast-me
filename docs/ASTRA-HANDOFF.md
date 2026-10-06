@@ -62,3 +62,5 @@ Latest domain/UI follow-up: [RM-050.1 — RecastMeAi.com migration and owner-req
 Latest mug/hero follow-up: [RM-050.2 — mug band composition, landing reference match and Printful connection evidence](ASTRA-SESSION-RM-0502.md).
 
 Latest fulfillment diagnostics: [RM-050.3 — read-only Printful order lookup and draft-attempt investigation](ASTRA-SESSION-RM-0503.md).
+
+Latest: [RM-050.4 — Workers-compatible order lookup and bounded Printful references](ASTRA-SESSION-RM-0504.md).

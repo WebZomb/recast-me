@@ -1,7 +1,7 @@
 import {initOwnerSettings} from './admin-settings.js?v=250';
-import {attachPrintfulDiagnostic} from './printful-diagnostics.js?v=rm0503';
+import {attachPrintfulDiagnostic} from './printful-diagnostics.js?v=rm0504';
 const deploymentLabel=document.querySelector('#deployment-identity');
-if(deploymentLabel)deploymentLabel.textContent=`${['recastmeai.com','recast-me.sergz24.workers.dev'].includes(location.hostname)?'Production':'Preview / alternate host'} · ${location.hostname} · RM-050.3 diagnostics`;
+if(deploymentLabel)deploymentLabel.textContent=`${['recastmeai.com','recast-me.sergz24.workers.dev'].includes(location.hostname)?'Production':'Preview / alternate host'} · ${location.hostname} · RM-050.4 diagnostics`;
 const $=s=>document.querySelector(s);const $$=s=>[...document.querySelectorAll(s)];
 const tokenKey='recast_admin_token';let token=sessionStorage.getItem(tokenKey)||'';
 function headers(json=false){return{'x-recast-request':'1',Authorization:`Bearer ${token}`,...(json?{'content-type':'application/json'}:{})}}

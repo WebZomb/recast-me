@@ -1,3 +1,4 @@
+import {printfulReferenceForNewDraft} from './printful-reference.js';
 import { FULFILLMENT } from "./entry.js";
 import { runSocialPipeline, socialReadiness } from './social.js';
 import { renderHealth } from './render-health.js';
@@ -619,10 +620,15 @@ async function createPrintfulDraftForJob(env,job){
   if(!design.finalKey)throw fault('print_not_ready','Prepare the approved print file first.');
   const map=FULFILLMENT[job.sku];const sourceUrl=`${String(env.PUBLIC_APP_URL||'').replace(/\/$/,'')}/api/order-print/${encodeURIComponent(job.id)}?token=${encodeURIComponent(design.printToken)}`;
   const claim=`commerce/production/${await hash(job.id)}-draft.json`;
-  if(!await env.ARTWORK.put(claim,JSON.stringify({startedAt:now()}),{onlyIf:new Headers({'If-None-Match':'*'})}))throw fault('draft_started','Draft submission already started; review Printful before retrying.');
-  const payload={external_id:`recast-${job.id}`,recipient:job.recipient,items:[{variant_id:map.printfulVariantId,quantity:Number(job.quantity||1)*Number(map.quantity||1),files:[{type:map.orderFileType||"default",url:sourceUrl,position:design.proof.position}]}]};
+  // Existing attempts keep their exact reference and duplicate-submission lock.
+  if(await env.ARTWORK.head(claim))throw fault('draft_started','Draft submission already started; review Printful before retrying.');
+  const externalId=await printfulReferenceForNewDraft(job);
+  if(!await env.ARTWORK.put(claim,JSON.stringify({startedAt:now(),externalId,referenceVersion:2}),{onlyIf:new Headers({'If-None-Match':'*'})}))throw fault('draft_started','Draft submission already started; review Printful before retrying.');
+  const payload={external_id:externalId,recipient:job.recipient,items:[{variant_id:map.printfulVariantId,quantity:Number(job.quantity||1)*Number(map.quantity||1),files:[{type:map.orderFileType||"default",url:sourceUrl,position:design.proof.position}]}]};
   const result=await printful(env,"/orders",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(payload)});
-  job.printfulOrderId=result.id;job.printfulStatus=result.status||"draft";job.printSourceUrl=sourceUrl;job.status="printful_draft_ready";job.printfulCreatedAt=now();
+  job.printfulExternalId=externalId;job.printfulOrderId=result.id;job.printfulStatus=result.status||"draft";job.printSourceUrl=sourceUrl;job.status="printful_draft_ready";job.printfulCreatedAt=now();
+  // Persist the provider result before a separate Shopify tagging call can fail.
+  await saveJob(env,job);
   await addShopifyOrderTags(env,job.orderId,["RECAST_PRINTFUL_DRAFT"]);
   return saveJob(env,job);
 }
@@ -823,10 +829,13 @@ export async function adminJobAction(request,env,id,action){
       if(!design.finalKey)throw fault('print_not_ready','Prepare the approved print file first.');
       const map=FULFILLMENT[job.sku];const sourceUrl=`${String(env.PUBLIC_APP_URL||'').replace(/\/$/,'')}/api/order-print/${encodeURIComponent(job.id)}?token=${encodeURIComponent(design.printToken)}`;
       const claim=`commerce/production/${await hash(job.id)}-draft.json`;
-      if(!await env.ARTWORK.put(claim,JSON.stringify({startedAt:now()}),{onlyIf:new Headers({'If-None-Match':'*'})}))throw fault('draft_started','Draft submission already started; review Printful before retrying.');
-      const payload={external_id:`recast-${job.id}`,recipient:job.recipient,items:[{variant_id:map.printfulVariantId,quantity:Number(job.quantity||1)*Number(map.quantity||1),files:[{type:map.orderFileType||"default",url:sourceUrl,position:design.proof.position}]}]};
+      // Existing attempts keep their exact reference and duplicate-submission lock.
+      if(await env.ARTWORK.head(claim))throw fault('draft_started','Draft submission already started; review Printful before retrying.');
+      const externalId=await printfulReferenceForNewDraft(job);
+      if(!await env.ARTWORK.put(claim,JSON.stringify({startedAt:now(),externalId,referenceVersion:2}),{onlyIf:new Headers({'If-None-Match':'*'})}))throw fault('draft_started','Draft submission already started; review Printful before retrying.');
+      const payload={external_id:externalId,recipient:job.recipient,items:[{variant_id:map.printfulVariantId,quantity:Number(job.quantity||1)*Number(map.quantity||1),files:[{type:map.orderFileType||"default",url:sourceUrl,position:design.proof.position}]}]};
       const result=await printful(env,"/orders",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(payload)});
-      job.printfulOrderId=result.id;job.printfulStatus=result.status||"draft";job.printSourceUrl=sourceUrl;job.status="printful_draft_ready";job.printfulCreatedAt=now();await saveJob(env,job);return json({ok:true,job});
+      job.printfulExternalId=externalId;job.printfulOrderId=result.id;job.printfulStatus=result.status||"draft";job.printSourceUrl=sourceUrl;job.status="printful_draft_ready";job.printfulCreatedAt=now();await saveJob(env,job);return json({ok:true,job});
     }
     if(action==="send-production"){
       const body=await request.json().catch(()=>({}));if(body.confirm!=="SEND_TO_PRODUCTION")return json({ok:false,error:"Explicit production confirmation is required."},409);
