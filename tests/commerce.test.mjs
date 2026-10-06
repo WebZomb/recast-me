@@ -335,7 +335,7 @@ test('legacy owner release with no preserved approval is surfaced for review and
  try{
   await reconcileShopifyOrder(env,order);
   const listed=await env.ARTWORK.list({prefix:'jobs/'}),job=await (await env.ARTWORK.get(listed.objects[0].key)).json();
-  assert.equal(job.status,'owner_release_review');assert.match(job.ownerReleaseError,/no preserved approved design/i);
+  assert.equal(job.status,'owner_release_review');assert.match(job.ownerReleaseError,/could not be matched to its exact saved product preview/i);
   assert.equal(reviewTagged,true);assert.equal(printfulCalls,0);
  }finally{globalThis.fetch=original}
 });
