@@ -61,7 +61,8 @@ const pause=ms=>new Promise(resolve=>setTimeout(resolve,ms));
   }
   const config=report.health.find(x=>x.path==='/api/public-config')?.body;
   const model=report.health.find(x=>x.path==='/api/model-status')?.body;
-  report.launchGates={botProtectionConfigured:!!config?.turnstileSiteKey,aiCallLimitConfigured:!!model?.renderControls?.configured,liveGenerationTested:false,paidCheckoutTested:false,privateFulfillmentJobInspected:false};
+  report.launchGates={botProtectionConfigured:!!config?.turnstileSiteKey,aiCallLimitConfigured:!!model?.renderControls?.configured,aiDailyCallLimit:model?.renderControls?.dailyCallLimit??null,liveGenerationTested:false,paidCheckoutTested:false,privateFulfillmentJobInspected:false};
+  if(!report.launchGates.aiCallLimitConfigured||report.launchGates.aiDailyCallLimit!==70)report.failures.push('Expected site-wide AI daily call limit 70 is not active.');
   fs.writeFileSync(out+'/report.json',JSON.stringify(report,null,2));
   console.log('RECAST_AUDIT_REPORT\n'+JSON.stringify(report,null,2));
   if(report.failures.length)process.exitCode=1;
