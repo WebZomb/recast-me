@@ -417,3 +417,18 @@ Implemented:
 - Reconfirmed all 12 Recast Me Shopify products are ACTIVE.
 - Nudged Shopify order #1001 again with RECAST_SYNC_REFRESH_2 so the scheduled order sync re-evaluates its explicit legacy release.
 - Asset cache keys: site-v10.css?v=233, app.js?v=230, checkout.js?v=240.
+
+
+## RM-048 — remove pedestal, use clean mug cutout, rebalance hero and How It Works
+Owner reported that the transparent mug+pedestal extraction still looked visibly cut off at the glow edge, the mobile hero layout was unbalanced, the small How It Works mug was wrong, and the header CTA alignment felt off.
+
+Implemented:
+- Replaced the mug+pedestal hero asset with the clean transparent mug-only asset recast-neon-mug-cutout-v48.png; the little platform is no longer part of the live hero.
+- The mug asset already contains its neon rim glow, so the extra CSS glow layer is disabled to avoid a second clipped halo.
+- Added a live HTML “03 YOUR PRODUCT” pill below the mug instead of baking the label into a pedestal.
+- Rebalanced the mobile showcase: 01/02 cards use ~44–45% on the left and the mug uses ~57–58% on the right, with the mug kept inside the viewport rather than hanging off the edge.
+- Tightened the header Start a Recast button alignment, arrow spacing, line-height, and mobile padding.
+- Changed the How It Works step-03 thumbnail to the same current neon Jack Russell mug so the visual story is consistent.
+- Homepage Mug cards and active-Recast pre-mockup Mug art also use the current neon mug asset.
+- site-v10.css cache bumped to v233.
+- No order, Printful submission, or paid action was performed by these visual changes.
