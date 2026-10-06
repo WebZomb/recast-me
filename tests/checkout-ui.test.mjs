@@ -23,6 +23,19 @@ function markPreviewReady(ui){
   ui.card.dataset.mockupSignature=JSON.stringify({sku:'RECAST-MUG-15OZ',design});
   return design;
 }
+test('homepage polish keeps alternates separate and preview utilities collapsed',()=>{
+  const html=readFileSync(new URL('../public/index.html',import.meta.url),'utf8');
+  const aiPos=html.indexOf('CREATE WITH AI'),formPos=html.indexOf('<form id="recast-form">'),orPos=html.indexOf('class="alternate-divider"'),savedPos=html.indexOf('Continue a saved Recast');
+  assert.ok(aiPos>=0&&formPos>aiPos&&orPos>formPos&&savedPos>orPos);
+  assert.match(html,/class="hero-product-stage"/);
+  assert.match(html,/product-mug-v16\.webp/);
+  assert.match(html,/class="process-ribbon"/);
+  assert.match(html,/class="preview-more"/);
+  assert.match(html,/Choose a product →/);
+  assert.match(html,/Pick another version/);
+  assert.doesNotMatch(html,/Choose a product for your Recast →/);
+});
+
 test('homepage is compact and explains photo to Recast to product',()=>{
   const html=readFileSync(new URL('../public/index.html',import.meta.url),'utf8');
   const app=readFileSync(new URL('../public/app.js',import.meta.url),'utf8');
