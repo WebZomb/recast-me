@@ -1,11 +1,69 @@
-/* RM-050.1: owner-requested landing and product-flow polish layered over RM-049. */
+/* RM-050.2: mobile hero proportions tuned to the approved visual reference. */
 @media(max-width:760px){
-  .hero{padding-top:22px!important;padding-bottom:14px!important}
-  .hero-live-stage{margin-top:4px!important;aspect-ratio:1.08!important}
-  .hero-live-flow{width:47%!important;left:0!important;bottom:24%!important}
-  .hero-live-product{width:62%!important;right:-1%!important;top:2%!important}
-  .hero-live-tagline{bottom:1.5%!important}
+  .hero{
+    padding:24px 5.5vw 10px!important;
+  }
+  .hero-copy{
+    max-width:100%!important;
+    margin:0 auto!important;
+  }
+  .hero .eyebrow{
+    margin-bottom:14px!important;
+  }
+  .hero h1{
+    font-size:clamp(52px,15.2vw,78px)!important;
+    line-height:.91!important;
+    margin-bottom:20px!important;
+  }
+  .hero-lede{
+    max-width:34ch!important;
+    font-size:15px!important;
+    line-height:1.48!important;
+  }
+  .hero-actions{
+    margin:25px 0 13px!important;
+    gap:10px!important;
+  }
+  .trust-row{
+    margin-top:10px!important;
+  }
+  .hero-live-stage{
+    width:100%!important;
+    max-width:620px!important;
+    aspect-ratio:.91!important;
+    margin:10px auto 0!important;
+    overflow:visible!important;
+  }
+  .hero-live-flow{
+    width:49%!important;
+    left:0!important;
+    bottom:24%!important;
+    grid-template-columns:minmax(0,1fr) 12px minmax(0,1fr) 12px!important;
+  }
+  .hero-live-card{
+    padding:4px!important;
+  }
+  .hero-live-product{
+    width:65%!important;
+    right:-2%!important;
+    top:2%!important;
+  }
+  .hero-live-product-label{
+    width:88%!important;
+    left:48%!important;
+  }
+  .hero-live-tagline{
+    bottom:2.5%!important;
+  }
 }
+@media(max-width:400px){
+  .hero-live-stage{aspect-ratio:.88!important}
+  .hero-live-flow{width:49%!important;bottom:23.5%!important}
+  .hero-live-product{width:66%!important;right:-2.5%!important}
+  .hero-lede{max-width:33ch!important}
+}
+
+/* Product customization stays secondary after the customer accepts the automatic best fit. */
 .checkout-catalog .product-design-controls.compact-product-edit{margin-top:9px;padding:0;border:0;background:transparent}
 .checkout-catalog .product-design-controls.compact-product-edit summary{display:inline-flex;min-height:34px;align-items:center;padding:6px 12px;border:1px solid #37384c;border-radius:10px;background:#0d0e16;font-size:11px;width:auto}
 .checkout-catalog .product-design-controls.compact-product-edit .design-edit-body{margin-top:8px;padding:10px;border:1px solid #37384c;border-radius:12px;background:#0d0e16}

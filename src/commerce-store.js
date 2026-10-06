@@ -125,28 +125,36 @@ export async function composeMugLayout(env,sourceBytes,sourceSize,area,rawDesign
     const chain=env.IMAGES.input(stream()).transform({width:outWidth,height:outHeight,fit:'cover'});
     return {bytes:await jpegBytes(chain),design,outputSize:{width:outWidth,height:outHeight}};
   }
-  // Non-wrap layouts use a neutral dark canvas, then only a very soft low-opacity
-  // color wash from the artwork. This prevents a third stretched/blurred copy of the
-  // subject appearing between the intended portrait placements.
-  let background=env.IMAGES.input(new Blob([MUG_BG_PNG],{type:'image/png'}).stream()).transform({width:outWidth,height:outHeight,fit:'cover'});
-  const wash=env.IMAGES.input(stream()).transform({width:outWidth,height:outHeight,fit:'cover',blur:250,saturation:0.65,gamma:1.6});
-  background=background.draw(wash,{left:0,top:0,opacity:0.16});
-  const add=(chain,center,maxWidth,maxHeight)=>{
+
+  // Use the artwork itself as a heavily blurred color field so the exposed band
+  // feels like a natural continuation of the image instead of a flat black strip.
+  let background=env.IMAGES.input(stream()).transform({
+    width:outWidth,height:outHeight,fit:'cover',blur:280,saturation:0.88,gamma:1.18
+  });
+  const shade=env.IMAGES.input(new Blob([MUG_BG_PNG],{type:'image/png'}).stream()).transform({width:outWidth,height:outHeight,fit:'cover'});
+  background=background.draw(shade,{left:0,top:0,opacity:0.12});
+
+  const addFullHeight=(chain,center,maxWidth=0.42)=>{
     const factor=design.scale/100;
-    const d=fitDimensions(sourceSize.width,sourceSize.height,outWidth*maxWidth*factor,outHeight*maxHeight*factor);
-    const left=Math.round(Math.max(0,Math.min(outWidth-d.width,center*outWidth-d.width/2)));
-    const top=Math.round((outHeight-d.height)/2);
-    const overlay=env.IMAGES.input(stream()).transform({width:d.width,height:d.height,fit:'cover'});
-    return chain.draw(overlay,{left,top});
+    const aspect=Math.max(0.2,Math.min(4,Number(sourceSize.width)/Number(sourceSize.height)));
+    const naturalWidth=outHeight*aspect*factor;
+    const slotWidth=Math.max(
+      Math.round(outWidth*0.24),
+      Math.min(Math.round(outWidth*maxWidth),Math.round(naturalWidth))
+    );
+    const left=Math.round(Math.max(0,Math.min(outWidth-slotWidth,center*outWidth-slotWidth/2)));
+    const overlay=env.IMAGES.input(stream()).transform({width:slotWidth,height:outHeight,fit:'cover'});
+    return chain.draw(overlay,{left,top:0});
   };
+
   let chain=background;
   if(design.layout==='two-sided'){
-    const centers=design.spacing==='close'?[0.31,0.69]:design.spacing==='wide'?[0.18,0.82]:[0.24,0.76];
-    chain=add(chain,centers[0],0.29,0.90);
-    chain=add(chain,centers[1],0.29,0.90);
+    const centers=design.spacing==='close'?[0.31,0.69]:design.spacing==='wide'?[0.20,0.80]:[0.25,0.75];
+    chain=addFullHeight(chain,centers[0],0.42);
+    chain=addFullHeight(chain,centers[1],0.42);
   }else{
     const center=design.x==='left'?0.25:design.x==='right'?0.75:0.5;
-    chain=add(chain,center,0.43,0.92);
+    chain=addFullHeight(chain,center,0.48);
   }
   return {bytes:await jpegBytes(chain),design,outputSize:{width:outWidth,height:outHeight}};
 }
