@@ -247,6 +247,7 @@ async function loadCheckout(){
   const loadId=++checkoutLoadId;
   const req=lastRequest();
   if(!req?.requestId||!req?.accessToken||!grid)return;
+  grid.classList.remove('merch-home-compact');
   grid.classList.add('checkout-catalog');
   grid.innerHTML='<p class="product-loading">Loading products for the selected Artwork ID…</p>';
 
