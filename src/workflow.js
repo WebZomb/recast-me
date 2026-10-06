@@ -647,7 +647,13 @@ async function autoProcessPreapprovedJob(env,job){
 async function processOwnerReleasedLegacyJob(env,job){
   if(job.digital||job.sentToProductionAt)return job;
   const design=await designFor(env,job);
-  if(!design?.approvedAt)return job;
+  if(!design?.approvedAt){
+    job.ownerReleaseError="The legacy order has no preserved approved design record. Production was not started.";
+    job.ownerReleaseFailedAt=now();
+    if(job.status!=='on_hold')job.status='owner_release_review';
+    await addShopifyOrderTags(env,job.orderId,["RECAST_PRINTFUL_REVIEW"]);
+    return saveJob(env,job);
+  }
   try{
     if(!job.printReadyAt)job=await finalizePhysicalJob(env,job);
     if(!job.printfulOrderId)job=await createPrintfulDraftForJob(env,job);
