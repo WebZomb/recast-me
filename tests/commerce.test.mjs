@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {Bucket,CLEAN,ID,TOKEN,setup,imageMock,fakeApplication,submission,MARKED} from './security-helpers.mjs';
 import {creditRoute,walletFor,bindCustomerCredits,creditBalance,reserveCustomerRender,settleCustomerRender,reconcileOrderCredits,orderEligible} from '../src/render-credits.js';
 import {reserveBudget,guardedEnvironment} from '../src/render-controls.js';
-import {hash,read} from '../src/commerce-store.js';
+import {hash,read,normalizeProductDesign} from '../src/commerce-store.js';
 import {customerDesignAction,designFor,approvedDesign,finishApprovedDesign,printDesignFile} from '../src/order-approval.js';
 import {reconcileShopifyOrder,verifyPaidOrder,adminJobAction,routeWorkflow,customerOrderStatus} from '../src/workflow.js';
 import {secureApplication} from '../src/preview-security.js';
@@ -143,6 +143,22 @@ test('approved mug layout produces a clean composed production file without prev
  assert.ok(!operations.some(([name,args])=>name==='transform'&&args.blur===22));
 });
 
+test('v4 blanket production uses the same full-bleed composition approved in preview',async()=>{
+ const COMPOSED=Buffer.concat([Buffer.from([255,216,255]),Buffer.alloc(220,0x44),Buffer.from([255,217])]);
+ const ops=[];const IMAGES={operations:ops,info:async()=>({width:1024,height:1280}),input(){
+  return {transform(o){ops.push(['transform',o]);return this},draw(_overlay,o){ops.push(['draw',o]);return this},async output(o){ops.push(['output',o]);return{response:()=>new Response(COMPOSED,{headers:{'content-type':'image/jpeg'}})}}};
+ }};
+ const env=await setup({IMAGES});
+ const design=normalizeProductDesign({product:'Blanket'},{layout:'cover',fill:'full-bleed',x:'center',scale:100});
+ const job={id:'blanket-v4',requestId:ID,sku:'RECAST-BLANKET-50X60',quantity:1,product:'Blanket',digital:false,productDesignRequired:true,productDesign:design,productProofHash:'proof',productMockupId:'v4-Blanket-cover-full-bleed-center-100-standard'};
+ const sourceHash=await hash(CLEAN.toString('base64')),snapshotKey='commerce/artwork/blanket-v4/source.b64';
+ await env.ARTWORK.put(snapshotKey,CLEAN.toString('base64'));
+ await env.ARTWORK.put('commerce/designs/blanket-v4.json',JSON.stringify({revision:1,selectedRequestId:ID,approvedAt:'2026-10-05T00:00:00Z',snapshotKey,sourceHash,printToken:'print-blanket',proof:{images:[{url:'preview'}],position:{area_width:7500,area_height:9000,width:7500,height:9000,left:0,top:0},design,sku:job.sku,quantity:1,sourceHash}}));
+ const d=await finishApprovedDesign(env,job);assert.equal(d.finishMethod,'product-layout-v4-clean');
+ assert.ok(ops.some(([name,args])=>name==='transform'&&args.fit==='cover'));
+ const saved=await env.ARTWORK.get(d.finalKey);assert.deepEqual(Buffer.from(await saved.arrayBuffer()),COMPOSED);
+});
+
 test('only the dedicated print token plus a fresh eligible payment can receive clean print bytes',async()=>{
  const o=await orderSetup();await o.action('proof');await o.action('approve',{revision:1,confirm:'APPROVE_FOR_PRINT'});const d=await finishApprovedDesign(o.env,o.job);
  const get=t=>new Request(`https://recast.test/api/order-print/${o.job.id}?token=${t}`);
@@ -158,8 +174,8 @@ test('order-design customer previews are still watermarked, even after purchase 
 });
 test('Shopify reconciliation preserves approved preview snapshot and spacing for the customer order page',async()=>{
  const env=await setup({PUBLIC_APP_URL:'https://recast.test'});
- const design={version:3,layout:'two-sided',background:'scene-fill',x:'center',scale:110,spacing:'close'};
- const previewToken='a'.repeat(48),proof='proof-hash',mockup='v3-two-sided-scene-fill-center-110-close';
+ const design=normalizeProductDesign({product:'Mug'},{layout:'two-sided',fill:'ambient',x:'center',scale:110,spacing:'close'});
+ const previewToken='a'.repeat(48),proof='proof-hash',mockup='v4-Mug-two-sided-ambient-center-110-close';
  const order={...paid,lineItems:{pageInfo:{hasNextPage:false},nodes:[{id:'gid://shopify/LineItem/789',sku:'RECAST-MUG-11OZ',quantity:1,customAttributes:[
   {key:'Artwork ID',value:ID},{key:'_Recast Design',value:JSON.stringify(design)},{key:'_Recast Proof',value:proof},{key:'_Recast Mockup',value:mockup},{key:'_Recast Preview Token',value:previewToken}
  ]}]}};
@@ -177,10 +193,10 @@ test('pre-checkout confirmation becomes the approved design and auto-sends only 
   SHOPIFY_CLIENT_ID:'fixture-client',SHOPIFY_CLIENT_SECRET:'fixture-secret',SHOPIFY_SHOP:'fixture-store',
   PRINTFUL_API_TOKEN:'fixture-printful',AUTO_PRINT_PREAPPROVED_ENABLED:'true'
  });
- const design={version:3,layout:'two-sided',background:'scene-fill',x:'center',scale:110,spacing:'standard'};
+ const design=normalizeProductDesign({product:'Mug'},{layout:'two-sided',fill:'ambient',x:'center',scale:110,spacing:'standard'});
  const proofHash=await hash(CLEAN.toString('base64')+'|'+JSON.stringify(design));
  const sourceHash=await hash(CLEAN.toString('base64'));
- const token='b'.repeat(48),mockup='v3-two-sided-scene-fill-center-110-standard';
+ const token='b'.repeat(48),mockup='v4-Mug-two-sided-ambient-center-110-standard';
  const snapshotKey=`commerce/preapprovals/${token}/source.b64`;
  await env.ARTWORK.put(snapshotKey,CLEAN.toString('base64'));
  await env.ARTWORK.put(`commerce/preapprovals/${token}.json`,JSON.stringify({
