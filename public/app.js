@@ -50,7 +50,8 @@ const PRODUCT_CATALOG = [
 const styleGrid = document.querySelector('#style-grid');
 const styleSelect = document.querySelector('#style');
 
-styleGrid.innerHTML = STYLES.map(([id,name,copy,image,subject],i)=>`
+const HOME_STYLE_IDS=new Set(['game','halloween','fantasy','royal','future','space']);
+styleGrid.innerHTML = STYLES.filter(([id])=>HOME_STYLE_IDS.has(id)).map(([id,name,copy,image,subject],i)=>`
   <article class="style-card" data-style="${id}" tabindex="0" role="button" aria-label="Choose ${name}">
     <div class="style-art"><img src="${image}" alt="${subject}" loading="lazy"></div>
     <span class="style-pick">CHOOSE</span>
@@ -91,37 +92,22 @@ function merchCard(item,{featured=false}={}){
 }
 
 function renderStaticMerch(){
-  const featured=PRODUCT_CATALOG.filter(x=>x.tier==='featured');
-  const secondary=PRODUCT_CATALOG.filter(x=>x.tier==='secondary');
-  const digital=PRODUCT_CATALOG.filter(x=>x.tier==='digital');
+  const homeNames=new Set(['Mug','Blanket','Canvas','Poster']);
+  const homeProducts=PRODUCT_CATALOG.filter(x=>homeNames.has(x.name));
 
   const catalog=document.querySelector('#product-grid');
   if(catalog){
-    catalog.classList.add('merch-catalog-shell');
+    catalog.classList.add('merch-catalog-shell','merch-home-compact');
     catalog.innerHTML=`
-      <div class="merch-featured-grid">
-        ${featured.map(x=>merchCard(x,{featured:true})).join('')}
+      <div class="merch-home-grid">
+        ${homeProducts.map(x=>merchCard(x,{featured:x.name==='Mug'})).join('')}
       </div>
-      <div class="merch-subhead">
-        <div><span>MORE WAYS TO MAKE IT YOURS</span><h3>Wear it. Gift it. Live with it.</h3></div>
-        <p>Made to order — no mass-produced inventory and no generic artwork swap.</p>
-      </div>
-      <div class="merch-secondary-grid">
-        ${secondary.map(x=>merchCard(x)).join('')}
-      </div>
-      <div class="merch-digital-last">
-        <div class="merch-digital-copy">
-          <span>DIGITAL ARTWORK</span>
-          <strong>Just want the artwork?</strong>
-          <p>Keep the clean artwork for your screen or your own creative projects.</p>
-        </div>
-        <div class="merch-digital-grid">
-          ${digital.map(x=>merchCard(x)).join('')}
-        </div>
+      <div class="merch-home-more">
+        <span>MORE AFTER YOU CREATE</span>
+        <p>Tumblers, apparel, framed art, magnets, coasters, and digital downloads appear with your Recast.</p>
+        <a class="button ghost" href="#start">Start a Recast →</a>
       </div>`;
   }
-
-
 }
 renderStaticMerch();
 
