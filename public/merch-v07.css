@@ -154,3 +154,75 @@ html.recast-review-open,html.recast-review-open body{overflow:hidden}
   .merch-home-more{grid-template-columns:1fr;gap:8px}
   .merch-home-more .button{width:100%}
 }
+
+
+/* RM-047 — show the entire store without making the homepage endlessly tall. */
+.merch-home-all{display:block!important}
+.merch-home-track{
+  display:grid;
+  grid-auto-flow:column;
+  grid-auto-columns:minmax(210px,260px);
+  gap:12px;
+  overflow-x:auto;
+  overflow-y:hidden;
+  padding:2px 2px 14px;
+  scroll-snap-type:x mandatory;
+  scrollbar-width:thin;
+  overscroll-behavior-inline:contain;
+}
+.merch-home-track .product{
+  scroll-snap-align:start;
+  min-width:0!important;
+  width:auto!important;
+}
+.merch-home-track .product-art{
+  aspect-ratio:1/1!important;
+  height:auto!important;
+}
+.merch-home-track .product-art img{
+  width:100%!important;
+  height:100%!important;
+  object-fit:cover!important;
+  transform:none!important;
+}
+.merch-home-track .product-body{padding:13px!important}
+.merch-home-track .product strong{font-size:17px!important}
+.merch-home-track .product-pitch{
+  min-height:44px!important;
+  font-size:10.5px!important;
+  line-height:1.4!important;
+}
+.merch-home-track .price{font-size:16px!important}
+.merch-home-track .shop-card-cta{
+  min-height:42px!important;
+  margin-top:10px!important;
+  font-size:12px!important;
+}
+.merch-home-note{
+  display:flex;
+  align-items:center;
+  gap:14px;
+  margin-top:10px;
+  padding:13px 15px;
+  border:1px solid rgba(113,101,225,.22);
+  border-radius:15px;
+  background:rgba(8,9,25,.64);
+  backdrop-filter:blur(10px);
+}
+.merch-home-note span{
+  flex:0 0 auto;
+  color:#8fe6f5;
+  font-size:9px;
+  font-weight:950;
+  letter-spacing:.15em;
+}
+.merch-home-note p{
+  margin:0;
+  color:#9d9caf;
+  font-size:11px;
+  line-height:1.45;
+}
+@media(max-width:760px){
+  .merch-home-track{grid-auto-columns:58vw;gap:10px}
+  .merch-home-note{align-items:flex-start;flex-direction:column;gap:6px}
+}
