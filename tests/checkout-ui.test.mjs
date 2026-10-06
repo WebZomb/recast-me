@@ -29,7 +29,7 @@ test('homepage polish keeps alternates separate and preview utilities collapsed'
   assert.ok(aiPos>=0&&formPos>aiPos&&orPos>formPos&&savedPos>orPos);
   assert.match(html,/class="hero-demo hero-showcase hero-live-stage"/);
   assert.match(html,/recast-neon-mug-cutout-v48\.png/);
-  assert.match(html,/dog-original-v17\.webp/);
+  assert.match(html,/jack-russell-source-v18\.webp/);
   assert.match(html,/world-game-v18\.webp/);
   assert.match(html,/class="process-ribbon"/);
   assert.match(html,/class="preview-more"/);
