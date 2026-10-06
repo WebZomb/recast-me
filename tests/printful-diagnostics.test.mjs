@@ -69,3 +69,29 @@ test('UI check passes no mutation options, renders text, and never enables block
   });
   const [button,result]=article.children[0].children;assert.equal(create.disabled,true);await button.click();assert.equal(calls,1);assert.equal(create.disabled,true);assert.equal(button.disabled,false);assert.ok(result.textContent.includes('<b>not HTML</b>'));assert.equal(result.innerHTML,undefined);
 });
+
+test('RM0505 UI offers owner recovery only after a complete zero-order snapshot and never requests production',async t=>{
+  const make=()=>({children:[],dataset:{},style:{},textContent:'',disabled:false,append(...x){this.children.push(...x)},setAttribute(){},addEventListener(event,fn){this[event]=fn;},remove(){this.removed=true;}});
+  const previousDocument=globalThis.document,previousConfirm=globalThis.confirm;
+  globalThis.document={createElement:make};globalThis.confirm=()=>true;
+  t.after(()=>{if(previousDocument===undefined)delete globalThis.document;else globalThis.document=previousDocument;if(previousConfirm===undefined)delete globalThis.confirm;else globalThis.confirm=previousConfirm;});
+  const create=make();create.textContent='Create Printful draft';const article=make();article.querySelectorAll=()=>[create];const calls=[];
+  attachPrintfulDiagnostic(article,{id:'legacy-long-job',ownerReleaseError:'Draft submission already started; review Printful before retrying.'},async(path,options)=>{
+    calls.push([path,options]);
+    if(path.endsWith('/printful-check'))return{state:'not_found_here',message:'No match',configuredStoreId:'123',storeScan:{checked:0,total:0,complete:true},draftAttemptRecorded:true,externalId:'recast-legacy-reference-that-is-too-long',externalIdLength:40,externalIdValid:false,safety:'Read only'};
+    if(path.endsWith('/recover-missing-draft')){assert.deepEqual(options,{method:'POST',body:{confirm:'RECOVER_MISSING_DRAFT'}});return{printfulOrderId:'4242',productionSubmitted:false};}
+    throw Error('Unexpected API path');
+  });
+  const box=article.children[0],[check,result]=box.children;await check.click();
+  assert.equal(create.disabled,true);assert.equal(box.children.length,3);const recover=box.children[2];assert.match(recover.textContent,/Recover missing draft safely/);
+  await recover.click();assert.equal(calls.length,2);assert.ok(!calls.some(([path])=>path.includes('send-production')));assert.match(result.textContent,/ON HOLD/i);assert.match(result.textContent,/NOT been submitted/i);
+});
+
+test('RM0505 UI does not offer recovery for incomplete or non-empty store evidence',async t=>{
+  const make=()=>({children:[],dataset:{},style:{},textContent:'',append(...x){this.children.push(...x)},setAttribute(){},addEventListener(event,fn){this[event]=fn;},remove(){}});
+  const previousDocument=globalThis.document;globalThis.document={createElement:make};t.after(()=>{if(previousDocument===undefined)delete globalThis.document;else globalThis.document=previousDocument;});
+  for(const storeScan of [{checked:0,total:null,complete:false},{checked:1,total:1,complete:true}]){
+    const article=make();article.querySelectorAll=()=>[];attachPrintfulDiagnostic(article,{id:'legacy-long-job'},async()=>({state:'not_found_here',message:'No match',configuredStoreId:'123',storeScan,draftAttemptRecorded:true,externalId:'x'.repeat(35),externalIdLength:35,externalIdValid:false,safety:'Read only'}));
+    await article.children[0].children[0].click();assert.equal(article.children[0].children.length,2);
+  }
+});
