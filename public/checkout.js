@@ -72,10 +72,37 @@ function productDesign(card){
   return {product:preset.product,layout,fill,x,scale,spacing};
 }
 function designSignature(card,sku){return JSON.stringify({sku,design:productDesign(card)})}
-function syncSpacingControl(card){
-  const wrap=card?.querySelector?.("[data-design-spacing-wrap]"),layout=card?.querySelector?.("[data-design-layout]")?.value;
-  if(wrap)wrap.hidden=layout!=="two-sided";
+function designControlsMarkup(title,preset){
+  const wrap=['Custom Recast Mug','Custom Recast Tumbler'].includes(title);
+  const layoutOptions=wrap
+    ? `<option value="two-sided" selected>Best setup · image on both sides</option><option value="wrap">Full wrap / full bleed</option><option value="single">One image</option><option value="fit">Keep whole image + blended background</option>`
+    : `<option value="cover" selected>Best setup · fill the product</option><option value="fit">Keep whole image + background fill</option>`;
+  const spacing=wrap?`<label data-design-spacing-wrap>Image spacing<select data-design-spacing><option value="close">Closer together</option><option value="standard" selected>Standard</option><option value="wide">Farther apart</option></select></label>`:"";
+  return `<details class="product-design-controls">
+    <summary><span>Edit design</span><small>${preset.label}</small></summary>
+    <div class="design-edit-body">
+      <label>Layout<select data-design-layout>${layoutOptions}</select></label>
+      ${spacing}
+      <label data-design-fill-wrap hidden>Background fill<select data-design-fill><option value="ambient" selected>Blend artwork colors</option><option value="dark">Dark fill</option><option value="full-bleed">Artwork edge fill</option></select></label>
+      <label data-design-position-wrap>Image position<select data-design-x><option value="left">Left</option><option value="center" selected>Center</option><option value="right">Right</option></select></label>
+      <label data-design-scale-wrap>Image size <strong data-design-scale-label>${preset.scale}%</strong><input data-design-scale type="range" min="75" max="125" step="5" value="${preset.scale}"></label>
+      <p class="product-mockup-note">Recommended setup is already applied. Edit only if you want a different crop or composition.</p>
+    </div>
+  </details>`;
 }
+function syncDesignControls(card){
+  const layout=card?.querySelector?.("[data-design-layout]")?.value;
+  const spacing=card?.querySelector?.("[data-design-spacing-wrap]");
+  const fill=card?.querySelector?.("[data-design-fill-wrap]");
+  const position=card?.querySelector?.("[data-design-position-wrap]");
+  const scale=card?.querySelector?.("[data-design-scale-wrap]");
+  if(spacing)spacing.hidden=layout!=="two-sided";
+  if(fill)fill.hidden=layout!=="fit";
+  const fullBleed=layout==="cover"||layout==="wrap";
+  if(position)position.hidden=fullBleed;
+  if(scale)scale.hidden=fullBleed;
+}
+
 function requireFreshPreview(card){
   const buy=card?.querySelector?.(".recast-buy");
   if(!buy||card?.dataset?.digital==="true"||card?.dataset?.active!=="true")return;
@@ -302,15 +329,9 @@ async function loadCheckout(){
           ${variants.map(v=>`<option value="${v.sku}">${v.variantTitle} · ${money(v.price)}</option>`).join("")}
          </select>`
       : `<input type="hidden" class="recast-variant" data-product="${index}" value="${first?.sku||""}">`;
-    const isMug=product.title==="Custom Recast Mug";
-    const designControls=digital?"":`<details class="product-design-controls" ${isMug?"open":""}>
-      <summary>Adjust design placement</summary>
-      ${isMug?`<label>Print layout<select data-design-layout><option value="single">One image</option><option value="two-sided">Same image on both sides</option><option value="wrap">Full wrap / full bleed</option></select></label><label data-design-spacing-wrap hidden>Two-sided spacing<select data-design-spacing><option value="close">Closer together</option><option value="standard" selected>Standard</option><option value="wide">Farther apart</option></select></label>`:""}
-      <label>Image position<select data-design-x><option value="left">Left</option><option value="center" selected>Center</option><option value="right">Right</option></select></label>
-      <label>Image size <strong data-design-scale-label>${isMug?92:100}%</strong><input data-design-scale type="range" min="55" max="${isMug?115:100}" step="5" value="${isMug?92:100}"></label>
-      ${isMug?'<p class="product-mockup-note">A soft color-wash fills unused mug space without stretching a third copy of your picture. Two-sided uses exactly two portrait placements; Full wrap uses one full-bleed image.</p>':'<p class="product-mockup-note">Adjust size and left/center/right placement before generating the real product preview.</p>'}
-    </details>`;
-    const realPreview=digital?"":`${designControls}<button class="product-preview-action" data-product="${index}" type="button">Preview my Recast on the real product</button><p class="mockup-error" role="alert" hidden></p><p class="product-mockup-note">Uses the mapped Printful product and your exact Artwork ID.</p>`;
+    const preset=PRODUCT_DESIGN_PRESETS[product.title]||presetFor({dataset:{productTitle:product.title}});
+    const designControls=digital?"":designControlsMarkup(product.title,preset);
+    const realPreview=digital?"":`<div class="recommended-design-row"><span>Recommended setup applied</span><strong>${preset.label}</strong></div>${designControls}<button class="product-preview-action" data-product="${index}" type="button">Preview recommended design</button><p class="mockup-error" role="alert" hidden></p>`;
 
     return `<div class="${classes}" data-product-index="${index}" data-product-title="${product.title}" data-active="${active}" data-digital="${digital}">
       <div class="product-art"><img src="${PRODUCT_ART[product.title]}" alt="Example design on ${product.title}" loading="lazy"><span class="example-design-label">Example design</span></div>
@@ -350,11 +371,12 @@ async function loadCheckout(){
     const label=card?.querySelector?.("[data-design-scale-label]");
     control.addEventListener("input",()=>{if(label)label.textContent=control.value+"%";resetProductPreview(card);});
   });
-  document.querySelectorAll("[data-design-layout],[data-design-x],[data-design-spacing]").forEach(control=>{
+  document.querySelectorAll("[data-design-layout],[data-design-x],[data-design-spacing],[data-design-fill]").forEach(control=>{
     const card=control.closest?.("[data-product-index]");
-    if(control.matches?.("[data-design-layout]"))syncSpacingControl(card);
-    control.addEventListener("change",()=>{syncSpacingControl(card);resetProductPreview(card);});
+    if(control.matches?.("[data-design-layout]"))syncDesignControls(card);
+    control.addEventListener("change",()=>{syncDesignControls(card);resetProductPreview(card);});
   });
+  document.querySelectorAll(".product-design-controls").forEach(details=>syncDesignControls(details.closest("[data-product-index]")));
 
   document.querySelectorAll(".recast-buy").forEach(button=>{
     button.addEventListener("click",async()=>{
