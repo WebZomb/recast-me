@@ -27,8 +27,10 @@ test('homepage polish keeps alternates separate and preview utilities collapsed'
   const html=readFileSync(new URL('../public/index.html',import.meta.url),'utf8');
   const aiPos=html.indexOf('CREATE WITH AI'),formPos=html.indexOf('<form id="recast-form">'),orPos=html.indexOf('class="alternate-divider"'),savedPos=html.indexOf('Continue a saved Recast');
   assert.ok(aiPos>=0&&formPos>aiPos&&orPos>formPos&&savedPos>orPos);
-  assert.match(html,/class="hero-demo hero-showcase hero-reference-stage"/);
-  assert.match(html,/recast-hero-stage-v45b\.jpg/);
+  assert.match(html,/class="hero-demo hero-showcase hero-live-stage"/);
+  assert.match(html,/recast-mug-base-cutout-v46\.png/);
+  assert.match(html,/jack-russell-source-v18\.webp/);
+  assert.match(html,/world-game-v18\.webp/);
   assert.match(html,/class="process-ribbon"/);
   assert.match(html,/class="preview-more"/);
   assert.match(html,/Choose a product →/);
@@ -45,6 +47,14 @@ test('live homepage uses the correct Recast step image and original mug merchand
   assert.match(html,/product-node-art"><img src="\/assets\/product-mug-v16\.webp"/);
   assert.match(app,/image:"\/assets\/product-mug-v16\.webp"/);
   assert.match(checkout,/"Custom Recast Mug":"\/assets\/product-mug-v16\.webp"/);
+});
+
+test('homepage keeps the entire store catalog visible',()=>{
+  const app=readFileSync(new URL('../public/app.js',import.meta.url),'utf8');
+  const merch=readFileSync(new URL('../public/merch-v07.css',import.meta.url),'utf8');
+  assert.doesNotMatch(app,/homeNames=new Set/);
+  assert.match(app,/PRODUCT_CATALOG\.map\(x=>merchCard\(x\)\)/);
+  assert.match(merch,/\.merch-home-track/);
 });
 
 test('homepage is compact and explains photo to Recast to product',()=>{
