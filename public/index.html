@@ -9,7 +9,7 @@
   <title>Recast Me — Recast your world.</title>
   <link rel="stylesheet" href="/styles.css?v=130" />
   <link rel="stylesheet" href="/merch-v07.css?v=133" />
-  <link rel="stylesheet" href="/site-v10.css?v=231" />
+  <link rel="stylesheet" href="/site-v10.css?v=232" />
 </head>
 <body>
   <a class="skip-link" href="#start">Skip to create your Recast</a>
@@ -48,13 +48,24 @@
         </div>
       </div>
 
-      <div class="hero-demo hero-showcase hero-reference-stage" aria-label="Your photo becomes a Recast and then a product">
-        <img
-          class="hero-reference-stage-image"
-          src="https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-hero-stage-v45b.jpg?v=1791263138"
-          alt="Your photo becomes a Recast, then a personalized product"
-          fetchpriority="high"
-        />
+      <div class="hero-demo hero-showcase hero-live-stage" aria-label="Your photo becomes a Recast and then a product">
+        <div class="hero-live-flow">
+          <article class="hero-live-card hero-live-source">
+            <img src="/assets/jack-russell-source-v18.webp" alt="Original Jack Russell photo" fetchpriority="high">
+            <div class="hero-live-meta"><span>01</span><b>YOUR PHOTO</b></div>
+          </article>
+          <div class="hero-live-arrow" aria-hidden="true">→</div>
+          <article class="hero-live-card hero-live-recast">
+            <img src="/assets/world-game-v18.webp" alt="The same Jack Russell transformed into a neon city Recast" fetchpriority="high">
+            <div class="hero-live-meta"><span>02</span><b>YOUR RECAST</b></div>
+          </article>
+          <div class="hero-live-arrow hero-live-arrow-product" aria-hidden="true">→</div>
+        </div>
+        <div class="hero-live-product">
+          <span class="hero-live-product-glow" aria-hidden="true"></span>
+          <img src="https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-mug-base-cutout-v46.png?v=1791265499" alt="The Recast artwork printed on a glowing mug and pedestal" fetchpriority="high">
+        </div>
+        <div class="hero-live-tagline"><span>SAME PHOTOS.</span><strong>BIGGER POSSIBILITIES.</strong><i aria-hidden="true"></i></div>
       </div>
     </section>
 
@@ -301,7 +312,7 @@
     <span>© 2026 Recast Me</span>
   </footer>
 
-  <script src="/app.js?v=228" type="module"></script>
-  <script src="/checkout.js?v=238" type="module"></script>
+  <script src="/app.js?v=229" type="module"></script>
+  <script src="/checkout.js?v=239" type="module"></script>
 </body>
 </html>
