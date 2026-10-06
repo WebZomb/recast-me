@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 620 520" role="img" aria-label="Recast dog artwork on a mug">
+<defs>
+  <clipPath id="body"><path d="M120 95 C120 62 154 48 190 48 H395 C432 48 462 66 462 99 V365 C462 414 430 444 382 448 H198 C148 448 120 416 120 368 Z"/></clipPath>
+  <linearGradient id="rim" x1="0" x2="0" y1="0" y2="1">
+    <stop stop-color="#ffffff"/><stop offset=".55" stop-color="#e9e8ee"/><stop offset="1" stop-color="#c8c7d0"/>
+  </linearGradient>
+  <linearGradient id="shine" x1="0" x2="1">
+    <stop stop-color="rgba(255,255,255,.5)"/><stop offset=".18" stop-color="rgba(255,255,255,.04)"/><stop offset=".78" stop-color="rgba(255,255,255,.02)"/><stop offset="1" stop-color="rgba(0,0,0,.16)"/>
+  </linearGradient>
+  <filter id="shadow" x="-30%" y="-30%" width="170%" height="180%">
+    <feDropShadow dx="0" dy="22" stdDeviation="20" flood-color="#000" flood-opacity=".55"/>
+  </filter>
+  <filter id="handleShadow" x="-30%" y="-30%" width="180%" height="180%">
+    <feDropShadow dx="3" dy="8" stdDeviation="8" flood-color="#000" flood-opacity=".26"/>
+  </filter>
+</defs>
+<g filter="url(#shadow)">
+  <path d="M455 145 C560 138 584 198 577 268 C570 346 525 385 459 370" fill="none" stroke="url(#rim)" stroke-width="48" stroke-linecap="round" filter="url(#handleShadow)"/>
+  <path d="M455 158 C533 153 552 201 547 264 C542 320 511 350 459 345" fill="none" stroke="#fbfbfd" stroke-width="18" stroke-linecap="round"/>
+  <g clip-path="url(#body)">
+    <rect x="115" y="45" width="355" height="410" fill="#11131e"/>
+    <image href="/assets/world-game-v18.webp" x="103" y="28" width="382" height="438" preserveAspectRatio="xMidYMid slice"/>
+    <rect x="113" y="48" width="360" height="405" fill="url(#shine)" opacity=".48"/>
+  </g>
+  <path d="M120 98 C120 60 154 47 190 47 H394 C432 47 462 63 462 99" fill="none" stroke="url(#rim)" stroke-width="28" stroke-linecap="round"/>
+  <ellipse cx="291" cy="78" rx="160" ry="25" fill="#f7f7fa"/>
+  <ellipse cx="291" cy="82" rx="141" ry="15" fill="#d8d8df"/>
+  <path d="M121 365 C121 416 148 446 198 450 H382 C430 446 462 416 462 365" fill="none" stroke="url(#rim)" stroke-width="16"/>
+</g>
+</svg>
