@@ -28,7 +28,7 @@ test('homepage polish keeps alternates separate and preview utilities collapsed'
   const aiPos=html.indexOf('CREATE WITH AI'),formPos=html.indexOf('<form id="recast-form">'),orPos=html.indexOf('class="alternate-divider"'),savedPos=html.indexOf('Continue a saved Recast');
   assert.ok(aiPos>=0&&formPos>aiPos&&orPos>formPos&&savedPos>orPos);
   assert.match(html,/class="hero-demo hero-showcase hero-live-stage"/);
-  assert.match(html,/recast-mug-base-cutout-v46\.png/);
+  assert.match(html,/recast-neon-mug-cutout-v48\.png/);
   assert.match(html,/jack-russell-source-v18\.webp/);
   assert.match(html,/world-game-v18\.webp/);
   assert.match(html,/class="process-ribbon"/);
@@ -44,9 +44,9 @@ test('live homepage uses the correct Recast step image and original mug merchand
   const checkout=readFileSync(new URL('../public/checkout.js',import.meta.url),'utf8');
   assert.doesNotMatch(html,/<\/div>\/div>/);
   assert.match(html,/recast-node-art"><img src="\/assets\/world-game-v18\.webp"/);
-  assert.match(html,/product-node-art"><img src="\/assets\/product-mug-v16\.webp"/);
-  assert.match(app,/image:"\/assets\/product-mug-v16\.webp"/);
-  assert.match(checkout,/"Custom Recast Mug":"\/assets\/product-mug-v16\.webp"/);
+  assert.match(html,/product-node-art"><img src="https:\/\/cdn\.shopify\.com\/[^"]*recast-neon-mug-cutout-v48\.png/);
+  assert.match(app,/image:"https:\/\/cdn\.shopify\.com\/[^"]*recast-neon-mug-cutout-v48\.png/);
+  assert.match(checkout,/"Custom Recast Mug":"https:\/\/cdn\.shopify\.com\/[^"]*recast-neon-mug-cutout-v48\.png/);
 });
 
 test('homepage keeps the entire store catalog visible',()=>{
