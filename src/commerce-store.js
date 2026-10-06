@@ -55,6 +55,7 @@ export function productPrintfile(catalog,variantId,placement){
 }
 
 const MUG_BG_PNG=new Uint8Array([137,80,78,71,13,10,26,10,0,0,0,13,73,72,68,82,0,0,0,1,0,0,0,1,8,2,0,0,0,144,119,83,222,0,0,0,12,73,68,65,84,120,218,99,224,17,144,1,0,0,100,0,57,1,178,224,122,0,0,0,0,73,69,78,68,174,66,96,130]);
+const LIGHT_BG_PNG=Uint8Array.from(atob('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGP4+vUHAAXFAuNCbvT6AAAAAElFTkSuQmCC'),c=>c.charCodeAt(0));
 function fitDimensions(sw,sh,mw,mh){
   const factor=Math.min(mw/sw,mh/sh);
   return {width:Math.max(1,Math.round(sw*factor)),height:Math.max(1,Math.round(sh*factor))};
@@ -85,8 +86,9 @@ export async function composeProductLayout(env,sourceBytes,sourceSize,area,map={
   // Preserve the whole portrait over a product-filling backdrop. This is used
   // only when a customer explicitly chooses a fit-style edit instead of the
   // product's recommended full-bleed crop.
-  const darkBg=new Blob([MUG_BG_PNG],{type:'image/png'}).stream();
-  let chain=env.IMAGES.input(darkBg).transform({width:outWidth,height:outHeight,fit:'cover'});
+  const baseBytes=design.fill==='light'?LIGHT_BG_PNG:MUG_BG_PNG;
+  const baseBg=new Blob([baseBytes],{type:'image/png'}).stream();
+  let chain=env.IMAGES.input(baseBg).transform({width:outWidth,height:outHeight,fit:'cover'});
   if(design.fill==='ambient'){
     const wash=env.IMAGES.input(stream()).transform({width:outWidth,height:outHeight,fit:'cover',blur:180,saturation:0.78,gamma:1.25});
     chain=chain.draw(wash,{left:0,top:0,opacity:0.58});
