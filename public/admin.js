@@ -1,7 +1,7 @@
 import {initOwnerSettings} from './admin-settings.js?v=250';
-import {attachPrintfulDiagnostic} from './printful-diagnostics.js?v=rm0504';
+import {attachPrintfulDiagnostic} from './printful-diagnostics.js?v=rm0505';
 const deploymentLabel=document.querySelector('#deployment-identity');
-if(deploymentLabel)deploymentLabel.textContent=`${['recastmeai.com','recast-me.sergz24.workers.dev'].includes(location.hostname)?'Production':'Preview / alternate host'} · ${location.hostname} · RM-050.4 diagnostics`;
+if(deploymentLabel)deploymentLabel.textContent=`${['recastmeai.com','recast-me.sergz24.workers.dev'].includes(location.hostname)?'Production':'Preview / alternate host'} · ${location.hostname} · RM-050.5 recovery`;
 const $=s=>document.querySelector(s);const $$=s=>[...document.querySelectorAll(s)];
 const tokenKey='recast_admin_token';let token=sessionStorage.getItem(tokenKey)||'';
 function headers(json=false){return{'x-recast-request':'1',Authorization:`Bearer ${token}`,...(json?{'content-type':'application/json'}:{})}}
@@ -37,7 +37,7 @@ async function loadJobs(more=false){
   const article=document.createElement('article');article.className='glass op-card';
   article.innerHTML=`<div class="op-title">${escapeText(j.orderName||j.id)} · ${escapeText(j.product||j.sku)}</div><div class="op-meta">${statusPill(j.status)}<span class="pill">${escapeText(j.sku)}</span></div><p>Artwork ${escapeText(j.requestId)} · Quantity ${escapeText(j.quantity||1)}${j.printfulOrderId?' · Printful #'+escapeText(j.printfulOrderId):''}</p><p class="muted">${escapeText(j.ownerReleaseError||j.autoPrintError||j.lastPrintfulSyncError||j.holdReason||'')}</p>`;
   const actions=document.createElement('div');actions.className='op-actions';
-  for(const [action,label,show] of [['approve-art','Approve artwork',!j.artApprovedAt],['finalize-art','Prepare high-res print',j.artApprovedAt&&!j.digital&&!j.printReadyAt],['create-draft','Create Printful draft',j.printReadyAt&&!j.printfulOrderId&&!j.digital],['send-production','Send to production',j.printfulOrderId&&!j.sentToProductionAt],['hold','Hold',true]]){
+  for(const [action,label,show] of [['approve-art','Approve artwork',!j.artApprovedAt],['finalize-art','Prepare high-res print',j.artApprovedAt&&!j.digital&&!j.printReadyAt],['create-draft','Create Printful draft',j.printReadyAt&&!j.printfulOrderId&&!j.digital],['send-production','Send to production',j.printfulOrderId&&!j.sentToProductionAt&&j.status!=='on_hold'],['hold','Hold',true]]){
    if(!show)continue;const button=document.createElement('button');button.textContent=label;button.type='button';button.className=action==='send-production'?'danger':'secondary';button.onclick=()=>jobAction(j.id,action);actions.append(button);
   }
   article.append(actions);attachPrintfulDiagnostic(article,j,api);list.append(article);shownJobs++;

@@ -1,4 +1,5 @@
 import {printfulReferenceForNewDraft} from './printful-reference.js';
+import {verifiedLegacyEmptyStoreForRecovery} from './printful-diagnostics.js';
 import { FULFILLMENT } from "./entry.js";
 import { runSocialPipeline, socialReadiness } from './social.js';
 import { renderHealth } from './render-health.js';
@@ -817,6 +818,58 @@ export async function adminJobAction(request,env,id,action){
     }
     if(action==="hold"){
       const body=await request.json().catch(()=>({}));job.status="on_hold";job.holdReason=String(body.reason||"Manual hold");await saveJob(env,job);return json({ok:true,job});
+    }
+    if(action==="recover-missing-draft"){
+      const body=await request.json().catch(()=>({}));
+      if(body.confirm!=="RECOVER_MISSING_DRAFT")return json({ok:false,error:"Explicit missing-draft recovery confirmation is required."},409);
+      if(job.digital)return json({ok:false,error:"Digital products do not use Printful."},400);
+      if(job.printfulOrderId||job.sentToProductionAt)return json({ok:false,error:"This job already has a Printful order or production submission."},409);
+      if(job.paymentRevokedAt)return json({ok:false,error:"This order is not eligible for recovery because its payment is on hold."},409);
+      if(!job.artApprovedAt||!job.printReadyAt)return json({ok:false,error:"The exact approved high-resolution print file must already be prepared."},409);
+      const claimKey=`commerce/production/${await hash(job.id)}-draft.json`;
+      const claimObject=await env.ARTWORK.get(claimKey);
+      if(!claimObject)return json({ok:false,error:"The original draft-attempt lock is not present. Use the normal draft action instead."},409);
+      const verified=await verifiedLegacyEmptyStoreForRecovery(env,job,claimObject);
+      if(!verified.eligible)return json({ok:false,error:verified.reason,recoveryState:verified.state},409);
+      await verifyPaidOrder(env,job,{forProduction:true});
+      const design=await approvedDesign(env,job);
+      if(!design.proof?.position||!design.finalKey)throw fault('print_not_ready','The exact approved print file or placement is unavailable.');
+      const map=FULFILLMENT[job.sku];
+      const sourceUrl=`${String(env.PUBLIC_APP_URL||'').replace(/\/$/,'')}/api/order-print/${encodeURIComponent(job.id)}?token=${encodeURIComponent(design.printToken)}`;
+      const externalId=await printfulReferenceForNewDraft(job);
+      const recoveryStartedAt=now(),previousStatus=job.status;
+      job.status='on_hold';
+      job.holdReason='Safe Printful draft recovery in progress. Paid production is blocked until owner inspection.';
+      job.printfulRecoveryStartedAt=recoveryStartedAt;
+      job.printfulRecoveryPreviousStatus=previousStatus;
+      await saveJob(env,job);
+      const replacement=await env.ARTWORK.put(claimKey,JSON.stringify({
+        startedAt:recoveryStartedAt,externalId,referenceVersion:3,recovery:true,
+        recoveredFrom:{startedAt:verified.claimStartedAt||null,externalId:verified.legacyExternalId,verifiedEmptyAt:verified.checkedAt,storeId:verified.configuredStoreId}
+      }),{onlyIf:{etagMatches:verified.claimEtag}});
+      if(!replacement){
+        job.holdReason='Recovery paused because the saved attempt changed during verification. Re-check Printful before any further action.';
+        job.printfulRecoveryError='attempt_lock_changed';
+        await saveJob(env,job);
+        return json({ok:false,error:job.holdReason},409);
+      }
+      const payload={external_id:externalId,recipient:job.recipient,items:[{variant_id:map.printfulVariantId,quantity:Number(job.quantity||1)*Number(map.quantity||1),files:[{type:map.orderFileType||"default",url:sourceUrl,position:design.proof.position}]}]};
+      let result;
+      try{
+        result=await printful(env,"/orders",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(payload)});
+      }catch(error){
+        job.status='on_hold';job.holdReason='Recovery draft result is not confirmed. Keep this job on hold and use Check Printful status before any retry.';
+        job.printfulRecoveryError=error.message||String(error);job.printfulRecoveryFailedAt=now();
+        await saveJob(env,job);throw error;
+      }
+      job.printfulExternalId=externalId;job.printfulOrderId=result.id;job.printfulStatus=result.status||"draft";
+      job.printSourceUrl=sourceUrl;job.printfulCreatedAt=now();job.recoveredPrintfulDraftAt=now();job.status='on_hold';
+      job.holdReason=`Recovered Printful draft #${result.id} — inspect the draft before paid production.`;
+      delete job.ownerReleaseError;delete job.autoPrintError;delete job.printfulRecoveryError;
+      await saveJob(env,job);
+      try{await addShopifyOrderTags(env,job.orderId,["RECAST_PRINTFUL_DRAFT","RECAST_RECOVERED_DRAFT"])}
+      catch(error){job.printfulRecoveryTagWarning=error.message||String(error);await saveJob(env,job)}
+      return json({ok:true,recovered:true,productionSubmitted:false,printfulOrderId:String(result.id),externalId,job});
     }
     if(action==="create-draft"){
       if(job.digital)return json({ok:false,error:"Digital products do not use Printful."},400);

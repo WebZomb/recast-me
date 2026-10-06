@@ -134,3 +134,40 @@ export async function printfulDiagnosticRoute(request, env, {requireAdmin}={}) {
     return reply({ok:false,error:Number(error?.status)===401?'Admin authorization required.':'The private diagnostic could not be completed. No order action was taken.'},Number(error?.status)===401?401:503);
   }
 }
+
+// Mutation callers must authenticate before invoking this. This helper performs
+// only the fresh provider reads needed to prove the narrow legacy recovery gate.
+export async function verifiedLegacyEmptyStoreForRecovery(env, job, claimObject) {
+  const configuredStoreId=numericId(env.PRINTFUL_STORE_ID)?String(env.PRINTFUL_STORE_ID):null;
+  const report={configuredStoreId,providerStatus:null,providerRequestCount:0,lookupFailure:null};
+  const deny=(reason,state='blocked')=>({eligible:false,reason,state,providerStatus:report.providerStatus,providerRequestCount:report.providerRequestCount,lookupFailure:report.lookupFailure});
+  if(!job||job.digital)return deny('Only a stored physical Recast job can use this recovery.');
+  if(job.printfulOrderId||job.sentToProductionAt||job.printfulExternalId)return deny('This job already has provider linkage and cannot use missing-draft recovery.');
+  if(!env.PRINTFUL_API_TOKEN)return deny('Printful is not connected.','not_configured');
+  if(!configuredStoreId)return deny('The intended Printful store is not configured.','store_not_configured');
+  if(!claimObject?.etag)return deny('The original Recast attempt lock is missing or cannot be compared safely.');
+  let claim;
+  try{claim=await claimObject.json()}catch{return deny('The original Recast attempt lock cannot be read safely.');}
+  if(!claim||typeof claim!=='object'||claim.externalId!==undefined)return deny('This is not an untouched legacy attempt lock; keep it for review.');
+  const externalId=`recast-${job.id}`;
+  if(validPrintfulReference(externalId))return deny('The historical reference is valid, so zero-store recovery is not permitted.');
+  const direct=await providerGet(env,`/orders/@${encodeURIComponent(externalId)}`,report);
+  if(direct.state)return deny(direct.message,direct.state);
+  if(![400,404].includes(direct.code))return deny('Printful did not reject or miss the exact legacy reference; keep the lock for review.','provider_ambiguous');
+  const page=await providerGet(env,'/orders?limit=100&offset=0',report);
+  if(page.state)return deny(page.message,page.state);
+  if(page.code!==200||!Array.isArray(page.data.result))return deny('Printful did not return a usable order list for the configured store.','provider_ambiguous');
+  const rows=page.data.result,paging=page.data.paging;
+  const total=Number.isSafeInteger(paging?.total)&&paging.total>=0?paging.total:null;
+  const complete=total!==null&&paging?.offset===0&&rows.length===total&&rows.length<=100;
+  if(rows.some(o=>o?.store!==undefined&&String(o.store)!==configuredStoreId))return deny('Printful returned a different store scope; recovery is blocked.','scope_mismatch');
+  if(rows.some(o=>o?.external_id===externalId))return deny('A Printful order with the historical reference exists; recovery is blocked.','order_found');
+  // Deliberately stricter than the read-only diagnostic: automatic stale-lock
+  // recovery is allowed only when the complete configured store is empty.
+  if(!(complete&&total===0&&rows.length===0))return deny('Safe recovery requires a fresh complete zero-order snapshot of this configured Printful store.','store_not_empty');
+  return{
+    eligible:true,state:'verified_empty_store',legacyExternalId:externalId,claimEtag:claimObject.etag,
+    claimStartedAt:isoDate(claim.startedAt),checkedAt:new Date().toISOString(),configuredStoreId,
+    providerStatus:report.providerStatus,providerRequestCount:report.providerRequestCount
+  };
+}
