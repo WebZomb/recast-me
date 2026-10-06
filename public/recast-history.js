@@ -7,7 +7,8 @@ export function privateRecastLink(origin,version){
   const url=new URL('/',origin);url.hash=new URLSearchParams({recast:version.requestId,key:version.accessToken}).toString();return url.href;
 }
 function trustedRecastHost(host){
-  return host==='recast-me.sergz24.workers.dev'||host.endsWith('-recast-me.sergz24.workers.dev');
+  const value=String(host||'').toLowerCase();
+  return value==='recastmeai.com'||value==='www.recastmeai.com'||value==='recast-me.sergz24.workers.dev'||value.endsWith('-recast-me.sergz24.workers.dev');
 }
 export function readRecastLink(value,origin){
   const url=new URL(value,origin),current=new URL(origin);

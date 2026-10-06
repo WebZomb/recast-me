@@ -2,7 +2,7 @@
 const {chromium,webkit}=require('playwright');
 const fs=require('node:fs');
 const path=require('node:path');
-const base='https://recast-me.sergz24.workers.dev';
+const base='https://recastmeai.com';
 const out=path.join(process.env.GITHUB_WORKSPACE||process.cwd(),'audit-results');
 const pause=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 (async()=>{
@@ -11,7 +11,7 @@ const pause=ms=>new Promise(resolve=>setTimeout(resolve,ms));
   // A source commit is not a deployment: check the real HTML marker before testing.
   let deployed=false;
   for(let attempt=0;attempt<8;attempt++){
-    try{const r=await fetch(base+'/?launch-audit='+Date.now(),{signal:AbortSignal.timeout(20000)});deployed=r.ok&&(await r.text()).includes('data-launch-build="RM-049.5"');}catch{}
+    try{const r=await fetch(base+'/?launch-audit='+Date.now(),{signal:AbortSignal.timeout(20000)});deployed=r.ok&&(await r.text()).includes('data-launch-build="RM-050.0"');}catch{}
     if(deployed)break;await pause(15000);
   }
   report.deployed=deployed;
@@ -50,7 +50,7 @@ const pause=ms=>new Promise(resolve=>setTimeout(resolve,ms));
       const emptyPhotoBlocked=await page.locator('[data-create-step="1"]').isVisible();
       await page.screenshot({path:out+'/'+name+'-create.png'});
       report.browsers.push({name,http:response.status(),metrics,shopReached,firstStep,photoStep,emptyPhotoBlocked,errors,failed,blocked});
-      if(metrics.build!=='RM-049.5')report.failures.push(name+': wrong production build');
+      if(metrics.build!=='RM-050.0')report.failures.push(name+': wrong production build');
       if(metrics.scrollWidth>width+1)report.failures.push(name+': horizontal page overflow');
       if(metrics.products!==12)report.failures.push(name+': missing product cards');
       if(metrics.badAnchors.length||metrics.duplicateIds.length||metrics.brokenImages.length)report.failures.push(name+': broken content structure or images');
