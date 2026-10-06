@@ -338,6 +338,10 @@ export async function reconcileShopifyOrder(env,order){
         const currentJob=put?job:await loadJob(env,id);
         await autoProcessPreapprovedJob(env,currentJob).catch(()=>null);
       }
+      if(!checkoutApproved&&!map.digital&&Array.isArray(order.tags)&&order.tags.includes("RECAST_SEND_PRODUCTION")){
+        const currentJob=put?job:await loadJob(env,id);
+        await processOwnerReleasedLegacyJob(env,currentJob).catch(()=>null);
+      }
     }else if(await env.ARTWORK.head(jobKey(id))){
       await change(env,jobKey(id),null,j=>({...j,financialStatus:order.displayFinancialStatus,paymentRevokedAt:now(),status:j.sentToProductionAt?j.status:'payment_hold'}));
     }
@@ -557,6 +561,23 @@ async function autoProcessPreapprovedJob(env,job){
   }catch(error){
     job.autoPrintError=error.message||String(error);job.autoPrintFailedAt=now();
     if(!job.sentToProductionAt&&job.status!=='on_hold')job.status='auto_print_review';
+    await saveJob(env,job);throw error;
+  }
+}
+
+async function processOwnerReleasedLegacyJob(env,job){
+  if(job.digital||job.sentToProductionAt)return job;
+  const design=await designFor(env,job);
+  if(!design?.approvedAt)return job;
+  try{
+    if(!job.printReadyAt)job=await finalizePhysicalJob(env,job);
+    if(!job.printfulOrderId)job=await createPrintfulDraftForJob(env,job);
+    if(!job.sentToProductionAt)job=await sendPrintfulProductionForJob(env,job);
+    job.ownerReleasedAt ||= now();job.ownerReleaseCompletedAt=now();delete job.ownerReleaseError;
+    return saveJob(env,job);
+  }catch(error){
+    job.ownerReleaseError=error.message||String(error);job.ownerReleaseFailedAt=now();
+    if(!job.sentToProductionAt&&job.status!=='on_hold')job.status='owner_release_review';
     await saveJob(env,job);throw error;
   }
 }
