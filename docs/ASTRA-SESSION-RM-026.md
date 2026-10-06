@@ -326,3 +326,12 @@ Implemented recommended layouts per product, generalized clean/mockup compositio
 - No legacy order is released merely because it is paid. The Shopify release tag is the explicit owner action/authorization boundary.
 - Added a mocked regression proving one tagged, paid, already-approved legacy mug reaches exactly one Printful draft and one production confirmation.
 - #1001 has NOT been tagged/released by this work.
+
+
+## RM-043 — premium hero mug art
+- Owner approved the corrected premium mug artwork as the homepage “wow” visual.
+- The approved image was uploaded to Shopify CDN as recast-me-hero-wow-mug.png and wired into the hero’s “03 YOUR PRODUCT” step.
+- Hero layout now gives the product substantially more width than the photo/recast cards, with stronger cyan/magenta glow and drop-shadow treatment so the final product is the visual payoff.
+- The same premium mug art is used in the How It Works product node, the static homepage Mug card, and the pre-mockup Mug example in the active-Recast catalog.
+- Shopify’s Custom Recast Mug featured product image was replaced with the same premium example, so checkout/storefront thumbnails also look intentional rather than like the older generic mockup.
+- app.js cache bumped to v227, checkout.js to v237, site-v10.css to v228.
