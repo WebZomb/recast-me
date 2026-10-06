@@ -5,11 +5,11 @@ import {readFileSync} from 'node:fs';
 const source=readFileSync(new URL('../public/checkout.js',import.meta.url),'utf8');
 function setup(fetcher){
   const listeners={},calls=[],error={hidden:true,textContent:''},img={src:'',alt:''},caption={textContent:''};
-  const layout={value:'single'},x={value:'center'},scale={value:'92'},spacing={value:'standard'};
+  const layout={value:'two-sided'},x={value:'center'},scale={value:'110'},spacing={value:'standard'},fill={value:'ambient'};
   const button={dataset:{product:'0'},textContent:'Shop Mug',disabled:false,parentElement:{querySelector:()=>error},addEventListener:(name,fn)=>button[name]=fn};
   const preview={disabled:false,textContent:'Preview'};
   const card={dataset:{productTitle:'Custom Recast Mug',active:'true',digital:'false'},classList:{add(){},remove(){}},
-    querySelector:s=>s==='.product-art img'?img:s==='.example-design-label'?caption:s==='.mockup-error'?error:s==='.product-preview-action'?preview:s==='.recast-buy'?button:s==='[data-design-layout]'?layout:s==='[data-design-x]'?x:s==='[data-design-scale]'?scale:s==='[data-design-spacing]'?spacing:null};
+    querySelector:s=>s==='.product-art img'?img:s==='.example-design-label'?caption:s==='.mockup-error'?error:s==='.product-preview-action'?preview:s==='.recast-buy'?button:s==='[data-design-layout]'?layout:s==='[data-design-x]'?x:s==='[data-design-scale]'?scale:s==='[data-design-spacing]'?spacing:s==='[data-design-fill]'?fill:null};
   const grid={innerHTML:'marketing',children:[],classList:{add(){},remove(){}},replaceChildren(){this.innerHTML='';this.children=[]},append(...items){this.children.push(...items)}};
   const document={querySelector:s=>s==='#product-grid'?grid:s==='#request-id'?{textContent:''}:s.startsWith('.recast-variant')?{value:'RECAST-MUG-15OZ'}:s.startsWith('[data-product-index')?card:null,querySelectorAll:s=>s==='.recast-buy'?[button]:[],addEventListener:(name,fn)=>listeners[name]=fn,createElement:()=>({children:[],setAttribute(){},addEventListener(name,fn){this[name]=fn},append(...x){this.children.push(...x)}})};
   const context={document,window:{},localStorage:{getItem:()=>JSON.stringify({requestId:'old',accessToken:'old-token'})},location:{origin:'https://recast.test'},URL,console:{warn(){}},setTimeout,fetch:async(...args)=>{calls.push(args);return fetcher(...args)}};
@@ -18,8 +18,8 @@ function setup(fetcher){
 }
 const catalog=()=>({ok:true,json:async()=>({ok:true,products:[{title:'Custom Recast Mug',status:'ACTIVE',variants:[{sku:'RECAST-MUG-15OZ',variantTitle:'15 oz',price:'29.99'}]}]})});
 function markPreviewReady(ui){
-  const design={product:'Mug',layout:'single',background:'scene-fill',x:'center',scale:92,spacing:'standard'};
-  ui.card.dataset.mockupId='v3-single-scene-fill-center-92-standard';
+  const design={product:'Mug',layout:'two-sided',fill:'ambient',x:'center',scale:110,spacing:'standard'};
+  ui.card.dataset.mockupId='v4-Mug-two-sided-ambient-center-110-standard';
   ui.card.dataset.mockupSignature=JSON.stringify({sku:'RECAST-MUG-15OZ',design});
   return design;
 }
@@ -28,7 +28,7 @@ test('homepage polish keeps alternates separate and preview utilities collapsed'
   const aiPos=html.indexOf('CREATE WITH AI'),formPos=html.indexOf('<form id="recast-form">'),orPos=html.indexOf('class="alternate-divider"'),savedPos=html.indexOf('Continue a saved Recast');
   assert.ok(aiPos>=0&&formPos>aiPos&&orPos>formPos&&savedPos>orPos);
   assert.match(html,/class="hero-product-stage"/);
-  assert.match(html,/product-mug-v16\.webp/);
+  assert.match(html,/hero-product-mug-v20\.svg/);
   assert.match(html,/class="process-ribbon"/);
   assert.match(html,/class="preview-more"/);
   assert.match(html,/Choose a product →/);
