@@ -227,3 +227,24 @@ Safety/commerce boundary:
 - Current order #1001 remains legacy/manual because it was purchased before the preapproval token existed; the automatic path applies only to future orders created through the new Final Review confirmation.
 
 - Final validation follow-up: social/public checkout regression expectation updated for the new mandatory Final Review gate; no application logic changed in that follow-up.
+
+
+## RM-038 — shorter homepage + broader “Recast your world” positioning
+Owner asked to stop positioning Recast Me as only a pet site and to make the homepage substantially shorter/easier to scan.
+
+Implemented:
+- Hero changed from “Recast your pet” to “Recast your world.”
+- Hero now tells the complete story visually: Your Photo → Your Recast → Your Product. The third card uses the same transformed Jack Russell artwork inside a blanket-style product mockup so the merchandise end result is immediately obvious.
+- Hero CTA changed to Start a Recast + See products; trust copy reduced to three compact chips.
+- Removed the marquee band, Popular Recasts/idea section, and Recast Standard/promise section.
+- How It Works reduced from four long cards to three compact steps: Upload → Recast → Preview & buy.
+- Homepage world gallery reduced to six representative worlds; all styles remain available inside the creator.
+- World-card descriptions are hidden in the compact homepage gallery to reduce reading.
+- Static homepage merchandise catalog reduced to four representative products: Mug, Blanket, Canvas, Poster. Full product catalog still replaces this sampler once a Recast is active.
+- Shop, creation intro, FAQ/policy copy, and footer language shortened.
+- Mobile layout tightened: smaller section spacing, 2-column world grid, compact 3-step cards, compact 2-column product sampler.
+- checkout.js removes the compact homepage catalog class before rendering the full active-Recast checkout catalog.
+- Cache keys bumped to app.js?v=225, checkout.js?v=232, merch-v07.css?v=133, site-v10.css?v=222.
+- Added regression coverage asserting the broad hero, three-step flow, removed long sections, compact product sample, and limited homepage world set.
+
+No AI render, payment, order change, or Printful action was performed by this homepage work.
