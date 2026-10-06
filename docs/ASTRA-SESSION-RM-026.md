@@ -315,3 +315,14 @@ Implemented recommended layouts per product, generalized clean/mockup compositio
 - Live blanket screenshots also exposed a UI inconsistency: the “Recommended setup applied” badge could coexist with a browser-restored/stale Edit design selection, and a disabled second CTA (“Preview product before buying”) duplicated the main preview button.
 - checkout.js now forcibly reapplies each product preset when the active catalog renders, hides the physical buy/final-review button until a fresh real mockup is complete, and shows only “Preview recommended design” before that point. After successful mockup generation, the single next CTA becomes “Continue to final review.”
 - checkout.js cache bumped to v236.
+
+
+### RM-042 — owner-controlled release for legacy paid orders
+- Added Shopify order tags to the synchronized order shape.
+- Added an explicit legacy-release path keyed only by the Shopify order tag RECAST_SEND_PRODUCTION.
+- The release path applies only to non-digital legacy jobs that already have a locked customer-approved design. It re-verifies live Shopify payment/order contents before print preparation, before Printful draft creation, and before production confirmation.
+- It remains idempotent through the existing draft/confirm claims and sentToProductionAt checks.
+- Existing legacy design schema (v1-v3 mug layouts) is now preserved during normalization so old paid orders are not silently upgraded to v4 and rejected as “design changed.”
+- No legacy order is released merely because it is paid. The Shopify release tag is the explicit owner action/authorization boundary.
+- Added a mocked regression proving one tagged, paid, already-approved legacy mug reaches exactly one Printful draft and one production confirmation.
+- #1001 has NOT been tagged/released by this work.
