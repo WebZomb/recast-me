@@ -349,3 +349,17 @@ Implemented recommended layouts per product, generalized clean/mockup compositio
 - Repaired one malformed closing tag introduced during the structural rewrite.
 - site-v10.css cache is v229.
 - No image generation, checkout, order, or Printful action was performed by this layout implementation.
+
+
+## RM-045 — actual live hero now uses the approved reference composition
+User explicitly asked to stop generating mockups and make the real website match the approved hero reference.
+
+Implemented on the live website source:
+- Kept the headline, CTA buttons, trust chips, and header as real interactive HTML.
+- Rebuilt the mobile sizing/spacing around the approved 864×1536 reference proportions.
+- Added the approved reference's exact lower Photo → Recast → Product composition as a dedicated responsive hero showcase asset, so the source photo, transformed photo, mug, pedestal, reflections, rocks, and “Same photos. Bigger possibilities.” spacing match the approved design rather than being approximated with CSS.
+- Added a right-side high-definition planet/city background crop from the approved reference, blended behind the real hero copy with a CSS fade so the top background matches the reference more closely without turning the whole page into a non-interactive screenshot.
+- Removed the older independently positioned live mug/source/recast elements from the hero layout to eliminate spacing drift and overlap differences.
+- Header, headline, CTA, chip sizing, padding, gradients, borders, and responsive mobile rules were retuned to match the approved reference.
+- site-v10.css cache bumped to v230.
+- The rest of the Recast site remains functional HTML; only the decorative lower hero showcase is a composed visual asset.
