@@ -92,20 +92,16 @@ function merchCard(item,{featured=false}={}){
 }
 
 function renderStaticMerch(){
-  const homeNames=new Set(['Mug','Blanket','Canvas','Poster']);
-  const homeProducts=PRODUCT_CATALOG.filter(x=>homeNames.has(x.name));
-
   const catalog=document.querySelector('#product-grid');
   if(catalog){
-    catalog.classList.add('merch-catalog-shell','merch-home-compact');
+    catalog.classList.add('merch-catalog-shell','merch-home-all');
     catalog.innerHTML=`
-      <div class="merch-home-grid">
-        ${homeProducts.map(x=>merchCard(x)).join('')}
+      <div class="merch-home-track" aria-label="All Recast Me products">
+        ${PRODUCT_CATALOG.map(x=>merchCard(x)).join('')}
       </div>
-      <div class="merch-home-more">
-        <span>MORE AFTER YOU CREATE</span>
-        <p>Tumblers, apparel, framed art, magnets, coasters, and digital downloads appear with your Recast.</p>
-        <a class="button ghost" href="#start">Start a Recast →</a>
+      <div class="merch-home-note">
+        <span>ALL PRODUCTS</span>
+        <p>Swipe through the full collection. After you choose a Recast, every product uses your exact Artwork ID and a real product preview before checkout.</p>
       </div>`;
   }
 }
