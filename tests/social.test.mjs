@@ -60,10 +60,10 @@ test('quota pauses the X job without dropping it; the same request completes aft
   const {env,calls}=setup(t,{quota:true});await runSocialPipeline(env);
   let job=await (await env.ARTWORK.get('social/x/1234.json')).json();
   assert.equal(job.replyStatus,'awaiting_capacity');assert.equal(calls.replies.length,0);
-  assert.equal((await renderHealth(env)).state,'paused');
+  assert.equal((await renderHealth(env,'social')).state,'paused');
   assert.ok(await env.ARTWORK.get('social/pending/1234.json'));
   await runSocialPipeline(env);assert.equal(calls.ai,1);
-  job.retryAt='2000-01-01';await env.ARTWORK.put('social/x/1234.json',JSON.stringify(job));await env.ARTWORK.delete('system/render-health-high.json');await env.ARTWORK.delete('system/render-health.json');
+  job.retryAt='2000-01-01';await env.ARTWORK.put('social/x/1234.json',JSON.stringify(job));await env.ARTWORK.delete('system/render-health-social.json');await env.ARTWORK.delete('system/render-health.json');
   env.AI.run=async()=>{calls.ai++;return {image:jpeg.toString('base64')};};
   await runSocialPipeline(env);job=await (await env.ARTWORK.get('social/x/1234.json')).json();
   assert.equal(job.replyStatus,'replied');assert.equal(calls.ai,2);

@@ -54,3 +54,5 @@ Latest: [RM-025 — mug activation and Shopify trial checkout hold](ASTRA-SESSIO
 Latest: [RM-027 — launch polish, production browser audit, and fulfillment-state correction](ASTRA-SESSION-RM-027.md).
 
 Latest branding: [Approved RM orbit logo deployment and social assets](ASTRA-BRAND-ORBIT-2026-10-06.md).
+
+Latest policy: [RM-050 — HQ-first daily previews, three purchase credits, simplified products and private owner settings](ASTRA-SESSION-RM-050.md).

@@ -4,6 +4,7 @@ import { WATERMARK_TILE_BASE64, WATERMARK_FOOTER_BASE64 } from './watermark-tile
 import { digest, guardedEnvironment, renderControlStatus, budgetStatus, submissionFingerprint } from './render-controls.js';
 
 import { creditRoute, bindCustomerCredits, creditsEnabled, settleCustomerRender } from './render-credits.js';
+import { withOwnerSettings, ownerSettingsRoute } from './owner-settings.js';
 import { sameOrigin, composeProductLayout } from './commerce-store.js';
 import { serveApprovedPrint } from './workflow.js';
 
@@ -158,6 +159,9 @@ export function secureApplication(application) {
       const url = new URL(request.url), path = url.pathname;
       if (!path.startsWith('/api/')) return application.fetch(request, env, ctx);
       try {
+        env=await withOwnerSettings(env);
+        const settingsResponse=await ownerSettingsRoute(request,env);
+        if(settingsResponse)return hardened(settingsResponse);
         if(path==='/api/original-photo'&&request.method==='POST'){
           const data=await saveOriginalPhoto(request,env);
           const image=`data:image/jpeg;base64,${to64(await protectedArtwork(env,data.requestId))}`;
@@ -311,6 +315,7 @@ export function secureApplication(application) {
       }
     },
     async scheduled(controller, env, ctx) {
+      env=await withOwnerSettings(env);
       const guarded = guardedEnvironment(env);
       return application.scheduled(controller, guarded.env, ctx);
     }

@@ -80,14 +80,14 @@ function designControlsMarkup(title,preset){
     : `<option value="cover" selected>Best setup · fill the product</option><option value="fit">Keep whole image + background fill</option>`;
   const spacing=wrap?`<label data-design-spacing-wrap>Image spacing<select data-design-spacing><option value="close">Closer together</option><option value="standard" selected>Standard</option><option value="wide">Farther apart</option></select></label>`:"";
   return `<details class="product-design-controls">
-    <summary><span>Edit design</span><small>${preset.label}</small></summary>
+    <summary><span>Edit design</span></summary>
     <div class="design-edit-body">
       <label>Layout<select data-design-layout>${layoutOptions}</select></label>
       ${spacing}
       <label data-design-fill-wrap hidden>Background fill<select data-design-fill><option value="ambient" selected>Blend artwork colors</option><option value="dark">Dark fill</option><option value="light">Light fill</option><option value="full-bleed">Artwork edge fill</option></select></label>
       <label data-design-position-wrap>Image position<select data-design-x><option value="left">Left</option><option value="center" selected>Center</option><option value="right">Right</option></select></label>
       <label data-design-scale-wrap>Image size <strong data-design-scale-label>${preset.scale}%</strong><input data-design-scale type="range" min="75" max="125" step="5" value="${preset.scale}"></label>
-      <p class="product-mockup-note">Recommended setup is already applied. Edit only if you want a different crop or composition.</p>
+      <button type="button" class="button ghost" data-reset-design>Reset to recommended</button><p class="product-mockup-note">Review a new preview after changing the design.</p>
     </div>
   </details>`;
 }
@@ -121,6 +121,8 @@ function requireFreshPreview(card){
 }
 function resetProductPreview(card,{invalidate=true}={}){
   if(!card)return;
+  const summary=card?.querySelector?.('[data-design-summary]');
+  if(summary){const preset=presetFor(card),design=productDesign(card);summary.textContent=['layout','fill','x','scale','spacing'].every(k=>design[k]===preset[k])?'Recommended layout applied':'Custom layout';}
   const state=stateFor(card);if(invalidate){state.run++;state.busy=false;}
   const title=card.dataset.productTitle,img=card.querySelector?.(".product-art img");
   if(img&&title){img.src=PRODUCT_ART[title];img.alt="Example design on "+title;}
@@ -130,7 +132,7 @@ function resetProductPreview(card,{invalidate=true}={}){
   const caption=card.querySelector?.(".example-design-label");if(caption)caption.textContent="Example design";
   const error=card.querySelector?.(".mockup-error");if(error){error.hidden=true;error.textContent="";}
   const preview=card.querySelector?.(".product-preview-action");
-  if(preview){preview.disabled=state.busy;preview.textContent=state.busy?"Waiting for current preview…":"Preview recommended design";}
+  if(preview){preview.disabled=state.busy;preview.textContent=state.busy?"Waiting for current preview…":"Preview my product";}
   requireFreshPreview(card);
 }
 
@@ -346,7 +348,7 @@ async function loadCheckout(){
       : `<input type="hidden" class="recast-variant" data-product="${index}" value="${first?.sku||""}">`;
     const preset=PRODUCT_DESIGN_PRESETS[product.title]||presetFor({dataset:{productTitle:product.title}});
     const designControls=digital?"":designControlsMarkup(product.title,preset);
-    const realPreview=digital?"":`<div class="recommended-design-row"><span>Recommended setup applied</span><strong>${preset.label}</strong></div>${designControls}<button class="product-preview-action" data-product="${index}" type="button">Preview recommended design</button><p class="mockup-error" role="alert" hidden></p>`;
+    const realPreview=digital?"":`<div class="recommended-design-row"><span data-design-summary>Recommended layout applied</span></div>${designControls}<button class="product-preview-action" data-product="${index}" type="button">Preview my product</button><p class="mockup-error" role="alert" hidden></p>`;
 
     return `<div class="${classes}" data-product-index="${index}" data-product-title="${product.title}" data-active="${active}" data-digital="${digital}">
       <div class="product-art"><img src="${PRODUCT_ART[product.title]}" alt="Example design on ${product.title}" loading="lazy"><span class="example-design-label">Example design</span></div>
@@ -393,7 +395,13 @@ async function loadCheckout(){
     if(control.matches?.("[data-design-layout]"))syncDesignControls(card);
     control.addEventListener("change",()=>{syncDesignControls(card);resetProductPreview(card);});
   });
-  document.querySelectorAll(".product-design-controls").forEach(details=>applyPresetToControls(details.closest("[data-product-index]")));
+  document.querySelectorAll(".product-design-controls").forEach(details=>{
+    details.open=false;applyPresetToControls(details.closest("[data-product-index]"));
+  });
+  document.querySelectorAll('[data-reset-design]').forEach(button=>button.addEventListener('click',()=>{
+    const card=button.closest('[data-product-index]');applyPresetToControls(card);resetProductPreview(card);
+    const details=card.querySelector('.product-design-controls');if(details)details.open=false;
+  }));
 
   document.querySelectorAll(".recast-buy").forEach(button=>{
     button.addEventListener("click",async()=>{

@@ -38,16 +38,16 @@ test('parallel renders cannot overspend starter credits; failed previews restore
  assert.equal((await creditBalance(env,wallet)).remaining,1);
  await settleCustomerRender(env,accepted[1].value,true);assert.equal((await creditBalance(env,wallet)).remaining,1);
 });
-test('a purchase grants five once across duplicate syncs and multiple candidate wallets',async()=>{
+test('a purchase grants three once across duplicate syncs and multiple candidate wallets',async()=>{
  const a=await walletSetup(),b=await walletSetup('192.0.2.2',a.env);
  await Promise.all(Array.from({length:10},(_,i)=>reconcileOrderCredits(a.env,paid,i%2?a.wallet.id:b.wallet.id)));
- assert.equal((await creditBalance(a.env,a.wallet)).bonus+(await creditBalance(a.env,b.wallet)).bonus,5);
+ assert.equal((await creditBalance(a.env,a.wallet)).bonus+(await creditBalance(a.env,b.wallet)).bonus,3);
  const state=await read(a.env,`commerce/orders/${await hash(paid.id)}.json`);assert.ok([a.wallet.id,b.wallet.id].includes(state.walletId));
 });
 test('refunds revoke unspent bonus credits and late paid events cannot regrant them',async()=>{
  const {env,wallet}=await walletSetup();await reconcileOrderCredits(env,paid,wallet.id);
  for(let i=0;i<4;i++)await reserveCustomerRender({...env,RECAST_CREDIT_WALLET:wallet});
- assert.equal((await creditBalance(env,wallet)).bonus,4);
+ assert.equal((await creditBalance(env,wallet)).bonus,2);
  await reconcileOrderCredits(env,{...paid,displayFinancialStatus:'PARTIALLY_REFUNDED',updatedAt:'2026-10-03T02:00:00Z'});
  await reconcileOrderCredits(env,paid,wallet.id);
  assert.equal((await creditBalance(env,wallet)).bonus,0);
@@ -422,7 +422,7 @@ test('Shopify reconciliation creates one job per line, awards once, and revokes 
  const meta=await read(env,`requests/${ID}/request.json`);meta.creditWalletId=wallet.id;await env.ARTWORK.put(`requests/${ID}/request.json`,JSON.stringify(meta));
  const order={...paid,lineItems:{pageInfo:{hasNextPage:false},nodes:[{id:'gid://shopify/LineItem/456',sku,quantity:1,customAttributes:[{key:'Artwork ID',value:ID}]}]}};
  await reconcileShopifyOrder(env,order);await reconcileShopifyOrder(env,order);
- assert.equal((await env.ARTWORK.list({prefix:'jobs/'})).objects.length,1);assert.equal((await creditBalance(env,wallet)).bonus,5);
+ assert.equal((await env.ARTWORK.list({prefix:'jobs/'})).objects.length,1);assert.equal((await creditBalance(env,wallet)).bonus,3);
  await reconcileShopifyOrder(env,{...order,displayFinancialStatus:'REFUNDED',updatedAt:'2026-10-03T03:00:00Z'});
  assert.equal((await creditBalance(env,wallet)).bonus,0);assert.equal((await read(env,`requests/${ID}/request.json`)).paid,false);assert.equal((await read(env,'jobs/123-456.json')).status,'payment_hold');
 });
@@ -497,14 +497,17 @@ test('24-hour HQ reset preserves bonus and ignores delayed previous-window refun
  await settleCustomerRender(env,old,false);
  assert.equal((await creditBalance(env,wallet,now+86400000)).remaining,2);
 });
-test('Standard has one independent shared-network slot, failure refund and 24-hour reset',async()=>{
- const {env,wallet}=await walletSetup();const bound={...env,RECAST_CREDIT_WALLET:wallet,RECAST_RENDER_MODE:'quick'},now=Date.now();
- const results=await Promise.allSettled(Array.from({length:5},()=>reserveCustomerRender(bound,now)));
- const accepted=results.filter(r=>r.status==='fulfilled');assert.equal(accepted.length,1);
- assert.equal((await creditBalance(env,wallet,now)).remaining,3);
+test('Standard has five slots only after HQ is exhausted, with failure refund and 24-hour reset',async()=>{
+ const {env,wallet}=await walletSetup();const high={...env,RECAST_CREDIT_WALLET:wallet},bound={...high,RECAST_RENDER_MODE:'quick'},now=Date.now();
+ await assert.rejects(reserveCustomerRender(bound,now),e=>e.code==='standard_locked');
+ for(let i=0;i<3;i++)await settleCustomerRender(env,await reserveCustomerRender(high,now),true);
+ const results=await Promise.allSettled(Array.from({length:10},()=>reserveCustomerRender(bound,now)));
+ const accepted=results.filter(r=>r.status==='fulfilled');assert.equal(accepted.length,5);
+ assert.equal((await creditBalance(env,wallet,now)).remaining,0);
  assert.equal((await creditBalance(env,wallet,now)).standardRemaining,0);
  await settleCustomerRender(env,accepted[0].value,false);
  assert.equal((await creditBalance(env,wallet,now)).standardRemaining,1);
  await reserveCustomerRender(bound,now);
- assert.equal((await creditBalance(env,wallet,now+86400000)).standardRemaining,1);
+ assert.equal((await creditBalance(env,wallet,now+86400000)).standardRemaining,5);
+ await assert.rejects(reserveCustomerRender(bound,now+86400000),e=>e.code==='standard_locked');
 });

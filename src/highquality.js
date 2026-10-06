@@ -241,7 +241,7 @@ async function generateQuick({env,model,styleId,subjectType,notes,customWorld,in
   const safe=safePrompt(styleId,subjectType,inputFiles.length,notes,customWorld,hasBranch);
   const guidance=Math.max(1,Math.min(10,Number(env.IMAGE_QUICK_GUIDANCE||5)));
   const steps=Math.max(8,Math.min(30,Number(env.IMAGE_QUICK_STEPS||12)));
-  const settings={width:768,height:960,guidance,steps};
+  const settings={width:768,height:960,guidance,steps:model.includes('flux-2-klein')?null:steps};
 
   let firstError;
   try{
@@ -347,7 +347,7 @@ export async function highQualityTransform(request,env,{trustedSocialJob=false}=
     if(!inputFiles.length)return json({error:"missing_upload",userMessage:"Add at least one photo first.",reason:"input"},400);
 
     stage="readiness-preflight";
-    try{await assertRenderReady(env,qualityMode)}
+    try{await assertRenderReady(env,env.RECAST_RENDER_SCOPE==='social'?'social':qualityMode)}
     catch(gate){
       await writeAttemptReceipt(env,clientAttemptId,{status:'blocked',blockedAt:new Date().toISOString(),reason:gate.reason,stage,qualityMode,retryAt:gate.retryAt||null});
       const quota=gate.reason==='quota';
@@ -373,7 +373,7 @@ export async function highQualityTransform(request,env,{trustedSocialJob=false}=
     if(!image||image.length<100)throw Object.assign(new Error("malformed"),{reason:"provider"});
     const previewMime=imageMime(image);
 
-    await recordRenderHealth(env,qualityMode,'success');
+    await recordRenderHealth(env,env.RECAST_RENDER_SCOPE==='social'?'social':qualityMode,'success');
     stage="storage";
     const requestId=`RC-${Date.now().toString(36).toUpperCase()}-${randomHex(3).toUpperCase()}`;
     const accessToken=randomHex(32);
@@ -383,7 +383,7 @@ export async function highQualityTransform(request,env,{trustedSocialJob=false}=
     return json({ok:true,requestId,accessToken,style:STYLES[styleId]?.name||"Custom World",image:`data:${previewMime};base64,${image}`,persisted:stored.persisted,storageError:stored.storageError,qualityMode,qualityLabel:qualityMode==="quick"?"Standard Preview":"High-Quality Preview",modelUsed:generated.modelUsed,usedSafeRetry:generated.usedSafeRetry,usedFastFallback:false,promptVersion:PROMPT_VERSION,clientAttemptId});
   }catch(error){
     const reason=error?.reason||"provider";
-    if(['capacity','quota','timeout','unavailable'].includes(reason))await recordRenderHealth(env,qualityMode,'failed',reason);
+    if(['capacity','quota','timeout','unavailable'].includes(reason))await recordRenderHealth(env,env.RECAST_RENDER_SCOPE==='social'?'social':qualityMode,'failed',reason);
     const internal=error?.cause||error;
     const diagnosticId=await writeGenerationDiagnostic(env,{stage,reason,providerCode:providerCode(internal),providerMessage:String(internal?.message||internal||"").slice(0,500),highQuality:String(env.IMAGE_MODEL_HIGH_QUALITY||DEFAULT_HIGH_QUALITY),quick:String(env.IMAGE_MODEL_QUICK||DEFAULT_QUICK)});
     await writeAttemptReceipt(env,clientAttemptId,{status:"failed",failedAt:new Date().toISOString(),durationMs:Date.now()-attemptStartedAt,stage,reason,providerCode:providerCode(internal),diagnosticId,qualityMode});
@@ -403,7 +403,7 @@ export async function modelStatus(env){
     ok:true,
     modes:{
       high:{label:"High-Quality Preview",model:highQuality,steps:Number(env.IMAGE_HIGH_QUALITY_STEPS||18),guidance:Number(env.IMAGE_HIGH_QUALITY_GUIDANCE||5)},
-      quick:{label:"Standard Preview",model:quick,steps:Number(env.IMAGE_QUICK_STEPS||12),guidance:Number(env.IMAGE_QUICK_GUIDANCE||5)}
+      quick:{label:"Standard Preview",model:quick,steps:quick.includes("flux-2-klein")?null:Number(env.IMAGE_QUICK_STEPS||12),guidance:Number(env.IMAGE_QUICK_GUIDANCE||5)}
     },
     defaultMode:"high",
     version:"v1.6",
