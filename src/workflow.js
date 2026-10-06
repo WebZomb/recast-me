@@ -268,6 +268,20 @@ async function shopifyGraphQL(env,query,variables={}){
   const data=await response.json().catch(()=>({}));if(!response.ok||data.errors?.length)throw new Error(data.errors?.map(e=>e.message).join("; ")||`Shopify HTTP ${response.status}`);return data.data;
 }
 
+async function addShopifyOrderTags(env,orderId,tags=[]){
+  const clean=[...new Set(tags.map(x=>String(x||"").trim()).filter(Boolean))];
+  if(!orderId||!clean.length)return null;
+  try{
+    const data=await shopifyGraphQL(env,`mutation RecastOrderTags($id:ID!,$tags:[String!]!){tagsAdd(id:$id,tags:$tags){node{id} userErrors{field message}}}`,{id:orderId,tags:clean});
+    const errors=data?.tagsAdd?.userErrors||[];
+    if(errors.length)throw new Error(errors.map(e=>e.message).join("; "));
+    return true;
+  }catch(error){
+    console.warn("Shopify order tag update failed",orderId,clean,error?.message||error);
+    return false;
+  }
+}
+
 function attrFromLine(line,key){return(line.customAttributes||[]).find(a=>a.key===key)?.value||""}
 function artworkFromLine(line){return attrFromLine(line,"Artwork ID")}
 function purchasedDesign(line,map){
@@ -415,6 +429,12 @@ export async function syncPrintfulJobs(env){
       else if(order.status==="failed")job.status="printful_failed";
       else if(order.status==="canceled")job.status="canceled";
       else if(job.sentToProductionAt)job.status="in_printful_production";
+      const visibleTags=["RECAST_PRINTFUL_DRAFT"];
+      if(job.sentToProductionAt)visibleTags.push("RECAST_PRINTFUL_SUBMITTED");
+      if(job.status==="in_printful_production")visibleTags.push("RECAST_IN_PRODUCTION");
+      if(job.status==="shipped")visibleTags.push("RECAST_SHIPPED");
+      if(job.status==="printful_failed")visibleTags.push("RECAST_PRINTFUL_REVIEW");
+      await addShopifyOrderTags(env,job.orderId,visibleTags);
       await saveJob(env,job);updated++;
       const meta=await requestMeta(env,job.requestId);if(meta){meta.fulfillment=job.status;meta.updatedAt=now();await putJson(env,requestKey(job.requestId,"request.json"),meta)}
     }catch(error){job.lastPrintfulSyncError=error.message;await saveJob(env,job)}
@@ -537,6 +557,7 @@ async function createPrintfulDraftForJob(env,job){
   const payload={external_id:`recast-${job.id}`,recipient:job.recipient,items:[{variant_id:map.printfulVariantId,quantity:Number(job.quantity||1)*Number(map.quantity||1),files:[{type:map.orderFileType||"default",url:sourceUrl,position:design.proof.position}]}]};
   const result=await printful(env,"/orders",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(payload)});
   job.printfulOrderId=result.id;job.printfulStatus=result.status||"draft";job.printSourceUrl=sourceUrl;job.status="printful_draft_ready";job.printfulCreatedAt=now();
+  await addShopifyOrderTags(env,job.orderId,["RECAST_PRINTFUL_DRAFT"]);
   return saveJob(env,job);
 }
 async function sendPrintfulProductionForJob(env,job){
@@ -548,6 +569,7 @@ async function sendPrintfulProductionForJob(env,job){
   if(!await env.ARTWORK.put(claim,JSON.stringify({startedAt:now()}),{onlyIf:new Headers({'If-None-Match':'*'})}))throw fault('production_started','Production submission already started; review Printful before retrying.');
   const result=await printful(env,`/orders/${encodeURIComponent(job.printfulOrderId)}/confirm`,{method:"POST"});
   job.status="submitted_to_printful";job.printfulStatus=result.status||"pending";job.sentToProductionAt=now();
+  await addShopifyOrderTags(env,job.orderId,["RECAST_PRINTFUL_SUBMITTED"]);
   return saveJob(env,job);
 }
 async function autoProcessPreapprovedJob(env,job){
