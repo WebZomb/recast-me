@@ -23,7 +23,7 @@ jobs:
       - name: Test and bundle without deploying
         run: |
           npm ci --ignore-scripts --no-audit --no-fund
-          npm test > /tmp/recast-test-results.txt 2>&1
+          npm test > /tmp/recast-test-results.txt 2>&1 || { cat /tmp/recast-test-results.txt; exit 1; }
           tail -15 /tmp/recast-test-results.txt
           npx --no-install wrangler deploy --dry-run --outdir /tmp/recast-audit-bundle
       - name: Install isolated browser audit dependencies
@@ -36,48 +36,7 @@ jobs:
       - name: Audit public production only, no purchases or generation
         run: |
           mkdir -p audit-results
-          cat > /tmp/recast-browser/audit.cjs <<'NODE'
-          const {chromium,webkit}=require('playwright');
-          const fs=require('node:fs');
-          const base='https://recast-me.sergz24.workers.dev';
-          const out=process.env.GITHUB_WORKSPACE+'/audit-results';
-          (async()=>{
-            const report={commit:process.env.GITHUB_SHA,at:new Date().toISOString(),readOnly:true,health:[],browsers:[]};
-            for(const path of ['/api/model-status','/api/render-readiness','/api/public-config','/api/printful/health']){
-              try{const r=await fetch(base+path,{signal:AbortSignal.timeout(25000)});const type=r.headers.get('content-type')||'';const body=type.includes('json')?await r.json():{contentType:type};report.health.push({path,status:r.status,body});}catch(e){report.health.push({path,error:e.message});}
-            }
-            for(const [engine,width,height] of [[webkit,393,852],[chromium,320,740],[chromium,768,1024],[chromium,1440,1000]]){
-              const browser=await engine.launch();const name=engine.name()+'-'+width;
-              const context=await browser.newContext({viewport:{width,height},deviceScaleFactor:1,reducedMotion:'reduce'});
-              const blocked=[];const errors=[];const failed=[];
-              await context.route('**/*',async route=>{const r=route.request();if(!['GET','HEAD','OPTIONS'].includes(r.method())){blocked.push({method:r.method(),path:new URL(r.url()).pathname});return route.abort('blockedbyclient');}return route.continue();});
-              const page=await context.newPage();page.on('pageerror',e=>errors.push(e.message));page.on('response',r=>{if(r.status()>=400)failed.push({status:r.status(),path:new URL(r.url()).pathname});});
-              try{
-                const response=await page.goto(base,{waitUntil:'networkidle',timeout:45000});
-                await page.screenshot({path:out+'/'+name+'-top.png'});
-                const metrics=await page.evaluate(()=>{
-                  const rect=s=>{const n=document.querySelector(s);if(!n)return null;const b=n.getBoundingClientRect(),c=getComputedStyle(n);return {x:b.x,y:b.y,width:b.width,height:b.height,display:c.display,background:c.backgroundImage};};
-                  return {title:document.title,width:innerWidth,scrollWidth:document.documentElement.scrollWidth,hero:rect('.hero'),flow:rect('.hero-live-flow'),product:rect('.hero-live-product'),header:rect('.site-header'),styles:[...document.querySelectorAll('link[rel=stylesheet]')].map(x=>x.getAttribute('href')),products:document.querySelectorAll('#product-grid .product').length,worlds:document.querySelectorAll('#style-grid .style-card').length,brokenImages:[...document.images].filter(i=>i.offsetWidth&&!i.complete||i.offsetWidth&&i.complete&&i.naturalWidth===0).map(i=>({src:i.getAttribute('src'),alt:i.alt})),badAnchors:[...document.querySelectorAll('a[href^="#"]')].map(a=>a.getAttribute('href')).filter(h=>h.length>1&&!document.getElementById(h.slice(1)))};
-                });
-                await page.locator('.hero').screenshot({path:out+'/'+name+'-hero.png'});
-                await page.locator('.hero-secondary-cta').click();await page.waitForTimeout(300);
-                const shopReached=await page.evaluate(()=>{const b=document.querySelector('#shop').getBoundingClientRect();return b.top<innerHeight&&b.bottom>0});
-                await page.screenshot({path:out+'/'+name+'-shop.png'});
-                await page.locator('.site-header .nav-cta').click();await page.waitForTimeout(300);
-                const firstStep=await page.locator('[data-create-step="0"]').isVisible();
-                await page.locator('[data-create-step="0"] [data-go-step="1"]').click();
-                const photoStep=await page.locator('[data-create-step="1"]').isVisible();
-                await page.locator('[data-create-step="1"] [data-go-step="2"]').click();
-                const emptyPhotoBlocked=await page.locator('[data-create-step="1"]').isVisible();
-                await page.screenshot({path:out+'/'+name+'-create.png'});
-                report.browsers.push({name,http:response.status(),metrics,shopReached,firstStep,photoStep,emptyPhotoBlocked,errors,failed,blocked});
-              }catch(e){report.browsers.push({name,error:e.message,errors,failed,blocked});}
-              await browser.close();
-            }
-            fs.writeFileSync(out+'/report.json',JSON.stringify(report,null,2));console.log('RECAST_AUDIT_REPORT\n'+JSON.stringify(report,null,2));
-          })().catch(e=>{console.error(e);process.exitCode=1});
-          NODE
-          node /tmp/recast-browser/audit.cjs
+          NODE_PATH=/tmp/recast-browser/node_modules node scripts/launch-audit.cjs
       - name: Retain public screenshots and report
         if: always()
         uses: actions/upload-artifact@v4
