@@ -250,3 +250,25 @@ Implemented:
 No AI render, payment, order change, or Printful action was performed by this homepage work.
 
 - RM-038 validation fixture updated so the checkout UI test models classList.remove used when switching from the compact homepage catalog to the full active-Recast catalog.
+
+
+## RM-039 — live mobile polish + staged catalog activation
+Owner reviewed the live mobile homepage/creator/preview and requested four UX corrections plus activation of more store items.
+
+Implemented:
+- Hero product payoff is no longer another boxed artwork tile. The third step now uses a real mug product asset presented as a floating product with a cyan/purple/pink glow, feathered edges, drop shadow, and a small “YOUR PRODUCT” pill.
+- Replaced the visually heavy How It Works cards with one unified three-step process ribbon: Upload → Recast → Preview & buy. Desktop uses a horizontal rail; mobile becomes a compact vertical flow.
+- Creator now starts immediately with the main “CREATE WITH AI · Three quick steps” path. “Continue a saved Recast” and “Use my photo as-is · no AI” were moved below the AI form and separated by a clear OR divider.
+- Preview controls were simplified. Main screen now shows only watermark reassurance, Choose a product, and Pick another version. Save/share, cross-browser restore, and order/download links live inside a collapsed More options panel.
+- Recent-version explanatory copy shortened to one line.
+- site-v10.css bumped to v223 and app.js to v226.
+- Regression coverage added for the hero product stage, process ribbon, alternate-path ordering, and collapsed preview utilities.
+
+Shopify catalog:
+Activated 9 additional mapped products successfully:
+Blanket, Canvas, Coaster 4-Pack, Framed Poster, Magnet 3-Pack, Poster, Tumbler, HD Digital Recast, Recast Pack.
+Mug was already active, bringing the live Recast catalog to 10 active products.
+T-Shirt and Hoodie remain DRAFT intentionally until front-print placement/apparel mockups receive a dedicated live visual QA pass.
+All activated physical SKUs already have explicit Printful product/variant mappings in src/entry.js. The customer does not manually send artwork to Printful; live product previews are generated through the existing Printful mockup API from the selected private Artwork ID and placement settings.
+
+No new paid order, AI render, or Printful production submission was performed during this polish/activation work.
