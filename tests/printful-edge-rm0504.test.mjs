@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {Miniflare,Response as MFResponse} from 'miniflare';
 // Real workerd Request/fetch; all outbound requests terminate in this fixture.
+// The locked SDK uses workers[].config.manifest and dev.outboundService.
 // Never forward unmatched requests. cf:false disables external CF metadata fetch.
 test('workerd reproduces unsupported redirect:error, then performs authenticated manual GET and rejects redirects',async()=>{
   const reference=readFileSync(new URL('../src/printful-reference.js',import.meta.url),'utf8');
@@ -32,7 +33,17 @@ export default {async fetch(request){
     assert.ok(response,'Unexpected outbound request is blocked, never forwarded');
     return response;
   };
-  const mf=new Miniflare({cf:false,workers:[{name:'printful-diagnostic',modules:true,script,compatibilityDate:'2026-09-23',outboundService}]});
+  const mf=new Miniflare({
+    cf:false,
+    workers:[{
+      config:{
+        name:'printful-diagnostic',
+        compatibilityDate:'2026-09-23',
+        manifest:{mainModule:'index.js',modules:{'index.js':{type:'esm',contents:script}}}
+      },
+      dev:{outboundService:{type:'fetcher',handler:outboundService}}
+    }]
+  });
   try{
     const baseline=await(await mf.dispatchFetch('http://localhost/baseline')).json();
     assert.equal(baseline.rejected,true);assert.match(baseline.message,/redirect/i);
