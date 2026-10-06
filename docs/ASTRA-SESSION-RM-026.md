@@ -278,3 +278,8 @@ No new paid order, AI render, or Printful production submission was performed du
 
 ## RM-040 — product-specific Best Setup engine (validation checkpoint)
 Implemented recommended layouts per product, generalized clean/mockup composition, full-bleed blanket/wall-art defaults, two-sided mug/tumbler defaults, advanced controls behind Edit design, and a larger cutout Recast-dog hero mug. Validation run follows; details will be finalized after tests.
+
+
+### RM-040 follow-up
+- Added light/dark/blended filler choice for preserve-whole-image edits.
+- Bumped live asset keys to site-v10.css?v=225 and checkout.js?v=234 after the Best Setup UI/compositor changes.
