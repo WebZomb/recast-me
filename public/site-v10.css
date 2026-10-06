@@ -886,3 +886,45 @@ body{padding-bottom:env(safe-area-inset-bottom)}
   .preview-protection{align-items:flex-start;flex-direction:column}
   .preview-protection span{text-align:left}
 }
+
+
+/* RM-040: product-specific best setup UX */
+.hero-product-stage{min-height:250px;padding:0!important}
+.hero-product-stage>img{
+  width:158%!important;max-width:315px!important;aspect-ratio:auto!important;
+  -webkit-mask-image:none!important;mask-image:none!important;
+  filter:drop-shadow(0 32px 28px rgba(0,0,0,.62)) drop-shadow(0 0 30px rgba(65,218,255,.28)) drop-shadow(0 0 48px rgba(158,76,255,.18))!important;
+}
+.product-wow-glow{width:150%!important;opacity:1!important;filter:blur(30px)!important}
+.product-stage-label{bottom:-5px!important}
+.recommended-design-row{
+  margin-top:12px;padding:10px 12px;border:1px solid rgba(70,208,237,.28);border-radius:13px;
+  background:linear-gradient(90deg,rgba(27,28,50,.92),rgba(12,20,33,.92));
+  display:grid;gap:2px
+}
+.recommended-design-row span{font-size:9px;font-weight:950;letter-spacing:.14em;color:#79e5f4;text-transform:uppercase}
+.recommended-design-row strong{font-size:12px;color:#ecebf8}
+.product-design-controls{margin-top:9px!important;background:#0a0b14!important;border-color:#303144!important}
+.product-design-controls summary{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;padding:1px 0;
+  list-style:none;font-size:12px!important
+}
+.product-design-controls summary::-webkit-details-marker{display:none}
+.product-design-controls summary span{font-weight:900;color:#e3e2ec}
+.product-design-controls summary small{font-size:10px;color:#89899c;font-weight:700;text-align:right}
+.product-design-controls summary::after{content:"+";color:#7ce3f4;font-size:18px}
+.product-design-controls[open] summary::after{content:"–"}
+.design-edit-body{padding-top:5px}
+.product-preview-action{
+  min-height:50px!important;margin-top:10px!important;
+  background:linear-gradient(90deg,#9543ff,#27c6ef)!important;color:#fff!important;
+  border:0!important;font-size:14px!important
+}
+@media(max-width:760px){
+  .hero-product-stage{min-height:190px}
+  .hero-product-stage>img{width:182%!important;max-width:250px!important}
+  .product-wow-glow{width:170%!important}
+  .recommended-design-row{margin-top:10px}
+  .product-design-controls summary{align-items:flex-start}
+  .product-design-controls summary small{max-width:58%}
+}
