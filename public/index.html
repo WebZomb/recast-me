@@ -9,7 +9,7 @@
   <title>Recast Me — Recast your world.</title>
   <link rel="stylesheet" href="/styles.css?v=130" />
   <link rel="stylesheet" href="/merch-v07.css?v=133" />
-  <link rel="stylesheet" href="/site-v10.css?v=228" />
+  <link rel="stylesheet" href="/site-v10.css?v=229" />
 </head>
 <body>
   <a class="skip-link" href="#start">Skip to create your Recast</a>
@@ -22,7 +22,7 @@
       <a href="#how">How it works</a>
       <a href="#styles">Worlds</a>
       <a href="#shop">Products</a>
-      <a href="#start" class="nav-cta">Start a Recast</a>
+      <a href="#start" class="nav-cta">Start a Recast <span aria-hidden="true">→</span></a>
     </nav>
   </header>
 
@@ -38,34 +38,43 @@
         <h1>Recast<br><span>your world.</span></h1>
         <p class="hero-lede">Turn your pet, person, or favorite photo into a whole new world — then put it on something worth keeping.</p>
         <div class="hero-actions">
-          <a class="button primary" href="#start">Start a Recast</a>
-          <a class="button ghost" href="#shop">See products</a>
+          <a class="button primary hero-primary-cta" href="#start">Start a Recast <span aria-hidden="true">→</span></a>
+          <a class="button ghost hero-secondary-cta" href="#shop">See products</a>
         </div>
         <div class="trust-row">
-          <span>Private uploads</span>
-          <span>Preview before you buy</span>
-          <span>Made to order</span>
+          <span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10V7a5 5 0 0 1 10 0v3"/><rect x="5" y="10" width="14" height="11" rx="2"/></svg>Private uploads</span>
+          <span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="2.7"/></svg>Preview before you buy</span>
+          <span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 8 4.5v9L12 21l-8-4.5v-9L12 3Z"/><path d="m4 7.5 8 4.5 8-4.5M12 12v9"/></svg>Made to order</span>
         </div>
       </div>
 
-      <div class="hero-demo" aria-label="Your photo becomes a Recast and then a product">
-        <div class="demo-card">
-          <img src="/assets/jack-russell-source-v18.webp" alt="Your starting photo: a Jack Russell sitting in a garden" fetchpriority="high" />
-          <div class="demo-meta"><span>01</span><b>YOUR PHOTO</b></div>
+      <div class="hero-demo hero-showcase" aria-label="Your photo becomes a Recast and then a product">
+        <div class="hero-showcase-steps">
+          <div class="demo-card hero-mini-card">
+            <img src="/assets/jack-russell-source-v18.webp" alt="Your starting photo: a Jack Russell sitting in a garden" fetchpriority="high" />
+            <div class="demo-meta"><span>01</span><b>YOUR PHOTO</b></div>
+          </div>
+          <div class="hero-flow-arrow" aria-hidden="true">→</div>
+          <div class="demo-card demo-card-after hero-mini-card">
+            <img src="/assets/world-game-v18.webp" alt="Your Recast: the same Jack Russell in a cinematic new world" fetchpriority="high" />
+            <div class="demo-meta"><span>02</span><b>YOUR RECAST</b></div>
+          </div>
+          <div class="hero-flow-arrow hero-flow-arrow-product" aria-hidden="true">→</div>
         </div>
-        <div class="hero-flow-arrow" aria-hidden="true">→</div>
-        <div class="demo-card demo-card-after">
-          <img src="/assets/world-game-v18.webp" alt="Your Recast: the same Jack Russell in a cinematic new world" fetchpriority="high" />
-          <div class="demo-meta"><span>02</span><b>YOUR RECAST</b></div>
-        </div>
-        <div class="hero-flow-arrow" aria-hidden="true">→</div>
+
         <div class="hero-product-stage hero-product-wow" aria-label="The same Recast dog artwork printed on a premium mug">
           <span class="product-wow-glow" aria-hidden="true"></span>
+          <span class="hero-product-pedestal" aria-hidden="true"></span>
           <img class="hero-product-wow-image" src="https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-me-hero-wow-mug.png?v=1791260332" alt="Premium Recast mug featuring the same Jack Russell in a neon future city" fetchpriority="high" />
           <div class="product-stage-label"><span>03</span><b>YOUR PRODUCT</b></div>
         </div>
-        <p class="hero-demo-note">Upload → Recast → preview it on a real product before checkout.</p>
-      </div>
+
+        <div class="hero-tagline" aria-label="Same photos. Bigger possibilities.">
+          <span>SAME PHOTOS.</span>
+          <strong>BIGGER POSSIBILITIES.</strong>
+          <i aria-hidden="true"></i>
+        </div>
+      </div>/div>
     </section>
 
     <section class="section worlds" id="styles">
