@@ -138,8 +138,9 @@ test('approved mug layout produces a clean composed production file without prev
  const d=await finishApprovedDesign(env,job);assert.equal(d.finishMethod,'mug-layout-v3-clean');
  const saved=await env.ARTWORK.get(d.finalKey);assert.deepEqual(Buffer.from(await saved.arrayBuffer()),COMPOSED);assert.notDeepEqual(Buffer.from(await saved.arrayBuffer()),MARKED);
  assert.ok(operations.filter(([name])=>name==='draw').length>=2);
- assert.ok(operations.some(([name,args])=>name==='transform'&&args.blur===250));
- assert.ok(operations.some(([name,args])=>name==='draw'&&args.opacity===0.16));
+ assert.ok(operations.some(([name,args])=>name==='transform'&&args.blur===280));
+ assert.ok(operations.some(([name,args])=>name==='draw'&&args.opacity===0.12));
+ assert.ok(operations.some(([name,args])=>name==='draw'&&args.top===0));
  assert.ok(!operations.some(([name,args])=>name==='transform'&&args.blur===22));
 });
 
