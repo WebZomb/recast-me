@@ -61,7 +61,9 @@ t=t.map(line=>{
 });
 writeFileSync('tests/checkout-ui.test.mjs',t.join('\n'));
 
-rep('tests/owner-settings.test.mjs','Reset to recommended','Reset to best setup');\n\nconst domainTests=[
+rep('tests/owner-settings.test.mjs','Reset to recommended','Reset to best setup');
+
+const domainTests=[
 "import test from 'node:test';",
 "import assert from 'node:assert/strict';",
 "import {readFileSync} from 'node:fs';",
