@@ -58,3 +58,5 @@ Latest branding: [Approved RM orbit logo deployment and social assets](ASTRA-BRA
 Latest policy: [RM-050 — HQ-first daily previews, three purchase credits, simplified products and private owner settings](ASTRA-SESSION-RM-050.md).
 
 Latest domain/UI follow-up: [RM-050.1 — RecastMeAi.com migration and owner-requested UI fixes](ASTRA-SESSION-RM-0501.md).
+
+Latest mug/hero follow-up: [RM-050.2 — mug band composition, landing reference match and Printful connection evidence](ASTRA-SESSION-RM-0502.md).
