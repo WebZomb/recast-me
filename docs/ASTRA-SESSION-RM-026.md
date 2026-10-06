@@ -383,3 +383,19 @@ Implemented:
 - Added regression coverage for the repaired markup, correct Recast image, and restored Mug example.
 
 - RM-046 validation follow-up: corrected a regression assertion so it only rejects the literal visible “</div>/div>” artifact instead of matching every normal closing div tag. No application logic changed in this follow-up.
+
+
+## RM-047 — isolated mug/pedestal hero, full catalog restored, Shopify-visible Printful states
+Owner requested that the mug and its glowing pedestal be treated as one cutout asset to avoid the hero seam/background mismatch, and explicitly said every store item must remain on the site.
+
+Implemented:
+- Built a transparent cutout from the approved hero composition containing the premium mug + glowing pedestal + “03 YOUR PRODUCT” base label as one asset, then uploaded it to Shopify CDN as recast-mug-base-cutout-v46.png.
+- Replaced the baked full-width lower hero screenshot with live HTML cards for 01 YOUR PHOTO and 02 YOUR RECAST plus the transparent mug/pedestal cutout. This keeps the entire hero on the same continuous site background and removes the hard image seam while preserving the approved mug/pedestal art.
+- Added responsive positioning so the 01/02 cards remain visible to the left and the product stays dominant on iPhone.
+- Restored the complete store catalog. Hoodie and T-Shirt were changed from Shopify DRAFT to ACTIVE; all 12 Recast Me products are now ACTIVE.
+- Homepage Shop section now includes all 12 products in a compact horizontal swipe rail instead of showing only Mug/Blanket/Canvas/Poster.
+- Active-Recast checkout catalog no longer hides secondary products behind “See more products”; all active store products are visible.
+- Added Shopify-visible Printful status tags from the Worker: RECAST_PRINTFUL_DRAFT, RECAST_PRINTFUL_SUBMITTED, RECAST_IN_PRODUCTION, RECAST_SHIPPED, or RECAST_PRINTFUL_REVIEW. These are best-effort status mirrors and do not replace the private fulfillment job state.
+- Current order #1001 is still shown by Shopify as PAID / UNFULFILLED with release tags RECAST_SEND_PRODUCTION and RECAST_RELEASE_TRIGGER. Shopify has no fulfillment record yet; the direct Recast→Printful path does not require the owner to create a Shopify shipping label or manually mark the order fulfilled.
+- The Recast Worker’s production path is: paid Shopify order → verify exact purchased Artwork ID/layout/proof → prepare clean private print file → create Printful order using PRINTFUL_API_TOKEN / store 18798877 → confirm Printful production → sync Printful status/tracking back into Recast. Shopify fulfillment remains unfulfilled until a fulfillment/tracking update is created.
+- Asset cache keys: site-v10.css?v=232, merch-v07.css?v=134, app.js?v=229, checkout.js?v=239.
