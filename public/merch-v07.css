@@ -128,3 +128,29 @@ html.recast-review-open,html.recast-review-open body{overflow:hidden}
  .final-review-summary{grid-template-columns:1fr}
  .final-review-actions{grid-template-columns:1fr}
 }
+
+
+/* RM-038: compact homepage product sampler; full catalog still loads after a Recast */
+.merch-home-compact{display:block!important}
+.merch-home-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.merch-home-grid .product{min-width:0}
+.merch-home-grid .product-art{height:auto!important;aspect-ratio:1/1}
+.merch-home-grid .product-art img{object-fit:contain!important;transform:none!important}
+.merch-home-grid .product-body{padding:13px}
+.merch-home-grid .product strong{font-size:18px;margin:8px 0 4px}
+.merch-home-grid .product-pitch{min-height:0;font-size:11px;line-height:1.4;margin-bottom:9px}
+.merch-home-grid .product .price{font-size:16px}
+.merch-home-grid .shop-card-cta{min-height:42px;margin-top:10px;font-size:12px}
+.merch-home-more{margin-top:16px;padding:15px 17px;border:1px solid #342f48;border-radius:16px;background:#0d0e17;display:grid;grid-template-columns:auto 1fr auto;gap:14px;align-items:center}
+.merch-home-more>span{font-size:9px;font-weight:950;letter-spacing:.16em;color:#9e96ff}
+.merch-home-more p{margin:0;color:#9695a8;font-size:12px;line-height:1.45}
+.merch-home-more .button{min-height:42px;padding:0 14px;white-space:nowrap}
+
+@media(max-width:760px){
+  .merch-home-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+  .merch-home-grid .product-body{padding:11px}
+  .merch-home-grid .product strong{font-size:16px}
+  .merch-home-grid .product-pitch{font-size:10px}
+  .merch-home-more{grid-template-columns:1fr;gap:8px}
+  .merch-home-more .button{width:100%}
+}
