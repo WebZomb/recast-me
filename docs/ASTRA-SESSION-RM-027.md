@@ -78,3 +78,25 @@ Date: 2026-10-06
 - Visual layer can be rolled back independently by removing the `launch-v49.css` link and reverting the index changes; older CSS remains intact.
 - Fulfillment-sync changes are isolated in `src/workflow.js` and are idempotent using stored `shopifyFulfillmentId`; Astra should independently review the exact mutation and scopes.
 - The audit workflow is read-only by design and can be retained as a regression gate after launch.
+
+
+## RM-049.1 follow-up — final web polish and production revalidation
+- Production build marker was advanced to `RM-049.1` so the fulfillment-aware Worker and the polished website can be distinguished from the earlier visual-only RM-049 deployment.
+- Added a customer-facing `/support.html` page covering order tracking, made-to-order changes/cancellations, damaged/incorrect items, shipping, and safe support contact. No personal email/address was published.
+- Updated the privacy page to link to Orders & Support and removed the stale internal launch-blocker sentence.
+- Added Orders & Support to the homepage footer and private order page.
+- Replaced raw/internal order state names on the customer order page with customer-friendly status text, including review/hold states.
+- Updated mobile order/support spacing and touch targets.
+- Live Shopify catalog check on 2026-10-06 found exactly 12 ACTIVE Recast products; live Shopify variant prices matched the values returned by the Recast catalog flow. No product was archived/drafted during this pass.
+- Live Shopify #1001 recheck after RM-049.1: still PAID / UNFULFILLED, no Shopify fulfillment record, and no RECAST_PRINTFUL_* status tags. This remains evidence that the legacy order has not been proven submitted to Printful from the systems visible here. No billable production action was forced.
+- Final security validation run `37505194708`: 168 tests passed, 0 failed; Wrangler dry-run bundled successfully.
+- Final read-only production audit run `37505194755`: SUCCESS with `failures: []`; confirmed RM-049.1 live on production, support/privacy/order pages HTTP 200, model and render readiness HTTP 200, Printful health HTTP 200/reachable, all 12 product cards and six homepage worlds present, no decoded broken images, no duplicate IDs, no broken anchors, no horizontal overflow, and the empty-photo wizard gate working at WebKit 393px and Chromium 320/768/1440.
+- Footer-only CSS follow-up `16072fb0` also received a successful production launch audit (`37505319694`).
+- Additional commits after the initial RM-027 list: `54b97a15` validation/handoff update, `8cd4652b` RM-049.1 marker, `a0bbc13c` audit marker update, `381067c0` audit coverage expansion, `7e250ea8` support page, `efba1759` privacy/support link, `1016d7c4` homepage support footer link, `d95cb17a` private order support flow, `0c7baf8f` customer-friendly order statuses, `dbe1ebf9` mobile order/support styles, `56596768` final RM-049.1 validation audit, and `16072fb0` footer alignment.
+
+### Corrected launch-gate status
+- The prior note saying the privacy page still contained an unverified support/shipping launch blocker is superseded: a public Orders & Support page now exists and is linked from Privacy, the homepage, and the private order page.
+- Turnstile is still not configured on production (`turnstileSiteKey: null`).
+- The site-wide AI call limit / verified monetary reserve is still not configured. Do not invent a per-call cost or silently activate spending controls.
+- No live AI generation, new paid checkout, refund, or physical Printful production order was created during RM-049/RM-049.1 validation.
+- Shopify fulfillment mutation behavior is covered by mocked regression tests, but the connected app's live fulfillment write scope still needs confirmation on an actual shipment before that portion is considered provider-verified.
