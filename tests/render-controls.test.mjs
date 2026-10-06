@@ -1,5 +1,5 @@
 import test from 'node:test';import assert from 'node:assert/strict';
-import {guardedEnvironment,reserveAiCall,renderControlStatus,submissionFingerprint} from '../src/render-controls.js';
+import {budgetStatus,guardedEnvironment,reserveAiCall,renderControlStatus,reserveBudget,submissionFingerprint} from '../src/render-controls.js';
 import {Bucket,submission} from './security-helpers.mjs';
 
 test('no owner-selected call limit is invented',async()=>{
@@ -45,3 +45,14 @@ test('multipart boundaries and refreshed bot challenges do not defeat deduplicat
  b.set('notes','A different deliberate request');assert.notEqual(await submissionFingerprint(a,'/api/transform-v2'),await submissionFingerprint(b,'/api/transform-v2'));
 });
 test('legacy requests without client ID are explicitly not claimed',async()=>{assert.equal(await submissionFingerprint(await submission({id:null}).formData(),'/api/transform-v2'),null)});
+
+test('configured five-dollar AI reservation budget uses a conservative seven-cent call reserve',async()=>{
+ const env={ARTWORK:new Bucket(),AI_DAILY_BUDGET_CENTS:'500',AI_CALL_RESERVE_CENTS:'7'};
+ assert.deepEqual(budgetStatus(env),{configured:true,valid:true,dailyBudgetCents:500,perCallReserveCents:7,scope:'AI.run reservations only; not a provider invoice limit',timezone:'UTC'});
+ for(let i=0;i<71;i++)await reserveBudget(env,Date.parse('2026-10-06T12:00:00Z'));
+ await assert.rejects(reserveBudget(env,Date.parse('2026-10-06T12:00:00Z')),e=>e.code==='daily_render_budget');
+ const ledger=await env.ARTWORK.get('security/ai-budget/2026-10-06.json');assert.equal((await ledger.json()).reservedCents,497);
+});
+test('invalid daily budget configuration fails closed',async()=>{
+ await assert.rejects(reserveBudget({ARTWORK:new Bucket(),AI_DAILY_BUDGET_CENTS:'500',AI_CALL_RESERVE_CENTS:'0'}),e=>e.code==='budget_config');
+});
