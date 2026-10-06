@@ -305,3 +305,13 @@ Implemented recommended layouts per product, generalized clean/mockup compositio
 - Final validation runs 37409764254 and 37410098154 passed the full mocked test suite and Wrangler dry-run bundle. Final simplified chooser run 37409906143 also passed.
 - No live Printful production order or paid checkout was created during RM-040.
 - Existing paid order #1001 was checked after this work and remains Shopify PAID / UNFULFILLED with no Shopify fulfillment record. It is a legacy pre-v4 order and was not auto-sent by the new future-order pipeline.
+
+
+### RM-041 — legacy order #1001 + recommended-layout UI safeguard
+- Live Shopify check of #1001 confirms it is PAID, UNFULFILLED, non-test, not cancelled, with no fulfillment record.
+- Its line item is the old v3 mug purchase: Artwork ID RC-MUUCF7QH-E2E541, two-sided, center, 110%, standard spacing, with proof/mockup/preview token but NO _Recast Preapproval attribute. Therefore it remains a legacy/manual fulfillment order and is intentionally excluded from the new zero-touch future-order pipeline.
+- Do not auto-submit #1001 to Printful without owner confirmation; it is a real paid order and production is billable.
+- Future orders created by the current Final Review flow include _Recast Preapproval and do not require the post-purchase approval hunt that #1001 required.
+- Live blanket screenshots also exposed a UI inconsistency: the “Recommended setup applied” badge could coexist with a browser-restored/stale Edit design selection, and a disabled second CTA (“Preview product before buying”) duplicated the main preview button.
+- checkout.js now forcibly reapplies each product preset when the active catalog renders, hides the physical buy/final-review button until a fresh real mockup is complete, and shows only “Preview recommended design” before that point. After successful mockup generation, the single next CTA becomes “Continue to final review.”
+- checkout.js cache bumped to v236.
