@@ -976,3 +976,35 @@ body{padding-bottom:env(safe-area-inset-bottom)}
   .hero-mug-body{border-width:7px;border-top-width:11px;border-bottom-width:10px}
   .hero-mug-handle{border-width:16px;border-left-width:12px}
 }
+
+
+/* RM-043: premium hero product art — final product is the visual payoff */
+.hero-demo{grid-template-columns:.88fr 22px .88fr 18px 1.34fr!important;max-width:860px!important}
+.hero-product-wow{min-height:330px!important;overflow:visible!important}
+.hero-product-wow-image{
+  position:relative;z-index:2;width:170%!important;max-width:390px!important;height:auto!important;
+  object-fit:contain!important;transform:translateX(-9%) translateY(-1%);
+  filter:drop-shadow(0 34px 28px rgba(0,0,0,.66)) drop-shadow(0 0 34px rgba(47,215,255,.34)) drop-shadow(0 0 64px rgba(205,66,255,.26))!important;
+}
+.hero-product-wow .product-wow-glow{
+  width:185%!important;opacity:1!important;filter:blur(36px)!important;
+  background:radial-gradient(circle,rgba(42,220,255,.44) 0 18%,rgba(139,74,255,.35) 31%,rgba(255,73,218,.22) 48%,transparent 72%)!important;
+}
+.hero-product-wow .product-stage-label{
+  bottom:-2px!important;padding:8px 13px!important;
+  border-color:rgba(104,228,255,.58)!important;
+  box-shadow:0 10px 34px rgba(0,0,0,.36),0 0 34px rgba(81,220,255,.18)!important
+}
+.product-node-art{background:radial-gradient(circle,#161a34,#090a12 72%)!important}
+.product-node-art img{object-fit:contain!important;transform:scale(1.16);filter:drop-shadow(0 0 14px rgba(75,214,255,.20))}
+
+@media(max-width:760px){
+  .hero-demo{grid-template-columns:.78fr 12px .78fr 10px 1.45fr!important;max-width:none!important}
+  .hero-product-wow{min-height:250px!important}
+  .hero-product-wow-image{
+    width:205%!important;max-width:320px!important;
+    transform:translateX(-17%) translateY(-1%);
+  }
+  .hero-product-wow .product-wow-glow{width:210%!important;filter:blur(30px)!important}
+  .hero-product-wow .product-stage-label{font-size:7px!important;padding:6px 8px!important}
+}
