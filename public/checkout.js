@@ -91,6 +91,16 @@ function designControlsMarkup(title,preset){
     </div>
   </details>`;
 }
+function applyPresetToControls(card){
+  const preset=presetFor(card);
+  const layout=card?.querySelector?.("[data-design-layout]"),x=card?.querySelector?.("[data-design-x]"),scale=card?.querySelector?.("[data-design-scale]"),spacing=card?.querySelector?.("[data-design-spacing]"),fill=card?.querySelector?.("[data-design-fill]");
+  if(layout)layout.value=preset.layout;
+  if(x)x.value=preset.x;
+  if(scale){scale.value=String(preset.scale);const label=card.querySelector?.("[data-design-scale-label]");if(label)label.textContent=preset.scale+"%";}
+  if(spacing)spacing.value=preset.spacing;
+  if(fill)fill.value=preset.fill;
+  syncDesignControls(card);
+}
 function syncDesignControls(card){
   const layout=card?.querySelector?.("[data-design-layout]")?.value;
   const spacing=card?.querySelector?.("[data-design-spacing-wrap]");
@@ -107,7 +117,7 @@ function syncDesignControls(card){
 function requireFreshPreview(card){
   const buy=card?.querySelector?.(".recast-buy");
   if(!buy||card?.dataset?.digital==="true"||card?.dataset?.active!=="true")return;
-  buy.disabled=true;buy.textContent="Preview product before buying";
+  buy.disabled=true;buy.hidden=true;buy.textContent="Continue to final review";
 }
 function resetProductPreview(card,{invalidate=true}={}){
   if(!card)return;
@@ -270,7 +280,7 @@ async function generateRealMockup({req,sku,card,button}){
         state.busy=false;
         button.disabled=true;button.textContent="Real product preview ready ✓";
         const buy=card.querySelector(".recast-buy");
-        if(buy&&card.dataset.active==="true"){buy.disabled=false;buy.textContent="Continue to final review";}
+        if(buy&&card.dataset.active==="true"){buy.hidden=false;buy.disabled=false;buy.textContent="Continue to final review";}
         return;
       }
       if(data.status==="failed"||(!response.ok&&response.status!==202))throw new Error(data.error||"Printful could not finish this mockup.");
@@ -347,8 +357,8 @@ async function loadCheckout(){
         <span class="price">${priceText}</span>
         ${select}
         ${realPreview}
-        <button class="recast-buy" data-product="${index}" data-buy-label="${meta.cta}" ${active&&digital?"":"disabled"}>
-          ${active?(digital?meta.cta:"Preview product before buying"):"Not available to buy yet"}
+        <button class="recast-buy" data-product="${index}" data-buy-label="${meta.cta}" ${active&&digital?"":"disabled"} ${active&&!digital?"hidden":""}>
+          ${active?(digital?meta.cta:"Continue to final review"):"Not available to buy yet"}
         </button>
         ${active?"":'<p class="product-mockup-note">This product is still a draft. Purchasing opens after store setup and testing.</p>'}
         <p class="checkout-error" role="alert" hidden></p>
@@ -383,7 +393,7 @@ async function loadCheckout(){
     if(control.matches?.("[data-design-layout]"))syncDesignControls(card);
     control.addEventListener("change",()=>{syncDesignControls(card);resetProductPreview(card);});
   });
-  document.querySelectorAll(".product-design-controls").forEach(details=>syncDesignControls(details.closest("[data-product-index]")));
+  document.querySelectorAll(".product-design-controls").forEach(details=>applyPresetToControls(details.closest("[data-product-index]")));
 
   document.querySelectorAll(".recast-buy").forEach(button=>{
     button.addEventListener("click",async()=>{
