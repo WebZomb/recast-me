@@ -100,7 +100,7 @@ function renderStaticMerch(){
     catalog.classList.add('merch-catalog-shell','merch-home-compact');
     catalog.innerHTML=`
       <div class="merch-home-grid">
-        ${homeProducts.map(x=>merchCard(x,{featured:x.name==='Mug'})).join('')}
+        ${homeProducts.map(x=>merchCard(x)).join('')}
       </div>
       <div class="merch-home-more">
         <span>MORE AFTER YOU CREATE</span>
