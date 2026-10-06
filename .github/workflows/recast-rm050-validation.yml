@@ -23,16 +23,16 @@ jobs:
           from pathlib import Path
           import base64,gzip,hashlib,subprocess
           encoded=''.join(Path(f'scripts/rm050-data-{i:02d}.b64').read_text().strip() for i in range(1,4))
-          # Normalize two known transport transcription errors; the complete plaintext SHA is authoritative.
           encoded=encoded.replace('wquXTZZ/WV','wquXTZ/WV').replace('dmu1rm5Vx1','dmu1rm7Vx1')
           raw=gzip.decompress(base64.b64decode(encoded,validate=True))
           digest=hashlib.sha256(raw).hexdigest()
           print('Verified source delta SHA256:',digest)
-          assert digest=='ea0ced13bf6b4648e5a8daaf90c4feb3db9ab2f34ceaa5742861b40c52ed480a','Source delta mismatch; no files will be applied'
+          assert digest=='ea0ced13bf6b4648e5a8daaf90c4feb3db9ab2f34ceaa5742861b40c52ed480a','Source delta mismatch'
           patch=Path('/tmp/rm050.patch');patch.write_bytes(raw)
           subprocess.run(['git','apply','--check','--unidiff-zero',str(patch)],check=True)
           subprocess.run(['git','apply','--unidiff-zero',str(patch)],check=True)
           PY
+          python3 scripts/rm050-followup.py
           git diff --check
       - name: Node regressions and bundle, never deploy
         run: |
@@ -58,53 +58,19 @@ jobs:
             rm050-browser-results/
             /tmp/rm050-node.log
           retention-days: 7
-      - name: Publish only after all validations pass
+      - name: Publish application only after all validations pass
         run: |
           python3 - <<'PY'
           from pathlib import Path
           import json,os
           report=json.loads(Path('rm050-browser-results/report.json').read_text())
-          assert not report['failures']
-          assert len(report['checks'])==3
+          assert not report['failures'] and len(report['checks'])==3
           note=Path('docs/ASTRA-SESSION-RM-050.md')
           note.write_text(note.read_text()+'\n## CI preparation evidence\nRun '+os.environ['GITHUB_RUN_ID']+' verified the full source-delta checksum, passed the Node mocked suite and Wrangler dry-run, and passed Chromium 320/1440 plus WebKit 393 fixture-browser checks. The browser report and screenshots are in the run artifact. No live generation, commerce, admin settings or deployment was performed by this preparation. Application changes were published only to the working branch after validation.\n')
-          Path('.github/workflows/recast-rm050-validation.yml').write_text('''name: Recast customer-policy validation
-          on:
-            pull_request:
-              paths: ['src/**', 'public/**', 'tests/**', 'scripts/rm050-browser-tests.cjs', '.github/workflows/recast-rm050-validation.yml']
-            workflow_dispatch:
-          permissions:
-            contents: read
-          jobs:
-            policy-tests:
-              runs-on: ubuntu-latest
-              timeout-minutes: 12
-              env:
-                WRANGLER_SEND_METRICS: 'false'
-              steps:
-                - uses: actions/checkout@v4
-                - name: Node regression tests
-                  run: npm ci --ignore-scripts --no-audit --no-fund && npm test
-                - name: Bundle only
-                  run: npx --no-install wrangler deploy --dry-run --outdir /tmp/recast-bundle
-                - name: Isolated browser setup
-                  run: |
-                    mkdir -p /tmp/recast-browser && cd /tmp/recast-browser
-                    npm init -y >/dev/null
-                    npm install --ignore-scripts --no-audit --no-fund playwright
-                    npx playwright install --with-deps chromium webkit >/tmp/browser-install.log 2>&1
-                - name: Mocked customer and admin browser checks
-                  run: NODE_PATH=/tmp/recast-browser/node_modules node scripts/rm050-browser-tests.cjs
-                - uses: actions/upload-artifact@v4
-                  if: always()
-                  with:
-                    name: recast-policy-browser-evidence
-                    path: rm050-browser-results/
-                    retention-days: 7
-          ''')
           for i in range(1,4):Path(f'scripts/rm050-data-{i:02d}.b64').unlink()
+          Path('scripts/rm050-followup.py').unlink()
           PY
-          git add src public tests scripts docs wrangler.jsonc .github/workflows/recast-rm050-validation.yml
+          git add src public tests scripts docs wrangler.jsonc
           git diff --cached --check
           git config user.name 'WebZomb'
           git config user.email '97362504+WebZomb@users.noreply.github.com'
