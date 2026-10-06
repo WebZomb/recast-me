@@ -335,3 +335,17 @@ Implemented recommended layouts per product, generalized clean/mockup compositio
 - The same premium mug art is used in the How It Works product node, the static homepage Mug card, and the pre-mockup Mug example in the active-Recast catalog.
 - Shopify’s Custom Recast Mug featured product image was replaced with the same premium example, so checkout/storefront thumbnails also look intentional rather than like the older generic mockup.
 - app.js cache bumped to v227, checkout.js to v237, site-v10.css to v228.
+
+
+## RM-044 — homepage hero rebuilt to approved neon concept
+- Rebuilt the real HTML/CSS hero to closely match the approved mobile concept instead of using the concept as a static image.
+- Header is cleaner and more premium with larger brand treatment and gradient Start a Recast CTA.
+- Hero copy is no longer inside the old frosted card on mobile; headline, CTAs, trust pills, and cosmic background now follow the approved layout.
+- Added real inline lock/eye/cube icons to the trust pills.
+- Reworked the photo → Recast → product showcase: two compact source/result cards remain visible at left while the premium mug becomes the large dominant payoff at right.
+- Added a CSS neon pedestal, larger product glow, stronger product shadow, and a “03 YOUR PRODUCT” pill.
+- Added the bottom hero tagline “SAME PHOTOS. BIGGER POSSIBILITIES.”
+- Added responsive overrides for 760px and 420px mobile widths so the hero keeps the same proportions without hiding the 01/02 cards behind the mug.
+- Repaired one malformed closing tag introduced during the structural rewrite.
+- site-v10.css cache is v229.
+- No image generation, checkout, order, or Printful action was performed by this layout implementation.
