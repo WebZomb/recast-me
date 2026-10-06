@@ -100,3 +100,17 @@ Date: 2026-10-06
 - The site-wide AI call limit / verified monetary reserve is still not configured. Do not invent a per-call cost or silently activate spending controls.
 - No live AI generation, new paid checkout, refund, or physical Printful production order was created during RM-049/RM-049.1 validation.
 - Shopify fulfillment mutation behavior is covered by mocked regression tests, but the connected app's live fulfillment write scope still needs confirmation on an actual shipment before that portion is considered provider-verified.
+
+
+## RM-049.2 follow-up — production AI spending guard
+- Rechecked current Cloudflare Workers AI pricing for `@cf/black-forest-labs/flux-2-dev` against the exact Recast generation dimensions/reference preparation.
+- High Quality max calculated model price per `AI.run` at 4 references: $0.05940; Standard max: $0.02976. Details and formulas are preserved in `docs/AI-BUDGET-RM049.md`.
+- Production `wrangler.jsonc` now sets `AI_DAILY_CALL_LIMIT=70`, `AI_DAILY_BUDGET_CENTS=500`, and `AI_CALL_RESERVE_CENTS=7`.
+- The 7-cent reservation exceeds the current worst-case configured High Quality call estimate. Safe retries are separately reserved because the guard wraps every actual `AI.run`.
+- The 70-call limit is stricter than the reservation budget (70 × 7 cents = $4.90 reserved).
+- Added render-control regression tests for the five-dollar budget/reserve behavior and fail-closed invalid configuration.
+- Production marker advanced to `RM-049.2` so the audit waits for the config-bearing deployment instead of accepting an older RM-049.1 page.
+- Final production launch audit `37506308516`: SUCCESS, `failures: []`, `deployed: true`, `aiCallLimitConfigured: true`, `aiDailyCallLimit: 70`. Model/readiness/Printful checks remained healthy and the responsive browser checks remained clean.
+- Final validation at that revision: 170 tests passed, 0 failed, and Wrangler dry-run bundled successfully.
+- This cap is a conservative Recast AI reservation ceiling, not a guarantee of the entire Cloudflare bill. It does not include Images, storage, Shopify, Printful, taxes, or unrelated services.
+- Turnstile remains the remaining public anti-bot setup item; the monetary exposure of AI submissions is now bounded even before Turnstile is activated.
