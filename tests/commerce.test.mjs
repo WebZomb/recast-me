@@ -434,7 +434,7 @@ async function shopifyMock(o,run,{testOrder=false,payment='PAID'}={}){
   const path=String(url);
   if(path.endsWith('/admin/oauth/access_token'))return Response.json({access_token:'fixture-token',expires_in:3600});
   if(path.includes('graphql.json'))return Response.json({data:{order:{...paid,test:testOrder,displayFinancialStatus:payment,lineItems:{pageInfo:{hasNextPage:false},nodes:[{id:o.job.lineId,sku:o.job.sku,quantity:o.job.quantity,customAttributes:[{key:'Artwork ID',value:ID}]}]}}}});
-  if(path==='https://api.printful.com/orders'){drafts++;const b=JSON.parse(options.body);assert.deepEqual(b.items[0].files[0].position,{area_width:1800,area_height:2400,width:1800,height:2250,left:0,top:75});assert.match(b.items[0].files[0].url,/\/api\/order-print\//);assert.ok(!b.items[0].files[0].url.includes('/api/print-source/'));return Response.json({result:{id:999,status:'draft'}})}
+  if(path==='https://api.printful.com/orders'){drafts++;const b=JSON.parse(options.body);assert.match(b.external_id,/^[A-Za-z0-9_-]{1,32}$/);assert.deepEqual(b.items[0].files[0].position,{area_width:1800,area_height:2400,width:1800,height:2250,left:0,top:75});assert.match(b.items[0].files[0].url,/\/api\/order-print\//);assert.ok(!b.items[0].files[0].url.includes('/api/print-source/'));return Response.json({result:{id:999,status:'draft'}})}
   if(path.endsWith('/orders/999/confirm')){confirmations++;return Response.json({result:{id:999,status:'pending'}})}
   throw Error('Unexpected external call: '+path);
  };
@@ -511,4 +511,33 @@ test('Standard has five slots only after HQ is exhausted, with failure refund an
  await reserveCustomerRender(bound,now);
  assert.equal((await creditBalance(env,wallet,now+86400000)).standardRemaining,5);
  await assert.rejects(reserveCustomerRender(bound,now+86400000),e=>e.code==='standard_locked');
+});
+
+test('RM0504 long new draft IDs satisfy Printful and retain exact approved file with no confirmation',async()=>{
+ const o=await orderSetup();await o.env.ARTWORK.delete(`jobs/${o.job.id}.json`);
+ o.job.id='1111111111111-22222222222222';o.job.lineId='gid://shopify/LineItem/22222222222222';
+ await o.env.ARTWORK.put(`jobs/${o.job.id}.json`,JSON.stringify(o.job));
+ await o.action('proof');await o.action('approve',{revision:1,confirm:'APPROVE_FOR_PRINT'});await finishApprovedDesign(o.env,o.job);
+ Object.assign(o.job,{artApprovedAt:paid.updatedAt,printReadyAt:paid.updatedAt});await o.env.ARTWORK.put(`jobs/${o.job.id}.json`,JSON.stringify(o.job));
+ const before=await (await o.env.ARTWORK.get(`commerce/designs/${o.job.id}.json`)).text();
+ await shopifyMock(o,async counts=>{
+  const r=await adminJobAction(adminRequest(),o.env,o.job.id,'create-draft');assert.equal(r.status,200);
+  const saved=await read(o.env,`jobs/${o.job.id}.json`),claim=await read(o.env,`commerce/production/${await hash(o.job.id)}-draft.json`);
+  assert.match(saved.printfulExternalId,/^rm-[a-f0-9]{29}$/);assert.equal(claim.externalId,saved.printfulExternalId);
+  assert.equal(counts().drafts,1);assert.equal(counts().confirmations,0);
+  assert.equal(await (await o.env.ARTWORK.get(`commerce/designs/${o.job.id}.json`)).text(),before);
+ });
+});
+test('RM0504 existing invalid-ID attempt remains locked byte-for-byte and never retries',async()=>{
+ const o=await orderSetup();await o.env.ARTWORK.delete(`jobs/${o.job.id}.json`);
+ o.job.id='1111111111111-22222222222222';o.job.lineId='gid://shopify/LineItem/22222222222222';
+ await o.env.ARTWORK.put(`jobs/${o.job.id}.json`,JSON.stringify(o.job));
+ await o.action('proof');await o.action('approve',{revision:1,confirm:'APPROVE_FOR_PRINT'});await finishApprovedDesign(o.env,o.job);
+ Object.assign(o.job,{artApprovedAt:paid.updatedAt,printReadyAt:paid.updatedAt});await o.env.ARTWORK.put(`jobs/${o.job.id}.json`,JSON.stringify(o.job));
+ const key=`commerce/production/${await hash(o.job.id)}-draft.json`,original='{"startedAt":"2026-10-06T04:00:00Z"}';
+ await o.env.ARTWORK.put(key,original);
+ await shopifyMock(o,async counts=>{
+  for(let i=0;i<2;i++){const r=await adminJobAction(adminRequest(),o.env,o.job.id,'create-draft');assert.equal(r.status,409);assert.match((await r.json()).error,/already started/);}
+  assert.equal(counts().drafts,0);assert.equal(counts().confirmations,0);assert.equal(await(await o.env.ARTWORK.get(key)).text(),original);
+ });
 });

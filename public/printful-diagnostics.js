@@ -26,6 +26,8 @@ export function attachPrintfulDiagnostic(article, job, api) {
       const data = await api(`/api/admin/job/${encodeURIComponent(job.id)}/printful-check`);
       const lines = [data.message, `Configured Printful store: ${data.configuredStoreId || 'not configured'}`];
       if (data.order) lines.push(`Printful order #${data.order.id} · ${data.order.status}`);
+      if (data.storeScan) lines.push(`Orders checked in this store: ${data.storeScan.checked}${data.storeScan.total !== null ? ' of '+data.storeScan.total : ''} · ${data.storeScan.complete ? 'complete snapshot' : 'incomplete snapshot'}`);
+      lines.push(`Diagnostic: ${data.diagnosticVersion || 'unknown'} · Provider requests: ${data.providerRequestCount ?? 'unknown'}${data.providerStatus ? ' · HTTP '+data.providerStatus : ''}${data.lookupFailure ? ' · '+data.lookupFailure : ''}`);
       if (data.draftAttemptRecorded) lines.push(`Recast draft-attempt lock: present${data.draftAttemptStartedAt ? ' · '+data.draftAttemptStartedAt : ''}`);
       if (data.externalIdValid === false) lines.push(`Order-reference problem: ${data.externalIdLength} characters (Printful allows up to 32, using letters, digits, hyphens and underscores).`);
       lines.push(`Reference: ${data.externalId}`, data.safety);
