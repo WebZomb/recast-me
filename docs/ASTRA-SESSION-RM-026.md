@@ -285,3 +285,5 @@ Implemented recommended layouts per product, generalized clean/mockup compositio
 - Bumped live asset keys to site-v10.css?v=225 and checkout.js?v=234 after the Best Setup UI/compositor changes.
 
 - RM-040 UX follow-up: active-Recast product chooser now shows the four strongest products first (Mug, Blanket, Poster, Canvas), hides DRAFT products, and places the remaining active products behind one See more products button.
+
+- RM-040 hero follow-up: replaced the external SVG hero with a direct HTML/CSS mug cutout using the same Recast dog artwork, improving Safari reliability and making the final product the visual focal point.
