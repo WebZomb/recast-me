@@ -1,0 +1,41 @@
+name: Recast customer-policy validation
+on:
+  pull_request:
+    paths:
+      - 'src/**'
+      - 'public/**'
+      - 'tests/**'
+      - 'scripts/rm050-browser-tests.cjs'
+      - '.github/workflows/recast-rm050-validation.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  policy-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    env:
+      WRANGLER_SEND_METRICS: 'false'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Node regression tests
+        run: npm ci --ignore-scripts --no-audit --no-fund && npm test
+      - name: Bundle only, never deploy
+        run: npx --no-install wrangler deploy --dry-run --outdir /tmp/recast-bundle
+      - name: Install isolated browser dependencies
+        run: |
+          mkdir -p /tmp/recast-browser && cd /tmp/recast-browser
+          npm init -y >/dev/null
+          npm install --ignore-scripts --no-audit --no-fund playwright
+          npx playwright install --with-deps chromium webkit >/tmp/browser-install.log 2>&1
+      - name: Mocked customer and owner browser checks
+        run: NODE_PATH=/tmp/recast-browser/node_modules node scripts/rm050-browser-tests.cjs
+      - name: Retain regression evidence
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: recast-policy-browser-evidence
+          path: rm050-browser-results/
+          retention-days: 7

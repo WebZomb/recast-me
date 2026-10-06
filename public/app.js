@@ -1,6 +1,6 @@
 import {mergeHistory,privateRecastLink,readRecastLink} from './recast-history.js';
 import {initCreationWizard} from './creation-wizard.js';
-import {fallbackState} from './quality-policy.js';
+import {fallbackState,creditSummary} from './quality-policy.js?v=250';
 import {protectedPreviewFile} from './preview-export.js';
 let creditInfo=null;
 async function refreshCredits(initialize=false){
@@ -9,7 +9,7 @@ async function refreshCredits(initialize=false){
     const r=await fetch('/api/render-credits',{method:initialize?'POST':'GET',headers:{'x-recast-request':'1'}}),d=await r.json();
     if(!r.ok)throw new Error(d.userMessage||d.error||'Could not check your previews.');
     creditInfo=d;
-    if(display){display.hidden=!d.enabled;display.textContent=d.enabled?`${d.remaining??0} High Quality renders remaining · 3 per 24 hours + ${d.purchaseBonus??5} per eligible paid order. Failed previews restore your credit. Shared-network and site limits apply.`:'';}
+    if(display){display.hidden=!d.enabled;display.textContent=d.enabled?creditSummary(d):'';}
     applyReadiness();
     return d;
   }catch(e){if(display){display.hidden=false;display.textContent=e.message}throw e}
@@ -292,13 +292,17 @@ for(const [id,mode] of [['choose-standard','quick'],['choose-high','high']])docu
   updateQualityUI();applyReadiness();
 });
 function applyReadiness(){
+  if(currentFallback().returnToHigh&&!generationInFlight){
+    const high=document.querySelector('input[name="qualityMode"][value="high"]');if(high)high.checked=true;
+    updateQualityUI();
+  }
   const mode=selectedQuality(),health=readinessFor(mode),button=document.querySelector('#generate-button'),notice=document.querySelector('#render-availability');
   const fallback=updateFallback();
   const ready=Boolean(readinessSnapshot?.local?.ready&&health?.ready&&(mode==='quick'?fallback.standardReady:!fallback.exhausted));
   if(button&&!generationInFlight){button.disabled=!ready;button.textContent=ready?(mode==='quick'?'Create Standard Preview':'Create High-Quality Preview'):fallback.exhausted&&mode==='high'?'High Quality allowance used':'Checking availability…';}
   const copy=document.querySelector('#model-copy');if(copy)copy.textContent=readinessMessage(mode);
   const dot=document.querySelector('.quality-dot');if(dot)dot.dataset.state=ready?'ready':readinessSnapshot?.local?.ready?'waiting':'error';
-  if(notice){notice.hidden=ready;notice.textContent=ready?'':fallback.exhausted&&mode==='high'?fallback.message:readinessMessage(mode)+' Your photo and settings stay here.';}
+  if(notice){notice.hidden=ready;notice.textContent=ready?'':fallback.exhausted&&mode==='high'?'High Quality allowance used. See your options below.':readinessMessage(mode)+' Your photo and settings stay here.';}
   return ready;
 }
 async function refreshRenderAvailability(){
@@ -317,7 +321,7 @@ function syncRetryControls(){
   const switchMode=document.querySelector('#switch-quality-generation');
   const failed=readinessFor(lastAttemptQuality);
   if(retry&&!retry.classList.contains('hidden')){
-    const ready=Boolean(readinessSnapshot?.local?.ready&&failed?.ready);
+    const ready=Boolean(readinessSnapshot?.local?.ready&&failed?.ready&&(lastAttemptQuality==='quick'?currentFallback().standardReady:!currentFallback().exhausted));
     retry.disabled=!ready;
     const waitText=failed?.reason==='timeout'
       ?`${qualityLabel(lastAttemptQuality)} timed out — checking readiness…`
@@ -328,8 +332,9 @@ function syncRetryControls(){
       :`${qualityLabel(lastAttemptQuality)} unavailable — checking…`;
     retry.textContent=ready?(lastAttemptQuality==='quick'?'Try Standard again':'Try High-Quality again'):waitText;
   }
-  if(switchMode&&!switchMode.classList.contains('hidden')){
+  if(switchMode){
     const next=lastAttemptQuality==='quick'?'high':'quick',alternate=readinessFor(next);
+    switchMode.hidden=next==='quick'&&!currentFallback().show;
     const ready=Boolean(readinessSnapshot?.local?.ready&&alternate?.ready&&(next==='quick'?currentFallback().standardReady:!currentFallback().exhausted));
     switchMode.disabled=!ready;
     switchMode.textContent=ready
@@ -653,7 +658,7 @@ form.addEventListener('submit',async e=>{
 
   try{
     const credits=await refreshCredits(true);
-    if(credits.enabled&&(selectedQuality()==='quick'?credits.standardRemaining:credits.remaining)<=0)throw Object.assign(new Error('Your selected preview allowance is used. Check the reset time and available options below.'),{publicMessage:'Your selected preview allowance is used. Check the reset time and available options below.'});
+    if(credits.enabled&&(selectedQuality()==='quick'?(credits.remaining>0?0:credits.standardRemaining):credits.remaining)<=0)throw Object.assign(new Error('Your selected preview allowance is used. Check the reset time and available options below.'),{publicMessage:'Your selected preview allowance is used. Check the reset time and available options below.'});
     const fd=new FormData();
     fd.append('style',styleSelect.value);
     const customWorld=styleSelect.value==='custom'?document.querySelector('#custom-world').value.trim():'';
@@ -775,6 +780,7 @@ form.addEventListener('submit',async e=>{
     loading.classList.add('hidden');
     button.disabled=false;
     generationInFlight=false;
+    await refreshCredits().catch(()=>{});
     updateQualityUI();
     await refreshRenderAvailability();
     resetTurnstile();
@@ -964,3 +970,12 @@ document.querySelector('#original-photo-form').addEventListener('submit',async e
     status.textContent='Photo saved. Choose a product below—no AI render was used.';
   }catch(e){status.textContent=e.message;}finally{generationInFlight=false;button.disabled=false;originalTurnstileToken='';if(window.turnstile&&originalTurnstileWidgetId!==null)window.turnstile.reset(originalTurnstileWidgetId);}
 });
+
+let creditRefreshAt=0;
+function refreshVisibleBalance(){
+  if(document.visibilityState==='hidden'||generationInFlight||Date.now()-creditRefreshAt<15000)return;
+  creditRefreshAt=Date.now();refreshCredits().then(()=>refreshRenderAvailability()).catch(()=>{});
+}
+window.addEventListener('focus',refreshVisibleBalance);
+document.addEventListener('visibilitychange',refreshVisibleBalance);
+setInterval(refreshVisibleBalance,60000);

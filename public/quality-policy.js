@@ -1,16 +1,19 @@
-// Presentation only: the server enforces balances and shared spending safeguards.
+// Display policy only. The server independently enforces credits and Standard access.
 export function fallbackState(snapshot,credits,mode='high'){
-  const exhausted=Boolean(credits?.enabled&&credits.remaining<=0);
-  const health=snapshot?.modes?.high;
-  const outage=Boolean(health&&!health.ready);
-  const show=exhausted||outage||mode==='quick';
+  const known=Boolean(credits?.enabled&&Number.isFinite(credits.remaining));
+  const exhausted=known&&credits.remaining<=0;
   const date=value=>value&&Number.isFinite(Date.parse(value))?new Date(value).toLocaleString([], {month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}):null;
-  const reset=date(credits?.resetAt);
-  let message=exhausted?`Your High Quality allowance is used. ${reset?'Free renders return '+reset+'.':'Check back for your next allowance.'} An eligible paid order adds ${credits?.purchaseBonus??5} High Quality renders.`
-    :outage?`High Quality is ${health.reason==='capacity'?'busy':health.reason==='timeout'?'cooling down after a timeout':health.reason==='quota'?'paused by shared provider capacity':'temporarily unavailable'}. Your photos and choices are saved on this page.`
-    :mode==='quick'?'You selected Standard. You can return to High Quality before creating.':'';
-  const standardReady=Boolean(show&&snapshot?.local?.ready&&snapshot?.modes?.quick?.ready&&(!credits?.enabled||credits.standardRemaining>0));
-  if(show&&credits?.enabled&&credits.standardRemaining<=0)message+=` Your Standard allowance is also used.${date(credits.standardResetAt)?' It returns '+date(credits.standardResetAt)+'.':''}`;
-  if(show)message+=' Both options depend on site availability and the shared spending limit. Purchases do not bypass these limits.';
-  return {show,exhausted,standardReady,message};
+  const reset=date(credits?.resetAt),bonus=credits?.purchaseBonus??3;
+  const show=exhausted; // Provider outages and a stale selection do not unlock Standard.
+  let message=show?`You’ve used your High Quality previews for now. You can try Standard, but it may have less detail or a weaker likeness. Not happy with it? ${reset?'High Quality refreshes '+reset+'.':'Come back after your daily reset.'} Or buy an item with a design you already love to get ${bonus} bonus High Quality previews for your next Recast.`:'';
+  const standardReady=Boolean(show&&snapshot?.local?.ready&&snapshot?.modes?.quick?.ready&&credits.standardRemaining>0);
+  if(show&&credits.standardRemaining<=0)message+=` Your Standard previews are also used.${date(credits.standardResetAt)?' They refresh '+date(credits.standardResetAt)+'.':''}`;
+  if(show)message+=' Credits do not change an order already confirmed for printing or bypass site availability limits.';
+  return {show,exhausted,standardReady,message,returnToHigh:mode==='quick'&&!exhausted};
+}
+export function creditSummary(credits){
+  if(!credits?.enabled)return '';
+  const daily=Number(credits.free||0),bonus=Number(credits.bonus||0);
+  const reset=credits.resetAt&&Number.isFinite(Date.parse(credits.resetAt))?new Date(credits.resetAt).toLocaleString([], {month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}):null;
+  return `High Quality: ${daily} of ${credits.freeAllowance??3} daily previews left${bonus?` + ${bonus} purchase credits`:''}.${reset?' Refreshes '+reset+'.':''}${credits.remaining<=0?` Standard: ${credits.standardRemaining??0} left.`:''}`;
 }

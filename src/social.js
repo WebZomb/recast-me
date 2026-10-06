@@ -1,5 +1,6 @@
 import app from './entry.js';
 import { highQualityTransform } from './highquality.js';
+import { guardedSocialEnvironment } from './render-controls.js';
 import { renderHealth } from './render-health.js';
 
 const API = 'https://api.x.com/2';
@@ -152,15 +153,15 @@ export async function processSocialJob(env,job) {
     }
     if(!env.IMAGES){job.replyStatus='configuration_required';job.error='Add the IMAGES binding for photo preparation and watermarked X previews.';await saveJob(env,job);return;}
     if(!job.requestId) {
-      if((await renderHealth(env,'high')).state==='paused'){
+      if((await renderHealth(env,'social')).state==='paused'){
         job.replyStatus='awaiting_capacity';job.retryAt=new Date(Date.now()+5*60000).toISOString();await saveJob(env,job);return;
       }
       const form=new FormData();
       for(const [k,v] of Object.entries(job.direction))form.set(k,v);
-      form.set('source','x');form.set('sourceTweet',job.tweetId);form.set('qualityMode','high');
+      form.set('source','x');form.set('sourceTweet',job.tweetId);form.set('qualityMode','quick');
       for(let i=0;i<job.photos.length;i++)form.set(`image_${i}`,await referencePhoto(env,job.photos[i],i));
       job.replyStatus='generating';await saveJob(env,job);
-      const response=await highQualityTransform(new Request(`${base(env)}/api/transform-v2`,{method:'POST',body:form}),env,{trustedSocialJob:true});
+      const response=await highQualityTransform(new Request(`${base(env)}/api/transform-v2`,{method:'POST',body:form}),guardedSocialEnvironment({...env,IMAGE_MODEL_QUICK:env.IMAGE_MODEL_SOCIAL||env.IMAGE_MODEL_QUICK,AI_STANDARD_RESERVE_CENTS:env.AI_SOCIAL_RESERVE_CENTS||env.AI_CALL_RESERVE_CENTS}),{trustedSocialJob:true});
       const rendered=await response.json();
       if(response.status===202||rendered.reason==='policy'||rendered.reason==='moderation'){job.error=rendered.userMessage;await finish(env,job,'needs_review');return;}
       if(!response.ok||!rendered.persisted) {

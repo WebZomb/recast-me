@@ -53,7 +53,7 @@ async function load(){
   document.querySelector('#order-title').textContent=d.request.paid?'Your next favorite thing.':'Your Recast is saved.';
   document.querySelector('#order-subtitle').textContent=`Artwork ID: ${requestId}`;
   card.innerHTML=`<div id="order-message" role="status" aria-live="polite"></div><div class="order-state"><strong>${d.request.paid?'Order detected':'Waiting for a paid order'}</strong><span>${esc(d.request.orderName||'Artwork saved')}</span></div>
-  ${d.creditsEnabled&&jobs.length?'<div class="download-box"><h3>Keep creating</h3><p id="credit-status">Each eligible paid order adds five previews, once per order. Failed previews restore your credit.</p><button id="check-bonus" class="button ghost">Check my purchase credits</button><a id="create-more" class="button primary" href="/#start">Try another idea →</a></div>':''}
+  ${d.creditsEnabled&&jobs.length?'<div class="download-box"><h3>Keep creating</h3><p id="credit-status">Checking your High Quality purchase credits…</p><button id="check-bonus" class="button ghost">Check my purchase credits</button><a id="create-more" class="button primary" href="/#start">Try another idea →</a></div>':''}
   <div class="order-items">${jobs.length?jobs.map(j=>`<article class="order-item"><h2>${esc(j.product)}</h2><p>Status: ${esc(orderStatusLabel(j))}${j.printfulStatus?` · ${esc(j.printfulStatus)}`:''}</p>${designCard(j)}</article>`).join(''):'<p>After payment is verified, your order will appear here automatically.</p>'}</div>
   ${d.request.digitalEntitlement?`<div class="download-box"><h3>Your digital artwork</h3><a class="button primary" href="/api/digital-download/${encodeURIComponent(requestId)}?token=${encodeURIComponent(token)}">Download purchased artwork</a></div>`:''}
   <p class="order-note">Keep this private order link. It gives access to this artwork and its orders.</p>${!d.request.paid?'<button id="delete-recast" class="delete-recast">Delete this unpaid Recast</button>':''}`;
@@ -62,8 +62,9 @@ async function load(){
   const more=document.querySelector('#create-more');if(more)more.onclick=()=>{try{sessionStorage.setItem('recast_order_return',location.pathname+location.search)}catch{}};
   const bonus=document.querySelector('#check-bonus');if(bonus)bonus.onclick=async()=>{
    bonus.disabled=true;
-   try{await api('/api/render-credits',{});for(const order of new Map(jobs.map(j=>[j.orderName,j])).values())await api(`/api/order-bonus/${encodeURIComponent(order.id)}`,{token});const b=await api('/api/render-credits');document.querySelector('#credit-status').textContent=`${b.remaining} previews remaining (${b.bonus} purchase bonus).`;message('Your preview balance is up to date.')}catch(e){message(e.message)}finally{bonus.disabled=false}
+   try{await api('/api/render-credits',{});for(const order of new Map(jobs.map(j=>[j.orderName,j])).values())await api(`/api/order-bonus/${encodeURIComponent(order.id)}`,{token});const b=await api('/api/render-credits');document.querySelector('#credit-status').textContent=`${b.remaining} High Quality previews available, including ${b.bonus} purchase credits. Each new eligible paid order adds ${b.purchaseBonus} once. Use them for your next Recast; they do not change a design already confirmed for printing.`;message('Your preview balance is up to date.')}catch(e){message(e.message)}finally{bonus.disabled=false}
   };
+  if(bonus)bonus.click();
   const del=document.querySelector('#delete-recast');if(del)del.onclick=deleteRecast;
  }catch(e){card.innerHTML=`<p>${esc(e.message)}</p>`}
 }

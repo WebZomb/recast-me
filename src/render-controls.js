@@ -8,7 +8,7 @@ function blocked(code, message, status = 503) {
   return Object.assign(new Error(message), { code, status, renderControl: true });
 }
 export function renderControlStatus(env) {
-  const raw = env.AI_DAILY_CALL_LIMIT;
+  const raw = env.RECAST_RENDER_SCOPE==='social' ? env.AI_DAILY_SOCIAL_CALL_LIMIT : env.AI_DAILY_CALL_LIMIT;
   if (raw === undefined || raw === null || raw === '') {
     return { configured: false, dailyCallLimit: null, unit: 'AI.run submissions', timezone: 'UTC' };
   }
@@ -21,21 +21,22 @@ export async function digest(value) {
 }
 
 export async function reserveAiCall(env, time = Date.now()) {
+  if(env.RENDER_PAUSED==='true')throw blocked('owner_paused','Image creation is temporarily paused. Your credits and saved artwork are safe.',503);
   const config = renderControlStatus(env);
   if (!config.configured) return { enforced: false };
   if (!config.valid) throw blocked('render_limit_config', 'The owner needs to correct the AI call limit.');
   if (!env.ARTWORK) throw blocked('render_limit_storage', 'The AI call counter is unavailable.');
   const day = new Date(time).toISOString().slice(0, 10);
-  const key = `security/ai-calls/${day}.json`;
+  const key = `security/${env.RECAST_RENDER_SCOPE==='social'?'ai-social-calls':'ai-calls'}/${day}.json`;
   for (let attempt = 0; attempt < 8; attempt++) {
     const old = await env.ARTWORK.get(key);
-    let used = 0;
+    let used = 0,modes={};
     if (old) {
       const ledger = await old.json();
       if (ledger.day !== day || !Number.isSafeInteger(ledger.used) || ledger.used < 0 || !old.etag) {
         throw blocked('render_limit_storage', 'The AI call counter needs review.');
       }
-      used = ledger.used;
+      used = ledger.used;modes=ledger.modes||{};
     }
     if (used >= config.dailyCallLimit) {
       const error = blocked('daily_ai_call_limit', 'Image creation has reached the site-wide daily AI call limit. Your saved previews are still available.', 429);
@@ -44,7 +45,7 @@ export async function reserveAiCall(env, time = Date.now()) {
     }
     // A conditional write, not read-then-unconditional-put: simultaneous Workers
     // cannot all reserve the final slot. Never refund failures/timeouts blindly.
-    const written = await env.ARTWORK.put(key, JSON.stringify({ day, used: used + 1 }), {
+    const written = await env.ARTWORK.put(key, JSON.stringify({ day, used: used + 1,modes:{...modes,[env.RECAST_RENDER_MODE==='quick'?'quick':'high']:(modes[env.RECAST_RENDER_MODE==='quick'?'quick':'high']||0)+1} }), {
       onlyIf: old ? { etagMatches: old.etag } : new Headers({ 'If-None-Match': '*' }),
       httpMetadata: { contentType: 'application/json' }
     });
@@ -74,7 +75,7 @@ export async function submissionFingerprint(form, path) {
 
 export function guardedEnvironment(env, fingerprint = null) {
   if (env[CONTROL]) return { env, state: env[CONTROL] };
-  const state = { blocked: null, claimPromise: null };
+  const state = { blocked: null, claimPromise: null, rawAI: env.AI };
   const guarded = { ...env, [CONTROL]: state };
   if (!env.AI) return { env: guarded, state };
   async function claim() {
@@ -93,10 +94,12 @@ export function guardedEnvironment(env, fingerprint = null) {
           // A promise, not a Boolean, also serializes two simultaneous calls in one invocation.
           state.claimPromise ||= claim();
           await state.claimPromise;
-          await reserveAiCall(env);
-          await reserveBudget(env);
           state.creditPromise ||= reserveCustomerRender(env);
           await state.creditPromise;
+          await reserveAiCall(env);
+          // Safe per-model reserves set by the owner; unrecognized/admin models keep the full reserve.
+          const reserve=args[0]===env.IMAGE_MODEL_HIGH_QUALITY?null:args[0]===env.IMAGE_MODEL_QUICK?env.AI_STANDARD_RESERVE_CENTS:args[0]===env.IMAGE_MODEL_SOCIAL?env.AI_SOCIAL_RESERVE_CENTS:null;
+          await reserveBudget(reserve?{...env,AI_CALL_RESERVE_CENTS:reserve}:env);
         } catch (error) {
           state.blocked = error.renderControl ? error : blocked('render_control_unavailable', 'Image creation is paused because its usage safeguards could not be checked.');
           throw state.blocked;
@@ -135,4 +138,12 @@ export async function reserveBudget(env, time = Date.now()) {
     if (put) return {enforced: true, ...ledger};
   }
   throw blocked('budget_busy', 'The render budget is busy. Please try again shortly.');
+}
+
+// Rebind only internal scheduled social work, never a submitted source/quality field.
+export function guardedSocialEnvironment(env){
+  const raw=env[CONTROL]?.rawAI||env.AI;
+  const clean={...env,AI:raw,RECAST_RENDER_SCOPE:'social',RECAST_RENDER_MODE:'quick'};
+  delete clean[CONTROL];delete clean.RECAST_CREDIT_WALLET;
+  return guardedEnvironment(clean).env;
 }
