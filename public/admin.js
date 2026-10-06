@@ -1,6 +1,7 @@
 import {initOwnerSettings} from './admin-settings.js?v=250';
+import {attachPrintfulDiagnostic} from './printful-diagnostics.js?v=rm0503';
 const deploymentLabel=document.querySelector('#deployment-identity');
-if(deploymentLabel)deploymentLabel.textContent=`${location.hostname==='recast-me.sergz24.workers.dev'?'Production':'Preview / alternate host'} · ${location.hostname} · RM-050`;
+if(deploymentLabel)deploymentLabel.textContent=`${['recastmeai.com','recast-me.sergz24.workers.dev'].includes(location.hostname)?'Production':'Preview / alternate host'} · ${location.hostname} · RM-050.3 diagnostics`;
 const $=s=>document.querySelector(s);const $$=s=>[...document.querySelectorAll(s)];
 const tokenKey='recast_admin_token';let token=sessionStorage.getItem(tokenKey)||'';
 function headers(json=false){return{'x-recast-request':'1',Authorization:`Bearer ${token}`,...(json?{'content-type':'application/json'}:{})}}
@@ -39,7 +40,7 @@ async function loadJobs(more=false){
   for(const [action,label,show] of [['approve-art','Approve artwork',!j.artApprovedAt],['finalize-art','Prepare high-res print',j.artApprovedAt&&!j.digital&&!j.printReadyAt],['create-draft','Create Printful draft',j.printReadyAt&&!j.printfulOrderId&&!j.digital],['send-production','Send to production',j.printfulOrderId&&!j.sentToProductionAt],['hold','Hold',true]]){
    if(!show)continue;const button=document.createElement('button');button.textContent=label;button.type='button';button.className=action==='send-production'?'danger':'secondary';button.onclick=()=>jobAction(j.id,action);actions.append(button);
   }
-  article.append(actions);list.append(article);shownJobs++;
+  article.append(actions);attachPrintfulDiagnostic(article,j,api);list.append(article);shownJobs++;
  }
  $('#more-jobs').hidden=!jobsCursor;$('#jobs-page-status').textContent=`Showing ${shownJobs} stored jobs${jobsCursor?' — more available':' — end of list'}. Summary cards use a bounded snapshot, not lifetime totals.`;
 }
