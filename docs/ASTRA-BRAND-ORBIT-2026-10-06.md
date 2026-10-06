@@ -9,7 +9,7 @@ Read current main at fdeed52c04cc77407c661befd2b2daaccd741a8c (tree 93cb80c101fe
 ## Approved assets
 Reused the exact approved artwork, without another image-generation call for website assets. Prepared a compact transparent header lockup from the approved monogram and outline-only wordmark, plus app/tab icon sizes. Transparent presentation removes only the black background; it is not a new font or letter design. The original stacked approved master is retained unchanged.
 Uploaded to the already-connected matching Shopify store b2wnfu-7g solely as public brand files:
-- Header: https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recastmeai-approved-orbit-header-v1.png?v=1791313673
+- Header: https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recastmeai-approved-orbit-header-v2.png?v=1791314310
 - Stacked: https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recastmeai-approved-orbit-stacked-v1.png?v=1791313709
 - Icon: https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recastmeai-approved-orbit-icon-v1.png?v=1791313742
 No customer photos, tokens or font files were uploaded. Existing store products/images were not modified or removed.
@@ -34,3 +34,6 @@ No claim of tested physical-print quality, 1000/day capacity, completed fulfillm
 
 ## Rollback
 Revert only this branding commit on top of the latest main. Do not reset the repository to the September baseline or revert current checkout/Printful work. Uploaded CDN files can remain harmlessly unreferenced; do not delete shared files automatically.
+
+## Header asset refinement
+Local visual inspection found a small stray swirl fragment at the left edge of the first horizontal crop. Header v2 uses the approved stacked wordmark crop instead and retains the same 691x144 intrinsic dimensions. No letter shapes were regenerated. The earlier CDN file is no longer referenced by deployed HTML. Preparation validation at 1d46d1b: 178 tests passed, zero failures, Wrangler dry-run passed (run 37517306354). The first follow-up preparation workflow at 0788fbf failed YAML parsing before execution due to a colon-space in an unquoted condition. This was corrected to the known working prepare-prefix condition; it did not alter production or application behavior. Rerun the same checks after this reference-only correction.

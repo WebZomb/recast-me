@@ -3,7 +3,7 @@ import {resolve} from 'node:path';
 import {fileURLToPath} from 'node:url';
 
 export const BRAND_VERSION='orbit-approved-v1';
-export const HEADER='https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recastmeai-approved-orbit-header-v1.png?v=1791313673';
+export const HEADER='https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recastmeai-approved-orbit-header-v2.png?v=1791314310';
 export const ICON='https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recastmeai-approved-orbit-icon-v1.png?v=1791313742';
 export const SOCIAL='https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recastmeai-approved-orbit-stacked-v1.png?v=1791313709';
 const oldMark=/<span\b[^>]*class=["'][^"']*\bbrand-mark\b[^"']*["'][^>]*>\s*<span[^>]*>R<\/span>\s*<span[^>]*>M<\/span>\s*<\/span>\s*<span[^>]*>RECAST ME<\/span>/g;
