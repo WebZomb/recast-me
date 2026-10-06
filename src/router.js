@@ -1,4 +1,5 @@
 import app from "./entry.js";
+import {printfulDiagnosticRoute} from "./printful-diagnostics.js";
 import { highQualityTransform, modelStatus } from "./highquality.js";
 import { routeWorkflow, scheduledWorkflow, requireAdmin } from "./workflow.js";
 import { socialRoutes } from './social.js';
@@ -10,6 +11,8 @@ import { printFinishRoutes } from './print-finish.js';
 const application = {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
+    const diagnostic = await printfulDiagnosticRoute(request, env, {requireAdmin});
+    if (diagnostic) return diagnostic;
     if(url.pathname === '/api/admin/model-test' && request.method === 'POST'){
       try{
         requireAdmin(request,env);
