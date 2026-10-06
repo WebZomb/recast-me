@@ -40,7 +40,7 @@ test('live homepage uses the correct Recast step image and original mug merchand
   const html=readFileSync(new URL('../public/index.html',import.meta.url),'utf8');
   const app=readFileSync(new URL('../public/app.js',import.meta.url),'utf8');
   const checkout=readFileSync(new URL('../public/checkout.js',import.meta.url),'utf8');
-  assert.doesNotMatch(html,/\/div>/);
+  assert.doesNotMatch(html,/<\/div>\/div>/);
   assert.match(html,/recast-node-art"><img src="\/assets\/world-game-v18\.webp"/);
   assert.match(html,/product-node-art"><img src="\/assets\/product-mug-v16\.webp"/);
   assert.match(app,/image:"\/assets\/product-mug-v16\.webp"/);
