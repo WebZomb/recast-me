@@ -274,3 +274,7 @@ All activated physical SKUs already have explicit Printful product/variant mappi
 No new paid order, AI render, or Printful production submission was performed during this polish/activation work.
 
 - RM-039 validation fixture updated from the removed step-card markup to the new process-node ribbon markup; no application logic changed in this follow-up.
+
+
+## RM-040 — product-specific Best Setup engine (validation checkpoint)
+Implemented recommended layouts per product, generalized clean/mockup composition, full-bleed blanket/wall-art defaults, two-sided mug/tumbler defaults, advanced controls behind Edit design, and a larger cutout Recast-dog hero mug. Validation run follows; details will be finalized after tests.
