@@ -23,6 +23,20 @@ function markPreviewReady(ui){
   ui.card.dataset.mockupSignature=JSON.stringify({sku:'RECAST-MUG-15OZ',design});
   return design;
 }
+test('homepage is compact and explains photo to Recast to product',()=>{
+  const html=readFileSync(new URL('../public/index.html',import.meta.url),'utf8');
+  const app=readFileSync(new URL('../public/app.js',import.meta.url),'utf8');
+  assert.match(html,/Recast<br><span>your world\.<\/span>/);
+  assert.match(html,/YOUR PHOTO · YOUR WORLD · YOUR PRODUCT/);
+  assert.match(html,/YOUR PRODUCT/);
+  assert.doesNotMatch(html,/class="marquee-band"/);
+  assert.doesNotMatch(html,/class="section idea-section"/);
+  assert.doesNotMatch(html,/class="section promise"/);
+  assert.equal((html.match(/<article class="step-card">/g)||[]).length,3);
+  assert.match(app,/new Set\(\['Mug','Blanket','Canvas','Poster'\]\)/);
+  assert.match(app,/HOME_STYLE_IDS/);
+});
+
 test('static asset HTML loads checkout without Worker HTML injection',()=>{
   const html=readFileSync(new URL('../public/index.html',import.meta.url),'utf8');
   assert.match(html,/<script src="\/checkout\.js\?v=\d+" type="module"><\/script>/);
