@@ -363,3 +363,21 @@ Implemented on the live website source:
 - Header, headline, CTA, chip sizing, padding, gradients, borders, and responsive mobile rules were retuned to match the approved reference.
 - site-v10.css cache bumped to v230.
 - The rest of the Recast site remains functional HTML; only the decorative lower hero showcase is a composed visual asset.
+
+
+## RM-046 — background continuity + corrected merchandising imagery
+User reported three live issues after the RM-045 hero update:
+1. the hero/top background showed ghost/duplicate text and artwork,
+2. the rest of the page fell into large flat/dark areas instead of carrying the premium visual language through,
+3. the Mug example and How It Works center image were wrong.
+
+Implemented:
+- Removed the screenshot-crop planet layer that was causing duplicate/ghost text behind the live hero content.
+- Hero now uses the clean existing high-resolution bg-hero-v10.webp asset plus gradient lighting overlays.
+- Added one fixed continuous cinematic background layer behind the entire site and changed Worlds, How It Works, Create, Preview, Shop, Status, and Policies to translucent section overlays so scrolling stays inside one visual universe instead of dropping to blank black.
+- Added cross-section fade/lighting treatment and glass cards for contrast over the shared background.
+- Repaired the literal “/div>” markup artifact that was visible under the hero on iPhone.
+- Restored the original Mug marketing example (/assets/product-mug-v16.webp) in the homepage product sample, the active-Recast pre-mockup Mug card, and the How It Works product thumbnail. Real generated Printful product previews are unchanged.
+- Changed the How It Works middle “Recast” image from the unrelated world-space-v18 artwork to world-game-v18 so it matches the same Jack Russell transformation shown in the hero.
+- Cache keys bumped to site-v10.css?v=231, app.js?v=228, checkout.js?v=238.
+- Added regression coverage for the repaired markup, correct Recast image, and restored Mug example.
