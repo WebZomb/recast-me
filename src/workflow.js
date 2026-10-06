@@ -1015,7 +1015,7 @@ export async function routeWorkflow(request,env,ctx){
   if(p==="/api/admin/trends"&&request.method==="GET")return adminTrends(request,env);
   if(p==="/api/admin/social"&&request.method==="GET")return adminSocial(request,env);
   if(p==="/api/admin/sync-orders"&&request.method==="POST")return adminSyncOrders(request,env);
-  m=p.match(/^\/api\/admin\/job\/([^/]+)\/(approve-art|finalize-art|hold|create-draft|send-production)$/);if(m&&request.method==="POST")return adminJobAction(request,env,decodeURIComponent(m[1]),m[2]);
+  m=p.match(/^\/api\/admin\/job\/([^/]+)\/(approve-art|finalize-art|hold|create-draft|recover-missing-draft|send-production)$/);if(m&&request.method==="POST")return adminJobAction(request,env,decodeURIComponent(m[1]),m[2]);
   if(p==="/api/admin/poll-x"&&request.method==="POST"){try{requireAdmin(request,env);return json(await pollXMentions(env))}catch(error){return json({ok:false,error:error.message},error.status||500)}}
   if(p==="/api/admin/scan-trends"&&request.method==="POST"){try{requireAdmin(request,env);return json(await scanTrends(env))}catch(error){return json({ok:false,error:error.message},error.status||500)}}
   m=p.match(/^\/api\/admin\/trend\/([^/]+)\/(approve|reject)$/);if(m&&request.method==="POST")return adminTrendAction(request,env,decodeURIComponent(m[1]),m[2]);
