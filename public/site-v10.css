@@ -1627,3 +1627,168 @@ body{padding-bottom:env(safe-area-inset-bottom)}
   .hero-actions .button{font-size:14px!important}
   .trust-row span{font-size:9px!important}
 }
+
+
+/* RM-046 — unified high-quality site background + cleanup after live iPhone review */
+
+/* One continuous cinematic background behind the entire experience.
+   Individual sections now tint this same universe instead of dropping to flat black. */
+html{background:#050611!important}
+body{
+  position:relative!important;
+  isolation:isolate!important;
+  background:#050611!important;
+}
+body::before{
+  content:"";
+  position:fixed;
+  inset:-3vh -3vw;
+  z-index:-20;
+  pointer-events:none;
+  background:
+    linear-gradient(180deg,rgba(3,5,16,.15),rgba(4,5,17,.38) 48%,rgba(4,5,16,.58)),
+    url('/assets/bg-hero-v10.webp') center center/cover no-repeat;
+  filter:saturate(1.18) contrast(1.05) brightness(.92);
+  transform:scale(1.04);
+}
+body::after{
+  content:"";
+  position:fixed;
+  inset:0;
+  z-index:-19;
+  pointer-events:none;
+  background:
+    radial-gradient(circle at 15% 24%,rgba(129,62,255,.12),transparent 32%),
+    radial-gradient(circle at 86% 54%,rgba(28,210,255,.09),transparent 30%),
+    linear-gradient(180deg,rgba(4,5,17,.03),rgba(5,6,18,.26));
+}
+main{background:transparent!important}
+
+/* Remove the screenshot-crop planet layer that caused ghost text/duplicate artwork. */
+.hero::before{display:none!important}
+.hero{
+  background:
+    linear-gradient(180deg,rgba(3,5,16,.10) 0%,rgba(4,5,18,.21) 48%,rgba(5,6,18,.52) 100%),
+    linear-gradient(90deg,rgba(3,5,16,.40) 0%,rgba(3,5,16,.12) 54%,rgba(3,5,16,.06) 100%),
+    url('/assets/bg-hero-v10.webp') center 34%/cover no-repeat!important;
+}
+.hero::after{
+  display:block!important;
+  background:
+    radial-gradient(circle at 80% 18%,rgba(48,213,255,.11),transparent 23%),
+    radial-gradient(circle at 24% 42%,rgba(156,68,255,.10),transparent 34%),
+    linear-gradient(180deg,transparent 65%,rgba(5,6,18,.34) 86%,rgba(5,6,18,.62) 100%)!important;
+}
+
+/* Blend the approved transformation stage into the same backdrop rather than looking pasted on. */
+.hero-reference-stage{
+  overflow:hidden!important;
+  background:transparent!important;
+}
+.hero-reference-stage-image{
+  -webkit-mask-image:linear-gradient(to bottom,rgba(0,0,0,.98) 0%,#000 84%,rgba(0,0,0,.82) 94%,transparent 100%)!important;
+  mask-image:linear-gradient(to bottom,rgba(0,0,0,.98) 0%,#000 84%,rgba(0,0,0,.82) 94%,transparent 100%)!important;
+}
+
+/* Keep every major section in one visual universe. */
+.worlds,
+.process,
+.create-section,
+.preview-section,
+.shop-showcase,
+.status-section,
+.policies{
+  position:relative!important;
+  isolation:isolate!important;
+  background:
+    linear-gradient(180deg,rgba(6,7,24,.70),rgba(7,8,25,.62) 50%,rgba(5,6,20,.72))!important;
+  border-top:1px solid rgba(105,91,218,.10)!important;
+  border-bottom:1px solid rgba(94,84,204,.08)!important;
+}
+.worlds::before,
+.process::before,
+.create-section::before,
+.preview-section::before,
+.shop-showcase::before,
+.status-section::before,
+.policies::before{
+  content:""!important;
+  position:absolute!important;
+  inset:0!important;
+  z-index:-1!important;
+  pointer-events:none!important;
+  background:
+    radial-gradient(circle at 15% 20%,rgba(136,69,255,.10),transparent 29%),
+    radial-gradient(circle at 88% 58%,rgba(34,205,255,.07),transparent 28%)!important;
+}
+.worlds::after,
+.process::after,
+.create-section::after,
+.preview-section::after,
+.shop-showcase::after,
+.status-section::after,
+.policies::after{
+  content:""!important;
+  position:absolute!important;
+  left:0!important;right:0!important;bottom:-1px!important;height:90px!important;
+  z-index:-1!important;
+  pointer-events:none!important;
+  background:linear-gradient(180deg,transparent,rgba(5,6,20,.42))!important;
+}
+
+/* Cards keep contrast while letting the continuous background show through. */
+.worlds .section-kicker,
+.process .section-heading,
+.create-intro,
+.create-card,
+.preview-frame,
+.preview-info,
+.shop-showcase .section-kicker,
+.product,
+.process-ribbon{
+  background:linear-gradient(160deg,rgba(10,11,31,.84),rgba(6,7,21,.88))!important;
+  border-color:rgba(115,101,231,.22)!important;
+  backdrop-filter:blur(12px)!important;
+  -webkit-backdrop-filter:blur(12px)!important;
+  box-shadow:0 26px 74px rgba(0,0,0,.25)!important;
+}
+
+/* The How It Works middle image must be the same Recast dog, not an unrelated astronaut scene. */
+.recast-node-art img{
+  object-fit:cover!important;
+  object-position:center!important;
+}
+
+/* Restore the original merchandising example styling while keeping real customer previews unchanged. */
+.product-node-art img{
+  object-fit:cover!important;
+  transform:none!important;
+  background:#0a0b14!important;
+}
+
+/* Avoid dead black gaps between stacked sections. */
+.section{margin-top:0!important}
+footer,.site-footer{
+  background:linear-gradient(180deg,rgba(5,6,19,.74),rgba(3,4,13,.90))!important;
+  border-top:1px solid rgba(103,91,214,.12)!important;
+}
+
+@media(max-width:760px){
+  body::before{
+    inset:-2vh -10vw;
+    background-position:57% center;
+    background-size:auto 112%;
+    filter:saturate(1.18) contrast(1.05) brightness(.86);
+  }
+  .hero{
+    background-position:57% 31%!important;
+    background-size:auto 100%!important;
+  }
+  .hero-reference-stage-image{
+    -webkit-mask-image:linear-gradient(to bottom,#000 0%,#000 87%,rgba(0,0,0,.78) 95%,transparent 100%)!important;
+    mask-image:linear-gradient(to bottom,#000 0%,#000 87%,rgba(0,0,0,.78) 95%,transparent 100%)!important;
+  }
+  .worlds,.process,.create-section,.preview-section,.shop-showcase,.status-section,.policies{
+    background:linear-gradient(180deg,rgba(7,8,27,.72),rgba(6,7,24,.67),rgba(5,6,21,.75))!important;
+  }
+}
