@@ -32,7 +32,7 @@ export default {async fetch(request){
     assert.ok(response,'Unexpected outbound request is blocked, never forwarded');
     return response;
   };
-  const mf=new Miniflare({modules:true,script,compatibilityDate:'2026-09-23',cf:false,outboundService});
+  const mf=new Miniflare({cf:false,workers:[{name:'printful-diagnostic',modules:true,script,compatibilityDate:'2026-09-23',outboundService}]});
   try{
     const baseline=await(await mf.dispatchFetch('http://localhost/baseline')).json();
     assert.equal(baseline.rejected,true);assert.match(baseline.message,/redirect/i);
