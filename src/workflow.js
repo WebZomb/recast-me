@@ -145,7 +145,8 @@ export async function serveMockupSource(request,env,requestId,sku,layoutId){
 export function mockupPosition(catalog, variantId, placement, size, rawDesign=null){
   const variant=catalog.variant_printfiles?.find(v=>Number(v.variant_id)===Number(variantId));
   const file=catalog.printfiles?.find(f=>Number(f.printfile_id)===Number(variant?.placements?.[placement]));
-  const design=normalizeProductDesign({product:size?.product||'Generic'},rawDesign||size?.design||{});
+  const raw=rawDesign||size?.design||{};
+  const design=normalizeProductDesign({product:size?.product||raw?.product||'Generic'},raw);
   if(!file || ![file.width,file.height,size.width,size.height].every(n=>Number.isFinite(n)&&n>0))throw fault('print_area_missing','Printful print dimensions are unavailable for this variant.',502);
   if(Number(design.version)>=4||['scene-fill','full-bleed','ambient','dark','light'].includes(size?.design?.background))return {area_width:file.width,area_height:file.height,width:file.width,height:file.height,top:0,left:0};
   const scale=Math.min(file.width/size.width,file.height/size.height)*(design.scale/100);
@@ -178,7 +179,7 @@ export async function createMockup(request,env){
     if(existing?.sourceHash===sourceHash&&existing.position&&['completed','pending'].includes(existing.status))return json({ok:true,status:existing.status,taskKey:existing.taskKey,sku,mockupId,design:existing.design||design,waitSeconds:10});
     if(!env.IMAGES)throw fault('images_required','Image processing is not configured.',503);
     stage="image-info";
-    const size=await env.IMAGES.info(new Blob([decodeBase64(savedBase64)]).stream());size.design=design;
+    const size=await env.IMAGES.info(new Blob([decodeBase64(savedBase64)]).stream());size.design=design;size.product=map.product;
     const placement=map.preferredPlacement||'default';
     stage="printful-catalog";
     const catalog=await printful(env,`/mockup-generator/printfiles/${map.printfulProductId}`,{method:'GET'});
