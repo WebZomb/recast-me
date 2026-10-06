@@ -67,7 +67,7 @@ test('homepage is compact and explains photo to Recast to product',()=>{
   assert.doesNotMatch(html,/class="section idea-section"/);
   assert.doesNotMatch(html,/class="section promise"/);
   assert.equal((html.match(/<article class="process-node">/g)||[]).length,3);
-  assert.match(app,/new Set\(\['Mug','Blanket','Canvas','Poster'\]\)/);
+  assert.match(app,/PRODUCT_CATALOG\.map\(x=>merchCard\(x\)\)/);
   assert.match(app,/HOME_STYLE_IDS/);
 });
 
