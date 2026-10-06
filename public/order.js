@@ -18,10 +18,14 @@ function orderStatusLabel(j){
  if(status==='printful_draft_ready')return 'Production order prepared';
  if(status==='submitted_to_printful'||status==='in_printful_production')return 'In production';
  if(status==='shipped')return 'Shipped';
- if(status==='auto_print_review')return 'Paused for a quick production check';
+ if(status==='auto_print_review'||status==='owner_release_review'||status==='printful_failed')return 'Paused for a production check';
  if(status==='payment_hold')return 'Payment needs review';
  if(status==='awaiting_customer_approval')return 'Design approval needed';
- return status.replaceAll('_',' ');
+ if(status==='product_layout_review')return 'Product preview needs review';
+ if(status==='digital_fulfillment_pending')return 'Preparing your digital download';
+ if(status==='digital_ready')return 'Digital download ready';
+ if(status==='on_hold')return 'Order paused for review';
+ return status?'Order being prepared':'Checking order status';
 }
 function designCard(j){
  if(j.digital)return '';
