@@ -1,0 +1,11 @@
+/* RM-050.1: owner-requested landing and product-flow polish layered over RM-049. */
+@media(max-width:760px){
+  .hero{padding-top:22px!important;padding-bottom:14px!important}
+  .hero-live-stage{margin-top:4px!important;aspect-ratio:1.08!important}
+  .hero-live-flow{width:47%!important;left:0!important;bottom:24%!important}
+  .hero-live-product{width:62%!important;right:-1%!important;top:2%!important}
+  .hero-live-tagline{bottom:1.5%!important}
+}
+.checkout-catalog .product-design-controls.compact-product-edit{margin-top:9px;padding:0;border:0;background:transparent}
+.checkout-catalog .product-design-controls.compact-product-edit summary{display:inline-flex;min-height:34px;align-items:center;padding:6px 12px;border:1px solid #37384c;border-radius:10px;background:#0d0e16;font-size:11px;width:auto}
+.checkout-catalog .product-design-controls.compact-product-edit .design-edit-body{margin-top:8px;padding:10px;border:1px solid #37384c;border-radius:12px;background:#0d0e16}

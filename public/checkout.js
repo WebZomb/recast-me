@@ -8,7 +8,7 @@ const PRODUCT_ART = {
   "Custom Recast Canvas":"/assets/product-canvas-v16.webp",
   "Custom Recast T-Shirt":"/assets/product-tshirt-v16.webp",
   "Custom Recast Blanket":"/assets/product-blanket-v16.webp",
-  "Custom Recast Mug":"https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-neon-mug-cutout-v48.png?v=1791266555",
+  "Custom Recast Mug":"/assets/product-mug-v16.webp",
   "Custom Recast Tumbler":"/assets/product-tumbler-v16.webp",
   "Custom Recast Magnet 3-Pack":"/assets/product-magnet-v16.webp",
   "Custom Recast Coaster 4-Pack":"/assets/product-coaster-v16.webp",
@@ -79,7 +79,7 @@ function designControlsMarkup(title,preset){
     ? `<option value="two-sided" selected>Best setup · image on both sides</option><option value="wrap">Full wrap / full bleed</option><option value="single">One image</option><option value="fit">Keep whole image + blended background</option>`
     : `<option value="cover" selected>Best setup · fill the product</option><option value="fit">Keep whole image + background fill</option>`;
   const spacing=wrap?`<label data-design-spacing-wrap>Image spacing<select data-design-spacing><option value="close">Closer together</option><option value="standard" selected>Standard</option><option value="wide">Farther apart</option></select></label>`:"";
-  return `<details class="product-design-controls">
+  return `<details class="product-design-controls compact-product-edit">
     <summary><span>Edit design</span></summary>
     <div class="design-edit-body">
       <label>Layout<select data-design-layout>${layoutOptions}</select></label>
@@ -87,7 +87,7 @@ function designControlsMarkup(title,preset){
       <label data-design-fill-wrap hidden>Background fill<select data-design-fill><option value="ambient" selected>Blend artwork colors</option><option value="dark">Dark fill</option><option value="light">Light fill</option><option value="full-bleed">Artwork edge fill</option></select></label>
       <label data-design-position-wrap>Image position<select data-design-x><option value="left">Left</option><option value="center" selected>Center</option><option value="right">Right</option></select></label>
       <label data-design-scale-wrap>Image size <strong data-design-scale-label>${preset.scale}%</strong><input data-design-scale type="range" min="75" max="125" step="5" value="${preset.scale}"></label>
-      <button type="button" class="button ghost" data-reset-design>Reset to recommended</button><p class="product-mockup-note">Review a new preview after changing the design.</p>
+      <button type="button" class="button ghost" data-reset-design>Reset to best setup</button><p class="product-mockup-note">Review a new preview after changing the design.</p>
     </div>
   </details>`;
 }
@@ -348,7 +348,7 @@ async function loadCheckout(){
       : `<input type="hidden" class="recast-variant" data-product="${index}" value="${first?.sku||""}">`;
     const preset=PRODUCT_DESIGN_PRESETS[product.title]||presetFor({dataset:{productTitle:product.title}});
     const designControls=digital?"":designControlsMarkup(product.title,preset);
-    const realPreview=digital?"":`<div class="recommended-design-row"><span data-design-summary>Recommended layout applied</span></div>${designControls}<button class="product-preview-action" data-product="${index}" type="button">Preview my product</button><p class="mockup-error" role="alert" hidden></p>`;
+    const realPreview=digital?"":`<button class="product-preview-action" data-product="${index}" type="button">Preview my product</button><p class="mockup-error" role="alert" hidden></p>`;
 
     return `<div class="${classes}" data-product-index="${index}" data-product-title="${product.title}" data-active="${active}" data-digital="${digital}">
       <div class="product-art"><img src="${PRODUCT_ART[product.title]}" alt="Example design on ${product.title}" loading="lazy"><span class="example-design-label">Example design</span></div>
@@ -362,6 +362,7 @@ async function loadCheckout(){
         <button class="recast-buy" data-product="${index}" data-buy-label="${meta.cta}" ${active&&digital?"":"disabled"} ${active&&!digital?"hidden":""}>
           ${active?(digital?meta.cta:"Continue to final review"):"Not available to buy yet"}
         </button>
+        ${designControls}
         ${active?"":'<p class="product-mockup-note">This product is still a draft. Purchasing opens after store setup and testing.</p>'}
         <p class="checkout-error" role="alert" hidden></p>
       </div>
