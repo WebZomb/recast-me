@@ -1,4 +1,4 @@
-import {change,read,hash,equal,randomToken,fault,sameOrigin,privateJson,composeMugLayout} from './commerce-store.js';
+import {change,read,hash,equal,randomToken,fault,sameOrigin,privateJson,composeMugLayout,composeProductLayout} from './commerce-store.js';
 const designKey=id=>`commerce/designs/${id}.json`;
 const validId=v=>typeof v==='string'&&/^[a-zA-Z0-9._-]{1,180}$/.test(v);
 async function authorizedOrderCapability(env,requestId,body){
@@ -107,11 +107,17 @@ export async function finishApprovedDesign(env,job){
   const claimed=await env.ARTWORK.put(claim,'started',{onlyIf:new Headers({'If-None-Match':'*'})});
   if(!claimed)throw fault('finish_in_progress','Print finishing has already started. Check its saved result before retrying.');
   let finalBytes,finishMethod='preserve-interpolate';
-  if(job.product==='Mug'&&d.proof?.design?.background==='scene-fill'){
-    const area={width:Number(d.proof.position?.area_width),height:Number(d.proof.position?.area_height)};
+  const area={width:Number(d.proof?.position?.area_width),height:Number(d.proof?.position?.area_height)};
+  const design=d.proof?.design||job.productDesign||null;
+  if(design&&Number(design.version)>=4){
+    if(!(area.width>0&&area.height>0))throw fault('proof_placement_missing','The approved product layout is missing its print area.',503);
+    const info=await env.IMAGES.info(new Blob([bytes]).stream());
+    const composed=await composeProductLayout(env,bytes,info,area,{product:job.product},design,4096);
+    finalBytes=composed.bytes;finishMethod='product-layout-v4-clean';
+  }else if(job.product==='Mug'&&design?.background==='scene-fill'){
     if(!(area.width>0&&area.height>0))throw fault('proof_placement_missing','The approved mug layout is missing its print area.',503);
     const info=await env.IMAGES.info(new Blob([bytes]).stream());
-    const composed=await composeMugLayout(env,bytes,info,area,d.proof.design,4096);
+    const composed=await composeMugLayout(env,bytes,info,area,design,4096);
     finalBytes=composed.bytes;finishMethod='mug-layout-v3-clean';
   }else{
     const out=await env.IMAGES.input(new Blob([bytes]).stream()).transform({width:4096,fit:'scale-up',upscale:'interpolate'}).output({format:'image/jpeg',quality:95});
