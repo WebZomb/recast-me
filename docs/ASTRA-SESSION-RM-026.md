@@ -399,3 +399,5 @@ Implemented:
 - Current order #1001 is still shown by Shopify as PAID / UNFULFILLED with release tags RECAST_SEND_PRODUCTION and RECAST_RELEASE_TRIGGER. Shopify has no fulfillment record yet; the direct Recast→Printful path does not require the owner to create a Shopify shipping label or manually mark the order fulfilled.
 - The Recast Worker’s production path is: paid Shopify order → verify exact purchased Artwork ID/layout/proof → prepare clean private print file → create Printful order using PRINTFUL_API_TOKEN / store 18798877 → confirm Printful production → sync Printful status/tracking back into Recast. Shopify fulfillment remains unfulfilled until a fulfillment/tracking update is created.
 - Asset cache keys: site-v10.css?v=232, merch-v07.css?v=134, app.js?v=229, checkout.js?v=239.
+
+- RM-047 validation follow-up: adjusted the homepage regression to expect the full PRODUCT_CATALOG rail instead of the removed four-product homeNames subset. No application logic changed in this follow-up.
