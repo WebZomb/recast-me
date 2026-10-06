@@ -31,6 +31,19 @@ const PRODUCT_META = {
   "Recast Pack": {order:91,badge:"DIGITAL PACK",pitch:"The complete digital set with useful crops and formats.",tier:"digital",cta:"Get Recast Pack"}
 };
 
+const PRODUCT_DESIGN_PRESETS = {
+  "Custom Recast Mug": {product:"Mug",layout:"two-sided",fill:"ambient",x:"center",scale:110,spacing:"standard",label:"Best setup · two-sided wrap"},
+  "Custom Recast Tumbler": {product:"Tumbler",layout:"two-sided",fill:"ambient",x:"center",scale:108,spacing:"standard",label:"Best setup · two-sided wrap"},
+  "Custom Recast Blanket": {product:"Blanket",layout:"cover",fill:"full-bleed",x:"center",scale:100,spacing:"standard",label:"Best setup · full blanket"},
+  "Custom Recast Poster": {product:"Poster",layout:"cover",fill:"full-bleed",x:"center",scale:100,spacing:"standard",label:"Best setup · full bleed"},
+  "Custom Recast Framed Poster": {product:"Framed Poster",layout:"cover",fill:"full-bleed",x:"center",scale:100,spacing:"standard",label:"Best setup · full bleed"},
+  "Custom Recast Canvas": {product:"Canvas",layout:"cover",fill:"full-bleed",x:"center",scale:100,spacing:"standard",label:"Best setup · full bleed"},
+  "Custom Recast Magnet 3-Pack": {product:"Magnet 3-Pack",layout:"cover",fill:"full-bleed",x:"center",scale:100,spacing:"standard",label:"Best setup · full bleed"},
+  "Custom Recast Coaster 4-Pack": {product:"Coaster 4-Pack",layout:"cover",fill:"full-bleed",x:"center",scale:100,spacing:"standard",label:"Best setup · full bleed"}
+};
+function presetFor(card){return PRODUCT_DESIGN_PRESETS[card?.dataset?.productTitle]||{product:"Generic",layout:"fit",fill:"ambient",x:"center",scale:100,spacing:"standard",label:"Recommended setup"}}
+
+
 function lastRequest(){if(window.__recastActiveRequest)return window.__recastActiveRequest;try{return JSON.parse(localStorage.getItem("recast_last_request")||"null")}catch{return null}}
 function showCatalogError(message){
   grid.replaceChildren();
@@ -50,12 +63,13 @@ function stateFor(card){
   return state;
 }
 function productDesign(card){
-  const mug=card?.dataset?.productTitle==="Custom Recast Mug";
-  const layout=card?.querySelector?.("[data-design-layout]")?.value||"single";
-  const x=card?.querySelector?.("[data-design-x]")?.value||"center";
-  const scale=Number(card?.querySelector?.("[data-design-scale]")?.value||(mug?92:100));
-  const spacing=card?.querySelector?.("[data-design-spacing]")?.value||"standard";
-  return {product:mug?"Mug":"Generic",layout:mug?layout:"single",background:mug?"scene-fill":"none",x,scale,spacing:mug?spacing:"standard"};
+  const preset=presetFor(card);
+  const layout=card?.querySelector?.("[data-design-layout]")?.value||preset.layout;
+  const x=card?.querySelector?.("[data-design-x]")?.value||preset.x;
+  const scale=Number(card?.querySelector?.("[data-design-scale]")?.value||preset.scale);
+  const spacing=card?.querySelector?.("[data-design-spacing]")?.value||preset.spacing;
+  const fill=card?.querySelector?.("[data-design-fill]")?.value||preset.fill;
+  return {product:preset.product,layout,fill,x,scale,spacing};
 }
 function designSignature(card,sku){return JSON.stringify({sku,design:productDesign(card)})}
 function syncSpacingControl(card){
@@ -78,7 +92,7 @@ function resetProductPreview(card,{invalidate=true}={}){
   const caption=card.querySelector?.(".example-design-label");if(caption)caption.textContent="Example design";
   const error=card.querySelector?.(".mockup-error");if(error){error.hidden=true;error.textContent="";}
   const preview=card.querySelector?.(".product-preview-action");
-  if(preview){preview.disabled=state.busy;preview.textContent=state.busy?"Waiting for current preview…":"Preview my Recast on the real product";}
+  if(preview){preview.disabled=state.busy;preview.textContent=state.busy?"Waiting for current preview…":"Preview recommended design";}
   requireFreshPreview(card);
 }
 
@@ -91,10 +105,11 @@ function viewLabel(title,index){
 }
 function designSummary(card){
   const d=productDesign(card),parts=[];
-  parts.push(d.layout==="two-sided"?"Same image on both sides":d.layout==="wrap"?"Full wrap":"One image");
+  parts.push(d.layout==="two-sided"?"Two-sided wrap":d.layout==="wrap"?"Full wrap":d.layout==="cover"?"Full bleed":d.layout==="fit"?"Keep whole image":"One image");
   if(d.layout==="two-sided")parts.push(d.spacing==="close"?"Closer spacing":d.spacing==="wide"?"Wider spacing":"Standard spacing");
+  if(d.layout==="fit")parts.push(d.fill==="dark"?"Dark fill":d.fill==="full-bleed"?"Artwork fill":"Blended fill");
   parts.push((d.x||"center").replace(/^./,m=>m.toUpperCase()));
-  parts.push(`${d.scale}% size`);
+  if(d.scale!==100)parts.push(`${d.scale}% size`);
   return parts.join(" · ");
 }
 function closeFinalReview(){
