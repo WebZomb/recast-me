@@ -34,6 +34,14 @@ export function recommendedProductDesign(map={}){
 }
 export function normalizeProductDesign(map,raw={}){
   const product=String(map?.product||'Generic'),recommended=recommendedProductDesign(map);
+  const rawVersion=Number(raw?.version||0);
+  if(product==='Mug'&&rawVersion>0&&rawVersion<4){
+    const layout=['single','two-sided','wrap'].includes(String(raw.layout))?String(raw.layout):'single';
+    const x=['left','center','right'].includes(String(raw.x))?String(raw.x):'center';
+    const n=Number(raw.scale),scale=Math.round(Math.max(55,Math.min(250,Number.isFinite(n)?n:92)));
+    const spacing=['close','standard','wide'].includes(String(raw.spacing))?String(raw.spacing):'standard';
+    return {version:rawVersion,layout,background:'scene-fill',x,scale,spacing};
+  }
   const wrapProduct=['Mug','Tumbler'].includes(product);
   const flatProduct=['Blanket','Poster','Framed Poster','Canvas','Magnet 3-Pack','Coaster 4-Pack'].includes(product);
   const allowedLayout=wrapProduct?['single','two-sided','wrap','fit']:flatProduct?['cover','fit']:['fit','cover'];
