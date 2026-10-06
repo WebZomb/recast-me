@@ -89,7 +89,7 @@ test('engine-specific reserves are applied to the actual model without loosening
 test('product settings stay collapsed with only Edit design and a reset action',()=>{
  const code=readFileSync(new URL('../public/checkout.js',import.meta.url),'utf8');
  assert.match(code,/<summary><span>Edit design<\/span><\/summary>/);assert.doesNotMatch(code,/<summary>[^\n]*preset.label/);
- assert.match(code,/details.open=false/);assert.match(code,/Reset to recommended/);assert.match(code,/Preview my product/);assert.match(code,/requireFreshPreview\(card\)/);
+ assert.match(code,/details.open=false/);assert.match(code,/Reset to best setup/);assert.match(code,/Preview my product/);assert.match(code,/requireFreshPreview\(card\)/);
 });
 
 test('a model alias cannot accidentally reduce the High Quality reserve',async()=>{
