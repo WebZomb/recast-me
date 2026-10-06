@@ -248,3 +248,5 @@ Implemented:
 - Added regression coverage asserting the broad hero, three-step flow, removed long sections, compact product sample, and limited homepage world set.
 
 No AI render, payment, order change, or Printful action was performed by this homepage work.
+
+- RM-038 validation fixture updated so the checkout UI test models classList.remove used when switching from the compact homepage catalog to the full active-Recast catalog.
