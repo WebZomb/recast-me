@@ -2138,3 +2138,145 @@ footer,.site-footer{
   .hero-live-product{right:-5%!important;width:65%!important;top:13px!important;min-height:374px!important}
   .hero-live-product-label{bottom:28px!important;min-width:154px!important}
 }
+
+
+/* RM-048 — clean mug-only hero composition and tighter header alignment */
+.site-header .nav-cta{
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:8px!important;
+  line-height:1!important;
+  white-space:nowrap!important;
+}
+.site-header .nav-cta span{
+  display:inline-block!important;
+  line-height:1!important;
+  transform:translateY(-1px)!important;
+}
+
+.hero-live-stage{
+  height:485px!important;
+}
+.hero-live-flow{
+  left:2.5%!important;
+  bottom:108px!important;
+  width:43%!important;
+  grid-template-columns:1fr 24px 1fr 18px!important;
+}
+.hero-live-product{
+  right:2%!important;
+  top:6px!important;
+  width:56%!important;
+  min-height:385px!important;
+}
+.hero-live-product img{
+  width:100%!important;
+  max-width:540px!important;
+  transform:none!important;
+  filter:drop-shadow(0 28px 24px rgba(0,0,0,.46))!important;
+}
+.hero-live-product-glow{
+  display:none!important;
+}
+.hero-live-product-label{
+  position:absolute;
+  z-index:4;
+  left:50%;
+  bottom:32px;
+  transform:translateX(-50%);
+  min-width:214px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+  padding:9px 16px;
+  border-radius:999px;
+  border:1px solid rgba(46,219,255,.72);
+  background:rgba(5,9,25,.88);
+  box-shadow:0 0 24px rgba(40,215,255,.16);
+  color:#fff;
+  letter-spacing:.15em;
+  white-space:nowrap;
+}
+.hero-live-product-label span{
+  color:#35dff6;
+  font-size:9px;
+  font-weight:900;
+}
+.hero-live-product-label b{
+  font-size:9px;
+  font-weight:900;
+}
+.hero-live-tagline{bottom:0!important}
+
+/* The small How It Works mug should use the same current mug art, cropped cleanly. */
+.product-node-art{
+  display:grid!important;
+  place-items:center!important;
+  background:radial-gradient(circle at 50% 50%,rgba(59,75,146,.25),rgba(7,8,18,.96) 72%)!important;
+}
+.product-node-art img{
+  width:100%!important;
+  height:100%!important;
+  object-fit:contain!important;
+  object-position:center!important;
+  transform:scale(.98)!important;
+  background:transparent!important;
+}
+
+@media(max-width:760px){
+  .site-header .nav-cta{
+    min-height:52px!important;
+    padding:0 18px!important;
+    font-size:14px!important;
+  }
+  .hero-live-stage{
+    height:455px!important;
+    width:calc(100% + 8vw)!important;
+    margin:15px -4vw 0!important;
+  }
+  .hero-live-flow{
+    left:3.5%!important;
+    bottom:112px!important;
+    width:44%!important;
+    grid-template-columns:1fr 16px 1fr 12px!important;
+  }
+  .hero-live-product{
+    right:1.5%!important;
+    top:10px!important;
+    width:57%!important;
+    min-height:350px!important;
+  }
+  .hero-live-product img{
+    width:100%!important;
+    max-width:none!important;
+  }
+  .hero-live-product-label{
+    bottom:24px!important;
+    min-width:162px!important;
+    padding:7px 10px!important;
+    gap:7px!important;
+  }
+  .hero-live-product-label span,.hero-live-product-label b{font-size:7.5px!important}
+  .hero-live-tagline{bottom:0!important}
+}
+@media(max-width:420px){
+  .site-header .nav-cta{
+    padding:0 14px!important;
+    font-size:13px!important;
+    gap:6px!important;
+  }
+  .hero-live-stage{height:430px!important}
+  .hero-live-flow{
+    left:3%!important;
+    bottom:105px!important;
+    width:45%!important;
+  }
+  .hero-live-product{
+    right:0!important;
+    top:12px!important;
+    width:58%!important;
+    min-height:330px!important;
+  }
+}
