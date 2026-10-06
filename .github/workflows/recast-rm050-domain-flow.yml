@@ -1,0 +1,43 @@
+name: Prepare RM-050 domain and flow polish
+on:
+  push:
+    branches: [recast/rm050-domain-flow-polish-2026-10-06]
+permissions:
+  contents: write
+jobs:
+  prepare:
+    if: startsWith(github.event.head_commit.message, 'prepare:')
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    env:
+      CI: 'true'
+      WRANGLER_SEND_METRICS: 'false'
+    steps:
+      - name: Fetch exact revision
+        run: |
+          git init .
+          git remote add origin "https://github.com/${GITHUB_REPOSITORY}.git"
+          git fetch --depth=1 origin "${GITHUB_SHA}"
+          git checkout --detach FETCH_HEAD
+      - name: Apply scoped owner-requested changes
+        run: node scripts/apply-rm050-domain-flow.mjs
+      - name: Install locked dependencies
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Run full tests
+        run: npm test
+      - name: Bundle without deployment
+        run: npx --no-install wrangler deploy --dry-run --outdir /tmp/recast-rm050
+      - name: Commit validated changes and remove one-shot workflow
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config user.name 'WebZomb'
+          git config user.email '97362504+WebZomb@users.noreply.github.com'
+          git rm .github/workflows/recast-rm050-domain-flow.yml
+          git add public src scripts tests docs wrangler.jsonc
+          git diff --cached --check
+          git diff --cached --stat
+          git commit -m 'validate: RM-050 custom domain and purchase-flow polish'
+          AUTH=$(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)
+          git -c http.extraHeader="AUTHORIZATION: basic $AUTH" push origin HEAD:refs/heads/recast/rm050-domain-flow-polish-2026-10-06
+          git rev-parse HEAD
