@@ -381,3 +381,5 @@ Implemented:
 - Changed the How It Works middle “Recast” image from the unrelated world-space-v18 artwork to world-game-v18 so it matches the same Jack Russell transformation shown in the hero.
 - Cache keys bumped to site-v10.css?v=231, app.js?v=228, checkout.js?v=238.
 - Added regression coverage for the repaired markup, correct Recast image, and restored Mug example.
+
+- RM-046 validation follow-up: corrected a regression assertion so it only rejects the literal visible “</div>/div>” artifact instead of matching every normal closing div tag. No application logic changed in this follow-up.
