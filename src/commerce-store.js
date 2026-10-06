@@ -24,14 +24,28 @@ export function sameOrigin(request){
 }
 export function privateJson(data,status=200,extra={}){return Response.json(data,{status,headers:{'cache-control':'private, no-store','referrer-policy':'no-referrer',...extra}})}
 
+export function recommendedProductDesign(map={}){
+  const product=String(map?.product||'Generic');
+  if(product==='Mug')return {layout:'two-sided',fill:'ambient',x:'center',scale:110,spacing:'standard'};
+  if(product==='Tumbler')return {layout:'two-sided',fill:'ambient',x:'center',scale:108,spacing:'standard'};
+  if(product==='Blanket')return {layout:'cover',fill:'full-bleed',x:'center',scale:100,spacing:'standard'};
+  if(['Poster','Framed Poster','Canvas','Magnet 3-Pack','Coaster 4-Pack'].includes(product))return {layout:'cover',fill:'full-bleed',x:'center',scale:100,spacing:'standard'};
+  return {layout:'fit',fill:'ambient',x:'center',scale:100,spacing:'standard'};
+}
 export function normalizeProductDesign(map,raw={}){
-  const mug=map?.product==='Mug';
-  const allowedLayout=mug?['single','two-sided','wrap']:['single'];
-  const layout=allowedLayout.includes(String(raw.layout))?String(raw.layout):'single';
-  const x=['left','center','right'].includes(String(raw.x))?String(raw.x):'center';
-  const n=Number(raw.scale),scale=Math.round(Math.max(55,Math.min(250,Number.isFinite(n)?n:(mug?92:100))));
-  const spacing=mug&&['close','standard','wide'].includes(String(raw.spacing))?String(raw.spacing):'standard';
-  return {version:3,layout,background:mug?'scene-fill':'none',x,scale,spacing};
+  const product=String(map?.product||'Generic'),recommended=recommendedProductDesign(map);
+  const wrapProduct=['Mug','Tumbler'].includes(product);
+  const flatProduct=['Blanket','Poster','Framed Poster','Canvas','Magnet 3-Pack','Coaster 4-Pack'].includes(product);
+  const allowedLayout=wrapProduct?['single','two-sided','wrap','fit']:flatProduct?['cover','fit']:['fit','cover'];
+  const requested=String(raw.layout||'');
+  const layout=allowedLayout.includes(requested)?requested:recommended.layout;
+  const x=['left','center','right'].includes(String(raw.x))?String(raw.x):recommended.x;
+  const n=Number(raw.scale),scale=Math.round(Math.max(70,Math.min(140,Number.isFinite(n)?n:recommended.scale)));
+  const spacing=wrapProduct&&['close','standard','wide'].includes(String(raw.spacing))?String(raw.spacing):recommended.spacing;
+  const allowedFill=['full-bleed','ambient','dark','light'];
+  const fill=allowedFill.includes(String(raw.fill))?String(raw.fill):(layout==='cover'||layout==='wrap'?'full-bleed':recommended.fill);
+  const background=(layout==='cover'||layout==='wrap')?'full-bleed':fill;
+  return {version:4,layout,background,fill,x,scale,spacing,product};
 }
 export function productPrintfile(catalog,variantId,placement){
   const variant=catalog?.variant_printfiles?.find(v=>Number(v.variant_id)===Number(variantId));
@@ -53,9 +67,47 @@ async function jpegBytes(chain){
   if(bytes.length<100||bytes[0]!==255||bytes[1]!==216||bytes[2]!==255)throw fault('product_compose_invalid','Product artwork composition returned invalid image data.',502);
   return bytes;
 }
+export async function composeProductLayout(env,sourceBytes,sourceSize,area,map={},rawDesign={},targetWidth=2400){
+  if(!env.IMAGES?.input)throw fault('images_required','Image processing is not configured.',503);
+  const design=normalizeProductDesign(map,rawDesign);
+  const outWidth=Math.max(800,Math.round(targetWidth));
+  const outHeight=Math.max(300,Math.round(outWidth*area.height/area.width));
+  const stream=()=>new Blob([sourceBytes],{type:'image/jpeg'}).stream();
+
+  if(design.layout==='cover'||design.layout==='wrap'){
+    const chain=env.IMAGES.input(stream()).transform({width:outWidth,height:outHeight,fit:'cover'});
+    return {bytes:await jpegBytes(chain),design,outputSize:{width:outWidth,height:outHeight},method:'full-bleed-cover'};
+  }
+  if(['Mug','Tumbler'].includes(design.product)&&design.layout==='two-sided'){
+    return composeMugLayout(env,sourceBytes,sourceSize,area,design,targetWidth);
+  }
+
+  // Preserve the whole portrait over a product-filling backdrop. This is used
+  // only when a customer explicitly chooses a fit-style edit instead of the
+  // product's recommended full-bleed crop.
+  const darkBg=new Blob([MUG_BG_PNG],{type:'image/png'}).stream();
+  let chain=env.IMAGES.input(darkBg).transform({width:outWidth,height:outHeight,fit:'cover'});
+  if(design.fill==='ambient'){
+    const wash=env.IMAGES.input(stream()).transform({width:outWidth,height:outHeight,fit:'cover',blur:180,saturation:0.78,gamma:1.25});
+    chain=chain.draw(wash,{left:0,top:0,opacity:0.58});
+  }else if(design.fill==='full-bleed'){
+    const wash=env.IMAGES.input(stream()).transform({width:outWidth,height:outHeight,fit:'cover',blur:42,saturation:0.92});
+    chain=chain.draw(wash,{left:0,top:0,opacity:0.9});
+  }
+
+  const factor=design.scale/100;
+  const fitted=fitDimensions(sourceSize.width,sourceSize.height,outWidth*0.92*factor,outHeight*0.92*factor);
+  const center=design.x==='left'?0.30:design.x==='right'?0.70:0.50;
+  const left=Math.round(Math.max(0,Math.min(outWidth-fitted.width,center*outWidth-fitted.width/2)));
+  const top=Math.round((outHeight-fitted.height)/2);
+  const overlay=env.IMAGES.input(stream()).transform({width:fitted.width,height:fitted.height,fit:'contain'});
+  chain=chain.draw(overlay,{left,top});
+  return {bytes:await jpegBytes(chain),design,outputSize:{width:outWidth,height:outHeight},method:'fit-over-fill'};
+}
+
 export async function composeMugLayout(env,sourceBytes,sourceSize,area,rawDesign={},targetWidth=1600){
   if(!env.IMAGES?.input)throw fault('images_required','Image processing is not configured.',503);
-  const design=normalizeProductDesign({product:'Mug'},rawDesign);
+  const design=normalizeProductDesign({product:rawDesign?.product==='Tumbler'?'Tumbler':'Mug'},rawDesign);
   const outWidth=Math.max(800,Math.round(targetWidth));
   const outHeight=Math.max(240,Math.round(outWidth*area.height/area.width));
   const stream=()=>new Blob([sourceBytes],{type:'image/jpeg'}).stream();
