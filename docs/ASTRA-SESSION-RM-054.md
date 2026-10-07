@@ -46,3 +46,5 @@ For every candidate, use the connected Printful token to verify catalog_product_
 Phone Case needs a deliberate supported-device set rather than one generic Shopify variant. Puzzle must be labeled US-only if retained.
 
 No current live SKU, order, fulfillment mapping, render-credit rule, owner control, approved artwork, or paid production submission is changed by this branch.
+
+- Added an admin-only GET catalog-candidate verifier. It uses the existing Printful token to read exact V2 variant identity/product IDs without creating mockups, orders, drafts, or production submissions. This is the next safe bridge from public research to exact provider mapping.
