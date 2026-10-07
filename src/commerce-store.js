@@ -36,7 +36,7 @@ export function recommendedProductDesign(map={}){
 export function normalizeProductDesign(map,raw={}){
   const product=String(map?.product||'Generic'),recommended=recommendedProductDesign(map);
   const rawVersion=Number(raw?.version||0);
-  if(rawVersion===7&&product==='Hardcover Journal'){
+  if(rawVersion===7&&['Hardcover Journal','Phone Case'].includes(product)){
     const n=Number(raw.scale),scale=Math.round(Math.max(70,Math.min(100,Number.isFinite(n)?n:100)));
     const fill=['ambient','dark','light'].includes(raw.fill)?raw.fill:'ambient';
     return {version:7,layout:'fit',background:fill,fill,x:'center',scale,spacing:'standard',product};
@@ -68,7 +68,7 @@ export function normalizeProductDesign(map,raw={}){
     const apparelScale=Math.min(raw.finish==='soft'?118:100,scale);
     return {version:5,layout:'fit',background:'transparent',fill:'transparent',x,scale:apparelScale,spacing,product,finish:raw.finish};
   }
-  if(rawVersion===6)return {version:6,layout,background,fill,x,scale,spacing,product,...(['Poster','Framed Poster','Canvas'].includes(product)?{orientation:raw.orientation==='landscape'?'landscape':'portrait'}:{})};
+  if(rawVersion===6)return {version:6,layout,background,fill,x,scale,spacing,product,...(['Poster','Framed Poster','Canvas','Puzzle'].includes(product)?{orientation:raw.orientation==='landscape'?'landscape':'portrait'}:{})};
   return {version:4,layout,background,fill,x,scale,spacing,product};
 }
 // Pillow front and back share one supplier-verified template and the same artwork.
@@ -139,6 +139,16 @@ export async function composeProductLayout(env,sourceBytes,sourceSize,area,map={
     const canvas=await transparentCanvas(outWidth,outHeight);
     const chain=env.IMAGES.input(new Blob([canvas],{type:'image/png'}).stream()).draw(overlay,{left,top});
     return {bytes:await pngOutput(chain),mime:'image/png',design,outputSize:{width:outWidth,height:outHeight},method:'apparel-v5-'+design.finish};
+  }
+  if(design.version===7&&design.product==='Phone Case'){
+    // Reserve the upper 32% for the verified clear-case camera openings.
+    const base=design.fill==='light'?LIGHT_BG_PNG:MUG_BG_PNG;
+    let chain=env.IMAGES.input(new Blob([base],{type:'image/png'}).stream()).transform({width:outWidth,height:outHeight,fit:'cover'});
+    if(design.fill==='ambient')chain=chain.draw(env.IMAGES.input(stream()).transform({width:outWidth,height:outHeight,fit:'cover',blur:180}),{left:0,top:0,opacity:0.58});
+    const fitted=fitDimensions(sourceSize.width,sourceSize.height,outWidth*.84*design.scale/100,outHeight*.59*design.scale/100);
+    const box={left:Math.round((outWidth-fitted.width)/2),top:Math.round(outHeight*.32+(outHeight*.59-fitted.height)/2),...fitted};
+    chain=chain.draw(env.IMAGES.input(stream()).transform({width:box.width,height:box.height,fit:'contain'}),{left:box.left,top:box.top});
+    return {bytes:await jpegBytes(chain),design,outputSize:{width:outWidth,height:outHeight},artworkBox:box,method:'phone-v7-camera-safe'};
   }
   if(design.version===7&&design.product==='Hardcover Journal'){
     // Supplier 867/22658: one 4065×2850 wrap sheet around two 5.75×8 covers.

@@ -21,7 +21,7 @@ const pause=ms=>new Promise(resolve=>setTimeout(resolve,ms));
   for(const p of ['/api/model-status','/api/render-readiness','/api/public-config','/api/printful-health']){
     try{const r=await fetch(base+p,{signal:AbortSignal.timeout(25000)});const type=r.headers.get('content-type')||'';const body=type.includes('json')?await r.json():{contentType:type};report.health.push({path:p,status:r.status,body});}catch(e){report.health.push({path:p,error:e.message});}
   }
-  for(const p of ['/privacy.html','/support.html','/order.html','/launch-v49.css?v=249','/product-studio-v52.css?v=1','/checkout.js?v=2567']){
+  for(const p of ['/privacy.html','/support.html','/order.html','/launch-v49.css?v=249','/product-studio-v52.css?v=1','/checkout.js?v=2568']){
     try{const r=await fetch(base+p,{signal:AbortSignal.timeout(20000)});report.pages.push({path:p,status:r.status,contentType:r.headers.get('content-type')});if(!r.ok)report.failures.push(p+' unavailable');}catch(e){report.pages.push({path:p,error:e.message});report.failures.push(p+' inaccessible');}
   }
   for(const [engine,width,height] of [[webkit,393,852],[chromium,320,740],[chromium,768,1024],[chromium,1440,1000]]){

@@ -33,3 +33,15 @@ test('journal keeps whole portrait on separate covers without changing old appro
   assert.ok(back.left>0&&back.left+back.width<1200);assert.ok(front.left>1200&&front.left+front.width<2400);
  }
 });
+
+test('phone layout reserves the camera area and keeps the complete image within the case',async()=>{
+ const {normalizeProductDesign,composeProductLayout}=await import('../src/commerce-store.js');
+ const map=FULFILLMENT['RECAST-CASE-IP14PM'];
+ assert.equal(normalizeProductDesign(map,{version:6,layout:'cover'}).version,6);
+ const env={IMAGES:{input(){const chain={transform(){return chain},draw(){return chain},async output(){return {response:()=>new Response(new Uint8Array([255,216,255,...Array(100).fill(0)]))}}};return chain}}};
+ for(const [width,height] of [[900,1600],[1600,900],[1000,1000]]){
+  const out=await composeProductLayout(env,new Uint8Array([1]),{width,height},{width:900,height:1800},map,{version:7,scale:140},1200);
+  const b=out.artworkBox;assert.equal(out.design.version,7);assert.equal(out.design.scale,100);
+  assert.ok(b.top>=out.outputSize.height*.32);assert.ok(b.left>0&&b.left+b.width<out.outputSize.width);assert.ok(b.top+b.height<out.outputSize.height);assert.ok(Math.abs(b.width/b.height-width/height)<.002);
+ }
+});

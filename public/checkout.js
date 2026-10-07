@@ -57,11 +57,11 @@ const PRODUCT_DESIGN_PRESETS = {
   "Custom Recast Magnet 3-Pack": {product:"Magnet 3-Pack",layout:"cover",fill:"full-bleed",x:"center",scale:100,spacing:"standard",label:"Best setup · full bleed"},
   "Custom Recast Coaster 4-Pack": {product:"Coaster 4-Pack",layout:"cover",fill:"full-bleed",x:"center",scale:100,spacing:"standard",label:"Best setup · full bleed"},
   "Custom Recast Sticker": {product:"Sticker",layout:"cover",fill:"full-bleed",x:"center",scale:100,spacing:"standard",label:"Best setup · full sticker"},
-  "Custom Recast Phone Case": {product:"Phone Case",layout:"cover",fill:"full-bleed",x:"center",scale:100,spacing:"standard",label:"Best setup · full case"},
-  "Custom Recast Pillow": {product:"Pillow",layout:"cover",fill:"full-bleed",x:"center",scale:100,spacing:"standard",label:"Best setup · full pillow"},
+  "Custom Recast Phone Case": {product:"Phone Case",layout:"fit",fill:"ambient",x:"center",scale:100,spacing:"standard",label:"Best setup · whole image below camera"},
+  "Custom Recast Pillow": {product:"Pillow",layout:"fit",fill:"ambient",x:"center",scale:100,spacing:"standard",label:"Best setup · whole image"},
   "Custom Recast Hardcover Journal": {product:"Hardcover Journal",layout:"fit",fill:"ambient",x:"center",scale:100,spacing:"standard",label:"Best setup · whole image on both covers"},
   "Custom Recast Puzzle": {product:"Puzzle",layout:"cover",fill:"full-bleed",x:"center",scale:100,spacing:"standard",label:"Best setup · full puzzle"},
-  "Custom Recast Tote Bag": {product:"Tote Bag",layout:"cover",fill:"full-bleed",x:"center",scale:100,spacing:"standard",label:"Best setup · full tote"}
+  "Custom Recast Tote Bag": {product:"Tote Bag",layout:"fit",fill:"ambient",x:"center",scale:100,spacing:"standard",label:"Best setup · whole image"}
 };
 function presetFor(card){return PRODUCT_DESIGN_PRESETS[card?.dataset?.productTitle]||{product:"Generic",layout:"fit",fill:"ambient",x:"center",scale:100,spacing:"standard",label:"Recommended setup"}}
 
@@ -143,14 +143,14 @@ function productDesign(card){
   const scale=Number(card?.querySelector?.("[data-design-scale]")?.value||preset.scale);
   const spacing=card?.querySelector?.("[data-design-spacing]")?.value||preset.spacing;
   const fill=card?.querySelector?.("[data-design-fill]")?.value||preset.fill;
-  return {version:preset.product==="Hardcover Journal"?7:6,product:preset.product,layout,fill,x,scale,spacing,...(["Poster","Framed Poster","Canvas"].includes(preset.product)?{orientation:"portrait"}:{}),...(preset.finish?{finish:card?.querySelector?.("[data-design-finish]")?.value||preset.finish}:{})};
+  return {version:["Hardcover Journal","Phone Case"].includes(preset.product)?7:6,product:preset.product,layout,fill,x,scale,spacing,...(["Poster","Framed Poster","Canvas","Puzzle"].includes(preset.product)?{orientation:"portrait"}:{}),...(preset.finish?{finish:card?.querySelector?.("[data-design-finish]")?.value||preset.finish}:{})};
 }
 function designSignature(card,sku){return JSON.stringify({sku,design:productDesign(card)})}
 function designControlsMarkup(title,preset){
   const wrap=['Custom Recast Mug','Custom Recast Tumbler'].includes(title);
   const apparel=Boolean(preset.finish);
-  const journal=preset.product==="Hardcover Journal";
-  const layoutOptions=journal?`<option value="fit" selected>Whole image on both covers</option>`:wrap
+  const journal=preset.product==="Hardcover Journal",phone=preset.product==="Phone Case";
+  const layoutOptions=phone?`<option value="fit" selected>Whole image below camera opening</option>`:journal?`<option value="fit" selected>Whole image on both covers</option>`:wrap
     ? `<option value="two-sided" selected>Best setup · image on both sides</option><option value="wrap">Full wrap / full bleed</option><option value="single">One image</option><option value="fit">Keep whole image + blended background</option>`
     : `<option value="cover" selected>Best setup · fill the product</option><option value="fit">Keep whole image + background fill</option>`;
   const spacing=wrap?`<label data-design-spacing-wrap>Image spacing<select data-design-spacing><option value="close">Closer together</option><option value="standard" selected>Standard</option><option value="wide">Farther apart</option></select></label>`:"";
@@ -162,7 +162,7 @@ function designControlsMarkup(title,preset){
       ${spacing}
       <label data-design-fill-wrap hidden>Background fill<select data-design-fill><option value="ambient" selected>Blend artwork colors</option><option value="transparent" hidden>No added background</option><option value="dark">Dark fill</option><option value="light">Light fill</option><option value="full-bleed">Artwork edge fill</option></select></label>
       <label data-design-position-wrap>Image position<select data-design-x><option value="left">Left</option><option value="center" selected>Center</option><option value="right">Right</option></select></label>
-      <label data-design-scale-wrap>Print-area size <strong data-design-scale-label>${preset.scale}%</strong><input data-design-scale type="range" min="75" max="${apparel||journal?100:125}" step="${apparel?1:5}" value="${preset.scale}"></label>
+      <label data-design-scale-wrap>Print-area size <strong data-design-scale-label>${preset.scale}%</strong><input data-design-scale type="range" min="75" max="${apparel||journal||phone?100:125}" step="${apparel?1:5}" value="${preset.scale}"></label>
       <button type="button" class="button ghost" data-reset-design>Reset to best setup</button><p class="product-mockup-note">Review a new preview after changing the design.</p>
     </div>
   </details>`;
@@ -187,7 +187,7 @@ function syncDesignControls(card){
   if(spacing)spacing.hidden=layout!=="two-sided";
   if(fill)fill.hidden=layout!=="fit";
   const fullBleed=layout==="cover"||layout==="wrap";
-  if(position)position.hidden=fullBleed||presetFor(card).product==="Hardcover Journal";
+  if(position)position.hidden=fullBleed||["Hardcover Journal","Phone Case"].includes(presetFor(card).product);
   if(scale)scale.hidden=fullBleed;
 }
 
