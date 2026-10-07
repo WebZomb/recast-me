@@ -1,0 +1,45 @@
+name: RM055 isolated product accuracy
+on:
+  push:
+    branches: [recast/rm055-product-accuracy]
+permissions:
+  contents: read
+concurrency:
+  group: rm055-isolated
+  cancel-in-progress: true
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    env:
+      CI: 'true'
+      WRANGLER_SEND_METRICS: 'false'
+    steps:
+      - name: Fetch exact public source
+        run: |
+          git init .
+          git remote add origin "https://github.com/${GITHUB_REPOSITORY}.git"
+          git fetch --depth=1 origin "${GITHUB_SHA}"
+          git checkout --detach FETCH_HEAD
+          mkdir -p /tmp/rm055-evidence
+          git archive --format=zip HEAD -o /tmp/rm055-evidence/source.zip
+          git rev-parse HEAD > /tmp/rm055-evidence/commit.txt
+      - name: Source snapshot for local inspection
+        uses: actions/upload-artifact@v4
+        with:
+          name: rm055-source
+          path: /tmp/rm055-evidence/
+          retention-days: 3
+      - name: Validate final changes only
+        if: startsWith(github.event.head_commit.message, 'validate:')
+        run: |
+          npm ci --ignore-scripts --no-audit --no-fund
+          npm test | tee /tmp/rm055-evidence/tests.txt
+          npx --no-install wrangler deploy --dry-run --outdir /tmp/rm055-bundle | tee /tmp/rm055-evidence/bundle.txt
+      - name: Retain validation evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rm055-checks
+          path: /tmp/rm055-evidence/
+          retention-days: 3
