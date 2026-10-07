@@ -32,7 +32,49 @@ const STYLES = {
   space: {
     name: "Space Explorer",
     prompt: "original cinematic space explorer portrait, distant planets, spacecraft-inspired environment, dramatic rim light, epic scale, original suit and insignia"
-  }
+  },
+  cartoon_anime:{name:"Anime Adventure",prompt:"original anime-inspired cinematic portrait, crisp cel shading, expressive identity-faithful features, original setting and wardrobe"},
+  cartoon_manga:{name:"Manga Ink",prompt:"original black-and-white manga-inspired portrait, elegant ink linework, screentone texture and original styling"},
+  cartoon_primetime:{name:"Prime-Time Cartoon",prompt:"original prime-time television cartoon portrait, clean expressive shapes, bright flat color and an original setting"},
+  cartoon_papercut:{name:"Paper-Cut Comedy",prompt:"original paper-cut comedy portrait, layered flat shapes, simple expressive faces and playful original scenery"},
+  cartoon_3d:{name:"3D Animated Adventure",prompt:"original polished 3D family-animation portrait, dimensional materials, soft cinematic light and original environment"},
+  cartoon_clay:{name:"Clay Stop-Motion",prompt:"original handcrafted clay stop-motion portrait, tactile texture, miniature practical set and soft studio lighting"},
+  cartoon_saturday:{name:"Saturday Morning Toon",prompt:"original retro television-cartoon portrait, thick energetic outlines, bright color and playful adventure setting"},
+  sports_football:{name:"Football Fan",prompt:"original football stadium portrait, custom unbranded colors, dramatic game-night lights and no real team marks"},
+  sports_basketball:{name:"Basketball Arena",prompt:"original basketball arena portrait, custom unbranded jersey colors, hardwood reflections and star-player editorial energy"},
+  sports_baseball:{name:"Baseball Card",prompt:"original premium baseball-card portrait, custom unbranded uniform colors, ballpark light and collectible-card composition"},
+  sports_soccer:{name:"Soccer Matchday",prompt:"original soccer matchday portrait, custom unbranded kit colors, stadium lights and no real club marks"},
+  sports_hockey:{name:"Hockey Night",prompt:"original ice-hockey arena portrait, custom unbranded team colors, rink light and game-night energy"},
+  sports_racing:{name:"Racing Paddock",prompt:"original motorsport paddock portrait, custom unbranded racing suit, pit-lane lights and no sponsor marks"},
+  sports_golf:{name:"Golf Club",prompt:"premium golf-club editorial portrait, tailored sport styling, golden-hour fairway and clubhouse polish"},
+  sports_tennis:{name:"Tennis Center Court",prompt:"premium center-court tennis portrait, original athletic styling, crisp stadium light and no tournament logos"},
+  genre_action:{name:"Blockbuster Action Poster",prompt:"original cinematic action-poster portrait, dramatic city scale, nonviolent confident pose and original wardrobe"},
+  genre_space_opera:{name:"Space Opera",prompt:"original epic space-opera portrait, luminous planets, elegant spacecraft and original costumes"},
+  genre_fantasy_quest:{name:"Fantasy Quest",prompt:"original fantasy-quest portrait, enchanted landscape, quest attire, ancient ruins and magical practical light"},
+  genre_noir:{name:"Detective Noir",prompt:"classic detective-noir portrait, rain-slick streets, hard window light and tailored vintage wardrobe"},
+  genre_western:{name:"Modern Western",prompt:"original cinematic western portrait, dusty sunset, period wardrobe and frontier atmosphere"},
+  genre_romcom:{name:"Rom-Com Poster",prompt:"bright original romantic-comedy poster portrait, warm city light, natural expressions and polished styling"},
+  genre_horror:{name:"Spooky Movie Poster",prompt:"stylish original suspense poster, fog, moonlight, eerie architecture and spooky but nonviolent atmosphere"},
+  genre_sitcom:{name:"Sitcom Cast",prompt:"warm original television-sitcom ensemble portrait, bright studio-home setting and expressive natural poses"},
+  genre_musical:{name:"Stage Musical",prompt:"grand original stage-musical portrait, theatrical lights, original show wardrobe and rich color"},
+  genre_spy:{name:"Spy Thriller",prompt:"sleek original spy-thriller portrait, tailored wardrobe, luxury architecture and dramatic night light"},
+  era_70s:{name:"1970s Groove",prompt:"premium 1970s editorial portrait, warm analog color, disco-era fashion and vintage interiors"},
+  era_80s:{name:"1980s Neon",prompt:"premium 1980s portrait, neon gradients, arcade glow, period fashion, chrome accents and analog texture"},
+  era_90s:{name:"1990s Nostalgia",prompt:"premium 1990s portrait, casual period fashion, mall or bedroom nostalgia and direct-flash photography"},
+  era_y2k:{name:"Y2K Pop",prompt:"early-2000s pop-futurist portrait, glossy color, chrome details and playful period fashion"},
+  era_50s:{name:"1950s Diner",prompt:"mid-century diner portrait, polished 1950s wardrobe, chrome and neon details and roadside atmosphere"},
+  role_wizard:{name:"Wizard World",prompt:"original wizard portrait, custom robe and accessories, enchanted library or castle and no franchise-specific symbols"},
+  role_pirate:{name:"Pirate Captain",prompt:"original pirate-captain portrait, weathered ship deck, rich period fabrics and ocean light"},
+  role_rockstar:{name:"Rock Star",prompt:"premium rock-star portrait, original performance wardrobe, colored spotlights and stage haze"},
+  role_detective:{name:"Private Detective",prompt:"stylish original private-detective portrait, tailored coat, city-night clues and cinematic light"},
+  role_chef:{name:"Celebrity Chef",prompt:"premium culinary portrait, original chef styling, beautiful kitchen light and magazine-cover composition"},
+  role_adventurer:{name:"World Adventurer",prompt:"original explorer portrait, expedition wardrobe, dramatic landscape and premium travel-poster energy"},
+  season_christmas:{name:"Christmas Magic",prompt:"premium Christmas portrait, warm holiday lights, elegant festive wardrobe, snow or cozy interiors"},
+  season_valentine:{name:"Valentine Romance",prompt:"tasteful Valentine portrait, elegant romantic styling, warm pink-red light, flowers and soft glow"},
+  season_summer:{name:"Summer Vacation",prompt:"premium summer-vacation portrait, golden sunlight, beach or resort atmosphere and colorful styling"},
+  season_winter:{name:"Winter Lodge",prompt:"premium winter-lodge portrait, snowy landscape or cozy lodge, elegant winter wardrobe and fireplace warmth"},
+  season_birthday:{name:"Birthday Spotlight",prompt:"stylish birthday portrait, original party decor, flattering celebration light and confetti accents"},
+  season_wedding:{name:"Wedding Portrait",prompt:"elegant wedding-inspired portrait, refined formalwear, floral atmosphere and soft luminous light"}
 };
 
 const AUTO_REJECT = [
@@ -48,7 +90,10 @@ const REVIEW_TERMS = [
 
 const IP_MARKERS = [
   "gta", "grand theft auto", "rockstar games", "disney", "pixar", "marvel", "dc comics", "pokemon",
-  "naruto", "studio ghibli", "star wars", "harry potter", "fortnite", "minecraft"
+  "naruto", "studio ghibli", "star wars", "harry potter", "fortnite", "minecraft", "batman", "superman",
+  "spider-man", "spiderman", "avengers", "the simpsons", "simpsons", "family guy", "south park",
+  "dreamworks", "nickelodeon", "looney tunes", "mickey mouse", "mario", "zelda", "sonic the hedgehog",
+  "nfl", "nba", "mlb", "nhl", "fifa", "uefa", "premier league"
 ];
 
 function json(data, status = 200) {
