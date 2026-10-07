@@ -20,14 +20,62 @@ try{
   if(path&&path.startsWith('/order.html?')){const box=document.querySelector('#return-to-order');box.hidden=false;box.querySelector('a').href=path;}
 }catch{}
 const STYLES = [
-  ["game","Game World","Cinematic city energy, dramatic light, bold illustrated realism.","/assets/world-game-card-v181.webp","Jack Russell in an adventure vest"],
-  ["halloween","Halloween","Stylish costumes, moonlight, fog, pumpkins — playful, not grim.","/assets/world-halloween-v18.webp","Jack Russell in a Halloween cape"],
-  ["retro","Retro Time Machine","A vivid trip through analog color, film grain and 1980s atmosphere.","/assets/world-retro-v18.webp","Couple in a retro sunset"],
-  ["fantasy","Fantasy Warrior","Epic armor, ancient landscapes and cinematic fantasy light.","/assets/world-fantasy-v18.webp","Woman and terrier on a fantasy adventure"],
-  ["royal","Royal","Regal portraiture, palace textures, rich fabric and museum drama.","/assets/world-royal-v18.webp","Family in a royal portrait"],
-  ["future","Future City","Neon reflections, rain haze and an original high-tech world.","/assets/world-future-v18.webp","Sports car in a future city"],
-  ["comic","Comic Hero","Original nonviolent comic-book energy, ink, halftone and motion.","/assets/world-comic-v18.webp","Woman as an original comic hero"],
-  ["space","Space Explorer","Original sci-fi portraiture, planets, spacecraft and epic scale.","/assets/world-space-v18.webp","Couple and dog exploring space"]
+  ["game","Game World","Cinematic city energy, dramatic light, bold illustrated realism.","/assets/world-game-card-v181.webp","Jack Russell in an adventure vest","Featured"],
+  ["halloween","Halloween","Stylish costumes, moonlight, fog, pumpkins — playful, not grim.","/assets/world-halloween-v18.webp","Jack Russell in a Halloween cape","Featured"],
+  ["retro","Retro Time Machine","A vivid trip through analog color, film grain and 1980s atmosphere.","/assets/world-retro-v18.webp","Couple in a retro sunset","Featured"],
+  ["fantasy","Fantasy Warrior","Epic armor, ancient landscapes and cinematic fantasy light.","/assets/world-fantasy-v18.webp","Woman and terrier on a fantasy adventure","Featured"],
+  ["royal","Royal","Regal portraiture, palace textures, rich fabric and museum drama.","/assets/world-royal-v18.webp","Family in a royal portrait","Featured"],
+  ["future","Future City","Neon reflections, rain haze and an original high-tech world.","/assets/world-future-v18.webp","Sports car in a future city","Featured"],
+  ["comic","Comic Hero","Original nonviolent comic-book energy, ink, halftone and motion.","/assets/world-comic-v18.webp","Woman as an original comic hero","Featured"],
+  ["space","Space Explorer","Original sci-fi portraiture, planets, spacecraft and epic scale.","/assets/world-space-v18.webp","Couple and dog exploring space","Featured"],
+
+  ["cartoon_anime","Anime Adventure","Cinematic anime-inspired character art with expressive faces, crisp cel shading, dramatic light, and an original setting.","","","Cartoon & Animation"],
+  ["cartoon_manga","Manga Ink","Bold black-and-white manga-inspired linework, speed-line energy, screentone texture, and an original scene.","","","Cartoon & Animation"],
+  ["cartoon_primetime","Prime-Time Cartoon","Clean adult-sitcom cartoon energy, simple expressive shapes, bright flat color, and an original neighborhood or home.","","","Cartoon & Animation"],
+  ["cartoon_papercut","Paper-Cut Comedy","Flat paper-cut character shapes, simple faces, playful staging, bold color blocks, and an original comedic world.","","","Cartoon & Animation"],
+  ["cartoon_3d","3D Animated Adventure","Polished family-animation look, dimensional characters, soft cinematic lighting, vibrant materials, and an original environment.","","","Cartoon & Animation"],
+  ["cartoon_clay","Clay Stop-Motion","Handmade clay character look, tactile miniature sets, soft studio light, and charming stop-motion texture.","","","Cartoon & Animation"],
+  ["cartoon_saturday","Saturday Morning Toon","Energetic retro television-cartoon styling, thick outlines, bright color, playful poses, and an original adventure setting.","","","Cartoon & Animation"],
+
+  ["sports_football","Football Fan","Original stadium-night portrait, team-color-inspired wardrobe without logos, dramatic lights, crowd atmosphere, and game-day energy.","","","Sports"],
+  ["sports_basketball","Basketball Arena","Original basketball-arena portrait, custom unbranded jersey colors, hardwood glow, scoreboard light, and star-player energy.","","","Sports"],
+  ["sports_baseball","Baseball Card","Premium baseball-card portrait, custom unbranded uniform colors, ballpark lighting, collectible-card composition, no real team marks.","","","Sports"],
+  ["sports_soccer","Soccer Matchday","Original soccer matchday portrait, custom unbranded kit colors, stadium lights, supporter atmosphere, and premium sports-editorial energy.","","","Sports"],
+  ["sports_hockey","Hockey Night","Original rink-side portrait, custom unbranded hockey colors, cool arena light, ice reflections, and premium game-night styling.","","","Sports"],
+  ["sports_racing","Racing Paddock","Original motorsport paddock portrait, custom unbranded racing suit, pit-lane lights, polished vehicles, and speed-focused editorial drama.","","","Sports"],
+  ["sports_golf","Golf Club","Premium golf-club portrait, tailored sport styling, golden-hour fairway, clubhouse polish, and clean editorial composition.","","","Sports"],
+  ["sports_tennis","Tennis Center Court","Premium center-court portrait, original athletic styling, crisp stadium light, and elegant competitive energy.","","","Sports"],
+
+  ["genre_action","Blockbuster Action Poster","Big-screen poster composition, dramatic city scale, cinematic lighting, confident pose, original wardrobe, and no copied franchise elements.","","","Movie & TV Genres"],
+  ["genre_space_opera","Space Opera","Epic planets, luminous starships, dramatic cosmic light, original costumes, and sweeping cinematic scale.","","","Movie & TV Genres"],
+  ["genre_fantasy_quest","Fantasy Quest","Enchanted landscapes, original quest attire, ancient ruins, magical light, and sweeping adventure-poster composition.","","","Movie & TV Genres"],
+  ["genre_noir","Detective Noir","Moody detective portrait, rain-slick streets, hard window light, vintage tailoring, and classic black-and-white film atmosphere.","","","Movie & TV Genres"],
+  ["genre_western","Modern Western","Cinematic frontier portrait, dusty sunset, original western wardrobe, weathered textures, and premium film-poster drama.","","","Movie & TV Genres"],
+  ["genre_romcom","Rom-Com Poster","Bright romantic-comedy poster energy, warm city light, natural smiles, polished styling, and playful cinematic composition.","","","Movie & TV Genres"],
+  ["genre_horror","Spooky Movie Poster","Stylish suspense poster, fog, moonlight, eerie architecture, dramatic shadows, and spooky-but-nonviolent atmosphere.","","","Movie & TV Genres"],
+  ["genre_sitcom","Sitcom Cast","Warm television-sitcom ensemble portrait, bright studio-home setting, expressive poses, clean wardrobe, and original set design.","","","Movie & TV Genres"],
+  ["genre_musical","Stage Musical","Grand theater lights, original show wardrobe, rich stage color, elegant choreography energy, and premium poster composition.","","","Movie & TV Genres"],
+  ["genre_spy","Spy Thriller","Sleek original spy-thriller portrait, tailored wardrobe, luxury architecture, dramatic night lighting, and suspenseful cinematic polish.","","","Movie & TV Genres"],
+
+  ["era_70s","1970s Groove","Warm analog color, disco-era fashion, vintage interiors, soft film grain, and rich 1970s editorial styling.","","","Decades"],
+  ["era_80s","1980s Neon","Bold neon gradients, arcade glow, period fashion, chrome accents, analog film texture, and unmistakable 1980s energy.","","","Decades"],
+  ["era_90s","1990s Nostalgia","Authentic 1990s color, casual period fashion, mall-and-bedroom nostalgia, flash photography, and subtle VHS texture.","","","Decades"],
+  ["era_y2k","Y2K Pop","Early-2000s pop futurism, glossy color, chrome details, playful fashion, compact-digital-camera energy, and clean nostalgia.","","","Decades"],
+  ["era_50s","1950s Diner","Mid-century diner color, polished vintage wardrobe, chrome-and-neon details, classic-car-era atmosphere, and clean editorial light.","","","Decades"],
+
+  ["role_wizard","Wizard World","Original wizard wardrobe, enchanted library or castle, magical practical light, glowing details, and no franchise-specific symbols.","","","Characters & Roles"],
+  ["role_pirate","Pirate Captain","Original pirate-captain portrait, weathered ship deck, rich period fabrics, ocean light, treasure-map atmosphere, and adventurous tone.","","","Characters & Roles"],
+  ["role_rockstar","Rock Star","Concert-stage portrait, original performance wardrobe, dramatic colored spotlights, crowd haze, and premium album-cover energy.","","","Characters & Roles"],
+  ["role_detective","Private Detective","Stylish investigator portrait, tailored coat, city-night clues, cinematic practical light, and original mystery atmosphere.","","","Characters & Roles"],
+  ["role_chef","Celebrity Chef","Premium culinary portrait, original chef styling, beautiful kitchen light, plated-food atmosphere, and confident magazine-cover composition.","","","Characters & Roles"],
+  ["role_adventurer","World Adventurer","Original explorer styling, dramatic natural landscape, expedition details, cinematic light, and premium travel-poster energy.","","","Characters & Roles"],
+
+  ["season_christmas","Christmas Magic","Warm holiday lights, elegant festive wardrobe, snow or cozy interiors, ornaments, and premium seasonal portraiture.","","","Seasonal"],
+  ["season_valentine","Valentine Romance","Elegant romantic styling, warm pink and red light, flowers, soft glow, and tasteful premium portrait composition.","","","Seasonal"],
+  ["season_summer","Summer Vacation","Golden sunlight, beach or resort atmosphere, colorful vacation styling, relaxed expressions, and polished travel-editorial energy.","","","Seasonal"],
+  ["season_winter","Winter Lodge","Snowy landscape or cozy lodge, premium winter wardrobe, fireplace warmth, cool outdoor light, and cinematic seasonal atmosphere.","","","Seasonal"],
+  ["season_birthday","Birthday Spotlight","Stylish birthday portrait, original party decor, flattering celebration light, confetti accents, and premium editorial polish.","","","Seasonal"],
+  ["season_wedding","Wedding Portrait","Elegant wedding-inspired portrait, refined formalwear, floral atmosphere, soft luminous light, and timeless editorial composition.","","","Seasonal"]
 ];
 
 const PRODUCT_CATALOG = [
@@ -62,8 +110,11 @@ styleGrid.innerHTML = STYLES.filter(([id])=>HOME_STYLE_IDS.has(id)).map(([id,nam
     </div>
   </article>`).join('');
 
-styleSelect.innerHTML = STYLES.map(([id,name])=>`<option value="${id}">${name}</option>`).join('')
-  + '<option value="custom">My own environment</option>';
+const STYLE_GROUP_ORDER=["Featured","Cartoon & Animation","Sports","Movie & TV Genres","Decades","Characters & Roles","Seasonal"];
+styleSelect.innerHTML = STYLE_GROUP_ORDER.map(group=>{
+  const options=STYLES.filter(style=>style[5]===group).map(([id,name])=>`<option value="${id}">${name}</option>`).join('');
+  return options?`<optgroup label="${group}">${options}</optgroup>`:'';
+}).join('') + '<optgroup label="Custom"><option value="custom">Describe my own world</option></optgroup>';
 styleSelect.value='royal';
 
 function chooseStyle(card){
