@@ -68,7 +68,7 @@ export function normalizeProductDesign(map,raw={}){
     const apparelScale=Math.min(raw.finish==='soft'?118:100,scale);
     return {version:5,layout:'fit',background:'transparent',fill:'transparent',x,scale:apparelScale,spacing,product,finish:raw.finish};
   }
-  if(rawVersion===6)return {version:6,layout,background,fill,x,scale,spacing,product,...(['Poster','Framed Poster','Canvas','Puzzle'].includes(product)?{orientation:raw.orientation==='landscape'?'landscape':'portrait'}:{})};
+  if(rawVersion===6)return {version:6,layout,background,fill,x,scale,spacing,product,...((['Poster','Framed Poster','Canvas'].includes(product)||(product==='Puzzle'&&['portrait','landscape'].includes(raw.orientation)))?{orientation:raw.orientation==='landscape'?'landscape':'portrait'}:{})};
   return {version:4,layout,background,fill,x,scale,spacing,product};
 }
 // Pillow front and back share one supplier-verified template and the same artwork.

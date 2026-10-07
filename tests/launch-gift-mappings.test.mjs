@@ -47,3 +47,5 @@ test('phone layout reserves the camera area and keeps the complete image within 
 });
 
 test('tumbler uses the exact front sublimation placement returned by supplier catalog',()=>{const m=FULFILLMENT['RECAST-TUMBLER-20OZ'];assert.equal(m.printfulProductId,909);assert.equal(m.printfulVariantId,23470);assert.equal(m.preferredPlacement,'front');assert.equal(m.orderFileType,'front')});
+
+test('legacy puzzle proofs retain their original orientation unless explicitly selected',async()=>{const {normalizeProductDesign}=await import('../src/commerce-store.js');const map=FULFILLMENT['RECAST-PUZZLE-252'];assert.equal(normalizeProductDesign(map,{version:6,layout:'cover'}).orientation,undefined);assert.equal(normalizeProductDesign(map,{version:6,layout:'cover',orientation:'portrait'}).orientation,'portrait')});
