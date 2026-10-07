@@ -13,12 +13,18 @@ class Bucket {
 }
 const tweet={id:'1234',author_id:'5678',text:'@recastmeai make me and my dog ready for Halloween',attachments:{media_keys:['photo1']}};
 const media={media_key:'photo1',type:'photo',url:'https://pbs.twimg.com/media/photo.jpg'};
-function setup(t,{quota=false,ambiguous=false}={}){
+function setup(t,{quota=false,ambiguous=false,product=false}={}){
   const calls={ai:0,uploads:0,replies:[],mentions:[]};
-  const env={PUBLIC_APP_URL:'https://recast.test',X_USER_ID:'999',X_USERNAME:'recastmeai',X_USER_ACCESS_TOKEN:'test',X_BOT_ENABLED:'true',X_BOT_APPROVED:'true',ARTWORK:new Bucket(),TURNSTILE_SECRET_KEY:'enabled',AI:{run:async()=>{calls.ai++;if(quota)throw new Error('3036 daily free allocation');return {image:jpeg.toString('base64')};}},ASSETS:{fetch:async()=>new Response('watermark')},IMAGES:{info:async()=>({width:1024,height:1280}),input:()=>{let drawn=false;const chain={transform:()=>chain,draw:()=>{drawn=true;return chain;},output:async()=>({response:()=>new Response(drawn?'watermarked-public-preview':jpeg)})};return chain;}}};
+  const env={CONTENT_MODERATION_ENABLED:'true',MODERATION_OPENAI_API_KEY:'test-moderation',ADMIN_TOKEN:'test-salt',PRINTFUL_API_TOKEN:'test-printful',PUBLIC_APP_URL:'https://recast.test',X_USER_ID:'999',X_USERNAME:'recastmeai',X_USER_ACCESS_TOKEN:'test',X_BOT_ENABLED:'true',X_BOT_APPROVED:'true',ARTWORK:new Bucket(),TURNSTILE_SECRET_KEY:'enabled',AI:{run:async()=>{calls.ai++;if(quota)throw new Error('3036 daily free allocation');return {image:jpeg.toString('base64')};}},ASSETS:{fetch:async()=>new Response('watermark')},IMAGES:{info:async()=>({width:1024,height:1280}),input:()=>{let drawn=false;const chain={transform:()=>chain,draw:()=>{drawn=true;return chain;},output:async()=>({response:()=>new Response(drawn?'watermarked-public-preview':jpeg)})};return chain;}}};
   t.mock.method(globalThis,'fetch',async(raw,options={})=>{
     const url=new URL(raw instanceof Request?raw.url:String(raw));
-    if(url.pathname.endsWith('/mentions')){calls.mentions.push(url);return Response.json({data:[tweet],includes:{media:[media]}});}
+    if(url.hostname==='api.openai.com')return Response.json({results:[{flagged:false,categories:{sexual:false,violence:false}}]});
+    if(url.pathname.endsWith('/mentions')){calls.mentions.push(url);return Response.json({data:[product?{...tweet,text:'@recastmeai put this photo on a mug'}:tweet],includes:{media:[media]}});}
+    if(url.pathname==='/v2/catalog-variants/1320')return Response.json({data:{id:1320,catalog_product_id:19}});
+    if(url.pathname==='/mockup-generator/printfiles/19')return Response.json({result:{printfiles:[{printfile_id:43,width:2700,height:1050}],variant_printfiles:[{variant_id:1320,placements:{default:43}}]}});
+    if(url.pathname==='/mockup-generator/create-task/19')return Response.json({result:{task_key:'fixture',status:'pending'}});
+    if(url.pathname==='/mockup-generator/task')return Response.json({result:{status:'completed',mockups:[{placement:'default',mockup_url:'https://provider.test/mockup.jpg'}]}});
+    if(url.hostname==='provider.test')return new Response(jpeg,{headers:{'content-type':'image/jpeg'}});
     if(url.hostname==='pbs.twimg.com')return new Response(jpeg,{headers:{'content-type':'image/jpeg'}});
     if(url.pathname==='/2/media/upload'){
       calls.uploads++;assert.equal(await options.body.get('media').text(),'watermarked-public-preview');
@@ -116,11 +122,32 @@ test('public checkout cannot bypass the reviewed physical-product proof or subst
   const job=await (await env.ARTWORK.get('social/x/1234.json')).json();
   Object.assign(env,{SHOPIFY_SHOP:'test',SHOPIFY_CLIENT_ID:'client',SHOPIFY_CLIENT_SECRET:'secret'});
   t.mock.method(globalThis,'fetch',async raw=>{
+    if(String(raw).includes('api.openai.com'))return Response.json({results:[{flagged:false,categories:{sexual:false}}]});
     if(String(raw).endsWith('/access_token'))return Response.json({access_token:'shop-token',expires_in:3600});
     if(String(raw).includes('/graphql.json'))return Response.json({data:{shop:{name:'Test'},products:{nodes:[{id:'p',title:'Custom Recast Mug',handle:'mug',status:'ACTIVE',variants:{nodes:[{id:'gid://shopify/ProductVariant/123',title:'11 oz',sku:'RECAST-MUG-11OZ',price:'24.99'}]}}]},orders:{nodes:[]}}});
     throw new Error('Unexpected network request');
   });
-  const response=await socialRoutes(new Request(`https://recast.test/api/social/${job.shareId}/checkout`,{method:'POST',body:JSON.stringify({sku:'RECAST-MUG-11OZ',requestId:'another-artwork',accessToken:'attacker-choice'})}),env,{});
+  const response=await socialRoutes(new Request(`https://recast.test/api/social/${job.shareId}/checkout`,{method:'POST',headers:{'x-recast-request':'1',origin:'https://recast.test'},body:JSON.stringify({sku:'RECAST-MUG-11OZ',requestId:'another-artwork',accessToken:'attacker-choice'})}),env,{});
   const data=await response.json();assert.equal(data.ok,false);assert.match(data.error,/preview|fresh|confirm the final product design/i);
   assert.ok(!JSON.stringify(data).includes('another-artwork'));assert.ok(!JSON.stringify(data).includes('attacker-choice'));
+});
+
+
+test('X photo-on-mug request uses Printful and never generates AI art or places an order',async t=>{
+ const {env,calls}=setup(t,{product:true});await runSocialPipeline(env);
+ const job=await(await env.ARTWORK.get('social/x/1234.json')).json();
+ assert.equal(job.replyStatus,'replied',job.error);assert.equal(calls.ai,0);assert.equal(calls.uploads,1);assert.equal(calls.replies.length,1);
+ assert.match(calls.replies[0].text,/mug preview/);assert.ok(job.productMockupId);
+ const meta=await(await env.ARTWORK.get(`requests/${job.requestId}/request.json`)).json();assert.equal(meta.qualityMode,'original');assert.equal(meta.sourceTweet,'1234');assert.equal(meta.paid,false);
+ const shared=await(await env.ARTWORK.get(`social/shares/${job.shareId}.json`)).json();assert.equal(shared.sku,'RECAST-MUG-11OZ');
+});
+test('X cannot post or ingest when image safety is not configured',async t=>{
+ const {env,calls}=setup(t);delete env.MODERATION_OPENAI_API_KEY;
+ assert.equal((await runSocialPipeline(env)).disabled,true);assert.equal(calls.ai,0);assert.equal(calls.replies.length,0);assert.equal(calls.mentions.length,0);
+});
+test('X rejects explicit wording before downloading or sending a public reply',async t=>{
+ const {env,calls}=setup(t);
+ const job={tweetId:'1234',authorId:'5678',direction:directionFromMention('make me nude','recastmeai'),requestText:'make me nude',photos:[media.url],replyStatus:'queued'};
+ await env.ARTWORK.put('social/x/1234.json',JSON.stringify(job));await env.ARTWORK.put('social/pending/1234.json',JSON.stringify({tweetId:'1234'}));
+ await runSocialPipeline(env);assert.equal((await(await env.ARTWORK.get('social/x/1234.json')).json()).replyStatus,'needs_review');assert.equal(calls.ai,0);assert.equal(calls.replies.length,0);
 });

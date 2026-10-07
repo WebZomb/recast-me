@@ -1,3 +1,4 @@
+import {moderationReadiness,checkStoredArtwork} from './content-safety.js';
 import {loadV2MockupSpec,v2MockupPayload,v2CreatedTask,v2PolledTask} from './printful-v2-mockup.js';
 import {prepareApparelArtwork} from './apparel-finish.js';
 import {selectMockupGroups,rankMockupCandidates} from './product-gallery.js';
@@ -173,6 +174,7 @@ export async function createMockup(request,env){
     const requestId=String(body.requestId||"");const accessToken=String(body.accessToken||"");const sku=String(body.sku||"");
     stage="artwork-access";
     let meta=await requireRequest(env,requestId,accessToken);
+    await checkStoredArtwork(env,meta);
     const map=FULFILLMENT[sku]; // product layout is normalized after SKU validation
     if(!map)return json({ok:false,error:"Unknown Recast product."},400);
     if(map.digital)return json({ok:false,error:"Digital products do not need a physical mockup."},400);
@@ -386,7 +388,7 @@ async function validatedPreapproval(env,line,map,requestId){
   if(!row.snapshotKey||!await env.ARTWORK?.head(row.snapshotKey))return null;
   return row;
 }
-function recipientFromOrder(order){
+export function recipientFromOrder(order){
   const a=order.shippingAddress||{};return{name:a.name||[a.firstName,a.lastName].filter(Boolean).join(" "),company:a.company||undefined,address1:a.address1,address2:a.address2||undefined,city:a.city,state_code:a.provinceCode||undefined,state_name:a.province||undefined,country_code:a.countryCodeV2,zip:a.zip,phone:a.phone||undefined,email:order.email||undefined};
 }
 
@@ -611,7 +613,7 @@ export async function clientDiagnostic(request,env){
 }
 
 export async function adminStatus(request,env){
-  try{requireAdmin(request,env);const jobs=await listJson(env,"jobs/",100);const trends=await listJson(env,"trends/",100);const socials=await listJson(env,"social/x/",100);const genErrors=await listJson(env,"diagnostics/generation/",100);const clientErrors=await listJson(env,"diagnostics/client/",100);const attempts=await listJson(env,"diagnostics/attempts/",100);return json({ok:true,version:"1.0.2",jobs:{total:jobs.length,awaiting:jobs.filter(x=>!String(x.status).includes("completed")&&!String(x.status).includes("shipped")).length},trends:{total:trends.length,review:trends.filter(x=>x.status==="review").length},generationErrors:{total:genErrors.length+clientErrors.length,recent:[...genErrors,...clientErrors].filter(x=>Date.now()-Date.parse(x.createdAt||0)<86400000).length,attempts:attempts.length},xRequests:socials.length,connections:{shopify:Boolean(env.SHOPIFY_CLIENT_ID&&env.SHOPIFY_CLIENT_SECRET),printful:Boolean(env.PRINTFUL_API_TOKEN),images:Boolean(env.IMAGES),x:Boolean(env.X_USER_ACCESS_TOKEN&&env.X_USER_ID),admin:true},automation:{orderSync:String(env.ORDER_SYNC_ENABLED||"false")==="true",xBot:String(env.X_BOT_ENABLED||"false")==="true",trendScanner:String(env.TREND_SCANNER_ENABLED||"false")==="true",retentionCleanup:String(env.RETENTION_CLEANUP_ENABLED||"false")==="true"}})}catch(error){return json({ok:false,error:error.message},error.status||500)}
+  try{requireAdmin(request,env);const jobs=await listJson(env,"jobs/",100);const trends=await listJson(env,"trends/",100);const socials=await listJson(env,"social/x/",100);const genErrors=await listJson(env,"diagnostics/generation/",100);const clientErrors=await listJson(env,"diagnostics/client/",100);const attempts=await listJson(env,"diagnostics/attempts/",100);return json({ok:true,version:"1.0.2",jobs:{total:jobs.length,awaiting:jobs.filter(x=>!String(x.status).includes("completed")&&!String(x.status).includes("shipped")).length},trends:{total:trends.length,review:trends.filter(x=>x.status==="review").length},generationErrors:{total:genErrors.length+clientErrors.length,recent:[...genErrors,...clientErrors].filter(x=>Date.now()-Date.parse(x.createdAt||0)<86400000).length,attempts:attempts.length},xRequests:socials.length,contentModeration:moderationReadiness(env),connections:{shopify:Boolean(env.SHOPIFY_CLIENT_ID&&env.SHOPIFY_CLIENT_SECRET),printful:Boolean(env.PRINTFUL_API_TOKEN),images:Boolean(env.IMAGES),x:Boolean(env.X_USER_ACCESS_TOKEN&&env.X_USER_ID),admin:true},automation:{orderSync:String(env.ORDER_SYNC_ENABLED||"false")==="true",xBot:String(env.X_BOT_ENABLED||"false")==="true",trendScanner:String(env.TREND_SCANNER_ENABLED||"false")==="true",retentionCleanup:String(env.RETENTION_CLEANUP_ENABLED||"false")==="true"}})}catch(error){return json({ok:false,error:error.message},error.status||500)}
 }
 export async function adminJobs(request,env){
  try{

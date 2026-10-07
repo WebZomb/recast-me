@@ -18,5 +18,5 @@ test('store loads versioned checkout and product styling from existing files',()
   const match=html.match(pattern);assert.ok(match);assert.ok(Number(match[2])>0);
   assert.ok(readFileSync(new URL('../public'+match[1],import.meta.url),'utf8').length>0);
  }
- assert.match(html,/data-launch-build="RM-055"/);
+ assert.match(html,/data-launch-build="RM-056"/);
 });

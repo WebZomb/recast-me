@@ -1,3 +1,8 @@
+import {moderateContent,moderationReadiness,screenText,CONTENT_MESSAGE} from './content-safety.js';
+import {socialIntent} from './social-products.js';
+import {saveOriginalPhoto} from './original-photo.js';
+import {createMockup,mockupStatus} from './workflow.js';
+import {sameOrigin} from './commerce-store.js';
 import app from './entry.js';
 import { highQualityTransform } from './highquality.js';
 import { guardedSocialEnvironment } from './render-controls.js';
@@ -38,7 +43,8 @@ export function socialReadiness(env) {
     tokenRefresh:Boolean(env.X_REFRESH_TOKEN&&env.X_CLIENT_ID),
     imageProcessing:Boolean(env.IMAGES),
     storage:Boolean(env.ARTWORK),
-    ai:Boolean(env.AI)
+    ai:Boolean(env.AI),
+    contentModeration:moderationReadiness(env).ready
   };
 }
 
@@ -87,9 +93,9 @@ export async function ingestMentions(env) {
     }
     if(await read(env,`social/optout/${tweet.author_id}.json`))continue;
     // A bare tag or unrelated discussion is not an image request.
-    if(!/\b(make|create|recast|transform|dress|generate|turn)\b/i.test(direction.notes))continue;
+    if(!/\b(make|create|recast|transform|dress|generate|turn|show|put|send)\b/i.test(direction.notes))continue;
     if(await read(env,key(tweet.id)))continue;
-    const job={tweetId:tweet.id,authorId:tweet.author_id,requestText:direction.notes,direction,photos:attachedPhotos(tweet,data.includes?.media),createdAt:stamp(),replyStatus:'queued',attempts:0};
+    const job={intent:socialIntent(direction.notes),tweetId:tweet.id,authorId:tweet.author_id,requestText:direction.notes,direction,photos:attachedPhotos(tweet,data.includes?.media),createdAt:stamp(),replyStatus:'queued',attempts:0};
     // Write queue marker first: a crash cannot leave a saved request unqueued.
     await write(env,pending(tweet.id),{tweetId:tweet.id});await saveJob(env,job);found++;
   }
@@ -99,19 +105,20 @@ export async function ingestMentions(env) {
   return found;
 }
 
-async function referencePhoto(env,url,index) {
+async function referencePhoto(env,url,index,original=false) {
   const u=new URL(url);
   if(u.protocol!=='https:'||u.hostname!=='pbs.twimg.com'||!u.pathname.startsWith('/media/'))throw new Error('Unsupported source photo URL.');
-  u.searchParams.set('name','small');u.searchParams.set('format','jpg');
+  u.searchParams.set('name',original?'large':'small');u.searchParams.set('format','jpg');
   const photo=await fetch(u,{redirect:'error',signal:AbortSignal.timeout(15000)});
   if(!photo.ok||!photo.headers.get('content-type')?.startsWith('image/'))throw new Error('The attached X photo is unavailable.');
-  const prepared=(await env.IMAGES.input(photo.body).transform({width:500,height:500,fit:'scale-down'}).output({format:'image/jpeg',quality:90})).response();
+  const prepared=(await env.IMAGES.input(photo.body).transform({width:original?2048:500,height:original?2048:500,fit:'scale-down'}).output({format:'image/jpeg',quality:90})).response();
   return new File([await prepared.arrayBuffer()],`reference-${index}.jpg`,{type:'image/jpeg'});
 }
 
 async function createPreview(env,job) {
   const stored=await env.ARTWORK.get(`requests/${job.requestId}/preview.b64`);
   if(!stored)throw new Error('Saved artwork is unavailable.');
+  await moderateContent(env,{images:[new File([bytes64(await stored.text())],'preview.jpg',{type:'image/jpeg'})],required:true});
   const mark=await env.ASSETS.fetch(new Request(`${base(env)}/assets/social-watermark.png`));
   if(!mark.ok)throw new Error('Preview watermark asset is missing.');
   const result=await env.IMAGES.input(new Blob([bytes64(await stored.text())]).stream())
@@ -140,12 +147,45 @@ async function postReply(env,job,text,mediaId) {
   await finish(env,job,response.status>=500||response.ok?'delivery_unknown':'failed');
 }
 
+async function createProductPreview(env,job){
+  const meta=await read(env,`requests/${job.requestId}/request.json`);
+  if(!meta)throw new Error('Artwork unavailable.');
+  const {sku,design}=job.intent.product;
+  if(!job.productMockupId){
+    const response=await createMockup(new Request(`${base(env)}/api/mockup/create`,{method:'POST',body:JSON.stringify({requestId:meta.requestId,accessToken:meta.accessToken,sku,design})}),env);
+    const data=await response.json();if(!response.ok||!data.mockupId)throw new Error('Product preview could not start.');
+    job.productMockupId=data.mockupId;job.replyStatus='awaiting_mockup';await saveJob(env,job);
+  }
+  const url=new URL('/api/mockup/status',base(env));url.search=new URLSearchParams({requestId:meta.requestId,token:meta.accessToken,sku,mockup:job.productMockupId});
+  const response=await mockupStatus(new Request(url),env),data=await response.json();
+  if(!response.ok)throw new Error('Product preview could not finish.');
+  if(data.status!=='completed'){job.replyStatus='awaiting_mockup';job.retryAt=new Date(Date.now()+15000).toISOString();await saveJob(env,job);return false;}
+  const selected=data.images.find(x=>/^(left|right|handle left|handle right)$/i.test(x.title))||data.images[0];
+  // Read the generated protected derivative from storage, never a user URL.
+  const imageIndex=data.images.indexOf(selected);
+  const object=await env.ARTWORK.get(`mockups/${meta.requestId}/${sku}/${job.productMockupId}/image-${imageIndex}.jpg`);
+  if(!object)throw new Error('Product image unavailable.');
+  const bytes=await object.arrayBuffer();
+  await moderateContent(env,{images:[new File([bytes],'product.jpg',{type:'image/jpeg'})],required:true});
+  job.shareId=job.shareId||hex();
+  const mark=await env.ASSETS.fetch(new Request(`${base(env)}/assets/social-watermark.png`));
+  if(!mark.ok)throw new Error('Preview watermark unavailable.');
+  const protectedImage=(await env.IMAGES.input(new Blob([bytes]).stream()).transform({width:768,height:960,fit:'contain'}).draw(env.IMAGES.input(mark.body),{top:0,left:0}).output({format:'image/jpeg',quality:85})).response();
+  if(!protectedImage.ok)throw new Error('Preview protection failed.');
+  await env.ARTWORK.put(`social/previews/${job.shareId}.jpg`,await protectedImage.arrayBuffer(),{httpMetadata:{contentType:'image/jpeg'}});
+  await write(env,`social/shares/${job.shareId}.json`,{requestId:meta.requestId,tweetId:job.tweetId,sku,createdAt:stamp()});
+  job.link=`${base(env)}/recast.html?share=${job.shareId}`;job.previewReady=true;job.retryAt=null;await saveJob(env,job);return true;
+}
+
 export async function processSocialJob(env,job) {
   if(['replied','delivery_unknown','failed','needs_review'].includes(job.replyStatus)){await env.ARTWORK.delete(pending(job.tweetId));return;}
   if(job.replyStatus==='sending'){await finish(env,job,'delivery_unknown');return;}
   if(job.retryAt&&Date.parse(job.retryAt)>Date.now())return;
   if(await read(env,`social/optout/${job.authorId}.json`)){await finish(env,job,'opted_out');return;}
   try {
+    job.intent=job.intent||socialIntent(job.requestText);
+    if(screenText(job.requestText).status==='rejected'){job.error=CONTENT_MESSAGE;await finish(env,job,'needs_review');return;}
+    if(!moderationReadiness(env).ready){job.replyStatus='configuration_required';job.error='Enable configured photo safety screening before X processing.';await saveJob(env,job);return;}
     if(!job.photos.length) {
       const params=new URLSearchParams({source:'x',tweet:job.tweetId,request:job.requestText,style:job.direction.style});
       job.link=`${base(env)}/?${params}`;
@@ -153,25 +193,33 @@ export async function processSocialJob(env,job) {
     }
     if(!env.IMAGES){job.replyStatus='configuration_required';job.error='Add the IMAGES binding for photo preparation and watermarked X previews.';await saveJob(env,job);return;}
     if(!job.requestId) {
-      if((await renderHealth(env,'social')).state==='paused'){
+      if(job.intent.mode!=='original-product'&&(await renderHealth(env,'social')).state==='paused'){
         job.replyStatus='awaiting_capacity';job.retryAt=new Date(Date.now()+5*60000).toISOString();await saveJob(env,job);return;
       }
       const form=new FormData();
       for(const [k,v] of Object.entries(job.direction))form.set(k,v);
       form.set('source','x');form.set('sourceTweet',job.tweetId);form.set('qualityMode','quick');
-      for(let i=0;i<job.photos.length;i++)form.set(`image_${i}`,await referencePhoto(env,job.photos[i],i));
+      for(let i=0;i<job.photos.length;i++)form.set(`image_${i}`,await referencePhoto(env,job.photos[i],i,job.intent.mode==='original-product'));
       job.replyStatus='generating';await saveJob(env,job);
-      const response=await highQualityTransform(new Request(`${base(env)}/api/transform-v2`,{method:'POST',body:form}),guardedSocialEnvironment({...env,IMAGE_MODEL_QUICK:env.IMAGE_MODEL_SOCIAL||env.IMAGE_MODEL_QUICK,AI_STANDARD_RESERVE_CENTS:env.AI_SOCIAL_RESERVE_CENTS||env.AI_CALL_RESERVE_CENTS}),{trustedSocialJob:true});
+      let response;
+      if(job.intent.mode==='original-product'){
+        const original=new FormData();original.set('photo',form.get('image_0'));original.set('consent','yes');
+        response=Response.json(await saveOriginalPhoto(new Request(`${base(env)}/api/original-photo`,{method:'POST',headers:{'x-recast-request':'1',origin:base(env)},body:original}),env,{trustedSocialJob:true}));
+      }else response=await highQualityTransform(new Request(`${base(env)}/api/transform-v2`,{method:'POST',body:form}),guardedSocialEnvironment({...env,IMAGE_MODEL_QUICK:env.IMAGE_MODEL_SOCIAL||env.IMAGE_MODEL_QUICK,AI_STANDARD_RESERVE_CENTS:env.AI_SOCIAL_RESERVE_CENTS||env.AI_CALL_RESERVE_CENTS}),{trustedSocialJob:true});
       const rendered=await response.json();
-      if(response.status===202||rendered.reason==='policy'||rendered.reason==='moderation'){job.error=rendered.userMessage;await finish(env,job,'needs_review');return;}
+      if(response.status===202||rendered.reason==='policy'||rendered.reason==='moderation'||rendered.reason==='content_policy'){job.error=rendered.userMessage;await finish(env,job,'needs_review');return;}
       if(!response.ok||!rendered.persisted) {
         job.error=rendered.userMessage||'Artwork could not be saved.';
         if(rendered.reason==='quota'||rendered.reason==='capacity'){job.replyStatus='awaiting_capacity';job.retryAt=rendered.retryAt||new Date(Date.now()+(rendered.reason==='capacity'?90:300)*1000).toISOString();await saveJob(env,job);return;}
         throw new Error(job.error);
       }
+      if(job.intent.mode==='original-product'){const m=await read(env,`requests/${rendered.requestId}/request.json`);await write(env,`requests/${rendered.requestId}/request.json`,{...m,source:'x-original-photo',sourceTweet:job.tweetId});}
       job.requestId=rendered.requestId;job.replyStatus='artwork_saved';job.error=null;await saveJob(env,job);
     }
-    if(!job.previewReady)await createPreview(env,job);
+    if(!job.previewReady){
+      if(job.intent.product){if(!await createProductPreview(env,job))return;}
+      else await createPreview(env,job);
+    }
     if(!job.mediaId||Date.parse(job.mediaExpiresAt)<=Date.now()) {
       const image=await env.ARTWORK.get(`social/previews/${job.shareId}.jpg`);
       const form=new FormData();form.set('media',new Blob([await image.arrayBuffer()],{type:'image/jpeg'}),'recast.jpg');form.set('media_category','tweet_image');
@@ -179,9 +227,10 @@ export async function processSocialJob(env,job) {
       if(!upload.ok||!result.data?.id)throw new Error(`X media upload HTTP ${upload.status}. Check media.write scope and API credits.`);
       job.mediaId=result.data.id;job.mediaExpiresAt=new Date(Date.now()+(result.data.expires_after_secs||3600)*1000).toISOString();await saveJob(env,job);
     }
-    await postReply(env,job,`Your AI Recast is ready! ✨ Want the clean high-resolution picture, a poster, or a coffee mug? Choose your favorite here: ${job.link}`,job.mediaId);
+    await postReply(env,job,job.intent.product?`Your ${job.intent.product.product.toLowerCase()} preview is ready! Review the size and design before buying or sending it as a gift: ${job.link}`:`Your AI Recast is ready! ✨ Want the clean high-resolution picture, a poster, or a coffee mug? Choose your favorite here: ${job.link}`,job.mediaId);
   } catch(error) {
     if(['replied','delivery_unknown','failed'].includes(job.replyStatus))return;
+    if(error.reason==='content_policy'){job.error=CONTENT_MESSAGE;await finish(env,job,'needs_review');return;}
     job.attempts=(job.attempts||0)+1;job.error=String(error.message).slice(0,500);
     if(job.attempts>=3){await finish(env,job,'needs_review');return;}
     job.replyStatus='retry_wait';job.retryAt=new Date(Date.now()+job.attempts*60000).toISOString();await saveJob(env,job);
@@ -191,7 +240,7 @@ export async function processSocialJob(env,job) {
 export async function runSocialPipeline(env) {
   const ready=socialReadiness(env);
   if(!ready.enabled)return {ok:true,disabled:true};
-  if(!ready.approved||!ready.credentials||!ready.storage||!ready.ai)return {ok:false,disabled:true,error:'X requires credentials, API access, approval, AI and private storage.',readiness:ready};
+  if(!ready.approved||!ready.credentials||!ready.storage||!ready.ai||!ready.contentModeration)return {ok:false,disabled:true,error:'X requires credentials, API access, approval, AI, private storage and enabled image screening.',readiness:ready};
   const lockKey='system/x-pipeline-lock.json';
   const old=await env.ARTWORK.get(lockKey);
   if(old&&Date.parse((await old.json()).until)>Date.now())return {ok:true,busy:true};
@@ -214,14 +263,15 @@ export async function runSocialPipeline(env) {
 }
 
 export async function socialRoutes(request,env,ctx) {
-  const url=new URL(request.url);const match=url.pathname.match(/^\/api\/social\/([a-f0-9]{40})(?:\/(image|products|checkout))?$/);
+  const url=new URL(request.url);const match=url.pathname.match(/^\/api\/social\/([a-f0-9]{40})(?:\/(image|products|checkout|mockup-create|mockup-status))?$/);
   if(!match)return null;
   const [,id,action]=match;
   if(!env.ARTWORK)return json({error:'Artwork unavailable.'},503);
   const shared=await read(env,`social/shares/${id}.json`);
   const meta=shared&&await read(env,`requests/${shared.requestId}/request.json`);
   if(!meta)return json({error:'This Recast is unavailable.'},404);
-  if(!action&&request.method==='GET')return json({ok:true,styleName:meta.styleName,image:`/api/social/${id}/image`,requestId:meta.requestId});
+  if(request.method==='POST'){try{sameOrigin(request);}catch{return json({ok:false,error:'Open this page on Recast Me to continue.'},403);}}
+  if(!action&&request.method==='GET')return json({ok:true,styleName:meta.styleName,image:`/api/social/${id}/image`,requestId:meta.requestId,preferredSku:shared.sku||null});
   if(action==='image'&&request.method==='GET'){
     const preview=await env.ARTWORK.get(`social/previews/${id}.jpg`);
     return preview?new Response(preview.body,{headers:{'content-type':'image/jpeg','cache-control':'private, max-age=300'}}):json({error:'Preview unavailable.'},404);
@@ -233,7 +283,15 @@ export async function socialRoutes(request,env,ctx) {
   }
   if(action==='checkout'&&request.method==='POST'){
     const body=await request.json().catch(()=>({}));
-    return app.fetch(new Request(new URL('/api/checkout-link',url.origin),{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({requestId:meta.requestId,accessToken:meta.accessToken,sku:String(body.sku||'')})}),env,ctx);
+    return app.fetch(new Request(new URL('/api/checkout-link',url.origin),{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({requestId:meta.requestId,accessToken:meta.accessToken,sku:String(body.sku||''),mockupId:body.mockupId,design:body.design,confirmDesign:body.confirmDesign===true})}),env,ctx);
+  }
+  if(action==='mockup-create'&&request.method==='POST'){
+    const body=await request.json().catch(()=>({}));
+    return createMockup(new Request(new URL('/api/mockup/create',url.origin),{method:'POST',body:JSON.stringify({requestId:meta.requestId,accessToken:meta.accessToken,sku:String(body.sku||''),design:body.design})}),env);
+  }
+  if(action==='mockup-status'&&request.method==='GET'){
+    const inner=new URL('/api/mockup/status',url.origin);inner.search=new URLSearchParams({requestId:meta.requestId,token:meta.accessToken,sku:url.searchParams.get('sku')||'',mockup:url.searchParams.get('mockup')||''});
+    return mockupStatus(new Request(inner),env);
   }
   return json({error:'Method not allowed.'},405);
 }

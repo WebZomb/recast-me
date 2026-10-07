@@ -1,3 +1,4 @@
+import {checkStoredArtwork} from './content-safety.js';
 import core, { shopifyCatalog } from "./index.js";
 import { hash, normalizeProductDesign } from "./commerce-store.js";
 
@@ -240,6 +241,8 @@ async function checkoutLink(request, env, ctx) {
   const accessToken = String(body.accessToken || "");
   const sku = String(body.sku || "");
   const recast = await validateRecast(request, env, ctx, requestId, accessToken);
+  const safetyMeta=await env.ARTWORK.get(`requests/${requestId}/request.json`);
+  if(safetyMeta)await checkStoredArtwork(env,await safetyMeta.json());
 
   if (!FULFILLMENT[sku]) return json({ ok: false, error: "Unknown Recast SKU." }, 400);
 

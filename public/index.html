@@ -32,7 +32,7 @@
   <meta name="twitter:image" content="https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recastmeai-approved-orbit-stacked-v1.png?v=1791313709">
   <meta name="twitter:image:alt" content="Recast Me Ai — cyan and magenta swirling RM logo">
 </head>
-<body data-launch-build="RM-055">
+<body data-launch-build="RM-056">
   <a class="skip-link" href="#start">Skip to create your Recast</a>
   <header class="site-header">
     <a class="brand" href="#home" aria-label="Recast Me home">
@@ -181,12 +181,12 @@
             </fieldset>
 <details id="personal-details"><summary>Make it personal · optional</summary>              <label>Describe who and their look <span class="optional-label">OPTIONAL</span>
                 <textarea name="notes" id="notes" maxlength="1200" placeholder="My dog in a little wizard costume. Or: me, my girlfriend, and our dog in matching space suits."></textarea>
-                <small>Add everyone you want included, plus outfits, poses, or effects. Your description guides the picture.</small>
+                <small>Add everyone you want included, plus outfits, poses, or effects. Your description guides the picture. Family-friendly photos and wording only.</small>
               </label>
 </details>
             <p id="prefill-note" class="prefill-note"></p>
             <div id="branch-note" class="branch-note hidden"></div>
-            <div class="consent"><input id="consent" type="checkbox" required><label for="consent">I have permission to use these photos. I agree to send my selected photos and descriptions to Cloudflare Workers AI to create my Recast. <a href="/privacy.html" target="_blank" rel="noopener">Photo privacy &amp; AI policy</a>.</label></div>
+            <div class="consent"><input id="consent" type="checkbox" required><label for="consent">I have permission to use these photos. Family-friendly content only. I agree to send my selected photos and descriptions to Cloudflare Workers AI to create my Recast. <a href="/privacy.html" target="_blank" rel="noopener">Photo privacy &amp; AI policy</a>.</label></div>
             <input type="radio" name="qualityMode" value="high" checked hidden>
             <input type="radio" name="qualityMode" value="quick" hidden>
             <aside id="quality-fallback" hidden aria-live="polite">
@@ -219,7 +219,7 @@
               <p>Skip the transformation and put your original photo directly on a product.</p>
               <form id="original-photo-form">
                 <label>Choose one photo <input id="original-photo" type="file" accept="image/jpeg,image/png,image/webp" required></label>
-                <label><input id="original-consent" type="checkbox" required> I have permission to use this photo and agree to private storage and image processing.</label>
+                <label><input id="original-consent" type="checkbox" required> I have permission to use this family-friendly photo and agree to private storage and image processing described in the <a href="/privacy.html">photo policy</a>.</label>
                 <div id="original-turnstile"></div>
                 <button class="button primary full" type="submit">Use this photo →</button>
                 <p id="original-status" role="status"></p>
@@ -318,6 +318,6 @@
     <span>© 2026 Recast Me</span>
   </footer>
   <script src="/app.js?v=2566" type="module"></script>
-  <script src="/checkout.js?v=2570" type="module"></script>
+  <script src="/checkout.js?v=2571" type="module"></script>
 </body>
 </html>

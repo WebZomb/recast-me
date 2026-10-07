@@ -93,4 +93,6 @@ Latest implementation: [RM055 product accuracy](ASTRA-SESSION-RM-055.md). Distin
 
 Latest reconciliation: [October 7 catch-up and restored validation](ASTRA-CATCHUP-2026-10-07.md). Current source includes six new mapped product types; older draft-only notes are historical. Single sticker and sticker pack remain distinct. 309 local tests and Worker dry-run passed; no live purchase or supplier verification in this session.
 
-Latest launch investigation: [October 7 live audit](ASTRA-LAUNCH-AUDIT-2026-10-07.md). Six new live previews failed supplier validation; private mug lookup confirms existing Printful order pending. Launch is not yet verified.
+Latest launch audit: [October 7 live audit](ASTRA-LAUNCH-AUDIT-2026-10-07.md). Supplier mappings repaired; 29 real mockups and six new-category checkout links verified. 315 tests and final browser CI passed. Owner-paid fulfillment test, branding/support and bot protection remain launch gates.
+
+Latest: [RM-056 — gifts, restored Shopify mug, content safeguards and X product requests](ASTRA-SESSION-RM-056.md). Image moderation integration requires explicit activation and a dedicated secret; X remains disabled.

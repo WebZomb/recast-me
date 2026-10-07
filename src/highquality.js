@@ -1,3 +1,4 @@
+import {moderateContent,screenText,CONTENT_MESSAGE} from './content-safety.js';
 import {referenceDirections} from './reference-labels.js';
 import { assertRenderReady, readinessSnapshot, recordRenderHealth } from './render-health.js';
 const PROMPT_VERSION = "identity-references-v3";
@@ -135,11 +136,12 @@ export async function verifyTurnstile(env,token,ip){
 }
 
 function assess(text=""){
+  if(screenText(text).status==="rejected")return {status:"rejected",reasons:["content_policy"]};
   const value=String(text).toLowerCase();
-  const reject=AUTO_REJECT.filter(t=>value.includes(t));
+  const reject=AUTO_REJECT.filter(t=>new RegExp(`\\b${t.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")}\\b`,"i").test(value));
   if(reject.length)return{status:"rejected",reasons:reject};
-  const review=REVIEW_TERMS.filter(t=>value.includes(t));
-  const ip=IP_MARKERS.filter(t=>value.includes(t));
+  const review=REVIEW_TERMS.filter(t=>new RegExp(`\\b${t.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")}\\b`,"i").test(value));
+  const ip=IP_MARKERS.filter(t=>new RegExp(`\\b${t.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")}\\b`,"i").test(value));
   if(review.length||ip.length)return{status:"review",reasons:[...review,...ip]};
   return{status:"approved",reasons:[]}
 }
@@ -246,7 +248,6 @@ async function tryGeneration(env,model,prompt,inputFiles,kind,settings){
 
 async function generateHighQuality({env,model,styleId,subjectType,notes,customWorld,inputFiles,hasBranch}){
   const main=makePrompt(styleId,subjectType,notes,inputFiles.length,customWorld,hasBranch);
-  const safe=safePrompt(styleId,subjectType,inputFiles.length,notes,customWorld,hasBranch);
   const steps=Math.max(8,Math.min(30,Number(env.IMAGE_HIGH_QUALITY_STEPS||18)));
   const guidance=Math.max(1,Math.min(10,Number(env.IMAGE_HIGH_QUALITY_GUIDANCE||5)));
   const settings={width:1024,height:1280,guidance,steps};
@@ -255,18 +256,7 @@ async function generateHighQuality({env,model,styleId,subjectType,notes,customWo
     return await tryGeneration(env,model,main,inputFiles,"high-primary",settings)
   }catch(firstError){
     if(isQuota(firstError))throw Object.assign(new Error("quota"),{reason:"quota",code:3036,cause:firstError});
-    if(isModeration(firstError)){
-      try{
-        return await tryGeneration(env,model,safe,inputFiles,"high-safe",settings)
-      }catch(last){
-        if(isQuota(last))throw Object.assign(new Error("quota"),{reason:"quota",code:3036,cause:last});
-        if(isModeration(last))throw Object.assign(new Error("moderation"),{reason:"moderation",code:3030,cause:last});
-        if(isTimeout(last))throw Object.assign(new Error("timeout"),{reason:"timeout",cause:last});
-        if(isCapacity(last))throw Object.assign(new Error("capacity"),{reason:"capacity",cause:last});
-        if(isTemporaryUnavailable(last))throw Object.assign(new Error("unavailable"),{reason:"unavailable",cause:last});
-        throw Object.assign(new Error("provider"),{reason:"provider",cause:last});
-      }
-    }
+    if(isModeration(firstError))throw Object.assign(new Error("moderation"),{reason:"moderation",code:3030,cause:firstError});
     if(isTimeout(firstError))throw Object.assign(new Error("timeout"),{reason:"timeout",cause:firstError});
     if(isCapacity(firstError)){
       // Capacity is not a quality failure and should not trigger a second
@@ -280,7 +270,6 @@ async function generateHighQuality({env,model,styleId,subjectType,notes,customWo
 
 async function generateQuick({env,model,styleId,subjectType,notes,customWorld,inputFiles,hasBranch}){
   const main=makePrompt(styleId,subjectType,notes,inputFiles.length,customWorld,hasBranch);
-  const safe=safePrompt(styleId,subjectType,inputFiles.length,notes,customWorld,hasBranch);
   const guidance=Math.max(1,Math.min(10,Number(env.IMAGE_QUICK_GUIDANCE||5)));
   const steps=Math.max(8,Math.min(30,Number(env.IMAGE_QUICK_STEPS||12)));
   const settings={width:768,height:960,guidance,steps:model.includes('flux-2-klein')?null:steps};
@@ -292,20 +281,7 @@ async function generateQuick({env,model,styleId,subjectType,notes,customWorld,in
 
   if(isQuota(firstError))throw Object.assign(new Error("quota"),{reason:"quota",code:3036,cause:firstError});
 
-  // A moderated prompt can be simplified once. Never substitute the low-fidelity 4B model.
-  if(isModeration(firstError)){
-    try{
-      return await tryGeneration(env,model,safe,inputFiles,"quick-safe",settings)
-    }catch(last){
-      if(isQuota(last))throw Object.assign(new Error("quota"),{reason:"quota",code:3036,cause:last});
-      if(isModeration(last))throw Object.assign(new Error("moderation"),{reason:"moderation",code:3030,cause:last});
-      if(isTimeout(last))throw Object.assign(new Error("timeout"),{reason:"timeout",cause:last});
-      if(isCapacity(last))throw Object.assign(new Error("capacity"),{reason:"capacity",cause:last});
-      if(isTemporaryUnavailable(last))throw Object.assign(new Error("unavailable"),{reason:"unavailable",cause:last});
-      throw Object.assign(new Error("provider"),{reason:"provider",cause:last});
-    }
-  }
-
+  if(isModeration(firstError))throw Object.assign(new Error("moderation"),{reason:"moderation",code:3030,cause:firstError});
   if(isTimeout(firstError))throw Object.assign(new Error("timeout"),{reason:"timeout",cause:firstError});
   if(isCapacity(firstError))throw Object.assign(new Error("capacity"),{reason:"capacity",cause:firstError});
   if(isTemporaryUnavailable(firstError))throw Object.assign(new Error("unavailable"),{reason:"unavailable",cause:firstError});
@@ -356,7 +332,7 @@ export async function highQualityTransform(request,env,{trustedSocialJob=false}=
     attemptStartedAt=Date.now();
     await writeAttemptReceipt(env,clientAttemptId,{status:"started",startedAt:new Date(attemptStartedAt).toISOString(),styleId,subjectType,qualityMode,source:source||"site"});
     const safety=assess(`${styleId} ${subjectType} ${notes} ${customWorld}`);
-    if(safety.status==="rejected")return json({error:"not_supported",userMessage:"That request is outside Recast Me's good-will image policy.",reason:"policy"},422);
+    if(safety.status==="rejected")return json({error:"not_supported",userMessage:CONTENT_MESSAGE,reason:"policy"},422);
     if(safety.status==="review")return json({reviewRequired:true,userMessage:"This request needs a quick human review before generation.",reason:"review"},202);
 
     const inputFiles=[];
@@ -394,6 +370,9 @@ export async function highQualityTransform(request,env,{trustedSocialJob=false}=
     }
     if(!inputFiles.length)return json({error:"missing_upload",userMessage:"Add at least one photo first.",reason:"input"},400);
 
+    stage="content-screening";
+    const inputSafety=await moderateContent(env,{text:`${notes} ${customWorld}`,images:inputFiles,required:env.RECAST_RENDER_SCOPE==='social'});
+    safety.inputScreening=inputSafety;
     stage="readiness-preflight";
     try{await assertRenderReady(env,env.RECAST_RENDER_SCOPE==='social'?'social':qualityMode)}
     catch(gate){
@@ -425,6 +404,7 @@ export async function highQualityTransform(request,env,{trustedSocialJob=false}=
     stage="storage";
     const requestId=`RC-${Date.now().toString(36).toUpperCase()}-${randomHex(3).toUpperCase()}`;
     const accessToken=randomHex(32);
+    safety.outputScreening=await moderateContent(env,{images:[new File([Uint8Array.from(atob(image),c=>c.charCodeAt(0))],"output",{type:previewMime})]});
     const stored=await store(env,{requestId,accessToken,styleId,subjectType,notes,customWorld,parentRequestId,source,sourceTweet,qualityMode,inputs:inputFiles,image,previewMime,safety,modelUsed:generated.modelUsed,attemptKind:generated.attemptKind});
 
     await writeAttemptReceipt(env,clientAttemptId,{status:"success",completedAt:new Date().toISOString(),durationMs:Date.now()-attemptStartedAt,requestId,qualityMode,modelUsed:generated.modelUsed,attemptKind:generated.attemptKind,persisted:stored.persisted});
@@ -436,7 +416,8 @@ export async function highQualityTransform(request,env,{trustedSocialJob=false}=
     const diagnosticId=await writeGenerationDiagnostic(env,{stage,reason,providerCode:providerCode(internal),providerMessage:String(internal?.message||internal||"").slice(0,500),highQuality:String(env.IMAGE_MODEL_HIGH_QUALITY||DEFAULT_HIGH_QUALITY),quick:String(env.IMAGE_MODEL_QUICK||DEFAULT_QUICK)});
     await writeAttemptReceipt(env,clientAttemptId,{status:"failed",failedAt:new Date().toISOString(),durationMs:Date.now()-attemptStartedAt,stage,reason,providerCode:providerCode(internal),diagnosticId,qualityMode});
     if(reason==="quota")return json({error:"shared_ai_capacity_used",code:3036,reason:"quota",retryable:false,diagnosticId,qualityMode,userMessage:"Recast Me has reached its shared AI capacity for today. This is a site-wide limit, not your personal render count. Your photo is safe, and nothing was charged."},429);
-    if(reason==="moderation")return json({error:"generation_declined",code:3030,reason:"moderation",retryable:true,diagnosticId,qualityMode,userMessage:"The image engine would not complete that exact photo and wording combination. We already retried with a safer version. Try the same idea with simpler wording or another reference photo."},422);
+    if(reason==="content_policy"||reason==="content_screening_unavailable")return json({error:reason,reason,retryable:reason!=="content_policy",userMessage:error.message},error.status||503);
+    if(reason==="moderation")return json({error:"generation_declined",code:3030,reason:"moderation",retryable:false,diagnosticId,qualityMode,userMessage:"This photo or request was declined by the image safety check. Choose a different, family-friendly photo or idea. Nothing was charged."},422);
     if(reason==="capacity")return json({error:"engine_busy",reason:"capacity",retryable:true,diagnosticId,qualityMode,userMessage:"The image engine returned a confirmed busy response. Your photo and settings are safe; wait for Ready before trying again."},503);
     if(reason==="timeout")return json({error:"engine_timeout",reason:"timeout",retryable:true,diagnosticId,qualityMode,userMessage:"The image provider timed out before returning the artwork. Your photo and settings are safe; wait for Ready before trying again."},504);
     if(reason==="unavailable")return json({error:"engine_unavailable",reason:"unavailable",retryable:true,diagnosticId,qualityMode,userMessage:"The image provider is temporarily unavailable. Your photo and settings are safe; wait for Ready before trying again."},503);

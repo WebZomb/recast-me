@@ -187,8 +187,8 @@ test('Workers AI calls request immediate busy rejection instead of entering a ca
   assert.deepEqual(options,[{rejectIfBusy:true}]);
 });
 
-// Inspect actual multipart prompts on both initial and moderation-retry calls.
-test('Royal multi-reference retries retain animal anatomy and do not count photos as subjects',async()=>{
+// A moderation rejection must not trigger a rewritten retry.
+test('Royal references retain anatomy; provider moderation stops after one call',async()=>{
   const prompts=[];
   const env=envFor(async(model,{multipart})=>{
     assert.equal(model,'@cf/black-forest-labs/flux-2-dev');
@@ -200,7 +200,7 @@ test('Royal multi-reference retries retain animal anatomy and do not count photo
   const form=await submission({style:'royal',notes:''}).formData();
   form.set('subject','person and pet');form.set('image_1',original);form.set('referenceLabels','["person1","pet"]');
   const response=await highQualityTransform(new Request('https://recast.test/api/transform-v2',{method:'POST',body:form}),env);
-  assert.equal(response.status,200);assert.equal(prompts.length,2);
+  assert.equal(response.status,422);assert.equal(prompts.length,1);assert.equal((await response.json()).retryable,false);
   for(const prompt of prompts){
     assert.match(prompt,/Input image 0 \(photo 1\) shows person 1/);
     assert.match(prompt,/Input image 1 \(photo 2\) shows the same pet/);

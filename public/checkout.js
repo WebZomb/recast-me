@@ -118,6 +118,10 @@ function refreshStaticExamples(){
 document.addEventListener('recast-static-catalog',refreshStaticExamples);
 refreshStaticExamples();
 
+function checkoutEndpoint(path,req){
+  const routes={'/api/checkout-options':'products','/api/checkout-link':'checkout','/api/mockup/create':'mockup-create','/api/mockup/status':'mockup-status'};
+  return req?.shareId?`/api/social/${encodeURIComponent(req.shareId)}/${routes[path]}`:path;
+}
 function lastRequest(){if(window.__recastActiveRequest)return window.__recastActiveRequest;try{return JSON.parse(localStorage.getItem("recast_last_request")||"null")}catch{return null}}
 function showCatalogError(message){
   grid.replaceChildren();
@@ -259,7 +263,7 @@ async function confirmCheckout({req,sku,card,button,modal}){
   }
   confirm.disabled=true;confirm.textContent="Opening secure checkout…";errorCopy.hidden=true;
   try{
-    const res=await fetch("/api/checkout-link",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({
+    const res=await fetch(checkoutEndpoint("/api/checkout-link",req),{method:"POST",headers:{"x-recast-request":"1","content-type":"application/json"},body:JSON.stringify({
       requestId:req.requestId,accessToken:req.accessToken,sku,mockupId:state.mockupId,design:state.design,confirmDesign:true
     })});
     const result=await res.json().catch(()=>({}));
@@ -285,12 +289,13 @@ function openFinalReview({req,sku,card,button}){
     <div class="final-review-summary"><div><small>PRODUCT</small><strong>${card.dataset.productTitle?.replace(/^Custom Recast /,"")||"Product"} · ${card.querySelector(".recast-variant option:checked")?.textContent||card.querySelector(".recast-variant")?.value||sku}</strong></div><div><small>ARTWORK</small><strong>${req.requestId}</strong></div><div><small>PRINT SETTINGS</small><strong>${designSummary(card)}</strong></div></div>
     <div class="final-review-note"><strong>Size &amp; finish:</strong> The preview is for your selected variant. Actual print placement and color can vary slightly with manufacturing; a screen is not a physical ruler.</div>
     <div class="final-review-note"><strong>Looks right?</strong> The preview watermark is only for protection. Your clean private artwork is used for the print file.</div>
+    <div class="final-review-note"><strong>Sending a gift?</strong> Use your own email and billing details at checkout, and your recipient’s name and shipping address. Place separate orders for different addresses. Gift wrapping and gift messages are not currently offered.</div>
     <p class="final-review-error" role="alert" hidden></p>
     <div class="final-review-actions"><button type="button" class="button ghost" data-final-image>Change image</button><button type="button" class="button ghost" data-final-edit>Edit placement</button><button type="button" class="button primary" data-final-confirm>Confirm design & checkout</button></div>
   </section>`;
   document.body.append(modal);document.documentElement.classList.add("recast-review-open");
   modal.querySelectorAll("[data-final-close],[data-final-edit]").forEach(el=>el.addEventListener("click",()=>{closeFinalReview();card.scrollIntoView({behavior:"smooth",block:"center"});}));
-  modal.querySelector("[data-final-image]")?.addEventListener("click",()=>{closeFinalReview();document.querySelector("#recent-versions-shell")?.scrollIntoView({behavior:"smooth",block:"start"});});
+  modal.querySelector("[data-final-image]")?.addEventListener("click",()=>{closeFinalReview();if(req.shareId){location.href="/#start";return;}document.querySelector("#recent-versions-shell")?.scrollIntoView({behavior:"smooth",block:"start"});});
   modal.querySelector("[data-final-confirm]").addEventListener("click",()=>confirmCheckout({req,sku,card,button,modal}));
   modal.querySelector("[data-final-confirm]").focus();
 }
@@ -310,8 +315,8 @@ async function generateRealMockup({req,sku,card,button}){
       button.textContent="Preparing preview…";
       if(!await safeWait(initialWait))return;
     }
-    const startRequest=()=>fetch("/api/mockup/create",{
-      method:"POST",headers:{"content-type":"application/json","cache-control":"no-cache"},
+    const startRequest=()=>fetch(checkoutEndpoint("/api/mockup/create",req),{
+      method:"POST",headers:{"x-recast-request":"1","content-type":"application/json","cache-control":"no-cache"},
       body:JSON.stringify({requestId:req.requestId,accessToken:req.accessToken,sku,design}),
       cache:"no-store"
     });
@@ -356,7 +361,7 @@ async function generateRealMockup({req,sku,card,button}){
       if(!current())return;
       button.textContent=attempt?"Building updated mockup…":"Building real mockup…";
       if(!await safeWait(attempt===0?10000:8000))return;
-      const url=new URL("/api/mockup/status",location.origin);
+      const url=new URL(checkoutEndpoint("/api/mockup/status",req),location.origin);
       url.searchParams.set("requestId",req.requestId);url.searchParams.set("token",req.accessToken);url.searchParams.set("sku",sku);url.searchParams.set("mockup",mockupId);
       const response=await fetch(url,{cache:"no-store"});data=await response.json().catch(()=>({}));
       if(!current())return;
@@ -404,14 +409,14 @@ async function generateRealMockup({req,sku,card,button}){
 async function loadCheckout(){
   const loadId=++checkoutLoadId;
   const req=lastRequest();
-  if(!req?.requestId||!req?.accessToken||!grid)return;
+  if(!req?.requestId||(!req?.accessToken&&!req?.shareId)||!grid)return;
   grid.classList.remove('merch-home-compact');
   grid.classList.add('checkout-catalog');
   grid.innerHTML='<p class="product-loading">Loading products for the selected Artwork ID…</p>';
 
   let response,data;
   try{
-    const url=new URL("/api/checkout-options",location.origin);
+    const url=new URL(checkoutEndpoint("/api/checkout-options",req),location.origin);
     url.searchParams.set("requestId",req.requestId);
     url.searchParams.set("token",req.accessToken);
     response=await fetch(url);
@@ -525,7 +530,7 @@ async function loadCheckout(){
       if(!digital){openFinalReview({req,sku,card,button});return;}
       button.disabled=true;const previous=button.textContent;button.textContent="Opening Shopify…";
       try{
-        const res=await fetch("/api/checkout-link",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({requestId:req.requestId,accessToken:req.accessToken,sku})});
+        const res=await fetch(checkoutEndpoint("/api/checkout-link",req),{method:"POST",headers:{"x-recast-request":"1","content-type":"application/json"},body:JSON.stringify({requestId:req.requestId,accessToken:req.accessToken,sku})});
         const result=await res.json().catch(()=>({}));
         if(!res.ok||!result.ok||!result.checkoutUrl)throw new Error(result.error||"Checkout link could not be created.");
         location.href=result.checkoutUrl;
