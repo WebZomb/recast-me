@@ -94,3 +94,5 @@ $('#lock-admin').addEventListener('click',()=>{$('#recovery-list').replaceChildr
 
 $('#check-commerce').onclick=async()=>{const el=$('#commerce-result');el.textContent='Checking product connection…';try{el.textContent=JSON.stringify(await api('/api/admin/commerce-check'),null,2)}catch(e){el.textContent=e.message}};
 $('#verify-new-products').onclick=async()=>{const el=$('#new-products-result');el.textContent='Checking approved product candidates against Printful…';try{const d=await api('/api/admin/product-candidates');el.textContent=JSON.stringify(d.products,null,2);toast('Product candidate check complete. No order or production was created.')}catch(e){el.textContent=e.message}};
+
+$('#verify-tumbler').onclick=async()=>{const el=$('#new-products-result');el.textContent='Reading tumbler catalog…';try{const d=await api('/api/admin/product-candidates?product=tumbler');el.textContent=JSON.stringify(d.products,null,2)}catch(e){el.textContent=e.message}};

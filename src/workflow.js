@@ -630,6 +630,12 @@ export async function adminSocial(request,env){try{requireAdmin(request,env);con
 export async function adminProductCandidates(request,env){
   try{
     requireAdmin(request,env);
+    if(new URL(request.url).searchParams.get('product')==='tumbler'){
+      const map=FULFILLMENT['RECAST-TUMBLER-20OZ'];
+      const variant=await printful(env,`/v2/catalog-variants/${map.printfulVariantId}`,{method:'GET'});
+      const styles=await printful(env,`/v2/catalog-products/${map.printfulProductId}/mockup-styles?limit=100`,{method:'GET'});
+      return json({ok:true,productionSubmitted:false,products:[{title:'Tumbler exact catalog',map,variant,styles}]});
+    }
     const products=[],catalogIds=new Set(),variantIds=new Set();
     const selected=new Set(['Sticker','Phone Case','Pillow','Hardcover Journal','Puzzle','Tote Bag']);
     for(const product of selected){
