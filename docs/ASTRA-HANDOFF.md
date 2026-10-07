@@ -81,3 +81,6 @@ Latest: [RM-051.1 — product gallery and Printful preview polish](ASTRA-SESSION
 Latest: [RM-051.2 — expanded worlds and final mobile visual polish](ASTRA-SESSION-RM-0512.md).
 
 Latest: [RM-052 — transparent apparel and bounded product studio](ASTRA-SESSION-RM-052.md).
+
+
+Latest: RM-053 discovery expansion and launch controls. Subjects and Worlds broadened; render burst limiter added. Existing 12-product checkout remains unchanged pending exact Printful candidate validation. Turnstile credentials remain account-gated. See ASTRA-SESSION-RM-053.md.
