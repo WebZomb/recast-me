@@ -12,7 +12,8 @@ defaults:
     shell: bash
 jobs:
   public-product-examples:
-    if: github.event.head_commit.message == 'validate: RM055 product accuracy and public samples' && github.run_attempt == 1
+    if: >-
+      github.event.head_commit.message == 'validate: RM055 product accuracy and public samples' && github.run_attempt == 1
     runs-on: ubuntu-latest
     timeout-minutes: 40
     env:
