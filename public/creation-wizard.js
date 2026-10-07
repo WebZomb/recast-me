@@ -53,10 +53,14 @@ export function initCreationWizard({styles,photos,subject,style,updateWorld,hasB
     document.querySelectorAll('.creation-progress button').forEach(b=>{if(Number(b.dataset.goStep)===step)b.setAttribute('aria-current','step');else b.removeAttribute('aria-current');});
     $('.creation-progress').scrollIntoView({behavior:'auto',block:'start'});
   }
-  for(const [value,title] of Object.entries(names)){
-    const b=document.createElement('button');b.type='button';b.dataset.subjectChoice=value;b.textContent=title;
+  const quickSubjects=['pet','person','person and pet','couple','family','car','friends','custom'];
+  for(const value of quickSubjects){
+    const title=names[value],b=document.createElement('button');b.type='button';b.dataset.subjectChoice=value;b.textContent=title;
     b.addEventListener('click',()=>{subject.value=value;subject.dispatchEvent(new Event('change'));});$('#subject-choices').append(b);
   }
+  const browse=document.createElement('button');browse.type='button';browse.className='browse-subjects';browse.textContent='Browse all subjects ↓';
+  browse.addEventListener('click',()=>{const label=document.querySelector('.native-subject');label.hidden=!label.hidden;browse.textContent=label.hidden?'Browse all subjects ↓':'Hide all subjects ↑';if(!label.hidden)subject.focus({preventScroll:true});});
+  $('#subject-choices').append(browse);
   function refreshAdventures(){
     $('#adventure-choices').replaceChildren();
     ['royal','fantasy','space','game'].map(id=>styles.find(s=>s[0]===id)).filter(Boolean).forEach(([id,name,,src,alt])=>{
