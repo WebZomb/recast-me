@@ -96,3 +96,5 @@ Latest reconciliation: [October 7 catch-up and restored validation](ASTRA-CATCHU
 Latest launch audit: [October 7 live audit](ASTRA-LAUNCH-AUDIT-2026-10-07.md). Supplier mappings repaired; 29 real mockups and six new-category checkout links verified. 315 tests and final browser CI passed. Owner-paid fulfillment test, branding/support and bot protection remain launch gates.
 
 Latest: [RM-056 — gifts, restored Shopify mug, content safeguards and X product requests](ASTRA-SESSION-RM-056.md). Image moderation integration requires explicit activation and a dedicated secret; X remains disabled.
+
+Latest: [RM057 — varied supplier examples and matching Shopify draft](ASTRA-SESSION-RM-057.md).15 products/33 supplier views ready for owner image review; draft theme188993994996 unpublished. Poster fix0a692ec live; browser checks passed. Keep moderation/X and physical-order gates explicit.

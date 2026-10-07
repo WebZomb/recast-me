@@ -1,0 +1,769 @@
+{
+  "startedAt": "2026-10-07T18:58:46.719Z",
+  "aiGenerationCalls": 0,
+  "checkoutCalls": 0,
+  "orderCalls": 0,
+  "examples": {
+    "RECAST-MUG-11OZ": {
+      "product": "Mug",
+      "sku": "RECAST-MUG-11OZ",
+      "scene": "Halloween pet",
+      "publicArtwork": "public/assets/world-halloween-v18.webp",
+      "sourceHash": "d8e2fd584b88c96833de1a37f575e8a9409c81248e145218b41cea62d7f4af09",
+      "variantLabel": "11 oz",
+      "design": {
+        "version": 6,
+        "layout": "two-sided",
+        "background": "ambient",
+        "fill": "ambient",
+        "x": "center",
+        "scale": 110,
+        "spacing": "standard",
+        "product": "Mug"
+      },
+      "position": {
+        "area_width": 2700,
+        "area_height": 1050,
+        "width": 2700,
+        "height": 1050,
+        "top": 0,
+        "left": 0
+      },
+      "variantIdentity": {
+        "id": 1320,
+        "productId": 19,
+        "name": "White Glossy Mug 11 oz",
+        "size": "11 oz",
+        "color": "White"
+      },
+      "files": [
+        {
+          "file": "recast-mug-11oz-0.jpg",
+          "title": "Handle on Left",
+          "group": "Default",
+          "sha256": "ddc0563a10850a1516330652574f7628fa08a748d96289e6fd06be51f8764e7c"
+        },
+        {
+          "file": "recast-mug-11oz-1.jpg",
+          "title": "Front view",
+          "group": "Default",
+          "sha256": "66c20976f8a4edeb601e8ccd8071a62d9c7f003ea6ddbcaa0f93da10839a39a6"
+        },
+        {
+          "file": "recast-mug-11oz-2.jpg",
+          "title": "default",
+          "group": "",
+          "sha256": "0ffdfc86e84237b7508d48d062baaa0be24dd2073d2c0a81a889abcb5fbd59b5"
+        },
+        {
+          "file": "recast-mug-11oz-3.jpg",
+          "title": "Woman",
+          "group": "Lifestyle",
+          "sha256": "4d0b717aceb0334ed7a6c2b5d07ee607bb8722a32d6303de9e73c5b19ca5dac7"
+        }
+      ],
+      "status": "provider-generated-needs-visual-review",
+      "generatedAt": "2026-10-07T18:59:42.284Z"
+    },
+    "RECAST-COASTER-SET": {
+      "product": "Coaster 4-Pack",
+      "sku": "RECAST-COASTER-SET",
+      "scene": "Halloween pet",
+      "publicArtwork": "public/assets/world-halloween-v18.webp",
+      "sourceHash": "d8e2fd584b88c96833de1a37f575e8a9409c81248e145218b41cea62d7f4af09",
+      "variantLabel": "Coaster Set",
+      "design": {
+        "version": 6,
+        "layout": "cover",
+        "background": "full-bleed",
+        "fill": "full-bleed",
+        "x": "center",
+        "scale": 100,
+        "spacing": "standard",
+        "product": "Coaster 4-Pack"
+      },
+      "position": {
+        "area_width": 1181,
+        "area_height": 1181,
+        "width": 1181,
+        "height": 1181,
+        "top": 0,
+        "left": 0
+      },
+      "variantIdentity": {
+        "id": 15662,
+        "productId": 611,
+        "name": "Cork Back Coaster (3.74″×3.74″)",
+        "size": "3.74″×3.74″",
+        "color": null
+      },
+      "files": [
+        {
+          "file": "recast-coaster-set-0.jpg",
+          "title": "default",
+          "group": "",
+          "sha256": "2212d11370018638afa75293e00f0207053fbe9644d2a7502a9cc7c474b3c90c"
+        },
+        {
+          "file": "recast-coaster-set-1.jpg",
+          "title": "Front",
+          "group": "Lifestyle",
+          "sha256": "0f033badcbe8eb48cc83f6ebf550f03335152516e04305f8c327523c96af1fc8"
+        }
+      ],
+      "status": "provider-generated-needs-visual-review",
+      "generatedAt": "2026-10-07T19:00:09.816Z"
+    },
+    "RECAST-TUMBLER-20OZ": {
+      "product": "Tumbler",
+      "sku": "RECAST-TUMBLER-20OZ",
+      "scene": "Retro couple",
+      "publicArtwork": "public/assets/world-retro-v18.webp",
+      "sourceHash": "4680ff51e287fd4bbb4ab50134937b09b1fdeefda51da65073cf831a17ed6e0f",
+      "variantLabel": "20 oz",
+      "design": {
+        "version": 6,
+        "layout": "two-sided",
+        "background": "ambient",
+        "fill": "ambient",
+        "x": "center",
+        "scale": 108,
+        "spacing": "standard",
+        "product": "Tumbler"
+      },
+      "position": {
+        "area_width": 2795,
+        "area_height": 2100,
+        "width": 2795,
+        "height": 2100,
+        "top": 0,
+        "left": 0
+      },
+      "variantIdentity": {
+        "id": 23470,
+        "productId": 909,
+        "name": "Stainless Steel Tumbler (20 oz) (White / 20oz)",
+        "size": "20oz",
+        "color": "White"
+      },
+      "files": [
+        {
+          "file": "recast-tumbler-20oz-0.jpg",
+          "title": "Back",
+          "group": "Flat",
+          "sha256": "e172cbfd1efdb6bb3ce04dc15b1a564ae36027d49aeb88ce244bddc6c133315b"
+        },
+        {
+          "file": "recast-tumbler-20oz-1.jpg",
+          "title": "Left",
+          "group": "Flat",
+          "sha256": "f16439a20afe8a2d8e682a7cc5028e148ad3c7da8993fdf253b40097cd62d64f"
+        },
+        {
+          "file": "recast-tumbler-20oz-2.jpg",
+          "title": "Right",
+          "group": "Flat",
+          "sha256": "e352ad809d02519a33a7c34bb328e3cf8238ae01636f4a2ac235ec75a4d009d4"
+        },
+        {
+          "file": "recast-tumbler-20oz-3.jpg",
+          "title": "front",
+          "group": "",
+          "sha256": "dd4d5efe7bfdd1d7d3ff5398e949b9b1cd1cd94d4775aff446f4a0920da994fd"
+        }
+      ],
+      "status": "provider-generated-needs-visual-review",
+      "generatedAt": "2026-10-07T19:01:02.644Z"
+    },
+    "RECAST-PILLOW-14": {
+      "product": "Pillow",
+      "sku": "RECAST-PILLOW-14",
+      "scene": "Retro couple",
+      "publicArtwork": "public/assets/world-retro-v18.webp",
+      "sourceHash": "4680ff51e287fd4bbb4ab50134937b09b1fdeefda51da65073cf831a17ed6e0f",
+      "variantLabel": "14×14",
+      "design": {
+        "version": 6,
+        "layout": "fit",
+        "background": "ambient",
+        "fill": "ambient",
+        "x": "center",
+        "scale": 100,
+        "spacing": "standard",
+        "product": "Pillow"
+      },
+      "position": {
+        "area_width": 2250,
+        "area_height": 2250,
+        "width": 2250,
+        "height": 2250,
+        "top": 0,
+        "left": 0
+      },
+      "variantIdentity": {
+        "id": 49853,
+        "productId": 83,
+        "name": "All-Over Print Basic Pillow 14″×14″",
+        "size": "14″×14″",
+        "color": null
+      },
+      "files": [
+        {
+          "file": "recast-pillow-14-0.jpg",
+          "title": "Back",
+          "group": "Default",
+          "sha256": "4758a4b2ab628f0f9401928292f20eb1047b61bbc4d28daabb89db2e26d3f2b4"
+        },
+        {
+          "file": "recast-pillow-14-1.jpg",
+          "title": "front",
+          "group": "",
+          "sha256": "4758a4b2ab628f0f9401928292f20eb1047b61bbc4d28daabb89db2e26d3f2b4"
+        }
+      ],
+      "status": "provider-generated-needs-visual-review",
+      "generatedAt": "2026-10-07T19:01:31.704Z"
+    },
+    "RECAST-BLANKET-50X60": {
+      "product": "Blanket",
+      "sku": "RECAST-BLANKET-50X60",
+      "scene": "Royal family",
+      "publicArtwork": "public/assets/world-royal-v18.webp",
+      "sourceHash": "03dd79237ece9910e13aff6be0cb37de9593f9d78e36855757ff65e5856ef934",
+      "variantLabel": "50×60",
+      "design": {
+        "version": 6,
+        "layout": "fit",
+        "background": "ambient",
+        "fill": "ambient",
+        "x": "center",
+        "scale": 92,
+        "spacing": "standard",
+        "product": "Blanket"
+      },
+      "position": {
+        "area_width": 9450,
+        "area_height": 7950,
+        "width": 9450,
+        "height": 7950,
+        "top": 0,
+        "left": 0
+      },
+      "variantIdentity": {
+        "id": 10986,
+        "productId": 395,
+        "name": "Throw blanket 50″×60″",
+        "size": "50″×60″",
+        "color": null
+      },
+      "files": [
+        {
+          "file": "recast-blanket-50x60-0.jpg",
+          "title": "default",
+          "group": "",
+          "sha256": "6c374526b89389839a646fa95385a4787eb2ad64f7c71ec25a4cf6177ff2935d"
+        }
+      ],
+      "status": "provider-generated-needs-visual-review",
+      "generatedAt": "2026-10-07T19:02:07.991Z"
+    },
+    "RECAST-PUZZLE-252": {
+      "product": "Puzzle",
+      "sku": "RECAST-PUZZLE-252",
+      "scene": "Royal family",
+      "publicArtwork": "public/assets/world-royal-v18.webp",
+      "sourceHash": "03dd79237ece9910e13aff6be0cb37de9593f9d78e36855757ff65e5856ef934",
+      "variantLabel": "252 pieces",
+      "design": {
+        "version": 6,
+        "layout": "cover",
+        "background": "full-bleed",
+        "fill": "full-bleed",
+        "x": "center",
+        "scale": 100,
+        "spacing": "standard",
+        "product": "Puzzle",
+        "orientation": "landscape"
+      },
+      "position": {
+        "area_width": 4200,
+        "area_height": 3300,
+        "width": 4200,
+        "height": 3300,
+        "top": 0,
+        "left": 0
+      },
+      "variantIdentity": {
+        "id": 13431,
+        "productId": 534,
+        "name": "Jigsaw Puzzle (252 pieces)",
+        "size": "252 pieces",
+        "color": null
+      },
+      "files": [
+        {
+          "file": "recast-puzzle-252-0.jpg",
+          "title": "default",
+          "group": "",
+          "sha256": "c5fe90cda1bcd30de70f854a61579bfe6dbc002107bbf664c9f317966cc6f914"
+        },
+        {
+          "file": "recast-puzzle-252-1.jpg",
+          "title": "Front",
+          "group": "Lifestyle",
+          "sha256": "4eedca4ca4819ac71e855a33a61028f93c509a329a8036944d8886614d080ee9"
+        }
+      ],
+      "status": "provider-generated-needs-visual-review",
+      "generatedAt": "2026-10-07T19:02:39.800Z"
+    },
+    "RECAST-HOODIE-M": {
+      "product": "Hoodie",
+      "sku": "RECAST-HOODIE-M",
+      "scene": "Fantasy person + pet",
+      "publicArtwork": "public/assets/world-fantasy-v18.webp",
+      "sourceHash": "0b142fd5bb3e2c5531b0919b93aed552b22386dcb5accc49c5d408be4dcd7b89",
+      "variantLabel": "M",
+      "design": {
+        "version": 6,
+        "layout": "fit",
+        "background": "transparent",
+        "fill": "transparent",
+        "x": "center",
+        "scale": 100,
+        "spacing": "standard",
+        "product": "Hoodie",
+        "finish": "soft"
+      },
+      "position": {
+        "area_width": 1800,
+        "area_height": 1800,
+        "width": 1800,
+        "height": 1800,
+        "top": 0,
+        "left": 0
+      },
+      "variantIdentity": {
+        "id": 10780,
+        "productId": 380,
+        "name": "Cotton Heritage M2580 Premium Unisex Hoodie (Black / M)",
+        "size": "M",
+        "color": "Black"
+      },
+      "files": [
+        {
+          "file": "recast-hoodie-m-0.jpg",
+          "title": "Back",
+          "group": "Flat",
+          "sha256": "92363234942904d3b807778c668120e22384adf773234e0460e9bcea031fafef"
+        },
+        {
+          "file": "recast-hoodie-m-1.jpg",
+          "title": "front",
+          "group": "",
+          "sha256": "22714eda080e8705a7a5e7fb4071c816cfd58a5c0ffde74b234ca676ad8ff646"
+        }
+      ],
+      "status": "provider-generated-needs-visual-review",
+      "generatedAt": "2026-10-07T19:03:17.820Z"
+    },
+    "RECAST-TOTE-BLACK": {
+      "product": "Tote Bag",
+      "sku": "RECAST-TOTE-BLACK",
+      "scene": "Fantasy person + pet",
+      "publicArtwork": "public/assets/world-fantasy-v18.webp",
+      "sourceHash": "0b142fd5bb3e2c5531b0919b93aed552b22386dcb5accc49c5d408be4dcd7b89",
+      "variantLabel": "Black",
+      "design": {
+        "version": 6,
+        "layout": "fit",
+        "background": "ambient",
+        "fill": "ambient",
+        "x": "center",
+        "scale": 100,
+        "spacing": "standard",
+        "product": "Tote Bag"
+      },
+      "position": {
+        "area_width": 2550,
+        "area_height": 2475,
+        "width": 2550,
+        "height": 2475,
+        "top": 0,
+        "left": 0
+      },
+      "variantIdentity": {
+        "id": 4533,
+        "productId": 84,
+        "name": "All-Over Tote (Black)",
+        "size": "15″×15″",
+        "color": "Black"
+      },
+      "files": [
+        {
+          "file": "recast-tote-black-0.jpg",
+          "title": "default",
+          "group": "",
+          "sha256": "4baea7ad69e39659b2ac1f5d951a0b607f9c95818bd21e780dc7a2c4a304c86b"
+        },
+        {
+          "file": "recast-tote-black-1.jpg",
+          "title": "Mockup",
+          "group": "Flat Lifestyle",
+          "sha256": "8c88b6c6fcf802e225d42ad3c1874a54cf874866ef20c796097544a462abb9e0"
+        }
+      ],
+      "status": "provider-generated-needs-visual-review",
+      "generatedAt": "2026-10-07T19:03:48.815Z"
+    },
+    "RECAST-TEE-M": {
+      "product": "T-Shirt",
+      "sku": "RECAST-TEE-M",
+      "scene": "Comic hero",
+      "publicArtwork": "public/assets/world-comic-v18.webp",
+      "sourceHash": "90839f9487296e86b510a02fead9dba296612b5a11722a1ba9c9410e477dea61",
+      "variantLabel": "M",
+      "design": {
+        "version": 6,
+        "layout": "fit",
+        "background": "transparent",
+        "fill": "transparent",
+        "x": "center",
+        "scale": 100,
+        "spacing": "standard",
+        "product": "T-Shirt",
+        "finish": "soft"
+      },
+      "position": {
+        "area_width": 1800,
+        "area_height": 2400,
+        "width": 1800,
+        "height": 2400,
+        "top": 0,
+        "left": 0
+      },
+      "variantIdentity": {
+        "id": 4017,
+        "productId": 71,
+        "name": "Bella + Canvas 3001 Unisex Short Sleeve Jersey T-Shirt with Tear Away Label (Black / M)",
+        "size": "M",
+        "color": "Black"
+      },
+      "files": [
+        {
+          "file": "recast-tee-m-0.jpg",
+          "title": "Back",
+          "group": "Flat",
+          "sha256": "eb751273c63ad02baf33bb1c85649cd6ef23c8b173186007e7131fd56a0c4a0f"
+        },
+        {
+          "file": "recast-tee-m-1.jpg",
+          "title": "front",
+          "group": "",
+          "sha256": "84c991434b6d1f5416d6014ba302ff653b9680ad2eeebabcf47dddadb82e7077"
+        }
+      ],
+      "status": "provider-generated-needs-visual-review",
+      "generatedAt": "2026-10-07T19:04:31.644Z"
+    },
+    "RECAST-JOURNAL-HC": {
+      "product": "Hardcover Journal",
+      "sku": "RECAST-JOURNAL-HC",
+      "scene": "Comic hero",
+      "publicArtwork": "public/assets/world-comic-v18.webp",
+      "sourceHash": "90839f9487296e86b510a02fead9dba296612b5a11722a1ba9c9410e477dea61",
+      "variantLabel": "8×5.75",
+      "design": {
+        "version": 7,
+        "layout": "fit",
+        "background": "ambient",
+        "fill": "ambient",
+        "x": "center",
+        "scale": 100,
+        "spacing": "standard",
+        "product": "Hardcover Journal"
+      },
+      "position": {
+        "area_width": 4065,
+        "area_height": 2850,
+        "width": 4065,
+        "height": 2850,
+        "top": 0,
+        "left": 0
+      },
+      "variantIdentity": {
+        "id": 22658,
+        "productId": 867,
+        "name": "Hardcover Journal Matte (White / 8″×5.75″)",
+        "size": "8″×5.75″",
+        "color": "White"
+      },
+      "files": [
+        {
+          "file": "recast-journal-hc-0.jpg",
+          "title": "Back",
+          "group": "Flat",
+          "sha256": "50be2c6bb53105a9dc1614493a9d3affc81b5c95a7068b89899157cc9c3660e9"
+        },
+        {
+          "file": "recast-journal-hc-1.jpg",
+          "title": "front",
+          "group": "",
+          "sha256": "0eee722f0f35a8f0bcd72dd894b9b47e1dcdf65e622be2a08d52172e530b217d"
+        },
+        {
+          "file": "recast-journal-hc-2.jpg",
+          "title": "Front",
+          "group": "Lifestyle",
+          "sha256": "3171f849b302c0df9f08c5fe9970a9abe4c29b50641feb1fdf5346400876d234"
+        }
+      ],
+      "status": "provider-generated-needs-visual-review",
+      "generatedAt": "2026-10-07T19:05:10.012Z"
+    },
+    "RECAST-CASE-IP14PM": {
+      "product": "Phone Case",
+      "sku": "RECAST-CASE-IP14PM",
+      "scene": "Space Explorer pet",
+      "publicArtwork": "public/assets/dog-space-v17.webp",
+      "sourceHash": "a76e892e57dabf8aeadabd75dc3e799f839b2fec0a3933c241af0be2f4830403",
+      "variantLabel": "iPhone 14 Pro Max",
+      "design": {
+        "version": 7,
+        "layout": "fit",
+        "background": "ambient",
+        "fill": "ambient",
+        "x": "center",
+        "scale": 100,
+        "spacing": "standard",
+        "product": "Phone Case"
+      },
+      "position": {
+        "area_width": 879,
+        "area_height": 1830,
+        "width": 879,
+        "height": 1830,
+        "top": 0,
+        "left": 0
+      },
+      "variantIdentity": {
+        "id": 16243,
+        "productId": 181,
+        "name": "Clear Case for iPhone® (iPhone 14 Pro Max)",
+        "size": "iPhone 14 Pro Max",
+        "color": null
+      },
+      "files": [
+        {
+          "file": "recast-case-ip14pm-0.jpg",
+          "title": "Case with phone",
+          "group": "Default",
+          "sha256": "56dd9470e59749e8c2ce3e92536cecb01a8f7986efb2720fd0d957a7144c2cf5"
+        },
+        {
+          "file": "recast-case-ip14pm-1.jpg",
+          "title": "default",
+          "group": "",
+          "sha256": "c3c6d1c1d33a6eb2059e774eb03ed0e82b87e3f2ba36c3a485b56e0b978c0827"
+        },
+        {
+          "file": "recast-case-ip14pm-2.jpg",
+          "title": "Lifestyle 1",
+          "group": "Lifestyle",
+          "sha256": "7927c2022dd3feb8c2f14bcd06c10d44066b2f046460c9954986e34a76cfca68"
+        },
+        {
+          "file": "recast-case-ip14pm-3.jpg",
+          "title": "Lifestyle 2",
+          "group": "Lifestyle",
+          "sha256": "4f9434f10623cec35243b167701ced2a6a5cefb919d598e2f327e4f3be517381"
+        }
+      ],
+      "status": "provider-generated-needs-visual-review",
+      "generatedAt": "2026-10-07T19:06:11.038Z"
+    },
+    "RECAST-POSTER-12X16": {
+      "product": "Poster",
+      "sku": "RECAST-POSTER-12X16",
+      "scene": "Space Explorer pet",
+      "publicArtwork": "public/assets/dog-space-v17.webp",
+      "sourceHash": "a76e892e57dabf8aeadabd75dc3e799f839b2fec0a3933c241af0be2f4830403",
+      "variantLabel": "12×16",
+      "design": {
+        "version": 6,
+        "layout": "cover",
+        "background": "full-bleed",
+        "fill": "full-bleed",
+        "x": "center",
+        "scale": 100,
+        "spacing": "standard",
+        "product": "Poster",
+        "orientation": "portrait"
+      },
+      "position": {
+        "area_width": 3600,
+        "area_height": 4800,
+        "width": 3600,
+        "height": 4800,
+        "top": 0,
+        "left": 0
+      },
+      "variantIdentity": {
+        "id": 1349,
+        "productId": 1,
+        "name": "Enhanced Matte Paper Poster 12″×16″",
+        "size": "12″×16″",
+        "color": null
+      },
+      "files": [
+        {
+          "file": "recast-poster-12x16-0.jpg",
+          "title": "default",
+          "group": "",
+          "sha256": "37aa443c4a3684a9ceb0f29b89bcf7d59c74c0459a5b858022fb8f77bdc6947d"
+        }
+      ],
+      "status": "provider-generated-needs-visual-review",
+      "generatedAt": "2026-10-07T19:15:00.607Z"
+    },
+    "RECAST-FRAME-12X16": {
+      "product": "Framed Poster",
+      "sku": "RECAST-FRAME-12X16",
+      "scene": "Royal pet",
+      "publicArtwork": "public/assets/dog-royal-v17-fixed.webp",
+      "sourceHash": "5e65a80cc55032717ba2cd5812177f02f69ed1468a911922edb0f28856c688e3",
+      "variantLabel": "12×16",
+      "design": {
+        "version": 6,
+        "layout": "cover",
+        "background": "full-bleed",
+        "fill": "full-bleed",
+        "x": "center",
+        "scale": 100,
+        "spacing": "standard",
+        "product": "Framed Poster",
+        "orientation": "portrait"
+      },
+      "position": {
+        "area_width": 3600,
+        "area_height": 4800,
+        "width": 3600,
+        "height": 4800,
+        "top": 0,
+        "left": 0
+      },
+      "variantIdentity": {
+        "id": 1350,
+        "productId": 2,
+        "name": "Enhanced Matte Paper Framed Poster (Black/12″×16″)",
+        "size": "12″×16″",
+        "color": "Black"
+      },
+      "files": [
+        {
+          "file": "recast-frame-12x16-0.jpg",
+          "title": "default",
+          "group": "",
+          "sha256": "59d6dfbd971384b059c5dc2d1e563ebe1e024b940e5def475b665ba1667163f4"
+        }
+      ],
+      "status": "provider-generated-needs-visual-review",
+      "generatedAt": "2026-10-07T19:15:31.527Z"
+    },
+    "RECAST-MAGNET-SET": {
+      "product": "Magnet 3-Pack",
+      "sku": "RECAST-MAGNET-SET",
+      "scene": "Royal pet",
+      "publicArtwork": "public/assets/dog-royal-v17-fixed.webp",
+      "sourceHash": "5e65a80cc55032717ba2cd5812177f02f69ed1468a911922edb0f28856c688e3",
+      "variantLabel": "Magnet Set",
+      "design": {
+        "version": 6,
+        "layout": "cover",
+        "background": "full-bleed",
+        "fill": "full-bleed",
+        "x": "center",
+        "scale": 100,
+        "spacing": "standard",
+        "product": "Magnet 3-Pack"
+      },
+      "position": {
+        "area_width": 900,
+        "area_height": 900,
+        "width": 900,
+        "height": 900,
+        "top": 0,
+        "left": 0
+      },
+      "variantIdentity": {
+        "id": 16366,
+        "productId": 656,
+        "name": "Die Cut Magnets (3″×3″)",
+        "size": "3″×3″",
+        "color": "White"
+      },
+      "files": [
+        {
+          "file": "recast-magnet-set-0.jpg",
+          "title": "default",
+          "group": "",
+          "sha256": "0368d03ebfe3712d8d896cdd0e7b562e8e86b44024925fbedeafe576b9584f4b"
+        },
+        {
+          "file": "recast-magnet-set-1.jpg",
+          "title": "Front",
+          "group": "Flat Lifestyle",
+          "sha256": "14ba91452db5470ed074e9a9c934377bace58e98ddc3e721e4904cdead8ff85b"
+        }
+      ],
+      "status": "provider-generated-needs-visual-review",
+      "generatedAt": "2026-10-07T19:16:05.142Z"
+    },
+    "RECAST-CANVAS-12X16": {
+      "product": "Canvas",
+      "sku": "RECAST-CANVAS-12X16",
+      "scene": "Future City car",
+      "publicArtwork": "public/assets/world-future-v18.webp",
+      "sourceHash": "6c6c25538bc4462b7095f170d7f4af603ef6e136048ad519f6f5e2ce1a2042ba",
+      "variantLabel": "12×16",
+      "design": {
+        "version": 6,
+        "layout": "fit",
+        "background": "ambient",
+        "fill": "ambient",
+        "x": "center",
+        "scale": 90,
+        "spacing": "standard",
+        "product": "Canvas",
+        "orientation": "landscape"
+      },
+      "position": {
+        "area_width": 6600,
+        "area_height": 5400,
+        "width": 6600,
+        "height": 5400,
+        "top": 0,
+        "left": 0
+      },
+      "variantIdentity": {
+        "id": 5,
+        "productId": 3,
+        "name": "Canvas 12″×16″",
+        "size": "12″×16″",
+        "color": null
+      },
+      "files": [
+        {
+          "file": "recast-canvas-12x16-0.jpg",
+          "title": "default",
+          "group": "",
+          "sha256": "39cf5237d93a23895f6aa14f689cf966d49e75e28a4ddb0852994a94fb5bae34"
+        }
+      ],
+      "status": "provider-generated-needs-visual-review",
+      "generatedAt": "2026-10-07T19:16:34.297Z"
+    }
+  },
+  "failures": [],
+  "finishedAt": "2026-10-07T19:16:34.297Z"
+}

@@ -1,0 +1,11 @@
+{
+  "sections": {
+    "main": {
+      "type": "recast-product-entry",
+      "settings": {}
+    }
+  },
+  "order": [
+    "main"
+  ]
+}

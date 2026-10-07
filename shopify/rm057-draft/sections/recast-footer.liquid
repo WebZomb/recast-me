@@ -1,0 +1,7 @@
+<footer class="rm-footer"><div><strong>{{ 'recast.brand' | t }}</strong><p>{{ 'recast.footer.copy' | t }}</p></div><nav aria-label="{{ 'recast.footer.label' | t | escape }}"><a href="https://recastmeai.com/support">{{ 'recast.footer.support' | t }}</a><a href="https://recastmeai.com/privacy">{{ 'recast.footer.privacy' | t }}</a><a href="https://recastmeai.com/#start">{{ 'recast.nav.start' | t }}</a></nav><small>© {{ 'now' | date: '%Y' }} {{ 'recast.brand' | t }}</small></footer>
+{% stylesheet %}
+.rm-footer{max-width:1256px;margin:auto;border-top:1px solid #35264c;padding:40px 32px;display:grid;grid-template-columns:1fr auto;gap:28px}.rm-footer strong{font-size:21px;letter-spacing:-.02em}.rm-footer p,.rm-footer small{color:#aca4bf;font-size:13px}.rm-footer nav{display:flex;gap:24px;align-items:start}.rm-footer a{color:#d7d0e6;font-size:13px}.rm-footer small{grid-column:1/-1}@media(max-width:600px){.rm-footer{grid-template-columns:1fr;padding:32px 20px}.rm-footer nav{flex-wrap:wrap;gap:18px}}
+{% endstylesheet %}
+{% schema %}
+{"name":"Recast footer","settings":[],"presets":[{"name":"Recast footer"}]}
+{% endschema %}

@@ -1,0 +1,10 @@
+<header class="rm-header">
+  <a class="rm-logo" href="{{ routes.root_url }}" aria-label="{{ 'recast.nav.home' | t | escape }}"><img src="https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recastmeai-approved-orbit-header-v2.png?v=1791314310&width=800" width="691" height="144" alt="{{ 'recast.brand' | t | escape }}" loading="eager"></a>
+  <nav aria-label="{{ 'recast.nav.label' | t | escape }}"><a href="{{ routes.all_products_collection_url }}">{{ 'recast.nav.products' | t }}</a><a class="rm-start" href="https://recastmeai.com/#start">{{ 'recast.nav.start' | t }}</a></nav>
+</header>
+{% stylesheet %}
+.rm-header{max-width:1320px;margin:auto;padding:22px 32px;display:flex;align-items:center;justify-content:space-between;gap:24px;border-bottom:1px solid #302443}.rm-logo{width:min(245px,42vw);display:block}.rm-logo img{width:100%;height:auto}.rm-header nav{display:flex;gap:24px;align-items:center}.rm-header a{color:#fff;text-decoration:none;font-weight:650}.rm-start{display:inline-flex;padding:14px 22px;border-radius:100px;background:linear-gradient(110deg,#863bea,#2576d2);border:1px solid #a18ce855}.rm-header a:focus-visible{outline:3px solid #6cdded;outline-offset:5px}@media(max-width:600px){.rm-header{padding:18px 20px;gap:12px}.rm-header nav{gap:12px}.rm-header nav>a:first-child{display:none}.rm-start{padding:12px 16px;font-size:13px}}
+{% endstylesheet %}
+{% schema %}
+{"name":"Recast header","settings":[],"presets":[{"name":"Recast header"}]}
+{% endschema %}

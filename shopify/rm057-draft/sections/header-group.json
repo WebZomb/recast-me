@@ -1,0 +1,13 @@
+{
+  "type": "header",
+  "name": "Header",
+  "sections": {
+    "header": {
+      "type": "recast-header",
+      "settings": {}
+    }
+  },
+  "order": [
+    "header"
+  ]
+}

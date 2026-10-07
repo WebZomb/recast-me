@@ -1,0 +1,13 @@
+{
+  "sections": {
+    "recast": {
+      "type": "recast-showcase",
+      "settings": {
+        "heading": "Your world. Recast."
+      }
+    }
+  },
+  "order": [
+    "recast"
+  ]
+}
