@@ -7,18 +7,18 @@ const wizard=readFileSync(new URL('../public/creation-wizard.js',import.meta.url
 const hq=readFileSync(new URL('../src/highquality.js',import.meta.url),'utf8');
 const wrangler=readFileSync(new URL('../wrangler.jsonc',import.meta.url),'utf8');
 
-test('RM053 keeps pet-first quick choices but exposes a broad subject library',()=>{
- for(const label of ['Two or more pets','Horse','Friends / group','Child / teen','Baby','Family + pet','Motorcycle / bike','Home / special place','Memorial / tribute','Anything else — describe it']) assert.ok(html.includes(label),label);
- assert.ok(wizard.includes("quickSubjects=['pet','person','person and pet','couple','family','car','friends','custom']"));
- assert.ok(wizard.includes('Browse all subjects ↓'));
- assert.match(html,/data-launch-build="RM-053"/);
+test('RM054 keeps the customer-facing subject step deliberately simple',()=>{
+ for(const label of ['My pet','Just me','Me + my pet','Couple','Family','My car','Other — describe it']) assert.ok(html.includes(label),label);
+ for(const excessive of ['Two or more pets','Horse</option>','Friends / group','Child / teen','Baby</option>','Family + pet','Motorcycle / bike','Home / special place','Memorial / tribute']) assert.equal(html.includes(excessive),false,excessive);
+ assert.ok(wizard.includes("quickSubjects=['pet','person','person and pet','couple','family','car','custom']"));
+ assert.equal(wizard.includes('Browse all subjects ↓'),false);
+ assert.match(html,/data-launch-build="RM-054"/);
 });
 
-test('expanded subjects preserve reference-label and transformation handling',()=>{
- for(const value of ['multiple pets','family and pet','motorcycle','horse','animal']) assert.ok(wizard.includes(value),value);
- assert.ok(hq.includes('"horse","animal"'));
- assert.ok(hq.includes('"motorcycle","bike"'));
- assert.ok(hq.includes('"friends","group","child","teen","baby","memorial"'));
+test('simple subjects retain deliberate multi-reference labeling',()=>{
+ for(const value of ['person and pet','couple','family','car']) assert.ok(wizard.includes(value),value);
+ assert.ok(wizard.includes("['person1','pet','together']"));
+ assert.ok(wizard.includes("['person1','person2','together']"));
 });
 
 test('render endpoint has a Worker burst limiter in addition to daily credit controls',()=>{
