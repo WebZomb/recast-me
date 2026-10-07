@@ -8,40 +8,18 @@ jobs:
   discover:
     if: contains(github.event.head_commit.message, 'catalog-discovery:')
     runs-on: ubuntu-latest
-    timeout-minutes: 8
+    timeout-minutes: 5
     steps:
-      - name: Generate sample mockups for selected products
+      - name: Print selected catalog images
         shell: bash
         run: |
-          python - <<'PY'
-          import json,time,urllib.request,urllib.error
-          art="https://recastmeai.com/assets/world-game-v18.webp"
-          items=[(358,10163,"default","Sticker"),(181,33995,"default","PhoneCase"),(83,49854,"front","Pillow"),(867,22658,"front","Journal"),(84,4533,"default","Tote"),(534,13431,"default","Puzzle")]
-          def request(url,data=None):
-              headers={"Content-Type":"application/json"} if data is not None else {}
-              req=urllib.request.Request(url,data=(json.dumps(data).encode() if data is not None else None),headers=headers,method="POST" if data is not None else "GET")
-              with urllib.request.urlopen(req,timeout=30) as r:return json.load(r)
-          for product,variant,placement,label in items:
-              payload={"variant_ids":[variant],"format":"jpg","width":1000,"files":[{"placement":placement,"image_url":art}]}
-              try: created=request(f"https://api.printful.com/mockup-generator/create-task/{product}",payload)
-              except Exception as e:
-                  print("MOCKUP_UNAVAILABLE",label,type(e).__name__,e);continue
-              key=(created.get("result") or {}).get("task_key")
-              if not key:
-                  print("NO_TASK_KEY",label,created);continue
-              result=None
-              for _ in range(12):
-                  time.sleep(5)
-                  status=request(f"https://api.printful.com/mockup-generator/task?task_key={key}")
-                  r=status.get("result") or {}
-                  if r.get("status")=="completed": result=r;break
-                  if r.get("status")=="failed": break
-              if not result:
-                  print("MOCKUP_FAILED",label);continue
-              urls=[]
-              for m in result.get("mockups") or []:
-                  if m.get("mockup_url"): urls.append(m["mockup_url"])
-                  for extra in m.get("extra") or []:
-                      if extra.get("url"): urls.append(extra["url"])
-              print("MOCKUP_RESULT",label,urls[:3])
+          set -euo pipefail
+          for id in 358 181 83 867 84 534; do
+            curl -fsSL --retry 3 "https://api.printful.com/products/$id" -o "/tmp/product-$id.json"
+            python - "$id" <<'PY'
+          import json,sys
+          ident=sys.argv[1]
+          p=(json.load(open(f'/tmp/product-{ident}.json')).get('result') or {}).get('product') or {}
+          print(f"CATALOG_IMAGE {ident} {p.get('title')} {p.get('image')}")
           PY
+          done
