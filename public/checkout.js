@@ -78,7 +78,7 @@ function roadmapMarkup(){
 
 let catalogExamplesPromise;
 function catalogExamples(){
-  return catalogExamplesPromise ||= fetch('/catalog-examples.json?v=2551',{cache:'no-cache'})
+  return catalogExamplesPromise ||= fetch('/catalog-examples.json?v=2552',{cache:'no-cache'})
     .then(r=>r.ok?r.json():{examples:{}}).catch(()=>({examples:{}}));
 }
 function trustedExample(row,sku,design){
@@ -91,14 +91,16 @@ function trustedExample(row,sku,design){
 async function applyCatalogExample(card,sku,{staticCard=false}={}){
   if(!card||!sku)return;
   const run=String(Number(card.dataset.exampleRun||0)+1);card.dataset.exampleRun=run;
-  const design=staticCard?null:productDesign(card),data=await catalogExamples(),row=data.examples?.[sku];
+  const data=await catalogExamples(),row=data.examples?.[sku];
+  // Read controls after the await: initial cards apply their presets synchronously.
+  const design=staticCard?null:productDesign(card);
   if(card.dataset.exampleRun!==run||card.classList.contains('real-mockup-ready')||(!staticCard&&stateFor(card).busy))return;
   if(!staticCard&&card.querySelector('.recast-variant')?.value!==sku)return;
   const image=card.querySelector('.product-art img'),caption=card.querySelector('.example-design-label');
   if(!image)return;
   if(trustedExample(row,sku,design)){
     image.src=row.image;image.alt=`Printful example for ${row.product} · ${row.variantLabel}`;
-    if(caption)caption.textContent=`Example · ${row.variantLabel} · supplier mockup`;
+    if(caption)caption.textContent=`${row.viewType==='Room'?'Room example':'Example'} · ${row.variantLabel} · supplier mockup`;
     card.dataset.exampleSku=sku;card.dataset.exampleVerified='true';
   }else{
     if(caption)caption.textContent='Style illustration · not a size proof';

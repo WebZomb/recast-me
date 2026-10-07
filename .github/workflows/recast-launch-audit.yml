@@ -44,10 +44,14 @@ jobs:
         run: |
           mkdir -p audit-results
           NODE_PATH=/tmp/recast-browser/node_modules node scripts/launch-audit.cjs
+      - name: Verify reviewed product-specific examples
+        run: NODE_PATH=/tmp/recast-browser/node_modules node scripts/rm055-published-example-audit.cjs
       - name: Retain public screenshots and report
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: recast-public-launch-audit
-          path: audit-results/
+          path: |
+            audit-results/
+            rm055-published-example-audit/
           retention-days: 7

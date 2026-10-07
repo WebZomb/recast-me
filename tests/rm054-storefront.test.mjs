@@ -14,5 +14,5 @@ test('unverified roadmap remains available as a concise coming-soon list, not fa
  assert.doesNotMatch(block,/<img|recast-buy|Preview my product|from \$/);
 });
 test('cache-safe RM055 release loads the revised checkout and styling',()=>{
- assert.match(html,/product-polish-v53\.css\?v=4/);assert.match(html,/checkout\.js\?v=2551/);assert.match(html,/data-launch-build="RM-055"/);
+ assert.match(html,/product-polish-v53\.css\?v=4/);assert.match(html,/checkout\.js\?v=2552/);assert.match(html,/data-launch-build="RM-055"/);
 });

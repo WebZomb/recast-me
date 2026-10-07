@@ -1,1 +1,288 @@
-{"revision":"RM055-1","examples":{}}
+{
+  "revision": "RM055-2",
+  "examples": {
+    "RECAST-HOODIE-S": {
+      "sku": "RECAST-HOODIE-S",
+      "product": "Hoodie",
+      "variantLabel": "Black · S",
+      "status": "provider-verified",
+      "sourceHash": "f9173acdee8cc76a5b447966711034ef14cf9597a61b7945e69212aff42dcbe3",
+      "design": {
+        "version": 6,
+        "layout": "fit",
+        "background": "transparent",
+        "fill": "transparent",
+        "x": "center",
+        "scale": 100,
+        "spacing": "standard",
+        "product": "Hoodie",
+        "finish": "soft"
+      },
+      "position": {
+        "area_width": 1800,
+        "area_height": 1800,
+        "width": 1800,
+        "height": 1800,
+        "top": 0,
+        "left": 0
+      },
+      "variantIdentity": {
+        "id": 10779,
+        "productId": 380,
+        "name": "Cotton Heritage M2580 Premium Unisex Hoodie (Black / S)",
+        "size": "S",
+        "color": "Black"
+      },
+      "generatedAt": "2026-10-07T07:04:35.702Z",
+      "reviewedAt": "2026-10-07T07:22:08.600562+00:00",
+      "viewType": "Front",
+      "image": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-hoodie-black-s-verified-rm055.jpg?v=1791357294",
+      "imageSha256": "18abcddae152f03b516c6ec4bf13e0b5e22a097a8caf86f778503eea121b2f8d",
+      "providerRun": "37585045651",
+      "visualReview": "Correct product and depicted face, source scene and proportion checked. Original supplier image, no compositing or resizing of the physical object."
+    },
+    "RECAST-TEE-S": {
+      "sku": "RECAST-TEE-S",
+      "product": "T-Shirt",
+      "variantLabel": "Black · S",
+      "status": "provider-verified",
+      "sourceHash": "f9173acdee8cc76a5b447966711034ef14cf9597a61b7945e69212aff42dcbe3",
+      "design": {
+        "version": 6,
+        "layout": "fit",
+        "background": "transparent",
+        "fill": "transparent",
+        "x": "center",
+        "scale": 100,
+        "spacing": "standard",
+        "product": "T-Shirt",
+        "finish": "soft"
+      },
+      "position": {
+        "area_width": 1800,
+        "area_height": 2400,
+        "width": 1800,
+        "height": 2400,
+        "top": 0,
+        "left": 0
+      },
+      "variantIdentity": {
+        "id": 4016,
+        "productId": 71,
+        "name": "Bella + Canvas 3001 Unisex Short Sleeve Jersey T-Shirt with Tear Away Label (Black / S)",
+        "size": "S",
+        "color": "Black"
+      },
+      "generatedAt": "2026-10-07T07:04:57.831Z",
+      "reviewedAt": "2026-10-07T07:22:08.600562+00:00",
+      "viewType": "Front",
+      "image": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-tee-black-s-verified-rm055.jpg?v=1791357311",
+      "imageSha256": "3e39d686db3e05352a60dd67e9125c86bb7ed809879fc961f270dc7947626ee2",
+      "providerRun": "37585045651",
+      "visualReview": "Correct product and depicted face, source scene and proportion checked. Original supplier image, no compositing or resizing of the physical object."
+    },
+    "RECAST-POSTER-12X16": {
+      "sku": "RECAST-POSTER-12X16",
+      "product": "Poster",
+      "variantLabel": "12×16 in",
+      "status": "provider-verified",
+      "sourceHash": "f9173acdee8cc76a5b447966711034ef14cf9597a61b7945e69212aff42dcbe3",
+      "design": {
+        "version": 6,
+        "layout": "cover",
+        "background": "full-bleed",
+        "fill": "full-bleed",
+        "x": "center",
+        "scale": 100,
+        "spacing": "standard",
+        "product": "Poster",
+        "orientation": "portrait"
+      },
+      "position": {
+        "area_width": 3600,
+        "area_height": 4800,
+        "width": 3600,
+        "height": 4800,
+        "top": 0,
+        "left": 0
+      },
+      "variantIdentity": {
+        "id": 1349,
+        "productId": 1,
+        "name": "Enhanced Matte Paper Poster 12″×16″",
+        "size": "12″×16″",
+        "color": null
+      },
+      "generatedAt": "2026-10-07T07:05:21.225Z",
+      "reviewedAt": "2026-10-07T07:22:08.600562+00:00",
+      "viewType": "Room",
+      "image": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-poster-12x16-room-verified-rm055.jpg?v=1791357617",
+      "imageSha256": "5218d2cebd09f9c8aae2f57a016fd47a68608e01f1a4786b5a9667cfc9ec3f4a",
+      "providerRun": "37585045651",
+      "visualReview": "Correct product and depicted face, source scene and proportion checked. Original supplier image, no compositing or resizing of the physical object."
+    },
+    "RECAST-FRAME-12X16": {
+      "sku": "RECAST-FRAME-12X16",
+      "product": "Framed Poster",
+      "variantLabel": "12×16 in · black frame",
+      "status": "provider-verified",
+      "sourceHash": "f9173acdee8cc76a5b447966711034ef14cf9597a61b7945e69212aff42dcbe3",
+      "design": {
+        "version": 6,
+        "layout": "cover",
+        "background": "full-bleed",
+        "fill": "full-bleed",
+        "x": "center",
+        "scale": 100,
+        "spacing": "standard",
+        "product": "Framed Poster",
+        "orientation": "portrait"
+      },
+      "position": {
+        "area_width": 3600,
+        "area_height": 4800,
+        "width": 3600,
+        "height": 4800,
+        "top": 0,
+        "left": 0
+      },
+      "variantIdentity": {
+        "id": 1350,
+        "productId": 2,
+        "name": "Enhanced Matte Paper Framed Poster (Black/12″×16″)",
+        "size": "12″×16″",
+        "color": "Black"
+      },
+      "generatedAt": "2026-10-07T07:06:20.652Z",
+      "reviewedAt": "2026-10-07T07:22:08.600562+00:00",
+      "viewType": "Product",
+      "image": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-frame-black-12x16-verified-rm055.jpg?v=1791357410",
+      "imageSha256": "c9f9e10d33109199895401af5817dbf277ddeda2853e3f9b6790ae8774a1e69f",
+      "providerRun": "37585045651",
+      "visualReview": "Correct product and depicted face, source scene and proportion checked. Original supplier image, no compositing or resizing of the physical object."
+    },
+    "RECAST-MUG-11OZ": {
+      "sku": "RECAST-MUG-11OZ",
+      "product": "Mug",
+      "variantLabel": "11 oz · white",
+      "status": "provider-verified",
+      "sourceHash": "f9173acdee8cc76a5b447966711034ef14cf9597a61b7945e69212aff42dcbe3",
+      "design": {
+        "version": 6,
+        "layout": "two-sided",
+        "background": "ambient",
+        "fill": "ambient",
+        "x": "center",
+        "scale": 110,
+        "spacing": "standard",
+        "product": "Mug"
+      },
+      "position": {
+        "area_width": 2700,
+        "area_height": 1050,
+        "width": 2700,
+        "height": 1050,
+        "top": 0,
+        "left": 0
+      },
+      "variantIdentity": {
+        "id": 1320,
+        "productId": 19,
+        "name": "White Glossy Mug 11 oz",
+        "size": "11 oz",
+        "color": "White"
+      },
+      "generatedAt": "2026-10-07T07:06:45.677Z",
+      "reviewedAt": "2026-10-07T07:22:08.600562+00:00",
+      "viewType": "Product",
+      "image": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-mug-11oz-verified-rm055.jpg?v=1791357487",
+      "imageSha256": "a9be848dab8b186f9e2278f6e415bcfb7cf4a828f42dd6f58b79a49848082092",
+      "providerRun": "37585045651",
+      "visualReview": "Correct product and depicted face, source scene and proportion checked. Original supplier image, no compositing or resizing of the physical object."
+    },
+    "RECAST-MAGNET-SET": {
+      "sku": "RECAST-MAGNET-SET",
+      "product": "Magnet 3-Pack",
+      "variantLabel": "3-pack · 3×3 in each · one shown",
+      "status": "provider-verified",
+      "sourceHash": "f9173acdee8cc76a5b447966711034ef14cf9597a61b7945e69212aff42dcbe3",
+      "design": {
+        "version": 6,
+        "layout": "cover",
+        "background": "full-bleed",
+        "fill": "full-bleed",
+        "x": "center",
+        "scale": 100,
+        "spacing": "standard",
+        "product": "Magnet 3-Pack"
+      },
+      "position": {
+        "area_width": 900,
+        "area_height": 900,
+        "width": 900,
+        "height": 900,
+        "top": 0,
+        "left": 0
+      },
+      "variantIdentity": {
+        "id": 16366,
+        "productId": 656,
+        "name": "Die Cut Magnets (3″×3″)",
+        "size": "3″×3″",
+        "color": "White"
+      },
+      "generatedAt": "2026-10-07T07:07:29.179Z",
+      "reviewedAt": "2026-10-07T07:22:08.600562+00:00",
+      "viewType": "Product",
+      "image": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-magnet-3x3-verified-rm055.jpg?v=1791357595",
+      "imageSha256": "dcdf8339e8cf46af5121b264c2e043b523b1bc187b1d50b97f48386236d29528",
+      "providerRun": "37585045651",
+      "visualReview": "Correct product and depicted face, source scene and proportion checked. Original supplier image, no compositing or resizing of the physical object."
+    },
+    "RECAST-COASTER-SET": {
+      "sku": "RECAST-COASTER-SET",
+      "product": "Coaster 4-Pack",
+      "variantLabel": "4-pack · 3.74×3.74 in each · one shown",
+      "status": "provider-verified",
+      "sourceHash": "f9173acdee8cc76a5b447966711034ef14cf9597a61b7945e69212aff42dcbe3",
+      "design": {
+        "version": 6,
+        "layout": "cover",
+        "background": "full-bleed",
+        "fill": "full-bleed",
+        "x": "center",
+        "scale": 100,
+        "spacing": "standard",
+        "product": "Coaster 4-Pack"
+      },
+      "position": {
+        "area_width": 1181,
+        "area_height": 1181,
+        "width": 1181,
+        "height": 1181,
+        "top": 0,
+        "left": 0
+      },
+      "variantIdentity": {
+        "id": 15662,
+        "productId": 611,
+        "name": "Cork Back Coaster (3.74″×3.74″)",
+        "size": "3.74″×3.74″",
+        "color": null
+      },
+      "generatedAt": "2026-10-07T07:07:49.627Z",
+      "reviewedAt": "2026-10-07T07:22:08.600562+00:00",
+      "viewType": "Product",
+      "image": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-coaster-374-verified-rm055.jpg?v=1791357554",
+      "imageSha256": "e8167ef2ff23f962115b72b1e3c421469c2a969d21f6dc2a34142929049c4c56",
+      "providerRun": "37585045651",
+      "visualReview": "Correct product and depicted face, source scene and proportion checked. Original supplier image, no compositing or resizing of the physical object."
+    }
+  },
+  "pending": {
+    "RECAST-CANVAS-12X16": "Supplier image generated; held for better front-safe artwork crop and a product-focused view.",
+    "RECAST-BLANKET-50X60": "Supplier image generated; held because folded view conceals the main subjects.",
+    "RECAST-TUMBLER-20OZ": "No compatible provider print-area/view combination yet. Checkout proof remains required."
+  },
+  "note": "Examples are specific to the listed SKU and settings. Watermarks are preview-only. Actual printing can have manufacturing and color variation."
+}

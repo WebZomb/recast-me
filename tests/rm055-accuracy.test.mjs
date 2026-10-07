@@ -53,3 +53,37 @@ test('unknown default image titles are product views, not mislabeled 3D room sce
  const c=context();assert.equal(vm.runInNewContext(`viewLabel('Default',0)`,c),'Product');
  assert.equal(vm.runInNewContext(`uniqueMockupViews([{title:'Living room',group:'Default',url:'1'}])[0].label`,c),'Lifestyle');
 });
+
+test('initial example lookup reads the applied preset, not the raw select defaults',async()=>{
+ const c=context();let release;const pending=new Promise(r=>release=r);
+ c.fetch=()=>pending;
+ const selected={layout:'cover',fill:'ambient',x:'center',scale:'100',spacing:'standard',finish:'soft'};
+ const image={},caption={},variant={value:'RECAST-HOODIE-S'};
+ const card={dataset:{productTitle:'Custom Recast Hoodie'},classList:{contains:()=>false},querySelector(selector){
+  if(selector==='.product-art img')return image;if(selector==='.example-design-label')return caption;if(selector==='.recast-variant')return variant;
+  const key=selector.match(/^\[data-design-(.+)\]$/)?.[1];return key?{value:selected[key]}:null;
+ }};
+ c.card=card;
+ const running=vm.runInNewContext("applyCatalogExample(card,'RECAST-HOODIE-S')",c);
+ selected.layout='fit';selected.fill='transparent';
+ const design=vm.runInNewContext('productDesign(card)',c);
+ release({ok:true,json:async()=>({examples:{'RECAST-HOODIE-S':{sku:'RECAST-HOODIE-S',status:'provider-verified',sourceHash:'a'.repeat(64),reviewedAt:'2026-10-07',variantIdentity:{id:10779},position:{area_width:4500,area_height:5400,width:4500,height:5400},image:'/assets/catalog/hoodie-s.jpg',product:'Hoodie',variantLabel:'S',design}}})});
+ await running;assert.equal(image.src,'/assets/catalog/hoodie-s.jpg');assert.equal(card.dataset.exampleVerified,'true');
+});
+
+
+test('published samples match exact mapped suppliers and only visually reviewed products',async()=>{
+ const {FULFILLMENT}=await import('../src/entry.js');
+ const data=JSON.parse(readFileSync(new URL('../public/catalog-examples.json',import.meta.url),'utf8'));
+ assert.equal(Object.keys(data.examples).length,7);
+ const c=context();
+ for(const [sku,row] of Object.entries(data.examples)){
+  const map=FULFILLMENT[sku];assert.ok(map&&!map.digital);assert.equal(row.variantIdentity.id,map.printfulVariantId);assert.equal(row.variantIdentity.productId,map.printfulProductId);assert.equal(row.design.product,map.product);
+  assert.match(row.imageSha256,/^[a-f0-9]{64}$/);assert.match(row.sourceHash,/^[a-f0-9]{64}$/);assert.equal(row.providerRun,'37585045651');
+  c.row=row;assert.ok(vm.runInNewContext('trustedExample(row,row.sku,row.design)',c));
+  if(map.quantity>1)assert.match(row.variantLabel,/one shown/);
+ }
+ for(const sku of ['RECAST-CANVAS-12X16','RECAST-BLANKET-50X60','RECAST-TUMBLER-20OZ']){assert.equal(data.examples[sku],undefined);assert.ok(data.pending[sku]);}
+ assert.equal(data.examples['RECAST-POSTER-12X16'].viewType,'Room');
+ assert.equal(data.examples['RECAST-HOODIE-S'].viewType,'Front');
+});
