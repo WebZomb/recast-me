@@ -20,6 +20,6 @@ test('mobile landing preserves approved Jack Russell sequence under the final Pi
   assert.equal((html.match(/jack-russell-source-v18\.webp/g)||[]).length,2);
   assert.doesNotMatch(html,/dog-original-v17\.webp/);
   assert.match(css,/aspect-ratio:1\.055!important/);
-  assert.match(css,/hero-live-product\{[\s\S]*width:56\\.5%!important/);
+  assert.match(css,/hero-live-product\{[\s\S]*width:56\.5%!important/);
   assert.match(css,/max-width:34ch!important/);
 });
