@@ -626,19 +626,34 @@ export async function adminSocial(request,env){try{requireAdmin(request,env);con
 export async function adminProductCandidates(request,env){
   try{
     requireAdmin(request,env);
-    const products=[];
-    for(const [key,candidate] of Object.entries(RM054_PRODUCT_CANDIDATES)){
+    const products=[],catalogIds=new Set(),variantIds=new Set();
+    const selected=new Set(['Sticker','Phone Case','Pillow','Hardcover Journal','Puzzle','Tote Bag']);
+    for(const product of selected){
       const variants=[];
-      for(const item of candidate.variants){
+      for(const [sku,item] of Object.entries(FULFILLMENT).filter(([,map])=>map.product===product)){
+        catalogIds.add(item.printfulProductId);variantIds.add(item.printfulVariantId);
         try{
-          const response=await printful(env,`/v2/catalog-variants/${item.printfulVariantId}`,{method:'GET'});
-          const row=response?.data||{};
-          variants.push({requestedId:item.printfulVariantId,verified:Number(row.id)===Number(item.printfulVariantId),catalogProductId:Number(row.catalog_product_id)||null,name:row.name||null,size:row.size||null,color:row.color||null,availability:row.availability_status||row.availability||null});
-        }catch(error){
-          variants.push({requestedId:item.printfulVariantId,verified:false,error:error.message||String(error),providerStatus:error.printfulStatus||null});
-        }
+          const response=await printful(env,`/v2/catalog-variants/${item.printfulVariantId}`,{method:'GET'}),row=response?.data||{};
+          if(Number.isSafeInteger(Number(row.catalog_product_id)))catalogIds.add(Number(row.catalog_product_id));
+          variants.push({sku,requestedId:item.printfulVariantId,expectedProductId:item.printfulProductId,verified:Number(row.id)===Number(item.printfulVariantId)&&Number(row.catalog_product_id)===Number(item.printfulProductId),catalogProductId:Number(row.catalog_product_id)||null,name:row.name||null,size:row.size||null,color:row.color||null});
+        }catch(error){variants.push({sku,requestedId:item.printfulVariantId,verified:false,error:error.message||String(error),providerStatus:error.printfulStatus||null});}
       }
-      products.push({key,title:candidate.title,wave:candidate.wave,state:candidate.state,variants});
+      products.push({title:product,variants});
+    }
+    // Read-only discovery of the promised hardcover item, never auto-remap a sale.
+    const listings=await printful(env,'/products',{method:'GET'});
+    const journals=(Array.isArray(listings)?listings:[]).filter(row=>/hardcover.*(journal|notebook)|(journal|notebook).*hardcover/i.test(row.title||row.name||''));
+    for(const row of journals.slice(0,3))if(Number.isSafeInteger(Number(row.id)))catalogIds.add(Number(row.id));
+    products.push({title:'Hardcover catalog candidates',candidates:journals.map(row=>({id:row.id,title:row.title||row.name}))});
+    for(const id of [...catalogIds].slice(0,12)){
+      const detail={title:'Supplier catalog '+id,productId:id};
+      try{
+        const row=await printful(env,`/products/${id}`,{method:'GET'});
+        detail.product=row.product;
+        detail.variants=(row.variants||[]).filter(v=>id!==181||variantIds.has(Number(v.id)));
+        detail.printfiles=await printful(env,`/mockup-generator/printfiles/${id}`,{method:'GET'});
+      }catch(error){detail.error=error.message;}
+      products.push(detail);
     }
     return json({ok:true,productionSubmitted:false,products});
   }catch(error){return json({ok:false,error:error.message},error.status||500)}
@@ -692,8 +707,10 @@ async function sendPrintfulProductionForJob(env,job){
   if(!await env.ARTWORK.put(claim,JSON.stringify({startedAt:now()}),{onlyIf:new Headers({'If-None-Match':'*'})}))throw fault('production_started','Production submission already started; review Printful before retrying.');
   const result=await printful(env,`/orders/${encodeURIComponent(job.printfulOrderId)}/confirm`,{method:"POST"});
   job.status="submitted_to_printful";job.printfulStatus=result.status||"pending";job.sentToProductionAt=now();
+  // Record provider acceptance before an unrelated network call can stall.
+  await saveJob(env,job);
   await addShopifyOrderTags(env,job.orderId,["RECAST_PRINTFUL_SUBMITTED"]);
-  return saveJob(env,job);
+  return job;
 }
 async function autoProcessPreapprovedJob(env,job){
   if(!job.preapprovedCheckout||String(env.AUTO_PRINT_PREAPPROVED_ENABLED||"false")!=="true")return job;
@@ -706,8 +723,9 @@ async function autoProcessPreapprovedJob(env,job){
   }catch(error){
     job.autoPrintError=error.message||String(error);job.autoPrintFailedAt=now();
     if(!job.sentToProductionAt&&job.status!=='on_hold')job.status='auto_print_review';
+    await saveJob(env,job);
     await addShopifyOrderTags(env,job.orderId,["RECAST_PRINTFUL_REVIEW"]);
-    await saveJob(env,job);throw error;
+    throw error;
   }
 }
 

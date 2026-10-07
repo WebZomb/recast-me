@@ -210,10 +210,16 @@ test('pre-checkout confirmation becomes the approved design and auto-sends only 
   {key:'_Recast Mockup',value:mockup},{key:'_Recast Preview Token',value:token},{key:'_Recast Preapproval',value:token}
  ];
  const order={...paid,email:'buyer@example.com',shippingAddress:{name:'Buyer',address1:'1 Test St',city:'Testville',province:'Pennsylvania',provinceCode:'PA',countryCodeV2:'US',zip:'19000'},lineItems:{pageInfo:{hasNextPage:false},nodes:[{id:'gid://shopify/LineItem/990',sku:'RECAST-MUG-11OZ',quantity:1,customAttributes:attrs}]}};
- const original=globalThis.fetch;let drafts=0,confirmations=0;
+ const original=globalThis.fetch;let drafts=0,confirmations=0,persistedAtTag=null;
  globalThis.fetch=async(url,options={})=>{
   const path=String(url);
   if(path.includes('access_token'))return Response.json({access_token:'fixture-token',expires_in:3600});
+  if(path.includes('graphql.json')&&JSON.parse(options.body).query.includes('RecastOrderTags')){
+   if(JSON.parse(options.body).variables.tags.includes('RECAST_PRINTFUL_SUBMITTED')){
+    const keys=await env.ARTWORK.list({prefix:'jobs/'});persistedAtTag=await read(env,keys.objects[0].key);
+   }
+   return Response.json({data:{tagsAdd:{userErrors:[]}}});
+  }
   if(path.includes('graphql.json'))return Response.json({data:{order}});
   if(path==='https://api.printful.com/orders'){drafts++;const body=JSON.parse(options.body);assert.match(body.items[0].files[0].url,/\/api\/order-print\//);return Response.json({result:{id:4455,status:'draft'}})}
   if(path.endsWith('/orders/4455/confirm')){confirmations++;return Response.json({result:{id:4455,status:'pending'}})}
@@ -225,6 +231,7 @@ test('pre-checkout confirmation becomes the approved design and auto-sends only 
   const job=await (await env.ARTWORK.get(jobs.objects[0].key)).json();
   assert.equal(job.preapprovedCheckout,true);assert.equal(job.preapprovalToken,token);assert.ok(job.sentToProductionAt);assert.equal(job.status,'submitted_to_printful');
   assert.equal(drafts,1);assert.equal(confirmations,1);
+  assert.equal(persistedAtTag?.status,"submitted_to_printful");assert.ok(persistedAtTag?.sentToProductionAt);
   const approved=await approvedDesign(env,job);assert.equal(approved.preapprovedAt,'2026-10-05T17:00:00Z');assert.equal(approved.proof.design.scale,110);
  }finally{globalThis.fetch=original}
 });

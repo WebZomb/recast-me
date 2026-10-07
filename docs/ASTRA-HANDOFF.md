@@ -92,3 +92,5 @@ Latest: RM-054 restores the approved simple subject step and records the recover
 Latest implementation: [RM055 product accuracy](ASTRA-SESSION-RM-055.md). Distinguish code checks, provider-generated samples, visual-reviewed manifest entries and paid physical tests. Do not claim unverified gifts/tumbler ready.
 
 Latest reconciliation: [October 7 catch-up and restored validation](ASTRA-CATCHUP-2026-10-07.md). Current source includes six new mapped product types; older draft-only notes are historical. Single sticker and sticker pack remain distinct. 309 local tests and Worker dry-run passed; no live purchase or supplier verification in this session.
+
+Latest launch investigation: [October 7 live audit](ASTRA-LAUNCH-AUDIT-2026-10-07.md). Six new live previews failed supplier validation; private mug lookup confirms existing Printful order pending. Launch is not yet verified.
