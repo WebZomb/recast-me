@@ -33,6 +33,8 @@ const PRODUCT_META = {
 
 const PRIMARY_PRODUCT_TITLES=new Set(["Custom Recast Mug","Custom Recast Blanket","Custom Recast Poster","Custom Recast Canvas"]);
 const PRODUCT_DESIGN_PRESETS = {
+  "Custom Recast Hoodie": {product:"Hoodie",layout:"fit",fill:"dark",x:"center",scale:85,spacing:"standard",label:"Best setup · centered on black"},
+  "Custom Recast T-Shirt": {product:"T-Shirt",layout:"fit",fill:"dark",x:"center",scale:82,spacing:"standard",label:"Best setup · centered on black"},
   "Custom Recast Mug": {product:"Mug",layout:"two-sided",fill:"ambient",x:"center",scale:110,spacing:"standard",label:"Best setup · two-sided wrap"},
   "Custom Recast Tumbler": {product:"Tumbler",layout:"two-sided",fill:"ambient",x:"center",scale:108,spacing:"standard",label:"Best setup · two-sided wrap"},
   "Custom Recast Blanket": {product:"Blanket",layout:"cover",fill:"full-bleed",x:"center",scale:100,spacing:"standard",label:"Best setup · full blanket"},
@@ -137,11 +139,27 @@ function resetProductPreview(card,{invalidate=true}={}){
 }
 
 function viewLabel(title,index){
-  const raw=String(title||"");
-  if(/^default$/i.test(raw))return "3D view";
+  const raw=String(title||"").trim();
+  if(/^default$/i.test(raw))return "3D";
   if(/handle on left/i.test(raw))return "Handle left";
-  if(/front/i.test(raw))return "Front view";
-  return raw||`View ${index+1}`;
+  if(/handle on right/i.test(raw))return "Handle right";
+  if(/product details?|detail/i.test(raw))return "Detail";
+  if(/\bfront\b/i.test(raw))return "Front";
+  if(/\bback\b/i.test(raw))return "Back";
+  if(/\bleft\b/i.test(raw))return "Left";
+  if(/\bright\b/i.test(raw))return "Right";
+  return raw.replace(/\s+/g," ").slice(0,22)||`View ${index+1}`;
+}
+function uniqueMockupViews(input=[]){
+  const seen=new Set(),output=[];
+  for(const view of input){
+    const label=viewLabel(view?.title,output.length);
+    const key=label.toLowerCase();
+    if(seen.has(key))continue;
+    seen.add(key);output.push({...view,label});
+    if(output.length===4)break;
+  }
+  return output;
 }
 function designSummary(card){
   const d=productDesign(card),parts=[];
@@ -243,8 +261,12 @@ async function generateRealMockup({req,sku,card,button}){
     }
     if(!current())return;
     if(!create?.ok||!data?.ok){
-      const details=[data?.error||"Could not start the product preview.",data?.stage?("Stage: "+data.stage):"",data?.workerVersionId?("Worker: "+data.workerVersionId):""].filter(Boolean).join(" · ");
-      throw new Error(details);
+      const internal=[data?.error||"Could not start the product preview.",data?.stage?("Stage: "+data.stage):"",data?.workerVersionId?("Worker: "+data.workerVersionId):""].filter(Boolean).join(" · ");
+      const customer=/print dimensions are unavailable|print_area_missing/i.test(internal)
+        ?"This product preview is being updated. Your Recast is saved — try again in a moment or choose another product."
+        :"We couldn't build this product preview right now. Your Recast is saved — please try again.";
+      console.warn("Recast product preview start failed",{sku,detail:internal});
+      throw new Error(customer);
     }
     const mockupId=data.mockupId||"legacy";
     for(let attempt=0;attempt<10;attempt++){
@@ -256,19 +278,16 @@ async function generateRealMockup({req,sku,card,button}){
       const response=await fetch(url,{cache:"no-store"});data=await response.json().catch(()=>({}));
       if(!current())return;
       if(response.ok&&data.status==="completed"&&data.images?.length){
-        const img=card.querySelector(".product-art img"),views=data.images;
-        const preferred=views.findIndex(view=>/front/i.test(view.title||"")),selected=preferred>=0?preferred:0;
+        const img=card.querySelector(".product-art img"),views=uniqueMockupViews(data.images);
+        const preferred=views.findIndex(view=>view.label==="Front"),fallback=views.findIndex(view=>view.label==="3D"),selected=preferred>=0?preferred:fallback>=0?fallback:0;
         img.src=views[selected].url;img.alt="Your Recast on the actual product mockup";
         card.querySelector(".mockup-views")?.remove();
         if(views.length>1){
           const controls=document.createElement("div");controls.className="mockup-views";
-          controls.style.cssText="display:flex;gap:8px;flex-wrap:wrap;padding:12px";
-          controls.setAttribute("aria-label","Product preview camera angles");
+          controls.setAttribute("aria-label","Product preview views");
           views.forEach((view,index)=>{
-            const choice=document.createElement("button");choice.type="button";choice.className="button secondary";
-            choice.style.cssText="min-height:44px;padding:8px 12px;font-size:14px";
-            const raw=String(view.title||"");
-            choice.textContent=/^default$/i.test(raw)?"3D view":/handle on left/i.test(raw)?"Handle left":/front/i.test(raw)?"Front view":raw||`View ${index+1}`;
+            const choice=document.createElement("button");choice.type="button";choice.className="mockup-view-chip";
+            choice.textContent=view.label;
             choice.setAttribute("aria-pressed",String(index===selected));
             choice.addEventListener("click",()=>{img.src=view.url;for(const other of controls.children)other.setAttribute("aria-pressed",String(other===choice));});
             controls.append(choice);
@@ -280,12 +299,12 @@ async function generateRealMockup({req,sku,card,button}){
         productReviewState.set(card,{sku,design,mockupId,views:views.slice(0,3),signature});
         card.classList.add("real-mockup-ready");
         state.busy=false;
-        button.disabled=true;button.textContent="Real product preview ready ✓";
+        button.disabled=true;button.textContent="Preview ready ✓";
         const buy=card.querySelector(".recast-buy");
         if(buy&&card.dataset.active==="true"){buy.hidden=false;buy.disabled=false;buy.textContent="Continue to final review";}
         return;
       }
-      if(data.status==="failed"||(!response.ok&&response.status!==202))throw new Error(data.error||"Printful could not finish this mockup.");
+      if(data.status==="failed"||(!response.ok&&response.status!==202)){console.warn("Recast product preview provider failure",{sku,detail:data.error||"unknown"});throw new Error("We couldn't finish this product preview right now. Your Recast is saved — please try again.");}
     }
     throw new Error("The real product preview is still processing. Please try again in a moment.");
   }catch(error){
