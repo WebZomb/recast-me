@@ -8,6 +8,8 @@ on:
       - 'public/**'
       - 'src/**'
       - 'scripts/launch-audit.cjs'
+      - 'scripts/social-purchase-audit.cjs'
+      - 'scripts/rm055-published-example-audit.cjs'
       - 'tests/**'
       - 'package*.json'
       - 'wrangler.jsonc'
