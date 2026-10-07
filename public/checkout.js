@@ -50,7 +50,7 @@ const PRODUCT_DESIGN_PRESETS = {
   "Custom Recast T-Shirt": {product:"T-Shirt",layout:"fit",fill:"transparent",x:"center",scale:100,spacing:"standard",finish:"soft",label:"Scene blend · soft fade into fabric"},
   "Custom Recast Mug": {product:"Mug",layout:"two-sided",fill:"ambient",x:"center",scale:110,spacing:"standard",label:"Best setup · two-sided wrap"},
   "Custom Recast Tumbler": {product:"Tumbler",layout:"two-sided",fill:"ambient",x:"center",scale:108,spacing:"standard",label:"Best setup · two-sided wrap"},
-  "Custom Recast Blanket": {product:"Blanket",layout:"cover",fill:"full-bleed",x:"center",scale:100,spacing:"standard",label:"Best setup · full blanket"},
+  "Custom Recast Blanket": {product:"Blanket",layout:"fit",fill:"ambient",x:"center",scale:92,spacing:"standard",label:"Best setup · full image on blanket"},
   "Custom Recast Poster": {product:"Poster",layout:"cover",fill:"full-bleed",x:"center",scale:100,spacing:"standard",label:"Best setup · full bleed"},
   "Custom Recast Framed Poster": {product:"Framed Poster",layout:"cover",fill:"full-bleed",x:"center",scale:100,spacing:"standard",label:"Best setup · full bleed"},
   "Custom Recast Canvas": {product:"Canvas",layout:"cover",fill:"full-bleed",x:"center",scale:100,spacing:"standard",label:"Best setup · full bleed"},
@@ -237,6 +237,16 @@ function uniqueMockupViews(input=[]){
   }
   return output;
 }
+function physicalSizeGuide(card){
+  const title=card?.dataset?.productTitle||"";
+  if(!["Custom Recast Poster","Custom Recast Canvas"].includes(title))return "";
+  const option=card.querySelector(".recast-variant option:checked");
+  const label=option?.textContent||"";
+  const m=label.match(/(\d+)\s*[×x]\s*(\d+)/i);if(!m)return "";
+  const w=Number(m[1]),h=Number(m[2]),maxW=24,maxH=36;
+  const pctW=Math.max(22,Math.min(100,w/maxW*100)),pctH=Math.max(22,Math.min(100,h/maxH*100));
+  return `<div class="physical-size-guide"><div class="physical-size-copy"><strong>Actual selected size: ${w}×${h} in</strong><span>Rectangle below is proportional to a 24×36 reference. Room photography can make wall art look larger or smaller.</span></div><div class="physical-size-stage"><div class="physical-size-rect" style="width:${pctW}%;height:${pctH}%"><span>${w}×${h}</span></div></div></div>`;
+}
 function designSummary(card){
   const d=productDesign(card),parts=[];
   parts.push(d.layout==="two-sided"?"Two-sided wrap":d.layout==="wrap"?"Full wrap":d.layout==="cover"?"Full bleed":d.layout==="fit"?"Keep whole image":"One image");
@@ -377,7 +387,9 @@ async function generateRealMockup({req,sku,card,button}){
           });
           card.querySelector(".product-art").after(controls);
         }
-        const caption=card.querySelector(".example-design-label");if(caption)caption.textContent="Your artwork · product preview";
+        const caption=card.querySelector(".example-design-label");if(caption)caption.textContent=["Custom Recast Poster","Custom Recast Canvas"].includes(card.dataset.productTitle)?`Your artwork · ${card.querySelector(".recast-variant option:checked")?.textContent||"selected size"} · supplier room mockup`:"Your artwork · product preview";
+        card.querySelector(".physical-size-guide")?.remove();
+        if(["Custom Recast Poster","Custom Recast Canvas"].includes(card.dataset.productTitle)){const wrap=document.createElement("div");wrap.innerHTML=physicalSizeGuide(card);const guide=wrap.firstElementChild;if(guide)card.querySelector(".mockup-views")?.after(guide);}
         card.dataset.mockupSignature=signature;card.dataset.mockupId=mockupId;
         productReviewState.set(card,{sku,design,mockupId,views:views.slice(0,3),signature});
         card.classList.add("real-mockup-ready");
