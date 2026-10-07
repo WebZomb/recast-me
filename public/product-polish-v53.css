@@ -209,3 +209,27 @@
 @media(prefers-reduced-motion:reduce){
  #product-grid.checkout-catalog .product,#product-grid.checkout-catalog .product-art img{transition:none!important}
 }
+
+
+/* RM-054 — one consistent temporary superhero + dog storefront story. */
+#product-grid.checkout-catalog .product:not(.real-mockup-ready) .product-art{
+  background:linear-gradient(145deg,#0a0b1c,#16142c 54%,#090b19)!important;
+}
+#product-grid.checkout-catalog .product:not(.real-mockup-ready) .product-art img{
+  width:100%!important;height:100%!important;object-fit:cover!important;object-position:center!important;
+  transform:none!important;filter:none!important;background:#0b0c1b!important;
+}
+#product-grid.checkout-catalog .product-roadmap{
+  border-style:solid!important;border-color:rgba(137,89,255,.42)!important;
+}
+#product-grid.checkout-catalog .roadmap-variant{
+  margin:0 0 10px;padding:11px 13px;border:1px solid #343548;border-radius:13px;
+  background:#090a14;color:#d8d8e5;font-size:12px;font-weight:750;
+}
+#product-grid.checkout-catalog .roadmap-ready{
+  margin-top:10px;padding:10px 12px;border:1px solid rgba(105,218,255,.28);border-radius:12px;
+  background:rgba(12,31,39,.72);color:#a6ecff;font-size:12px;font-weight:850;
+}
+#product-grid.checkout-catalog .product-roadmap .recast-buy[disabled]{
+  opacity:.72!important;background:linear-gradient(90deg,rgba(139,55,255,.58),rgba(31,191,231,.58))!important;color:#fff!important;
+}
