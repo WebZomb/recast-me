@@ -20,14 +20,35 @@ try{
   if(path&&path.startsWith('/order.html?')){const box=document.querySelector('#return-to-order');box.hidden=false;box.querySelector('a').href=path;}
 }catch{}
 const STYLES = [
-  ["game","Game World","Cinematic city energy, dramatic light, bold illustrated realism.","/assets/world-game-card-v181.webp","Jack Russell in an adventure vest"],
-  ["halloween","Halloween","Stylish costumes, moonlight, fog, pumpkins — playful, not grim.","/assets/world-halloween-v18.webp","Jack Russell in a Halloween cape"],
-  ["retro","Retro Time Machine","A vivid trip through analog color, film grain and 1980s atmosphere.","/assets/world-retro-v18.webp","Couple in a retro sunset"],
-  ["fantasy","Fantasy Warrior","Epic armor, ancient landscapes and cinematic fantasy light.","/assets/world-fantasy-v18.webp","Woman and terrier on a fantasy adventure"],
-  ["royal","Royal","Regal portraiture, palace textures, rich fabric and museum drama.","/assets/world-royal-v18.webp","Family in a royal portrait"],
-  ["future","Future City","Neon reflections, rain haze and an original high-tech world.","/assets/world-future-v18.webp","Sports car in a future city"],
-  ["comic","Comic Hero","Original nonviolent comic-book energy, ink, halftone and motion.","/assets/world-comic-v18.webp","Woman as an original comic hero"],
-  ["space","Space Explorer","Original sci-fi portraiture, planets, spacecraft and epic scale.","/assets/world-space-v18.webp","Couple and dog exploring space"]
+["game","Game World","Cinematic city energy, dramatic light, bold illustrated realism.","/assets/world-game-card-v181.webp","Adventure portrait","Featured"],
+["halloween","Halloween","Stylish costumes, moonlight, fog and pumpkins.","/assets/world-halloween-v18.webp","Halloween portrait","Featured"],
+["retro","1980s","Neon color, film grain and authentic 1980s atmosphere.","/assets/world-retro-v18.webp","1980s portrait","Decades"],
+["fantasy","Fantasy Warrior","Epic armor, ancient landscapes and cinematic fantasy light.","/assets/world-fantasy-v18.webp","Fantasy portrait","Featured"],
+["royal","Royal","Regal portraiture, palace textures and rich ceremonial detail.","/assets/world-royal-v18.webp","Royal portrait","Featured"],
+["future","Future City","Neon reflections, rain haze and an original high-tech world.","/assets/world-future-v18.webp","Future portrait","Featured"],
+["comic","Comic Hero","Original graphic-novel energy, ink, halftone and motion.","/assets/world-comic-v18.webp","Comic portrait","Animation & Art"],
+["space","Space Explorer","Original sci-fi portraiture, planets, spacecraft and epic scale.","/assets/world-space-v18.webp","Space portrait","Movies & Adventures"],
+["animated-sitcom","Animated Sitcom","Original prime-time cartoon comedy with clean shapes and expressive faces.","/assets/world-comic-v18.webp","Animated portrait","Animation & Art"],
+["cutout-comedy","Cutout Comedy","Original paper-cut comedy look with handmade texture and playful energy.","/assets/world-comic-v18.webp","Cutout portrait","Animation & Art"],
+["anime","Anime Adventure","Original cinematic anime-inspired portrait with expressive linework and detailed backgrounds.","/assets/world-game-v18.webp","Anime portrait","Animation & Art"],
+["storybook","Storybook","Warm painterly storybook illustration with whimsical scenery.","/assets/world-fantasy-v18.webp","Storybook portrait","Animation & Art"],
+["football","Football Gameday","Stadium lights, original team colors and unbranded uniform styling.","/assets/world-game-v18.webp","Football portrait","Sports"],
+["basketball","Basketball Arena","Courtside energy, arena lights and original unbranded jersey styling.","/assets/world-game-v18.webp","Basketball portrait","Sports"],
+["baseball","Baseball Ballpark","Classic ballpark atmosphere and original unbranded uniform styling.","/assets/world-game-v18.webp","Baseball portrait","Sports"],
+["soccer","Soccer Stadium","Match-night energy and original unbranded kit styling.","/assets/world-game-v18.webp","Soccer portrait","Sports"],
+["seventies","1970s","Warm film color, period fashion and authentic 1970s atmosphere.","/assets/world-retro-v18.webp","1970s portrait","Decades"],
+["nineties","1990s","Bold 1990s fashion, flash photography and colorful nostalgia.","/assets/world-retro-v18.webp","1990s portrait","Decades"],
+["y2k","Y2K / 2000s","Glossy early-2000s pop styling, chrome and playful futuristic nostalgia.","/assets/world-future-v18.webp","Y2K portrait","Decades"],
+["space-opera","Space Opera","Original galaxy-spanning cinema with spacecraft, alien skies and heroic sci-fi wardrobe.","/assets/world-space-v18.webp","Space opera portrait","Movies & Adventures"],
+["wizard-academy","Wizard Academy","Original magical academy with robes, ancient halls and enchanted light.","/assets/world-fantasy-v18.webp","Wizard portrait","Movies & Adventures"],
+["dinosaur-adventure","Dinosaur Adventure","Original prehistoric expedition with lush jungle and distant dinosaurs.","/assets/world-game-v18.webp","Dinosaur adventure portrait","Movies & Adventures"],
+["spy-thriller","Spy Thriller","Elegant original secret-agent cinema with tailored wardrobe and city-night intrigue.","/assets/world-game-v18.webp","Spy portrait","Movies & Adventures"],
+["western","Wild West","Original cinematic frontier portrait with period wardrobe and golden-hour dust.","/assets/world-retro-v18.webp","Western portrait","Movies & Adventures"],
+["pirate","Pirate Adventure","Original high-seas adventure with period styling and dramatic ship-deck light.","/assets/world-fantasy-v18.webp","Pirate portrait","Movies & Adventures"],
+["noir","Film Noir","Classic black-and-white detective cinema with dramatic shadows and timeless wardrobe.","/assets/world-retro-v18.webp","Noir portrait","Movies & Adventures"],
+["christmas","Holiday Magic","Elegant seasonal décor, twinkle lights and cozy cinematic glow.","/assets/world-fantasy-v18.webp","Holiday portrait","Seasonal"],
+["valentine","Valentine","Romantic premium portrait with refined pink-red light and flowers.","/assets/world-royal-v18.webp","Valentine portrait","Seasonal"],
+["birthday","Birthday Celebration","Colorful premium celebration with tasteful balloons, confetti and studio light.","/assets/world-royal-v18.webp","Birthday portrait","Seasonal"]
 ];
 
 const PRODUCT_CATALOG = [
@@ -62,7 +83,11 @@ styleGrid.innerHTML = STYLES.filter(([id])=>HOME_STYLE_IDS.has(id)).map(([id,nam
     </div>
   </article>`).join('');
 
-styleSelect.innerHTML = STYLES.map(([id,name])=>`<option value="${id}">${name}</option>`).join('')
+const STYLE_GROUP_ORDER=['Featured','Animation & Art','Sports','Decades','Movies & Adventures','Seasonal'];
+styleSelect.innerHTML=STYLE_GROUP_ORDER.map(group=>{
+ const options=STYLES.filter(x=>x[5]===group).map(([id,name])=>`<option value="${id}">${name}</option>`).join('');
+ return options?`<optgroup label="${group}">${options}</optgroup>`:'';
+}).join('')+`<optgroup label="Make your own"><option value="custom">Custom World — describe anything</option></optgroup>`
   + '<option value="custom">My own environment</option>';
 styleSelect.value='royal';
 

@@ -14,6 +14,29 @@ const STYLES = {
   comic:{name:"Comic Hero",prompt:"original heroic graphic-novel portrait, custom unbranded suit design, confident nonviolent heroic pose, sophisticated ink and painted detail, premium halftone texture, dramatic graphic lighting, no copied character designs"},
   space:{name:"Space Explorer",prompt:"original premium cinematic space explorer portrait, elegant unbranded suit, planets and spacecraft environment, dramatic rim light, vast epic scale, sophisticated science-fiction realism, no logos"}
 };
+Object.assign(STYLES,{
+ "animated-sitcom":{name:"Animated Sitcom",prompt:"original prime-time animated sitcom portrait, clean graphic shapes, expressive features, bright comedy environment, no copied characters or franchise references"},
+ "cutout-comedy":{name:"Cutout Comedy",prompt:"original paper-cut animation comedy portrait, handmade layered-paper texture, simple expressive shapes, no copied character designs"},
+ anime:{name:"Anime Adventure",prompt:"original cinematic anime-inspired portrait, expressive linework, detailed painted background and dynamic light, no copied characters or franchise references"},
+ storybook:{name:"Storybook",prompt:"warm original illustrated storybook portrait, painterly texture, whimsical scenery and gentle cinematic light"},
+ football:{name:"Football Gameday",prompt:"original football gameday portrait, stadium lights, custom unbranded uniform and colors, no real team logos or trademarks"},
+ basketball:{name:"Basketball Arena",prompt:"original basketball arena portrait, courtside energy, custom unbranded jersey and colors, no real team logos or trademarks"},
+ baseball:{name:"Baseball Ballpark",prompt:"original baseball portrait, classic ballpark atmosphere, custom unbranded uniform and colors, no real team logos or trademarks"},
+ soccer:{name:"Soccer Stadium",prompt:"original soccer match-night portrait, stadium atmosphere, custom unbranded kit and colors, no real club logos or trademarks"},
+ seventies:{name:"1970s",prompt:"authentic 1970s editorial portrait, warm film color, period fashion, vintage interiors and cinematic period detail"},
+ nineties:{name:"1990s",prompt:"authentic 1990s editorial portrait, bold period fashion, flash photography, colorful graphic energy and nostalgic detail"},
+ y2k:{name:"Y2K / 2000s",prompt:"early-2000s pop editorial portrait, chrome details, flash photography and playful futuristic nostalgia"},
+ "space-opera":{name:"Space Opera",prompt:"original galaxy-spanning cinematic adventure, spacecraft, alien skies and heroic unbranded sci-fi wardrobe, no franchise references"},
+ "wizard-academy":{name:"Wizard Academy",prompt:"original magical academy world, elegant robes, ancient halls, floating lights and enchanted atmosphere, no franchise references"},
+ "dinosaur-adventure":{name:"Dinosaur Adventure",prompt:"original cinematic prehistoric expedition, lush jungle, distant dinosaurs and adventurous wardrobe"},
+ "spy-thriller":{name:"Spy Thriller",prompt:"original elegant secret-agent cinema, tailored wardrobe, dramatic city night and sleek intrigue, no franchise references"},
+ western:{name:"Wild West",prompt:"original cinematic western portrait, frontier-town atmosphere, period wardrobe and golden-hour dust"},
+ pirate:{name:"Pirate Adventure",prompt:"original high-seas adventure portrait, period pirate styling, dramatic ship deck and storm-lit horizon"},
+ noir:{name:"Film Noir",prompt:"classic black-and-white detective cinema, rain-slick streets, dramatic shadows and timeless wardrobe"},
+ christmas:{name:"Holiday Magic",prompt:"warm original holiday portrait, elegant seasonal decor, twinkle lights and cozy cinematic glow"},
+ valentine:{name:"Valentine",prompt:"romantic original portrait, refined pink-red light, flowers and premium editorial styling"},
+ birthday:{name:"Birthday Celebration",prompt:"colorful premium birthday portrait, tasteful balloons, confetti and celebratory studio lighting"}
+});
 
 const SUBJECT_STYLING = {
   game:"original action-adventure protagonist styling: a clearly visible custom costume or heroic pet harness, distinctive accessories and an active pose integrated into the cinematic world",

@@ -190,3 +190,31 @@
   .hero-live-flow{left:3.8%!important;top:15.5%!important;width:43.5%!important}
   .hero-live-product{right:.5%!important;top:3%!important;width:55.5%!important}
 }
+
+
+/* RM-051.2 — final hero clipping/edge cleanup and restrained ambient motion. */
+.hero h1,.hero h1 span{overflow:visible!important}
+.hero h1 span{padding-bottom:.10em!important;margin-bottom:-.10em!important}
+.hero-glow-a{animation:recastGlowA 9s ease-in-out infinite alternate}
+.hero-glow-b{animation:recastGlowB 11s ease-in-out infinite alternate}
+.hero-light-streak-a{animation:recastStreakA 8s ease-in-out infinite alternate}
+.hero-light-streak-b{animation:recastStreakB 10s ease-in-out infinite alternate}
+.hero-live-product::before{animation:recastPedestal 5.5s ease-in-out infinite alternate}
+.hero-live-tagline i{animation:recastPulse 3.8s ease-in-out infinite}
+@keyframes recastGlowA{to{transform:translate3d(4%,-3%,0) scale(1.08);opacity:.78}}
+@keyframes recastGlowB{to{transform:translate3d(-4%,3%,0) scale(1.06);opacity:.72}}
+@keyframes recastStreakA{to{transform:translate3d(18px,-6px,0) rotate(-2deg);opacity:.34}}
+@keyframes recastStreakB{to{transform:translate3d(-16px,8px,0) rotate(2deg);opacity:.30}}
+@keyframes recastPedestal{to{box-shadow:0 -2px 3px #92efff,0 -6px 18px rgba(98,124,255,.72),0 10px 32px rgba(225,37,255,.32)}}
+@keyframes recastPulse{50%{transform:scaleX(1.18);filter:brightness(1.18)}}
+@media(max-width:760px){
+ .hero-live-product img{
+   -webkit-mask-image:radial-gradient(ellipse 72% 66% at 50% 48%,#000 0 76%,rgba(0,0,0,.96) 84%,transparent 100%)!important;
+   mask-image:radial-gradient(ellipse 72% 66% at 50% 48%,#000 0 76%,rgba(0,0,0,.96) 84%,transparent 100%)!important;
+   -webkit-mask-composite:source-over!important;
+   mask-composite:add!important;
+ }
+}
+@media(prefers-reduced-motion:reduce){
+ .hero-glow-a,.hero-glow-b,.hero-light-streak-a,.hero-light-streak-b,.hero-live-product::before,.hero-live-tagline i{animation:none!important}
+}

@@ -1,6 +1,6 @@
 export function initCreationWizard({styles,photos,subject,style,updateWorld,hasBranch}){
   const $=s=>document.querySelector(s), labels=new WeakMap();
-  let step=0,expanded=false;
+  let step=0;
   const names={'pet':'My pet','person':'Just me','person and pet':'Me + my pet','couple':'Couple','family':'Family','car':'My car','couple and pet':'Couple + pet','person and car':'Me + my car','custom':'Something else'};
   function roles(){
     const count=Number($('#family-count').value);
@@ -47,15 +47,18 @@ export function initCreationWizard({styles,photos,subject,style,updateWorld,hasB
   }
   function refreshAdventures(){
     $('#adventure-choices').replaceChildren();
-    (expanded?styles:['royal','fantasy','space','game'].map(id=>styles.find(s=>s[0]===id)).filter(Boolean)).forEach(([id,name,,src,alt])=>{
+    ['royal','fantasy','space','game'].map(id=>styles.find(s=>s[0]===id)).filter(Boolean).forEach(([id,name,,src,alt])=>{
       const b=document.createElement('button');b.type='button';b.setAttribute('aria-pressed',String(style.value===id));
       const img=document.createElement('img');img.src=src;img.alt=alt;img.loading='lazy';
       const title=document.createElement('strong');title.textContent=name;b.append(img,title);
       b.addEventListener('click',()=>{style.value=id;updateWorld();});$('#adventure-choices').append(b);
     });
-    $('#more-adventures').textContent=expanded?'Show fewer':'See more adventures';
+    $('#more-adventures').textContent='Browse all worlds ↓';
   }
-  $('#more-adventures').addEventListener('click',()=>{expanded=!expanded;refreshAdventures();});
+  $('#more-adventures').addEventListener('click',()=>{
+    style.scrollIntoView({behavior:'smooth',block:'center'});
+    style.focus({preventScroll:true});
+  });
   subject.addEventListener('change',refreshPhotos);$('#family-count').addEventListener('change',refreshPhotos);
   document.addEventListener('recast-photos-change',refreshPhotos);document.addEventListener('recast-style-change',refreshAdventures);
   document.querySelectorAll('[data-go-step]').forEach(b=>b.addEventListener('click',()=>go(Number(b.dataset.goStep))));
