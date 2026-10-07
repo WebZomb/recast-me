@@ -26,3 +26,15 @@ test('researched candidate mappings are concrete and bounded',()=>{
  }
  assert.match(RM054_PRODUCT_CANDIDATES.puzzle.regionNote,/US only/);
 });
+
+test('candidate verification is admin-only, read-only, and never submits production',()=>{
+ const workflow=readFileSync(new URL('../src/workflow.js',import.meta.url),'utf8');
+ const start=workflow.indexOf('export async function adminProductCandidates');
+ const end=workflow.indexOf('export async function adminSyncOrders',start);
+ const block=workflow.slice(start,end);
+ assert.ok(block.includes('requireAdmin(request,env)'));
+ assert.ok(block.includes("method:'GET'"));
+ assert.equal(block.includes("method:'POST'"),false);
+ assert.ok(block.includes('productionSubmitted:false'));
+ assert.ok(workflow.includes('/api/admin/product-candidates'));
+});
