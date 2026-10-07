@@ -10,16 +10,16 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - name: Print selected catalog images
+      - name: Inspect Samsung case pricing
         shell: bash
         run: |
-          set -euo pipefail
-          for id in 358 181 83 867 84 534; do
-            curl -fsSL --retry 3 "https://api.printful.com/products/$id" -o "/tmp/product-$id.json"
-            python - "$id" <<'PY'
-          import json,sys
-          ident=sys.argv[1]
-          p=(json.load(open(f'/tmp/product-{ident}.json')).get('result') or {}).get('product') or {}
-          print(f"CATALOG_IMAGE {ident} {p.get('title')} {p.get('image')}")
+          curl -fsSL --retry 3 "https://api.printful.com/products/267" -o /tmp/product.json
+          python - <<'PY'
+          import json
+          d=json.load(open('/tmp/product.json')).get('result',{})
+          print('PRODUCT',d.get('product',{}).get('title'))
+          for v in d.get('variants',[]):
+              r=v.get('availability_regions') or []
+              if v.get('in_stock') and 'US' in r and any(x in (v.get('name') or '') for x in ['S23','S24','S25']):
+                  print('US_VARIANT',v.get('id'),v.get('name'),'price='+str(v.get('price')))
           PY
-          done
