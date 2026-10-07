@@ -5,8 +5,8 @@
 export const RM054_PRODUCT_CANDIDATES = Object.freeze({
   sticker: {
     wave:"main", title:"Custom Recast Sticker Pack", supplier:"Printful Kiss-Cut Sticker Sheet",
-    variants:[{label:"5.83×8.27 sticker sheet", printfulProductId:505, printfulVariantId:null, shopifySku:"RECAST-STICKER-PACK"}],
-    draftRetail:14.99, supplierPriceObserved:5.15, state:"draft-needs-exact-variant",
+    variants:[{label:"5.83×8.27 sticker sheet", printfulProductId:505, printfulVariantId:12917, shopifySku:"RECAST-STICKER-PACK"}],
+    draftRetail:14.99, supplierPriceObserved:5.15, state:"draft-needs-provider-verification",
     testPurpose:"Final low-cost end-to-end purchase and automatic fulfillment test"
   },
   phoneCase: {
