@@ -107,7 +107,11 @@
         <p><a href="/model-lab.html">Compare rendering engines →</a></p>
         <div id="render-readiness" class="glass launch-box"></div>
         <div class="panel-heading"><div><div class="eyebrow">CONNECTIONS</div><h2>Launch readiness</h2><p>Green means the backend can see that connection. Automation flags intentionally stay off until launch testing is complete.</p></div></div>
-        <button id="check-commerce" type="button">Check product connection</button><pre id="commerce-result" style="white-space:pre-wrap"></pre>
+        <button id="check-commerce" type="button">Check product connection</button>
+        <button id="verify-new-products" type="button" class="secondary">Verify approved new products</button>
+        <p class="muted">Read-only: checks the approved Sticker, Phone Case, Pillow, Notebook, Pet Bandana, Puzzle and Tote candidates against Printful. It does not create an order or submit production.</p>
+        <pre id="commerce-result" style="white-space:pre-wrap"></pre>
+        <pre id="new-products-result" style="white-space:pre-wrap"></pre>
         <div id="system-list" class="system-list"></div>
         <div class="glass launch-box">
           <h3>Protected launch sequence</h3>
