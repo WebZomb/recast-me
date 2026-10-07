@@ -48,7 +48,26 @@ const STYLES = [
 ["noir","Film Noir","Classic black-and-white detective cinema with dramatic shadows and timeless wardrobe.","/assets/world-retro-v18.webp","Noir portrait","Movies & Adventures"],
 ["christmas","Holiday Magic","Elegant seasonal décor, twinkle lights and cozy cinematic glow.","/assets/world-fantasy-v18.webp","Holiday portrait","Seasonal"],
 ["valentine","Valentine","Romantic premium portrait with refined pink-red light and flowers.","/assets/world-royal-v18.webp","Valentine portrait","Seasonal"],
-["birthday","Birthday Celebration","Colorful premium celebration with tasteful balloons, confetti and studio light.","/assets/world-royal-v18.webp","Birthday portrait","Seasonal"]
+["birthday","Birthday Celebration","Colorful premium celebration with tasteful balloons, confetti and studio light.","/assets/world-royal-v18.webp","Birthday portrait","Seasonal"],
+["rockstar","Rock Star","Concert-stage energy, dramatic lights and original performance styling.","/assets/world-game-v18.webp","Rock star portrait","Music & Fame"],
+["popstar","Pop Star","Polished pop-editorial styling, colorful stage light and album-cover energy.","/assets/world-future-v18.webp","Pop star portrait","Music & Fame"],
+["dj","DJ Night","Premium club atmosphere, decks, lasers and original nightlife styling.","/assets/world-future-v18.webp","DJ portrait","Music & Fame"],
+["red-carpet","Red Carpet","Luxury premiere-night fashion, flash photography and cinematic arrival energy.","/assets/world-royal-v18.webp","Red carpet portrait","Music & Fame"],
+["beach","Beach Escape","Golden-hour coast, resort styling and warm vacation photography.","/assets/world-game-v18.webp","Beach portrait","Travel & Lifestyle"],
+["paris","Paris Getaway","Elegant European streets, café atmosphere and cinematic travel-editorial light.","/assets/world-royal-v18.webp","Paris travel portrait","Travel & Lifestyle"],
+["tropical","Tropical Paradise","Lush palms, turquoise water and vibrant resort light.","/assets/world-game-v18.webp","Tropical portrait","Travel & Lifestyle"],
+["luxury","Luxury Life","High-end editorial styling, modern architecture and refined dramatic lighting.","/assets/world-royal-v18.webp","Luxury portrait","Travel & Lifestyle"],
+["astronaut","Astronaut Mission","Original mission portrait with realistic space gear, spacecraft detail and planetary light.","/assets/world-space-v18.webp","Astronaut portrait","Careers & Dreams"],
+["firefighter","Firefighter Hero","Respectful original firefighter portrait with station atmosphere and cinematic light.","/assets/world-game-v18.webp","Firefighter portrait","Careers & Dreams"],
+["chef","Master Chef","Premium culinary portrait in an elegant kitchen with professional chef styling.","/assets/world-royal-v18.webp","Chef portrait","Careers & Dreams"],
+["pilot","Pilot","Original aviation portrait with flight gear, aircraft atmosphere and cinematic sky light.","/assets/world-game-v18.webp","Pilot portrait","Careers & Dreams"],
+["ancient-egypt","Ancient Egypt","Original historical-inspired portrait with monumental architecture, rich textiles and desert light.","/assets/world-royal-v18.webp","Ancient Egypt portrait","History & Legends"],
+["roman","Ancient Rome","Original Roman-era inspired portrait with classical architecture and cinematic period styling.","/assets/world-royal-v18.webp","Ancient Rome portrait","History & Legends"],
+["medieval","Medieval Kingdom","Original castle-world portrait with period-inspired clothing, banners and dramatic torchlight.","/assets/world-fantasy-v18.webp","Medieval portrait","History & Legends"],
+["renaissance","Renaissance Portrait","Museum-inspired painterly portrait with period fashion, rich texture and old-master light.","/assets/world-royal-v18.webp","Renaissance portrait","History & Legends"],
+["tiny-world","Tiny World","Playful miniature-world illusion with the subject appearing inside an oversized everyday scene.","/assets/world-comic-v18.webp","Tiny world portrait","Funny & Wild"],
+["giant-world","Giant World","Playful cinematic scale illusion with the subject towering over an original miniature city.","/assets/world-comic-v18.webp","Giant world portrait","Funny & Wild"],
+["food-world","Food Fantasy","Whimsical original world built from colorful food, candy or dessert-inspired scenery.","/assets/world-comic-v18.webp","Food fantasy portrait","Funny & Wild"]
 ];
 
 const PRODUCT_CATALOG = [
@@ -83,7 +102,7 @@ styleGrid.innerHTML = STYLES.filter(([id])=>HOME_STYLE_IDS.has(id)).map(([id,nam
     </div>
   </article>`).join('');
 
-const STYLE_GROUP_ORDER=['Featured','Animation & Art','Sports','Decades','Movies & Adventures','Seasonal'];
+const STYLE_GROUP_ORDER=['Featured','Animation & Art','Sports','Music & Fame','Travel & Lifestyle','Careers & Dreams','History & Legends','Decades','Movies & Adventures','Funny & Wild','Seasonal'];
 styleSelect.innerHTML=STYLE_GROUP_ORDER.map(group=>{
  const options=STYLES.filter(x=>x[5]===group).map(([id,name])=>`<option value="${id}">${name}</option>`).join('');
  return options?`<optgroup label="${group}">${options}</optgroup>`:'';
