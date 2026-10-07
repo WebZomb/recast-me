@@ -1,29 +1,23 @@
 export function initCreationWizard({styles,photos,subject,style,updateWorld,hasBranch}){
   const $=s=>document.querySelector(s), labels=new WeakMap();
   let step=0;
-  const names={'pet':'My pet','multiple pets':'My pets','person':'Just me','person and pet':'Me + my pet','couple':'Couple','family':'Family','friends':'Friends / group','child':'Child / teen','baby':'Baby','horse':'Horse','animal':'Another animal','car':'Car / truck','motorcycle':'Motorcycle / bike','home':'Home / place','couple and pet':'Couple + pet','family and pet':'Family + pet','person and car':'Me + vehicle','memorial':'Memorial / tribute','custom':'Anything else'};
+  const names={'pet':'My pet','person':'Just me','person and pet':'Me + my pet','couple':'Couple','family':'Family','car':'My car','custom':'Other'};
   function roles(){
     const count=Number($('#family-count').value);
-    if(subject.value==='pet'||subject.value==='horse'||subject.value==='animal')return ['pet'];
-    if(subject.value==='multiple pets')return ['pet1','pet2','together'];
-    if(['person','child','baby'].includes(subject.value))return ['person1'];
+    if(subject.value==='pet')return ['pet'];
+    if(subject.value==='person')return ['person1'];
     if(subject.value==='person and pet')return ['person1','pet','together'];
     if(subject.value==='couple')return ['person1','person2','together'];
     if(subject.value==='family')return [...Array.from({length:count},(_,i)=>'person'+(i+1)),'together'];
-    if(subject.value==='friends')return ['person1','person2','together'];
-    if(subject.value==='couple and pet')return ['person1','person2','pet','together'];
-    if(subject.value==='family and pet')return [...Array.from({length:count},(_,i)=>'person'+(i+1)),'pet','together'];
-    if(subject.value==='person and car')return ['person1','car','together'];
-    if(subject.value==='car'||subject.value==='motorcycle')return ['car'];
+    if(subject.value==='car')return ['car'];
     return ['together'];
   }
-  const roleName=value=>value==='together'?'Everyone / everything together':value==='pet'?'Your pet / animal':value==='pet1'?'Pet 1':value==='pet2'?'Pet 2':value==='car'?'Your vehicle':`Person ${value.slice(6)}`;
+  const roleName=value=>value==='together'?'Everyone together':value==='pet'?'Your pet':value==='car'?'Your car':`Person ${value.slice(6)}`;
   function refreshPhotos(){
     const options=roles();
     $('#photo-step-error').textContent='';
     $('#family-count-label').hidden=subject.value!=='family';
-    const animal=['pet','multiple pets','horse','animal'].includes(subject.value),vehicle=['car','motorcycle'].includes(subject.value),place=subject.value==='home';
-    $('#photo-guidance').textContent=animal?'Add clear photos that show the animal’s face, markings and distinctive features.':vehicle?'Add a clear photo showing the whole vehicle and its distinctive details.':place?'Add a clear photo of the home or place you want transformed.':subject.value==='person'?'Add a clear photo of your face.':'Add one clear photo per subject, or use a photo together. Label each photo below. Another angle of the same subject should use the same label.';
+    $('#photo-guidance').textContent=subject.value==='pet'?'Add a clear photo of your pet’s face and markings.':subject.value==='person'?'Add a clear photo of your face.':subject.value==='car'?'Add a clear photo showing your car.':'Add one clear photo per subject, or use a photo together. Label each photo below. Another angle of the same subject should use the same label.';
     [...photos.files].forEach((file,index)=>{
       const tile=$('#photo-thumbnails').children[index];if(!tile)return;
       tile.querySelector('.reference-label')?.remove();
@@ -53,14 +47,11 @@ export function initCreationWizard({styles,photos,subject,style,updateWorld,hasB
     document.querySelectorAll('.creation-progress button').forEach(b=>{if(Number(b.dataset.goStep)===step)b.setAttribute('aria-current','step');else b.removeAttribute('aria-current');});
     $('.creation-progress').scrollIntoView({behavior:'auto',block:'start'});
   }
-  const quickSubjects=['pet','person','person and pet','couple','family','car','friends','custom'];
+  const quickSubjects=['pet','person','person and pet','couple','family','car','custom'];
   for(const value of quickSubjects){
     const title=names[value],b=document.createElement('button');b.type='button';b.dataset.subjectChoice=value;b.textContent=title;
     b.addEventListener('click',()=>{subject.value=value;subject.dispatchEvent(new Event('change'));});$('#subject-choices').append(b);
   }
-  const browse=document.createElement('button');browse.type='button';browse.className='browse-subjects';browse.textContent='Browse all subjects ↓';
-  browse.addEventListener('click',()=>{const label=document.querySelector('.native-subject');label.hidden=!label.hidden;browse.textContent=label.hidden?'Browse all subjects ↓':'Hide all subjects ↑';if(!label.hidden)subject.focus({preventScroll:true});});
-  $('#subject-choices').append(browse);
   function refreshAdventures(){
     $('#adventure-choices').replaceChildren();
     ['royal','fantasy','space','game'].map(id=>styles.find(s=>s[0]===id)).filter(Boolean).forEach(([id,name,,src,alt])=>{
