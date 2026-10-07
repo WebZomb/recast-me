@@ -1,4 +1,4 @@
-/* RM-050.8 — mobile hero matched to the owner-approved Pic 2 composition.
+/* RM-050.9 — final mobile hero size cleanup against the owner-approved Pic 2.
    Presentation only: creator, checkout, render and fulfillment behavior are untouched. */
 
 @media(max-width:760px){
@@ -118,9 +118,9 @@
     text-shadow:0 0 16px rgba(75,122,255,.7)!important;
   }
   .hero-live-product{
-    right:-2.8%!important;
-    top:1.2%!important;
-    width:65.5%!important;
+    right:-1.0%!important;
+    top:4.0%!important;
+    width:56.5%!important;
     min-height:0!important;
     height:auto!important;
     z-index:4!important;
@@ -179,5 +179,5 @@
     aspect-ratio:1.035!important;
   }
   .hero-live-flow{left:5.2%!important;top:16%!important;width:47%!important}
-  .hero-live-product{right:-3.5%!important;top:1%!important;width:66%!important}
+  .hero-live-product{right:-1.5%!important;top:4%!important;width:57%!important}
 }
