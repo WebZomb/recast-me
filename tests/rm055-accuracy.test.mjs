@@ -54,23 +54,11 @@ test('unknown default image titles are product views, not mislabeled 3D room sce
  assert.equal(vm.runInNewContext(`uniqueMockupViews([{title:'Living room',group:'Default',url:'1'}])[0].label`,c),'Lifestyle');
 });
 
-test('initial example lookup reads the applied preset, not the raw select defaults',async()=>{
- const c=context();let release;const pending=new Promise(r=>release=r);
- c.fetch=()=>pending;
- const selected={layout:'cover',fill:'ambient',x:'center',scale:'100',spacing:'standard',finish:'soft'};
- const image={},caption={},variant={value:'RECAST-HOODIE-S'};
- const card={dataset:{productTitle:'Custom Recast Hoodie'},classList:{contains:()=>false},querySelector(selector){
-  if(selector==='.product-art img')return image;if(selector==='.example-design-label')return caption;if(selector==='.recast-variant')return variant;
-  const key=selector.match(/^\[data-design-(.+)\]$/)?.[1];return key?{value:selected[key]}:null;
- }};
- c.card=card;
- const running=vm.runInNewContext("applyCatalogExample(card,'RECAST-HOODIE-S')",c);
- selected.layout='fit';selected.fill='transparent';
- const design=vm.runInNewContext('productDesign(card)',c);
- release({ok:true,json:async()=>({examples:{'RECAST-HOODIE-S':{sku:'RECAST-HOODIE-S',status:'provider-verified',sourceHash:'a'.repeat(64),reviewedAt:'2026-10-07',variantIdentity:{id:10779},position:{area_width:4500,area_height:5400,width:4500,height:5400},image:'/assets/catalog/hoodie-s.jpg',product:'Hoodie',variantLabel:'S',design}}})});
- await running;assert.equal(image.src,'/assets/catalog/hoodie-s.jpg');assert.equal(card.dataset.exampleVerified,'true');
+test('store cards keep curated examples instead of replacing them with supplier samples',async()=>{
+  assert.match(checkout,/USE_SUPPLIER_EXAMPLES_ON_STORE_CARDS=false/);
+  assert.match(checkout,/if\(!USE_SUPPLIER_EXAMPLES_ON_STORE_CARDS\|\|!card\|\|!sku\)return/);
+  assert.match(checkout,/Style illustration · not a size proof/);
 });
-
 
 test('published samples match exact mapped suppliers and only visually reviewed products',async()=>{
  const {FULFILLMENT}=await import('../src/entry.js');
