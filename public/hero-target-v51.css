@@ -1,0 +1,183 @@
+/* RM-050.8 — mobile hero matched to the owner-approved Pic 2 composition.
+   Presentation only: creator, checkout, render and fulfillment behavior are untouched. */
+
+@media(max-width:760px){
+  /* Pic 2 uses a narrower editorial column for the copy, then breaks the visual
+     showcase back out to the full viewport. */
+  .hero{
+    padding:32px 7.5vw 10px!important;
+    background:var(--recast-reference-bg) center top/100% 100% no-repeat!important;
+  }
+  .hero-copy{
+    width:100%!important;
+    max-width:none!important;
+    margin:0!important;
+    padding:0!important;
+    background:none!important;
+    backdrop-filter:none!important;
+    -webkit-backdrop-filter:none!important;
+  }
+  .hero .eyebrow{
+    margin:0 0 12px!important;
+    font-size:8.5px!important;
+    line-height:1.35!important;
+    letter-spacing:.24em!important;
+  }
+  .hero h1{
+    margin:0 0 15px!important;
+    font-size:clamp(50px,14.15vw,66px)!important;
+    line-height:.91!important;
+    letter-spacing:-.064em!important;
+  }
+  .hero-lede{
+    margin:0!important;
+    max-width:34ch!important;
+    font-size:15px!important;
+    line-height:1.46!important;
+    color:#dedbea!important;
+  }
+  .hero-actions{
+    display:grid!important;
+    grid-template-columns:1fr 1fr!important;
+    gap:11px!important;
+    margin:20px 0 11px!important;
+  }
+  .hero-actions .button{
+    min-height:50px!important;
+    padding:10px 9px!important;
+    border-radius:17px!important;
+    font-size:14px!important;
+  }
+  .hero-actions .button.primary span{
+    margin-left:7px!important;
+    font-size:18px!important;
+  }
+  .trust-row{
+    display:grid!important;
+    grid-template-columns:1fr 1.30fr 1fr!important;
+    gap:7px!important;
+    margin:0!important;
+  }
+  .trust-row span{
+    min-height:37px!important;
+    padding:6px 7px!important;
+    gap:5px!important;
+    border-radius:999px!important;
+    font-size:9px!important;
+    white-space:nowrap!important;
+  }
+  .trust-row svg{
+    width:14px!important;
+    height:14px!important;
+    flex:0 0 14px!important;
+  }
+
+  /* The old RM-050.2 stage was too tall, which pushed 01/02 and the tagline
+     hundreds of device pixels below the Pic 2 composition. */
+  .hero-live-stage{
+    width:calc(100% + 15vw)!important;
+    max-width:none!important;
+    margin:8px -7.5vw 0!important;
+    aspect-ratio:1.055!important;
+    height:auto!important;
+    min-height:0!important;
+    overflow:visible!important;
+  }
+  .hero-live-flow{
+    left:5.4%!important;
+    top:16.5%!important;
+    bottom:auto!important;
+    width:46.5%!important;
+    grid-template-columns:minmax(0,1fr) 14px minmax(0,1fr) 14px!important;
+    z-index:6!important;
+  }
+  .hero-live-card{
+    padding:4px!important;
+    border-radius:15px!important;
+  }
+  .hero-live-card img{
+    border-radius:11px!important;
+    aspect-ratio:4/5!important;
+  }
+  .hero-live-meta{
+    padding:6px 2px 4px!important;
+    gap:3px!important;
+  }
+  .hero-live-meta span,.hero-live-meta b{
+    font-size:7.5px!important;
+    line-height:1.12!important;
+  }
+  .hero-live-meta b{letter-spacing:.075em!important}
+  .hero-live-arrow{
+    position:relative!important;
+    z-index:8!important;
+    font-size:19px!important;
+  }
+  .hero-live-arrow-product{
+    color:#fff!important;
+    text-shadow:0 0 16px rgba(75,122,255,.7)!important;
+  }
+  .hero-live-product{
+    right:-2.8%!important;
+    top:1.2%!important;
+    width:65.5%!important;
+    min-height:0!important;
+    height:auto!important;
+    z-index:4!important;
+  }
+  .hero-live-product img{
+    width:100%!important;
+    max-width:none!important;
+    height:auto!important;
+  }
+  .hero-live-product::before{
+    left:-3%!important;
+    right:1%!important;
+    bottom:-2.5%!important;
+    height:17%!important;
+  }
+  .hero-live-product::after{
+    left:-3%!important;
+    right:1%!important;
+    bottom:7.5%!important;
+    height:9%!important;
+  }
+  .hero-live-product-label{
+    bottom:-3.5%!important;
+    left:48%!important;
+    width:88%!important;
+    min-height:29px!important;
+    padding:4px 7px!important;
+    gap:7px!important;
+    letter-spacing:.115em!important;
+  }
+  .hero-live-product-label span,.hero-live-product-label b{
+    font-size:7.5px!important;
+  }
+  .hero-live-tagline{
+    bottom:1.2%!important;
+    gap:4px!important;
+    letter-spacing:.285em!important;
+  }
+  .hero-live-tagline span,.hero-live-tagline strong{
+    font-size:8px!important;
+  }
+  .hero-live-tagline i{
+    width:54px!important;
+    height:3px!important;
+    margin-top:5px!important;
+  }
+}
+
+@media(max-width:400px){
+  .hero{padding-left:7.2vw!important;padding-right:7.2vw!important}
+  .hero h1{font-size:clamp(47px,14.2vw,60px)!important}
+  .hero-live-stage{
+    width:calc(100% + 14.4vw)!important;
+    margin-left:-7.2vw!important;
+    margin-right:-7.2vw!important;
+    aspect-ratio:1.035!important;
+  }
+  .hero-live-flow{left:5.2%!important;top:16%!important;width:47%!important}
+  .hero-live-product{right:-3.5%!important;top:1%!important;width:66%!important}
+}
