@@ -10,13 +10,12 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - name: Inspect chosen Printful candidates
+      - name: Inspect chosen Printful candidate prices
         shell: bash
         run: |
           set -euo pipefail
           for id in 358 181 83 867 84 902 534; do
             curl -fsSL --retry 3 "https://api.printful.com/products/$id" -o "/tmp/product-$id.json"
-            curl -fsSL --retry 3 "https://api.printful.com/mockup-generator/printfiles/$id" -o "/tmp/printfiles-$id.json"
             python - "$id" <<'PY'
           import json,sys
           ident=sys.argv[1]
@@ -27,9 +26,5 @@ jobs:
               regions=v.get('availability_regions') or []
               if v.get('in_stock') and 'US' in regions:
                   print(f"  US_VARIANT {v.get('id')} | {v.get('name')} | price={v.get('price')} | retail={v.get('retail_price')}")
-          pf=json.load(open(f'/tmp/printfiles-{ident}.json')).get('result',{})
-          print("  PRINTFILES",[(x.get('printfile_id'),x.get('width'),x.get('height'),x.get('dpi')) for x in pf.get('printfiles',[])])
-          first=(pf.get('variant_printfiles') or [None])[0]
-          if first: print("  SAMPLE_PLACEMENTS",first.get('variant_id'),first.get('placements'))
           PY
           done
