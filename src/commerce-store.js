@@ -58,8 +58,9 @@ export function normalizeProductDesign(map,raw={}){
 export function productPrintfile(catalog,variantId,placement){
   const variant=catalog?.variant_printfiles?.find(v=>Number(v.variant_id)===Number(variantId));
   const file=catalog?.printfiles?.find(f=>Number(f.printfile_id)===Number(variant?.placements?.[placement]));
-  if(!file||![file.width,file.height].every(n=>Number.isFinite(n)&&n>0))throw fault('print_area_missing','Printful print dimensions are unavailable for this variant.',502);
-  return file;
+  const width=Number(file?.width),height=Number(file?.height);
+  if(!file||![width,height].every(n=>Number.isFinite(n)&&n>0))throw fault('print_area_missing','Printful print dimensions are unavailable for this variant.',502);
+  return {...file,width,height};
 }
 
 const MUG_BG_PNG=new Uint8Array([137,80,78,71,13,10,26,10,0,0,0,13,73,72,68,82,0,0,0,1,0,0,0,1,8,2,0,0,0,144,119,83,222,0,0,0,12,73,68,65,84,120,218,99,224,17,144,1,0,0,100,0,57,1,178,224,122,0,0,0,0,73,69,78,68,174,66,96,130]);
