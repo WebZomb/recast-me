@@ -84,3 +84,6 @@ Latest: [RM-052 — transparent apparel and bounded product studio](ASTRA-SESSIO
 
 
 Latest: RM-053 discovery expansion and launch controls. Subjects and Worlds broadened; render burst limiter added. Existing 12-product checkout remains unchanged pending exact Printful candidate validation. Turnstile credentials remain account-gated. See ASTRA-SESSION-RM-053.md.
+
+
+Latest: RM-054 restores the approved simple subject step and records the recovered product roadmap (Sticker, Phone Case, Pillow, Notebook; then Pet Bandana, Puzzle, Tote). Seven Shopify products were created as DRAFT only. Exact supplier variant candidates are isolated from checkout; an admin-only GET verifier can read their Printful V2 identities before any fulfillment mapping is enabled. See ASTRA-SESSION-RM-054.md.
