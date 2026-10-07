@@ -1,0 +1,36 @@
+name: Recast RM052 isolated checks
+on:
+  push:
+    branches: [recast/rm052-product-studio]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  source-and-checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      WRANGLER_SEND_METRICS: 'false'
+      CI: 'true'
+    steps:
+      - name: Fetch exact public source without credentials
+        run: |
+          git init .
+          git remote add origin "https://github.com/${GITHUB_REPOSITORY}.git"
+          git fetch --depth=1 origin "${GITHUB_SHA}"
+          git checkout --detach FETCH_HEAD
+          mkdir -p /tmp/recast-rm052
+          git archive --format=zip HEAD -o /tmp/recast-rm052/source.zip
+          git rev-parse HEAD > /tmp/recast-rm052/commit.txt
+      - name: Retain exact source for isolated local inspection
+        uses: actions/upload-artifact@v4
+        with:
+          name: rm052-source
+          path: /tmp/recast-rm052/
+          retention-days: 3
+      - name: Install locked dependencies
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Offline tests and dry-run only
+        run: |
+          npm test
+          npx --no-install wrangler deploy --dry-run --outdir /tmp/recast-rm052-bundle
