@@ -34,7 +34,7 @@ const fs=require('node:fs');
   fs.mkdirSync('audit-results',{recursive:true});
   await page.screenshot({path:'audit-results/social-final-review.png',fullPage:true});
   await page.getByRole('button',{name:'Confirm design & checkout',exact:true}).click();
-  await page.waitForURL('**/support.html?test-checkout=1');
+  await page.waitForURL(url => /^\/support(?:\.html)?$/.test(url.pathname) && url.searchParams.get('test-checkout') === '1');
   if(errors.length)throw new Error(errors.join(';'));
   fs.writeFileSync('audit-results/social-purchase-audit.json',JSON.stringify({mocked:true,orders:0,xPosts:0,calls,errors},null,2));
   console.log('Social purchase-only bridge → product preview → final approval → checkout UI passed. Mocked commerce; no purchase.');
