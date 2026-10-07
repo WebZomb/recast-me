@@ -51,9 +51,9 @@ const SUBJECT_STYLING = {
 
 function subjectTransformation(styleId,subjectType){
   const subject=String(subjectType||"person").toLowerCase();
-  const isPet=subject.includes("pet")||subject.includes("dog")||subject.includes("cat")||subject.includes("puppy")||subject.includes("kitten");
-  const isCar=subject.includes("car");
-  const isPerson=subject.includes("person")||subject.includes("couple")||subject.includes("family");
+  const isPet=["pet","dog","cat","puppy","kitten","horse","animal"].some(value=>subject.includes(value));
+  const isCar=["car","truck","vehicle","motorcycle","bike"].some(value=>subject.includes(value));
+  const isPerson=["person","couple","family","friends","group","child","teen","baby","memorial"].some(value=>subject.includes(value));
   const theme=SUBJECT_STYLING[styleId]||"an original costume, role and visual styling drawn directly from the customer's custom world";
   return [
     `VISIBLE SUBJECT TRANSFORMATION REQUIRED: ${theme}.`,
