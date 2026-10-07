@@ -36,6 +36,21 @@ export const FULFILLMENT = {
   "RECAST-MAGNET-SET":     { printfulProductId: 656, printfulVariantId: 16366, preferredPlacement: "default", orderFileType: "default", quantity: 3, baseCost: 3.39, product: "Magnet 3-Pack", color: "White" },
   "RECAST-COASTER-SET":    { printfulProductId: 611, printfulVariantId: 15662, preferredPlacement: "default", orderFileType: "default", quantity: 4, baseCost: 5.55, product: "Coaster 4-Pack" },
 
+  "RECAST-STICKER-3X3":    { printfulProductId: 55, printfulVariantId: 10163, preferredPlacement: "default", orderFileType: "default", quantity: 1, baseCost: 2.25, product: "Sticker" },
+  "RECAST-PILLOW-14":      { printfulProductId: 83, printfulVariantId: 4530, preferredPlacement: "front", orderFileType: "front", quantity: 1, baseCost: 12.95, product: "Pillow" },
+  "RECAST-PILLOW-16":      { printfulProductId: 83, printfulVariantId: 4531, preferredPlacement: "front", orderFileType: "front", quantity: 1, baseCost: 13.25, product: "Pillow" },
+  "RECAST-PILLOW-18":      { printfulProductId: 83, printfulVariantId: 4532, preferredPlacement: "front", orderFileType: "front", quantity: 1, baseCost: 13.57, product: "Pillow" },
+  "RECAST-PILLOW-22":      { printfulProductId: 83, printfulVariantId: 4534, preferredPlacement: "front", orderFileType: "front", quantity: 1, baseCost: 17.95, product: "Pillow" },
+  "RECAST-JOURNAL-HC":     { printfulProductId: 448, printfulVariantId: 12141, preferredPlacement: "front", orderFileType: "front", quantity: 1, baseCost: 12.43, product: "Hardcover Journal" },
+  "RECAST-TOTE-BLACK":     { printfulProductId: 84, printfulVariantId: 4533, preferredPlacement: "front", orderFileType: "front", quantity: 1, baseCost: 17.60, product: "Tote Bag" },
+  "RECAST-PUZZLE-252":     { printfulProductId: 541, printfulVariantId: 13431, preferredPlacement: "default", orderFileType: "default", quantity: 1, baseCost: 15.25, product: "Puzzle" },
+  "RECAST-PUZZLE-520":     { printfulProductId: 541, printfulVariantId: 13432, preferredPlacement: "default", orderFileType: "default", quantity: 1, baseCost: 19.95, product: "Puzzle" },
+  "RECAST-CASE-IP15":      { printfulProductId: 515, printfulVariantId: 17616, preferredPlacement: "default", orderFileType: "default", quantity: 1, baseCost: 9.57, product: "Phone Case" },
+  "RECAST-CASE-IP15PRO":   { printfulProductId: 515, printfulVariantId: 17618, preferredPlacement: "default", orderFileType: "default", quantity: 1, baseCost: 9.57, product: "Phone Case" },
+  "RECAST-CASE-IP15PM":    { printfulProductId: 515, printfulVariantId: 17619, preferredPlacement: "default", orderFileType: "default", quantity: 1, baseCost: 9.57, product: "Phone Case" },
+  "RECAST-CASE-IP16":      { printfulProductId: 515, printfulVariantId: 20290, preferredPlacement: "default", orderFileType: "default", quantity: 1, baseCost: 9.57, product: "Phone Case" },
+  "RECAST-CASE-IP16PRO":   { printfulProductId: 515, printfulVariantId: 20292, preferredPlacement: "default", orderFileType: "default", quantity: 1, baseCost: 9.57, product: "Phone Case" },
+
   "RECAST-DIGITAL-HD":     { digital: true, quantity: 1, baseCost: 0, product: "HD Digital Recast" },
   "RECAST-DIGITAL-PACK":   { digital: true, quantity: 1, baseCost: 0, product: "Recast Pack" }
 };
