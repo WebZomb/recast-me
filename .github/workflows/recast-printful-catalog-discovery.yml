@@ -10,43 +10,26 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - name: Fetch public Printful catalog candidates
+      - name: Inspect chosen Printful candidates
         shell: bash
         run: |
           set -euo pipefail
-          curl -fsSL --retry 3 https://api.printful.com/products -o /tmp/products.json
-          python - <<'PY'
-          import json,re
-          data=json.load(open('/tmp/products.json'))
-          items=data.get('result',{})
-          if isinstance(items,dict): items=items.get('products',[])
-          terms=re.compile(r'(case)',re.I)
-          matches=[p for p in items if terms.search(str(p.get('title','')))]
-          print('PRINTFUL_CANDIDATES_BEGIN')
-          for p in matches:
-              print(f"{p.get('id')}\t{p.get('title')}\tvariants={p.get('variant_count')}\ttype={p.get('type')}")
-          print('PRINTFUL_CANDIDATES_END')
-          print('candidate_count',len(matches))
-          open('/tmp/candidate_ids.txt','w').write('\n'.join(str(p['id']) for p in matches[:40]))
-          PY
-      - name: Fetch candidate variants
-        shell: bash
-        run: |
-          set -euo pipefail
-          echo PRINTFUL_VARIANTS_BEGIN
-          while read -r id; do
-            [ -n "$id" ] || continue
-            curl -fsSL --retry 2 "https://api.printful.com/products/$id" -o "/tmp/product-$id.json"
+          for id in 358 181 83 867 84 902 534; do
+            curl -fsSL --retry 3 "https://api.printful.com/products/$id" -o "/tmp/product-$id.json"
+            curl -fsSL --retry 3 "https://api.printful.com/mockup-generator/printfiles/$id" -o "/tmp/printfiles-$id.json"
             python - "$id" <<'PY'
           import json,sys
           ident=sys.argv[1]
           d=json.load(open(f'/tmp/product-{ident}.json')).get('result',{})
-          product=d.get('product',{})
-          variants=d.get('variants',[])
-          print(f"PRODUCT {ident}: {product.get('title')} | files={[f.get('type') for f in product.get('files',[])]}")
-          for v in variants[:30]:
-              regions=','.join(v.get('availability_regions') or [])
-              print(f"  VARIANT {v.get('id')} | {v.get('name')} | retail={v.get('retail_price')} | in_stock={v.get('in_stock')} | regions={regions}")
+          p=d.get('product',{})
+          print(f"PRODUCT {ident}: {p.get('title')} | files={[f.get('type') for f in p.get('files',[])]}")
+          for v in d.get('variants',[]):
+              regions=v.get('availability_regions') or []
+              if v.get('in_stock') and 'US' in regions:
+                  print(f"  US_VARIANT {v.get('id')} | {v.get('name')} | price={v.get('price')} | retail={v.get('retail_price')}")
+          pf=json.load(open(f'/tmp/printfiles-{ident}.json')).get('result',{})
+          print("  PRINTFILES",[(x.get('printfile_id'),x.get('width'),x.get('height'),x.get('dpi')) for x in pf.get('printfiles',[])])
+          first=(pf.get('variant_printfiles') or [None])[0]
+          if first: print("  SAMPLE_PLACEMENTS",first.get('variant_id'),first.get('placements'))
           PY
-          done < /tmp/candidate_ids.txt
-          echo PRINTFUL_VARIANTS_END
+          done
