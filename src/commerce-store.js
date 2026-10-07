@@ -36,6 +36,11 @@ export function recommendedProductDesign(map={}){
 export function normalizeProductDesign(map,raw={}){
   const product=String(map?.product||'Generic'),recommended=recommendedProductDesign(map);
   const rawVersion=Number(raw?.version||0);
+  if(rawVersion===7&&product==='Hardcover Journal'){
+    const n=Number(raw.scale),scale=Math.round(Math.max(70,Math.min(100,Number.isFinite(n)?n:100)));
+    const fill=['ambient','dark','light'].includes(raw.fill)?raw.fill:'ambient';
+    return {version:7,layout:'fit',background:fill,fill,x:'center',scale,spacing:'standard',product};
+  }
   if(rawVersion===6&&['Hoodie','T-Shirt'].includes(product)){
     const n=Number(raw.scale),scale=Math.round(Math.max(70,Math.min(100,Number.isFinite(n)?n:100)));
     return {version:6,layout:'fit',background:'transparent',fill:'transparent',x:['left','center','right'].includes(raw.x)?raw.x:'center',scale,spacing:'standard',product,finish:['soft','cutout','rectangle'].includes(raw.finish)?raw.finish:'soft'};
@@ -134,6 +139,18 @@ export async function composeProductLayout(env,sourceBytes,sourceSize,area,map={
     const canvas=await transparentCanvas(outWidth,outHeight);
     const chain=env.IMAGES.input(new Blob([canvas],{type:'image/png'}).stream()).draw(overlay,{left,top});
     return {bytes:await pngOutput(chain),mime:'image/png',design,outputSize:{width:outWidth,height:outHeight},method:'apparel-v5-'+design.finish};
+  }
+  if(design.version===7&&design.product==='Hardcover Journal'){
+    // Supplier 867/22658: one 4065×2850 wrap sheet around two 5.75×8 covers.
+    // Keep a complete copy inside each cover, clear of spine, turn-in and trim.
+    const base=design.fill==='light'?LIGHT_BG_PNG:MUG_BG_PNG;
+    let chain=env.IMAGES.input(new Blob([base],{type:'image/png'}).stream()).transform({width:outWidth,height:outHeight,fit:'cover'});
+    if(design.fill==='ambient')chain=chain.draw(env.IMAGES.input(stream()).transform({width:outWidth,height:outHeight,fit:'cover',blur:180}),{left:0,top:0,opacity:0.58});
+    const fitted=fitDimensions(sourceSize.width,sourceSize.height,outWidth*.38*design.scale/100,outHeight*.78*design.scale/100);
+    const top=Math.round((outHeight-fitted.height)/2);
+    const boxes=[.25,.75].map(center=>({left:Math.round(outWidth*center-fitted.width/2),top,...fitted}));
+    for(const box of boxes)chain=chain.draw(env.IMAGES.input(stream()).transform({width:box.width,height:box.height,fit:'contain'}),{left:box.left,top:box.top});
+    return {bytes:await jpegBytes(chain),design,outputSize:{width:outWidth,height:outHeight},artworkBoxes:boxes,method:'journal-v7-two-covers'};
   }
   if(design.layout==='cover'||design.layout==='wrap'){
     const chain=env.IMAGES.input(stream()).transform({width:outWidth,height:outHeight,fit:'cover'});

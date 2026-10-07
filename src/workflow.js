@@ -194,7 +194,7 @@ export async function createMockup(request,env){
     const placement=map.preferredPlacement||'default';
     stage="printful-catalog";
     let variantIdentity=null;
-    if(design.version===6){
+    if(design.version>=6){
       const reply=await printful(env,`/v2/catalog-variants/${map.printfulVariantId}`,{method:'GET'}),row=reply?.data;
       if(Number(row?.id)!==Number(map.printfulVariantId)||Number(row?.catalog_product_id)!==Number(map.printfulProductId))throw fault('catalog_identity_changed','The supplier product needs a catalog review before previewing.',503);
       variantIdentity={id:Number(row.id),productId:Number(row.catalog_product_id),name:row.name||null,size:row.size||null,color:row.color||null};

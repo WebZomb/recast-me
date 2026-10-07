@@ -19,3 +19,17 @@ test('pillow preview and production use identical art on both verified print are
  assert.deepEqual(productPlacements(map,{version:4}),['front']);
  assert.equal(productionFiles(FULFILLMENT['RECAST-MUG-11OZ'],{version:6},'url',position).length,1);
 });
+
+test('journal keeps whole portrait on separate covers without changing old approvals',async()=>{
+ const {normalizeProductDesign,composeProductLayout}=await import('../src/commerce-store.js');
+ const map=FULFILLMENT['RECAST-JOURNAL-HC'];
+ assert.equal(normalizeProductDesign(map,{version:6,layout:'cover'}).layout,'cover');
+ const env={IMAGES:{input(){const chain={transform(){return chain},draw(){return chain},async output(){return {response:()=>new Response(new Uint8Array([255,216,255,...Array(100).fill(0)]))}}};return chain}}};
+ for(const [width,height] of [[900,1600],[1600,900],[1000,1000]]){
+  const out=await composeProductLayout(env,new Uint8Array([1]),{width,height},{width:4065,height:2850},map,{version:7,scale:140},2400);
+  assert.equal(out.design.version,7);assert.equal(out.design.scale,100);assert.equal(out.artworkBoxes.length,2);
+  const [back,front]=out.artworkBoxes;
+  for(const b of [back,front]){assert.ok(b.top>0&&b.top+b.height<out.outputSize.height);assert.ok(Math.abs(b.width/b.height-width/height)<.002)}
+  assert.ok(back.left>0&&back.left+back.width<1200);assert.ok(front.left>1200&&front.left+front.width<2400);
+ }
+});
