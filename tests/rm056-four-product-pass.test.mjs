@@ -11,9 +11,10 @@ test('blanket default preserves the whole image over an ambient full-product bac
  assert.match(checkout,/Best setup · full image on blanket/);
 });
 
-test('poster and canvas show a proportional physical-size guide',()=>{
- assert.match(checkout,/Actual selected size:/);
- assert.match(checkout,/24×36 reference/);
+test('wall art uses the selected-size supplier caption without the withdrawn scale panel',()=>{
+ assert.doesNotMatch(checkout,/Actual selected size:|24×36 reference/);
+ assert.match(checkout,/Your artwork · \$\{card\.querySelector/);
+ assert.match(checkout,/selected size.*supplier mockup/);
  assert.match(checkout,/Custom Recast Poster/);
  assert.match(checkout,/Custom Recast Canvas/);
 });

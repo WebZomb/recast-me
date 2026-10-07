@@ -7,6 +7,8 @@ import {scenePrintBox,sceneEdgeMask,apparelEdgeMask} from '../src/apparel-finish
 import {normalizeProductDesign,composeProductLayout} from '../src/commerce-store.js';
 import {mockupPosition} from '../src/workflow.js';
 
+const checkout=readFileSync(new URL('../public/checkout.js',import.meta.url),'utf8');
+
 function maskPixels(bytes){let p=8,w,h,parts=[];while(p<bytes.length){const n=new DataView(bytes.buffer,bytes.byteOffset+p).getUint32(0),t=Buffer.from(bytes.subarray(p+4,p+8)).toString();if(t==='IHDR'){w=new DataView(bytes.buffer,bytes.byteOffset+p+8).getUint32(0);h=new DataView(bytes.buffer,bytes.byteOffset+p+12).getUint32(0)}if(t==='IDAT')parts.push(bytes.subarray(p+8,p+8+n));p+=n+12}const a=inflateSync(Buffer.concat(parts));return {w,h,a,pixel:(x,y)=>a[y*(w+1)+x+1]}}
 function context(){const c={document:{querySelector:()=>null,querySelectorAll:()=>[],addEventListener(){}},window:{},localStorage:{getItem:()=>null},location:{origin:'https://recast.test'},URL,console,setTimeout,fetch:async()=>({ok:false,json:async()=>({})})};vm.runInNewContext(readFileSync(new URL('../public/checkout.js',import.meta.url),'utf8'),c);return c}
 

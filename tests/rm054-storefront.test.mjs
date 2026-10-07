@@ -8,11 +8,15 @@ test('RM055 supersedes the withdrawn global raw-art example and restores product
  for(const asset of ['poster','hoodie','tshirt','canvas','mug','blanket'])assert.ok(checkout.includes(`product-${asset}-v16.webp`));
  assert.match(checkout,/Style illustration · not a size proof/);
 });
-test('unverified roadmap remains available as a concise coming-soon list, not fake buyable products',()=>{
+test('withdrawn roadmap does not duplicate active products or expose unverified buy buttons',()=>{
  const start=checkout.indexOf('function roadmapMarkup'),end=checkout.indexOf('let catalogExamplesPromise',start),block=checkout.slice(start,end);
- for(const item of ['Sticker Pack','Phone Case','Pillow','Notebook','Pet Bandana','Puzzle','Tote Bag'])assert.ok(block.includes(item));
+ assert.match(block,/return ""/);
  assert.doesNotMatch(block,/<img|recast-buy|Preview my product|from \$/);
 });
-test('cache-safe RM055 release loads the revised checkout and styling',()=>{
- assert.match(html,/product-polish-v53\.css\?v=4/);assert.match(html,/checkout\.js\?v=2552/);assert.match(html,/data-launch-build="RM-055"/);
+test('store loads versioned checkout and product styling from existing files',()=>{
+ for(const pattern of [/href="(\/product-polish-v53\.css)\?v=(\d+)"/,/src="(\/checkout\.js)\?v=(\d+)"/]){
+  const match=html.match(pattern);assert.ok(match);assert.ok(Number(match[2])>0);
+  assert.ok(readFileSync(new URL('../public'+match[1],import.meta.url),'utf8').length>0);
+ }
+ assert.match(html,/data-launch-build="RM-055"/);
 });
