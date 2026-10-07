@@ -9,7 +9,7 @@ test('RM0510 mobile hero uses the approved Pic 2 proportions',()=>{
   assert.match(html,/hero-target-v51\.css\?v=3/);
   assert.match(css,/padding:32px 7\.5vw 10px!important/);
   assert.match(css,/aspect-ratio:1\.24!important/);
-  assert.match(css,/top:16\.5%!important/);
+  assert.match(css,/top:16\.0%!important/);
   assert.match(css,/bottom:auto!important/);
   assert.match(css,/width:55\.0%!important/);
   assert.match(css,/grid-template-columns:1fr 1\.30fr 1fr!important/);
