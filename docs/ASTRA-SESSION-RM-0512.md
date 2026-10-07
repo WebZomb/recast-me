@@ -29,3 +29,6 @@ Run the full Node suite and Wrangler dry-run on the exact resulting commit. The 
 
 ## Rollback
 Revert only RM-051.2 on top of then-current main.
+
+## Validation correction
+First main audit run 37566173141 reached the full Node suite but failed one RM-051.1 regression because that older test hard-coded the prior CSS cache key `product-polish-v53.css?v=1`. The application behavior assertion itself was not the failure. Updated that compatibility assertion to accept v1/v2, then use a `validate:` commit so the security workflow runs the complete suite once. No application behavior changed in this correction.
