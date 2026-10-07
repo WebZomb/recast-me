@@ -17,7 +17,11 @@ test('approved additions are visible but locked until fulfillment verification',
  assert.match(checkout,/const ROADMAP_PRODUCTS=/);
  assert.match(checkout,/Finishing product setup/);
  assert.match(checkout,/Purchasing unlocks after its real Printful preview and automatic fulfillment path pass verification/);
- assert.doesNotMatch(checkout,/product-roadmap[^]*Preview my product/);
+ const start=checkout.indexOf('function roadmapMarkup');
+ const end=checkout.indexOf('function lastRequest',start);
+ const roadmapBlock=checkout.slice(start,end);
+ assert.doesNotMatch(roadmapBlock,/Preview my product/);
+ assert.match(roadmapBlock,/disabled>Finishing product setup/);
 });
 
 test('storefront cache keys advance for RM054 presentation',()=>{
