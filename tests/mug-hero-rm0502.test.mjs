@@ -16,10 +16,10 @@ test('mug composition fills the printable band vertically and derives ambient ba
 test('mobile landing preserves approved Jack Russell sequence under the final Pic 2 hero layer',()=>{
   const html=readFileSync(new URL('../public/index.html',import.meta.url),'utf8');
   const css=readFileSync(new URL('../public/hero-target-v51.css',import.meta.url),'utf8');
-  assert.match(html,/data-launch-build="RM-050\.8"/);
+  assert.match(html,/data-launch-build="RM-050\.9"/);
   assert.equal((html.match(/jack-russell-source-v18\.webp/g)||[]).length,2);
   assert.doesNotMatch(html,/dog-original-v17\.webp/);
   assert.match(css,/aspect-ratio:1\.055!important/);
-  assert.match(css,/hero-live-product\{[\s\S]*width:65\.5%!important/);
+  assert.match(css,/hero-live-product\{[\s\S]*width:56\\.5%!important/);
   assert.match(css,/max-width:34ch!important/);
 });
