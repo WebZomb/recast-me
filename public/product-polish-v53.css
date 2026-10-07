@@ -219,3 +219,10 @@
 
 #product-grid .product-art{position:relative}
 #product-grid:not(.checkout-catalog) .example-design-label{position:absolute;left:8px;bottom:8px;max-width:calc(100% - 16px);border-radius:7px;background:rgba(7,8,17,.85);color:#fff;padding:5px 7px;font-size:9px;line-height:1.4}
+
+/* RM-056: dimension-honest wall art guide */
+.physical-size-guide{margin:12px 20px 4px;padding:14px;border:1px solid rgba(110,224,255,.25);border-radius:16px;background:rgba(7,10,24,.78)}
+.physical-size-copy{display:grid;gap:5px;color:#fff;font-size:12px}.physical-size-copy span{color:#aeb3c7;line-height:1.35}
+.physical-size-stage{height:150px;margin-top:12px;display:flex;align-items:center;justify-content:center;border-radius:12px;background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.025))}
+.physical-size-rect{max-width:120px;max-height:135px;min-width:28px;min-height:34px;display:flex;align-items:center;justify-content:center;border:2px solid rgba(75,215,255,.85);background:linear-gradient(145deg,rgba(152,56,255,.35),rgba(31,194,233,.25));box-shadow:0 0 20px rgba(72,173,255,.12)}
+.physical-size-rect span{font-size:11px;font-weight:900;color:#fff}
