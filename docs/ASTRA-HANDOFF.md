@@ -1,6 +1,6 @@
 # Recast Me — cumulative Astra handoff
 
-Updated: 2026-10-03. Keep this index and append-only session records current whenever work is performed; the owner does not need to repeat the request for notes.
+Updated: 2026-10-07. Keep this index and append-only session records current whenever work is performed; the owner does not need to repeat the request for notes.
 
 ## Start here
 

@@ -53,7 +53,7 @@ const PRODUCT_DESIGN_PRESETS = {
   "Custom Recast Blanket": {product:"Blanket",layout:"fit",fill:"ambient",x:"center",scale:92,spacing:"standard",label:"Best setup · full image on blanket"},
   "Custom Recast Poster": {product:"Poster",layout:"cover",fill:"full-bleed",x:"center",scale:100,spacing:"standard",label:"Best setup · full bleed"},
   "Custom Recast Framed Poster": {product:"Framed Poster",layout:"cover",fill:"full-bleed",x:"center",scale:100,spacing:"standard",label:"Best setup · full bleed"},
-  "Custom Recast Canvas": {product:"Canvas",layout:"cover",fill:"full-bleed",x:"center",scale:100,spacing:"standard",label:"Best setup · full bleed"},
+  "Custom Recast Canvas": {product:"Canvas",layout:"fit",fill:"ambient",x:"center",scale:90,spacing:"standard",label:"Best setup · whole image inside wrapped edges"},
   "Custom Recast Magnet 3-Pack": {product:"Magnet 3-Pack",layout:"cover",fill:"full-bleed",x:"center",scale:100,spacing:"standard",label:"Best setup · full bleed"},
   "Custom Recast Coaster 4-Pack": {product:"Coaster 4-Pack",layout:"cover",fill:"full-bleed",x:"center",scale:100,spacing:"standard",label:"Best setup · full bleed"},
   "Custom Recast Sticker": {product:"Sticker",layout:"cover",fill:"full-bleed",x:"center",scale:100,spacing:"standard",label:"Best setup · full sticker"},

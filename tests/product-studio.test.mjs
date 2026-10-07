@@ -4,9 +4,9 @@ import {selectMockupGroups,rankMockupCandidates} from '../src/product-gallery.js
 import {selectV2MockupSpec,loadV2MockupSpec,v2MockupPayload,v2CreatedTask,v2PolledTask} from '../src/printful-v2-mockup.js';
 import {createMockup,mockupStatus} from '../src/workflow.js';
 import {setup,ID,TOKEN,CLEAN} from './security-helpers.mjs';
-const map={product:'Tumbler',printfulProductId:909,printfulVariantId:23470,preferredPlacement:'default'};
+const map={product:'Tumbler',printfulProductId:909,printfulVariantId:23470,preferredPlacement:'front'};
 const variant={id:23470,catalog_product_id:909};
-const row={placement:'default',technique:'sublimation',print_area_type:'simple',print_area_width:'9',print_area_height:'7',dpi:150,mockup_styles:[{id:12,category_name:'Lifestyle kitchen',view_name:'Kitchen view',restricted_to_variants:null},{id:13,category_name:'Flat',view_name:'Front',restricted_to_variants:[23470]},{id:14,category_name:'Flat',view_name:'Side',restricted_to_variants:[999]}]};
+const row={placement:'front',technique:'sublimation',print_area_type:'simple',print_area_width:'9',print_area_height:'7',dpi:150,mockup_styles:[{id:12,category_name:'Lifestyle kitchen',view_name:'Kitchen view',restricted_to_variants:null},{id:13,category_name:'Flat',view_name:'Front',restricted_to_variants:[23470]},{id:14,category_name:'Flat',view_name:'Side',restricted_to_variants:[999]}]};
 test('lifestyle groups are selected only when actually supported; apparel keeps a studio view',()=>{
  const catalog={option_groups:['Christmas','Lifestyle kitchen','Flat','Lifestyle living room']};
  assert.deepEqual(selectMockupGroups(catalog,'Mug'),['Flat','Lifestyle kitchen']);assert.deepEqual(selectMockupGroups(catalog,'T-Shirt'),['Flat']);
@@ -24,16 +24,16 @@ test('tumbler V2 uses exact catalog identity, supported style and dimensional co
 test('V2 refuses mismatched identities, unspecified restrictions and unsupported complex geometry',()=>{
  assert.throws(()=>selectV2MockupSpec(map,{...variant,id:1},[row]),/identity/);
  assert.throws(()=>selectV2MockupSpec(map,{...variant,catalog_product_id:1},[row]),/identity/);
- for(const change of [{placement:'front'},{technique:'embroidery'},{print_area_type:'advanced'},{dpi:0},{print_area_width:Infinity},{mockup_styles:[{id:15,category_name:'Flat'}]}])assert.throws(()=>selectV2MockupSpec(map,variant,[{...row,...change}]),/compatible/);
+ for(const change of [{placement:'default'},{technique:'embroidery'},{print_area_type:'advanced'},{dpi:0},{print_area_width:Infinity},{mockup_styles:[{id:15,category_name:'Flat'}]}])assert.throws(()=>selectV2MockupSpec(map,variant,[{...row,...change}]),/compatible/);
 });
 test('catalog loading is exact-product, bounded and reads only',async()=>{
  const calls=[];const call=async(path,options)=>{calls.push({path,options});return path.includes('catalog-variants')?{data:variant}:{data:[row]}};
- await loadV2MockupSpec(call,map);assert.equal(calls.length,2);assert.ok(calls.every(c=>c.options.method==='GET'));assert.match(calls[1].path,/catalog-products\/909\/mockup-styles\?placements=default/);
+ await loadV2MockupSpec(call,map);assert.equal(calls.length,2);assert.ok(calls.every(c=>c.options.method==='GET'));assert.match(calls[1].path,/catalog-products\/909\/mockup-styles\?placements=front/);
 });
 test('V2 task handling fails closed on wrong task, variants, placements or provider failures',()=>{
  assert.throws(()=>v2CreatedTask({data:[]}),/task/);assert.deepEqual(v2CreatedTask({data:[{id:123,status:'pending'}]}),{task_key:'123',status:'pending'});
  const record={taskKey:'123',printfulVariantId:23470,v2Spec:selectV2MockupSpec(map,variant,[row])};
- const body={data:[{id:123,status:'completed',catalog_variant_mockups:[{catalog_variant_id:23470,mockups:[{placement:'default',technique:'sublimation',style_id:12,mockup_url:'https://provider.test/mockup.jpg'}]}]}]};
+ const body={data:[{id:123,status:'completed',catalog_variant_mockups:[{catalog_variant_id:23470,mockups:[{placement:'front',technique:'sublimation',style_id:12,mockup_url:'https://provider.test/mockup.jpg'}]}]}]};
  assert.equal(v2PolledTask(body,record).mockups[0].option_group,'Lifestyle kitchen');
  assert.throws(()=>v2PolledTask(body,{...record,taskKey:'321'}),/exact/);
  assert.throws(()=>v2PolledTask(body,{...record,printfulVariantId:999}),/exact/);
@@ -49,7 +49,7 @@ test('missing V1 tumbler area takes validated V2 path, then polls exact task and
   if(u.endsWith('/v2/catalog-variants/23470'))return Response.json({data:variant});
   if(u.includes('/v2/catalog-products/909/mockup-styles'))return Response.json({data:[row]});
   if(u.endsWith('/v2/mockup-tasks')){payload=JSON.parse(options.body);return Response.json({data:[{id:100,status:'pending'}]})}
-  if(u.endsWith('/v2/mockup-tasks?id=100'))return Response.json({data:[{id:100,status:'completed',catalog_variant_mockups:[{catalog_variant_id:23470,mockups:[{placement:'default',technique:'sublimation',style_id:12,mockup_url:'https://mockup.example.com/fixture.jpg'}]}]}]});
+  if(u.endsWith('/v2/mockup-tasks?id=100'))return Response.json({data:[{id:100,status:'completed',catalog_variant_mockups:[{catalog_variant_id:23470,mockups:[{placement:'front',technique:'sublimation',style_id:12,mockup_url:'https://mockup.example.com/fixture.jpg'}]}]}]});
   if(u==='https://mockup.example.com/fixture.jpg')return new Response(CLEAN,{headers:{'content-type':'image/jpeg'}});
   throw Error('unexpected '+u);
  });
