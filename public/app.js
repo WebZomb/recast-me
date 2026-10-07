@@ -231,7 +231,7 @@ async function renderWatermark(dataUrl){
 
 function inferSubject(subject,notes){
   const text=String(notes||'').toLowerCase();
-  if(subject==='person' && /\b(dog|puppy|pup|cat|kitten|pet)\b/.test(text)) return 'person and pet';
+  if(subject==='person' && /\b(dog|puppy|pup|cat|kitten|pet|horse)\b/.test(text)) return 'person and pet';
   if(subject==='person' && /\b(car|truck|vehicle|motorcycle|bike)\b/.test(text)) return 'person and car';
   return subject;
 }
