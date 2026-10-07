@@ -11,11 +11,11 @@ const pause=ms=>new Promise(resolve=>setTimeout(resolve,ms));
   // A source commit is not a deployment: check the real HTML marker before testing.
   let deployed=false;
   for(let attempt=0;attempt<8;attempt++){
-    try{const r=await fetch(base+'/?launch-audit='+Date.now(),{signal:AbortSignal.timeout(20000)});deployed=r.ok&&(await r.text()).includes('data-launch-build="RM-050.8"');}catch{}
+    try{const r=await fetch(base+'/?launch-audit='+Date.now(),{signal:AbortSignal.timeout(20000)});deployed=r.ok&&(await r.text()).includes('data-launch-build="RM-050.9"');}catch{}
     if(deployed)break;await pause(15000);
   }
   report.deployed=deployed;
-  if(!deployed)report.failures.push('Expected RM-050.8 is not deployed on production.');
+  if(!deployed)report.failures.push('Expected RM-050.9 is not deployed on production.');
   for(const p of ['/api/model-status','/api/render-readiness','/api/public-config','/api/printful-health']){
     try{const r=await fetch(base+p,{signal:AbortSignal.timeout(25000)});const type=r.headers.get('content-type')||'';const body=type.includes('json')?await r.json():{contentType:type};report.health.push({path:p,status:r.status,body});}catch(e){report.health.push({path:p,error:e.message});}
   }
@@ -50,7 +50,7 @@ const pause=ms=>new Promise(resolve=>setTimeout(resolve,ms));
       const emptyPhotoBlocked=await page.locator('[data-create-step="1"]').isVisible();
       await page.screenshot({path:out+'/'+name+'-create.png'});
       report.browsers.push({name,http:response.status(),metrics,shopReached,firstStep,photoStep,emptyPhotoBlocked,errors,failed,blocked});
-      if(metrics.build!=='RM-050.8')report.failures.push(name+': wrong production build');
+      if(metrics.build!=='RM-050.9')report.failures.push(name+': wrong production build');
       if(metrics.scrollWidth>width+1)report.failures.push(name+': horizontal page overflow');
       if(metrics.products!==12)report.failures.push(name+': missing product cards');
       if(metrics.badAnchors.length||metrics.duplicateIds.length||metrics.brokenImages.length)report.failures.push(name+': broken content structure or images');
