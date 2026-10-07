@@ -103,5 +103,5 @@ test('mockup failure is visible in an inline alert on touch devices',async()=>{
  const alert={hidden:true,textContent:''};const button={textContent:'Preview',disabled:false};
  app.context.mockupArgs={req:{requestId:'saved',accessToken:'test'},sku:'RECAST-MUG-11OZ',card:{dataset:{productTitle:'Custom Recast Mug',active:'false',digital:'false'},classList:{add(){},remove(){}},querySelector:()=>alert},button};
  await vm.runInNewContext('generateRealMockup(mockupArgs)',app.context);
- assert.equal(alert.hidden,false);assert.equal(alert.textContent,'Printful is not connected.');assert.equal(button.disabled,false);
+ assert.equal(alert.hidden,false);assert.match(alert.textContent,/couldn't build this product preview/i);assert.doesNotMatch(alert.textContent,/Worker:|Stage:/);assert.equal(button.disabled,false);
 });
