@@ -32,7 +32,7 @@
   <meta name="twitter:image" content="https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recastmeai-approved-orbit-stacked-v1.png?v=1791313709">
   <meta name="twitter:image:alt" content="Recast Me Ai — cyan and magenta swirling RM logo">
 </head>
-<body data-launch-build="RM-052">
+<body data-launch-build="RM-053">
   <a class="skip-link" href="#start">Skip to create your Recast</a>
   <header class="site-header">
     <a class="brand" href="#home" aria-label="Recast Me home">
@@ -146,15 +146,35 @@
               <p>Your pet, you together, or anyone you love.</p>
               <div id="subject-choices" class="subject-choices"></div><label class="native-subject" hidden>Subject suggestions
                 <select name="subject" id="subject">
-                  <option value="person">Person</option>
-                  <option value="pet" selected>My dog / cat / pet</option>
-                  <option value="couple">Couple</option>
-                  <option value="family">Parents / Family</option>
-                  <option value="car">Car</option>
-                  <option value="person and pet">You + your pet</option>
-                  <option value="couple and pet">Couple + pet</option>
-                  <option value="person and car">You + your car</option>
-                  <option value="custom">Something else — describe below</option>
+                  <optgroup label="Pets & Animals">
+                    <option value="pet" selected>My dog / cat / pet</option>
+                    <option value="multiple pets">Two or more pets</option>
+                    <option value="horse">Horse</option>
+                    <option value="animal">Another animal</option>
+                  </optgroup>
+                  <optgroup label="People">
+                    <option value="person">Just me / one person</option>
+                    <option value="couple">Couple</option>
+                    <option value="family">Family</option>
+                    <option value="friends">Friends / group</option>
+                    <option value="child">Child / teen</option>
+                    <option value="baby">Baby</option>
+                  </optgroup>
+                  <optgroup label="Together">
+                    <option value="person and pet">Me + my pet</option>
+                    <option value="couple and pet">Couple + pet</option>
+                    <option value="family and pet">Family + pet</option>
+                    <option value="person and car">Me + my vehicle</option>
+                  </optgroup>
+                  <optgroup label="Vehicles & Places">
+                    <option value="car">Car / truck</option>
+                    <option value="motorcycle">Motorcycle / bike</option>
+                    <option value="home">Home / special place</option>
+                  </optgroup>
+                  <optgroup label="Special">
+                    <option value="memorial">Memorial / tribute</option>
+                    <option value="custom">Anything else — describe it</option>
+                  </optgroup>
                 </select>
               </label>
             </fieldset>
