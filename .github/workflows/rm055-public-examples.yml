@@ -1,0 +1,36 @@
+name: RM055 approved public product examples
+on:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+concurrency:
+  group: rm055-public-examples-once
+  cancel-in-progress: false
+defaults:
+  run:
+    shell: bash
+jobs:
+  public-product-examples:
+    if: github.event.head_commit.message == 'validate: RM055 product accuracy and public samples' && github.run_attempt == 1
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    env:
+      RECAST_PUBLIC_EXAMPLES: APPROVED_PUBLIC_ART_ONLY
+    steps:
+      - name: Fetch exact release source without credentials
+        run: |
+          git init .
+          git remote add origin "https://github.com/${GITHUB_REPOSITORY}.git"
+          git fetch --depth=1 origin "${GITHUB_SHA}"
+          git checkout --detach FETCH_HEAD
+      - name: One public-art upload and bounded product mockups, never orders
+        run: node scripts/rm055-public-examples.cjs
+      - name: Retain real provider samples for human visual inspection
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rm055-public-examples
+          path: rm055-public-examples/
+          retention-days: 7
+          if-no-files-found: warn
