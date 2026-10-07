@@ -28,3 +28,10 @@ test('render endpoint has a Worker burst limiter in addition to daily credit con
  assert.ok(hq.includes('render_rate_limited'));
  assert.ok(hq.includes('env.RECAST_CREDIT_WALLET?.id'));
 });
+
+test('RM053 broadens Worlds without publishing franchise or team-logo presets',()=>{
+ const app=readFileSync(new URL('../public/app.js',import.meta.url),'utf8');
+ for(const label of ['Rock Star','DJ Night','Red Carpet','Beach Escape','Paris Getaway','Master Chef','Pilot','Ancient Egypt','Medieval Kingdom','Tiny World','Food Fantasy']) assert.ok(app.includes(label),label);
+ for(const group of ['Music & Fame','Travel & Lifestyle','Careers & Dreams','History & Legends','Funny & Wild']) assert.ok(app.includes(group),group);
+ for(const mark of ['Simpsons','Family Guy','South Park','NFL','NBA','Disney','Marvel']) assert.equal(app.includes(mark),false,mark);
+});
