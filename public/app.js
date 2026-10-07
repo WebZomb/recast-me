@@ -87,8 +87,7 @@ const STYLE_GROUP_ORDER=['Featured','Animation & Art','Sports','Decades','Movies
 styleSelect.innerHTML=STYLE_GROUP_ORDER.map(group=>{
  const options=STYLES.filter(x=>x[5]===group).map(([id,name])=>`<option value="${id}">${name}</option>`).join('');
  return options?`<optgroup label="${group}">${options}</optgroup>`:'';
-}).join('')+`<optgroup label="Make your own"><option value="custom">Custom World — describe anything</option></optgroup>`
-  + '<option value="custom">My own environment</option>';
+}).join('')+`<optgroup label="Make your own"><option value="custom">Custom World — describe anything</option></optgroup>`;
 styleSelect.value='royal';
 
 function chooseStyle(card){
