@@ -68,3 +68,5 @@ Latest: [RM-050.4 — Workers-compatible order lookup and bounded Printful refer
 Latest: [RM-050.5 — verified-empty-store missing-draft recovery](ASTRA-SESSION-RM-0505.md).
 
 Latest: [RM-050.7 — inspected recovered-draft release](ASTRA-SESSION-RM-0507.md).
+
+Latest: [RM-050.8 — exact mobile landing hero match](ASTRA-SESSION-RM-0508.md).
