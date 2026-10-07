@@ -42,10 +42,14 @@ function join(parts){const out=new Uint8Array(parts.reduce((n,p)=>n+p.length,0))
 // Opaque dots / genuinely transparent gaps. No low-opacity gray rectangle.
 export async function apparelEdgeMask(width,height){
   if(!Number.isInteger(width)||!Number.isInteger(height)||width<1||height<1||width*height>24000000)throw fail('apparel_dimensions','Clothing print dimensions are invalid.');
-  const rows=new Uint8Array((width+1)*height),edge=Math.max(1,Math.min(width,height)*.18);
-  const dot=Math.max(3,Math.round(width/190));
+  const rows=new Uint8Array((width+1)*height),edgeX=Math.max(1,width*.24),edgeY=Math.max(1,height*.24);
+  // Broad elliptical dissolve: the center remains fully intact while corners and sides
+  // break up gradually, avoiding the visible rectangular print boundary.
+  const dot=Math.max(3,Math.round(width/210));
   for(let y=0;y<height;y++)for(let x=0;x<width;x++){
-    const distance=Math.min(x,y,width-1-x,height-1-y),t=Math.min(1,Math.max(0,distance/edge)),coverage=t*t*(3-2*t);
+    const dxEdge=Math.min(x,width-1-x)/edgeX,dyEdge=Math.min(y,height-1-y)/edgeY;
+    const t=Math.min(1,Math.max(0,Math.min(dxEdge,dyEdge)));
+    const coverage=t*t*(3-2*t);
     const dx=((x+.5)%dot)/dot-.5,dy=((y+.5)%dot)/dot-.5;
     rows[y*(width+1)+x+1]=coverage>=1||coverage>0&&dx*dx+dy*dy<coverage*.5?255:0;
   }
