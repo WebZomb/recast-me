@@ -45,3 +45,5 @@ test('phone layout reserves the camera area and keeps the complete image within 
   assert.ok(b.top>=out.outputSize.height*.32);assert.ok(b.left>0&&b.left+b.width<out.outputSize.width);assert.ok(b.top+b.height<out.outputSize.height);assert.ok(Math.abs(b.width/b.height-width/height)<.002);
  }
 });
+
+test('tumbler uses the exact front sublimation placement returned by supplier catalog',()=>{const m=FULFILLMENT['RECAST-TUMBLER-20OZ'];assert.equal(m.printfulProductId,909);assert.equal(m.printfulVariantId,23470);assert.equal(m.preferredPlacement,'front');assert.equal(m.orderFileType,'front')});

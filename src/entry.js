@@ -32,7 +32,7 @@ export const FULFILLMENT = {
   "RECAST-MUG-11OZ":      { printfulProductId: 19, printfulVariantId: 1320, preferredPlacement: "default", orderFileType: "default", quantity: 1, baseCost: 6.07, product: "Mug", color: "White" },
   "RECAST-MUG-15OZ":      { printfulProductId: 19, printfulVariantId: 4830, preferredPlacement: "default", orderFileType: "default", quantity: 1, baseCost: 8.11, product: "Mug", color: "White" },
 
-  "RECAST-TUMBLER-20OZ":  { printfulProductId: 909, printfulVariantId: 23470, preferredPlacement: "default", orderFileType: "default", quantity: 1, baseCost: 24.97, product: "Tumbler", color: "White" },
+  "RECAST-TUMBLER-20OZ":  { printfulProductId: 909, printfulVariantId: 23470, preferredPlacement: "front", orderFileType: "front", quantity: 1, baseCost: 24.97, product: "Tumbler", color: "White" },
   "RECAST-MAGNET-SET":     { printfulProductId: 656, printfulVariantId: 16366, preferredPlacement: "default", orderFileType: "default", quantity: 3, baseCost: 3.39, product: "Magnet 3-Pack", color: "White" },
   "RECAST-COASTER-SET":    { printfulProductId: 611, printfulVariantId: 15662, preferredPlacement: "default", orderFileType: "default", quantity: 4, baseCost: 5.55, product: "Coaster 4-Pack" },
 

@@ -24,7 +24,9 @@ const watchdog=setTimeout(()=>{console.error('Read-only example audit exceeded 1
    for(const [sku,label] of [['RECAST-HOODIE-S','hoodie'],['RECAST-FRAME-12X16','frame']]){
     const card=page.locator('#product-grid .product[data-example-sku="'+sku+'"]');
     await card.scrollIntoViewIfNeeded({timeout:8000});
-    await card.locator('img').evaluate(img=>img.decode());
+    // WebKit can abort decode while a lazy image switches from placeholder to src.
+    // Assert loaded pixels on the current element instead of treating that race as a broken image.
+    await page.waitForFunction(sku=>{const img=document.querySelector('#product-grid .product[data-example-sku="'+sku+'"] img');return img?.complete&&img.naturalWidth>0},sku,{timeout:12000});
     await page.screenshot({path:path.join(out,engine.name()+'-'+width+'-'+label+'.png'),timeout:10000});
    }
   }catch(e){
