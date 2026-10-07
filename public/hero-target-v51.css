@@ -1,4 +1,4 @@
-/* RM-050.9 — final mobile hero size cleanup against the owner-approved Pic 2.
+/* RM-051.0 — precision mobile match against the owner-approved Pic 2.
    Presentation only: creator, checkout, render and fulfillment behavior are untouched. */
 
 @media(max-width:760px){
@@ -78,16 +78,16 @@
     width:calc(100% + 15vw)!important;
     max-width:none!important;
     margin:8px -7.5vw 0!important;
-    aspect-ratio:1.055!important;
+    aspect-ratio:1.24!important;
     height:auto!important;
     min-height:0!important;
     overflow:visible!important;
   }
   .hero-live-flow{
-    left:5.4%!important;
-    top:16.5%!important;
+    left:4.0%!important;
+    top:16.0%!important;
     bottom:auto!important;
-    width:46.5%!important;
+    width:43.0%!important;
     grid-template-columns:minmax(0,1fr) 14px minmax(0,1fr) 14px!important;
     z-index:6!important;
   }
@@ -118,9 +118,9 @@
     text-shadow:0 0 16px rgba(75,122,255,.7)!important;
   }
   .hero-live-product{
-    right:-1.0%!important;
-    top:4.0%!important;
-    width:56.5%!important;
+    right:1.0%!important;
+    top:3.2%!important;
+    width:55.0%!important;
     min-height:0!important;
     height:auto!important;
     z-index:4!important;
@@ -129,6 +129,15 @@
     width:100%!important;
     max-width:none!important;
     height:auto!important;
+    filter:none!important;
+    -webkit-mask-image:
+      linear-gradient(to right,transparent 0%,#000 5%,#000 95%,transparent 100%),
+      linear-gradient(to bottom,transparent 0%,#000 5%,#000 96%,transparent 100%)!important;
+    -webkit-mask-composite:source-in!important;
+    mask-image:
+      linear-gradient(to right,transparent 0%,#000 5%,#000 95%,transparent 100%),
+      linear-gradient(to bottom,transparent 0%,#000 5%,#000 96%,transparent 100%)!important;
+    mask-composite:intersect!important;
   }
   .hero-live-product::before{
     left:-3%!important;
@@ -143,9 +152,9 @@
     height:9%!important;
   }
   .hero-live-product-label{
-    bottom:-3.5%!important;
+    bottom:-2.6%!important;
     left:48%!important;
-    width:88%!important;
+    width:69%!important;
     min-height:29px!important;
     padding:4px 7px!important;
     gap:7px!important;
@@ -155,7 +164,7 @@
     font-size:7.5px!important;
   }
   .hero-live-tagline{
-    bottom:1.2%!important;
+    bottom:2.8%!important;
     gap:4px!important;
     letter-spacing:.285em!important;
   }
@@ -176,8 +185,8 @@
     width:calc(100% + 14.4vw)!important;
     margin-left:-7.2vw!important;
     margin-right:-7.2vw!important;
-    aspect-ratio:1.035!important;
+    aspect-ratio:1.20!important;
   }
-  .hero-live-flow{left:5.2%!important;top:16%!important;width:47%!important}
-  .hero-live-product{right:-1.5%!important;top:4%!important;width:57%!important}
+  .hero-live-flow{left:3.8%!important;top:15.5%!important;width:43.5%!important}
+  .hero-live-product{right:.5%!important;top:3%!important;width:55.5%!important}
 }
