@@ -33,8 +33,8 @@ const PRODUCT_META = {
 
 const PRIMARY_PRODUCT_TITLES=new Set(["Custom Recast Mug","Custom Recast Blanket","Custom Recast Poster","Custom Recast Canvas"]);
 const PRODUCT_DESIGN_PRESETS = {
-  "Custom Recast Hoodie": {product:"Hoodie",layout:"fit",fill:"dark",x:"center",scale:85,spacing:"standard",label:"Best setup · centered on black"},
-  "Custom Recast T-Shirt": {product:"T-Shirt",layout:"fit",fill:"dark",x:"center",scale:82,spacing:"standard",label:"Best setup · centered on black"},
+  "Custom Recast Hoodie": {product:"Hoodie",layout:"fit",fill:"transparent",x:"center",scale:85,spacing:"standard",finish:"cutout",label:"Subject cutout · no background"},
+  "Custom Recast T-Shirt": {product:"T-Shirt",layout:"fit",fill:"transparent",x:"center",scale:82,spacing:"standard",finish:"cutout",label:"Subject cutout · no background"},
   "Custom Recast Mug": {product:"Mug",layout:"two-sided",fill:"ambient",x:"center",scale:110,spacing:"standard",label:"Best setup · two-sided wrap"},
   "Custom Recast Tumbler": {product:"Tumbler",layout:"two-sided",fill:"ambient",x:"center",scale:108,spacing:"standard",label:"Best setup · two-sided wrap"},
   "Custom Recast Blanket": {product:"Blanket",layout:"cover",fill:"full-bleed",x:"center",scale:100,spacing:"standard",label:"Best setup · full blanket"},
@@ -72,23 +72,25 @@ function productDesign(card){
   const scale=Number(card?.querySelector?.("[data-design-scale]")?.value||preset.scale);
   const spacing=card?.querySelector?.("[data-design-spacing]")?.value||preset.spacing;
   const fill=card?.querySelector?.("[data-design-fill]")?.value||preset.fill;
-  return {product:preset.product,layout,fill,x,scale,spacing};
+  return {product:preset.product,layout,fill,x,scale,spacing,...(preset.finish?{finish:card?.querySelector?.("[data-design-finish]")?.value||preset.finish}:{})};
 }
 function designSignature(card,sku){return JSON.stringify({sku,design:productDesign(card)})}
 function designControlsMarkup(title,preset){
   const wrap=['Custom Recast Mug','Custom Recast Tumbler'].includes(title);
+  const apparel=Boolean(preset.finish);
   const layoutOptions=wrap
     ? `<option value="two-sided" selected>Best setup · image on both sides</option><option value="wrap">Full wrap / full bleed</option><option value="single">One image</option><option value="fit">Keep whole image + blended background</option>`
     : `<option value="cover" selected>Best setup · fill the product</option><option value="fit">Keep whole image + background fill</option>`;
   const spacing=wrap?`<label data-design-spacing-wrap>Image spacing<select data-design-spacing><option value="close">Closer together</option><option value="standard" selected>Standard</option><option value="wide">Farther apart</option></select></label>`:"";
-  return `<details class="product-design-controls compact-product-edit">
+  return `<details class="product-design-controls compact-product-edit ${apparel?"apparel-design":""}">
     <summary><span>Edit design</span></summary>
     <div class="design-edit-body">
-      <label>Layout<select data-design-layout>${layoutOptions}</select></label>
+      <label data-layout-label>Layout<select data-design-layout>${layoutOptions}</select></label>
+      ${apparel?`<label>Artwork finish<select data-design-finish><option value="cutout">Subject cutout · no background</option><option value="soft">Soft-edge photo · keep the scene</option><option value="rectangle">Original photo · straight edges</option></select></label><p class="apparel-finish-note">Cutout removes the scene using Cloudflare AI image processing. Check all faces, ears and paws in your preview. Soft-edge photo uses a fine dot fade into the fabric. No colored print box is added.</p>`:""}
       ${spacing}
-      <label data-design-fill-wrap hidden>Background fill<select data-design-fill><option value="ambient" selected>Blend artwork colors</option><option value="dark">Dark fill</option><option value="light">Light fill</option><option value="full-bleed">Artwork edge fill</option></select></label>
+      <label data-design-fill-wrap hidden>Background fill<select data-design-fill><option value="ambient" selected>Blend artwork colors</option><option value="transparent" hidden>No added background</option><option value="dark">Dark fill</option><option value="light">Light fill</option><option value="full-bleed">Artwork edge fill</option></select></label>
       <label data-design-position-wrap>Image position<select data-design-x><option value="left">Left</option><option value="center" selected>Center</option><option value="right">Right</option></select></label>
-      <label data-design-scale-wrap>Image size <strong data-design-scale-label>${preset.scale}%</strong><input data-design-scale type="range" min="75" max="125" step="5" value="${preset.scale}"></label>
+      <label data-design-scale-wrap>Image size <strong data-design-scale-label>${preset.scale}%</strong><input data-design-scale type="range" min="75" max="${apparel?100:125}" step="${apparel?1:5}" value="${preset.scale}"></label>
       <button type="button" class="button ghost" data-reset-design>Reset to best setup</button><p class="product-mockup-note">Review a new preview after changing the design.</p>
     </div>
   </details>`;
@@ -101,6 +103,7 @@ function applyPresetToControls(card){
   if(scale){scale.value=String(preset.scale);const label=card.querySelector?.("[data-design-scale-label]");if(label)label.textContent=preset.scale+"%";}
   if(spacing)spacing.value=preset.spacing;
   if(fill)fill.value=preset.fill;
+  const finish=card?.querySelector?.("[data-design-finish]");if(finish)finish.value=preset.finish;
   syncDesignControls(card);
 }
 function syncDesignControls(card){
@@ -124,7 +127,7 @@ function requireFreshPreview(card){
 function resetProductPreview(card,{invalidate=true}={}){
   if(!card)return;
   const summary=card?.querySelector?.('[data-design-summary]');
-  if(summary){const preset=presetFor(card),design=productDesign(card);summary.textContent=['layout','fill','x','scale','spacing'].every(k=>design[k]===preset[k])?'Recommended layout applied':'Custom layout';}
+  if(summary){const preset=presetFor(card),design=productDesign(card);summary.textContent=['layout','fill','x','scale','spacing','finish'].every(k=>design[k]===preset[k])?'Recommended layout applied':'Custom layout';}
   const state=stateFor(card);if(invalidate){state.run++;state.busy=false;}
   const title=card.dataset.productTitle,img=card.querySelector?.(".product-art img");
   if(img&&title){img.src=PRODUCT_ART[title];img.alt="Example design on "+title;}
@@ -153,7 +156,7 @@ function viewLabel(title,index){
 function uniqueMockupViews(input=[]){
   const seen=new Set(),output=[];
   for(const view of input){
-    const label=viewLabel(view?.title,output.length);
+    const label=/lifestyle|room|interior|sofa|bed|kitchen|desk|home/i.test(view?.group||"")?"Lifestyle":viewLabel(view?.title,output.length);
     const key=label.toLowerCase();
     if(seen.has(key))continue;
     seen.add(key);output.push({...view,label});
@@ -165,7 +168,8 @@ function designSummary(card){
   const d=productDesign(card),parts=[];
   parts.push(d.layout==="two-sided"?"Two-sided wrap":d.layout==="wrap"?"Full wrap":d.layout==="cover"?"Full bleed":d.layout==="fit"?"Keep whole image":"One image");
   if(d.layout==="two-sided")parts.push(d.spacing==="close"?"Closer spacing":d.spacing==="wide"?"Wider spacing":"Standard spacing");
-  if(d.layout==="fit")parts.push(d.fill==="dark"?"Dark fill":d.fill==="light"?"Light fill":d.fill==="full-bleed"?"Artwork fill":"Blended fill");
+  if(d.finish)parts.push(d.finish==="cutout"?"Subject cutout · transparent background":d.finish==="soft"?"Soft-edge photo · transparent dot fade":"Original photo · no added background");
+  if(d.layout==="fit"&&!d.finish)parts.push(d.fill==="dark"?"Dark fill":d.fill==="light"?"Light fill":d.fill==="full-bleed"?"Artwork fill":"Blended fill");
   parts.push((d.x||"center").replace(/^./,m=>m.toUpperCase()));
   if(d.scale!==100)parts.push(`${d.scale}% size`);
   return parts.join(" · ");
@@ -262,7 +266,11 @@ async function generateRealMockup({req,sku,card,button}){
     if(!current())return;
     if(!create?.ok||!data?.ok){
       const internal=[data?.error||"Could not start the product preview.",data?.stage?("Stage: "+data.stage):"",data?.workerVersionId?("Worker: "+data.workerVersionId):""].filter(Boolean).join(" · ");
-      const customer=/print dimensions are unavailable|print_area_missing/i.test(internal)
+      const customer=String(data?.reason||'').startsWith('apparel_')
+        ?"Background removal couldn't finish. Your Recast is saved — open Edit design and choose Soft-edge photo to keep the scene without a print box."
+        :data?.reason==='printful_catalog_review'
+        ?"This tumbler's preview needs a Printful catalog check. Your Recast is saved; another product can still be previewed."
+        :/print dimensions are unavailable|print_area_missing/i.test(internal)
         ?"This product preview is being updated. Your Recast is saved — try again in a moment or choose another product."
         :"We couldn't build this product preview right now. Your Recast is saved — please try again.";
       console.warn("Recast product preview start failed",{sku,detail:internal});
@@ -279,7 +287,7 @@ async function generateRealMockup({req,sku,card,button}){
       if(!current())return;
       if(response.ok&&data.status==="completed"&&data.images?.length){
         const img=card.querySelector(".product-art img"),views=uniqueMockupViews(data.images);
-        const preferred=views.findIndex(view=>view.label==="Front"),fallback=views.findIndex(view=>view.label==="3D"),selected=preferred>=0?preferred:fallback>=0?fallback:0;
+        const preferred=views.findIndex(view=>view.label===(presetFor(card).finish?"Front":"Lifestyle")),fallback=views.findIndex(view=>view.label==="3D"),selected=preferred>=0?preferred:fallback>=0?fallback:0;
         img.src=views[selected].url;img.alt="Your Recast on the actual product mockup";
         card.querySelector(".mockup-views")?.remove();
         if(views.length>1){
@@ -378,6 +386,7 @@ async function loadCheckout(){
         <span class="price">${priceText}</span>
         ${select}
         ${realPreview}
+        ${preset.finish?'<p class="apparel-finish-note">Recommended: AI subject cutout, without a background. Your original stays unchanged. Change the finish in Edit design.</p>':""}
         <button class="recast-buy" data-product="${index}" data-buy-label="${meta.cta}" ${active&&digital?"":"disabled"} ${active&&!digital?"hidden":""}>
           ${active?(digital?meta.cta:"Continue to final review"):"Not available to buy yet"}
         </button>
@@ -410,7 +419,7 @@ async function loadCheckout(){
     const label=card?.querySelector?.("[data-design-scale-label]");
     control.addEventListener("input",()=>{if(label)label.textContent=control.value+"%";resetProductPreview(card);});
   });
-  document.querySelectorAll("[data-design-layout],[data-design-x],[data-design-spacing],[data-design-fill]").forEach(control=>{
+  document.querySelectorAll("[data-design-layout],[data-design-x],[data-design-spacing],[data-design-fill],[data-design-finish]").forEach(control=>{
     const card=control.closest?.("[data-product-index]");
     if(control.matches?.("[data-design-layout]"))syncDesignControls(card);
     control.addEventListener("change",()=>{syncDesignControls(card);resetProductPreview(card);});

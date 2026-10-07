@@ -96,6 +96,18 @@ export async function watermarkBytes(env, source, {maxWidth=768,maxHeight=960} =
   return result;
 }
 
+export async function watermarkProductSource(env,source,mime='image/jpeg'){
+  requireImaging(env);
+  const tile=env.IMAGES.input(new Blob([from64(WATERMARK_TILE_BASE64)],{type:'image/png'}).stream());
+  const out=await env.IMAGES.input(new Blob([source]).stream())
+    .draw(tile,{repeat:true,opacity:.22,top:0,left:0,composite:'atop'})
+    .output(mime==='image/png'?{format:'image/png'}:{format:'image/jpeg',quality:90});
+  const response=out.response(),bytes=new Uint8Array(await response.arrayBuffer());
+  const signature=mime==='image/png'?[137,80,78,71,13,10,26,10]:[255,216,255];
+  if(!response.ok||!signature.every((n,i)=>bytes[i]===n)||bytes.length<100||await digest(bytes)===await digest(source))throw error('watermark_failed','A protected product preview could not be verified.');
+  return bytes;
+}
+
 // Clean pixels stay in private storage. The cache contains only flattened JPEGs.
 // Source hashing also invalidates derivatives if a stored source is ever replaced.
 async function derivative(env, key, bytes) {
@@ -233,7 +245,7 @@ export function secureApplication(application) {
               const source=from64(await object.text()),info=await env.IMAGES.info(new Blob([source]).stream());
               const product=url.searchParams.get('product')||'Mug';
               const design={
-                product,
+                product,version:Number(url.searchParams.get('version')||0),finish:url.searchParams.get('finish')||undefined,
                 layout:url.searchParams.get('layout')||undefined,
                 fill:url.searchParams.get('fill')||undefined,
                 x:url.searchParams.get('x')||'center',
@@ -241,7 +253,7 @@ export function secureApplication(application) {
                 spacing:url.searchParams.get('spacing')||'standard'
               };
               const composed=await composeProductLayout(env,source,info,{width:areaWidth,height:areaHeight},{product},design);
-              return imageResponse(await watermarkBytes(env,composed.bytes));
+              return imageResponse(await watermarkProductSource(env,composed.bytes,composed.mime||'image/jpeg'),composed.mime||'image/jpeg');
             }
             return imageResponse(await protectedArtwork(env,id));
           }

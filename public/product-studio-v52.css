@@ -1,0 +1,52 @@
+/* RM052 — bounded media stages. The image is not an auto-minimum grid row. */
+#product-grid.checkout-catalog{gap:24px!important;align-items:start!important}
+#product-grid.checkout-catalog .product{border-radius:24px!important;isolation:isolate;overflow:hidden!important}
+#product-grid.checkout-catalog .product .product-art{
+  display:block!important;position:relative!important;width:100%!important;
+  height:auto!important;aspect-ratio:1 / 1!important;min-height:0!important;
+  background:radial-gradient(ellipse at 50% 36%,#fff 20%,#f4f3f1 76%,#e7e5e3)!important;
+  overflow:hidden!important;contain:layout paint;
+}
+#product-grid.checkout-catalog .product .product-art>img{
+  position:absolute!important;inset:0!important;display:block!important;
+  width:100%!important;height:100%!important;max-width:100%!important;max-height:100%!important;
+  min-width:0!important;min-height:0!important;box-sizing:border-box!important;
+  margin:0!important;padding:0!important;object-fit:contain!important;object-position:50% 50%!important;
+  transform:none!important;filter:none!important;background:transparent!important;
+}
+#product-grid.checkout-catalog .example-design-label{
+  position:absolute!important;left:12px!important;bottom:12px!important;
+  width:auto!important;max-width:calc(100% - 24px)!important;font-size:10px!important;
+  color:#fff!important;background:rgba(14,16,28,.84)!important;pointer-events:none;
+}
+#product-grid.checkout-catalog .product-body{padding:22px!important;display:flex!important;flex-direction:column!important;gap:0!important}
+#product-grid.checkout-catalog .product-badge{
+  width:fit-content!important;min-height:0!important;display:inline-flex!important;
+  border:0!important;background:transparent!important;box-shadow:none!important;
+  padding:0!important;color:#9fdfea!important;font-size:9px!important;letter-spacing:.19em!important;
+}
+#product-grid.checkout-catalog .product-body>strong{margin:10px 0 8px!important;font-size:clamp(25px,6.5vw,31px)!important;line-height:1.1!important}
+#product-grid.checkout-catalog .product-pitch{font-size:14px!important;line-height:1.5!important}
+#product-grid.checkout-catalog .price{margin:20px 0 12px!important;font-size:25px!important;line-height:1.2!important}
+#product-grid.checkout-catalog .real-mockup-ready .product-preview-action{width:fit-content!important;align-self:flex-start!important;min-height:30px!important;margin:12px 0 0!important;font-size:11px!important}
+#product-grid.checkout-catalog .recast-buy:not([hidden]){margin-top:13px!important;justify-content:center!important;text-align:center!important}
+#product-grid.checkout-catalog .mockup-views{padding:12px!important;gap:8px!important}
+#product-grid.checkout-catalog .mockup-view-chip{min-height:40px!important;font-size:12px!important}
+#product-grid.checkout-catalog .product-design-controls{margin-top:12px!important}
+#product-grid.checkout-catalog .apparel-finish-note{margin:12px 0 0;color:#b4b1c7;font-size:12px;line-height:1.5}
+#product-grid.checkout-catalog [data-design-finish]{min-height:46px}
+#product-grid.checkout-catalog .apparel-design [data-design-fill-wrap],
+#product-grid.checkout-catalog .apparel-design [data-layout-label]{display:none!important}
+#product-grid.checkout-catalog .design-edit-body{padding-top:14px}
+#product-grid.checkout-catalog .product:has(.apparel-design) .product-art{aspect-ratio:1 / 1!important;background:#f6f5f3!important}
+#product-grid.checkout-catalog .product[data-digital="true"] .product-art{aspect-ratio:4 / 3!important}
+/* Final proof is never enlarged/cropped to fill a fixed frame. */
+.final-review-angles img{width:100%!important;height:auto!important;min-height:0!important;object-fit:contain!important;transform:none!important}
+@media(min-width:960px){#product-grid.checkout-catalog{grid-template-columns:repeat(3,minmax(0,1fr))!important}}
+@media(max-width:580px){
+ #product-grid.checkout-catalog{gap:22px!important}
+ #product-grid.checkout-catalog .product-body{padding:18px!important}
+ #product-grid.checkout-catalog .product .product-art{height:auto!important}
+ #product-grid.checkout-catalog .product{border-radius:22px!important}
+}
+@media(prefers-reduced-motion:reduce){#product-grid.checkout-catalog .product{transition:none!important;transform:none!important}}

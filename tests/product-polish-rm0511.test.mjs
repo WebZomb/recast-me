@@ -28,10 +28,10 @@ test('RM0511 checkout deduplicates repeated Printful view labels and uses compac
   assert.deepEqual(Array.from(views,v=>v.label),['Front','Back','Detail']);
 });
 
-test('RM0511 apparel defaults are centered dark-fit rather than a large pasted square',()=>{
+test('RM0511 apparel defaults are centered transparent fit rather than a large pasted square',()=>{
   const source=readFileSync(new URL('../public/checkout.js',import.meta.url),'utf8');
-  assert.match(source,/"Custom Recast Hoodie": \{product:"Hoodie",layout:"fit",fill:"dark",x:"center",scale:85/);
-  assert.match(source,/"Custom Recast T-Shirt": \{product:"T-Shirt",layout:"fit",fill:"dark",x:"center",scale:82/);
+  assert.match(source,/"Custom Recast Hoodie": \{product:"Hoodie",layout:"fit",fill:"transparent",x:"center",scale:85/);
+  assert.match(source,/"Custom Recast T-Shirt": \{product:"T-Shirt",layout:"fit",fill:"transparent",x:"center",scale:82/);
 });
 
 test('RM0511 product UI uses compact view chips and a compact ready badge',()=>{

@@ -27,5 +27,5 @@ test('visual polish fixes clipping, mug haze and product framing',()=>{
  assert.equal(product.includes('Custom Recast Magnet 3-Pack'),true);
  assert.equal(product.includes('scale(1.16)'),true);
  assert.equal(product.includes('place-items:center'),true);
- assert.equal(index.includes('data-launch-build="RM-051.2"'),true);
+ assert.equal(/data-launch-build="RM-[0-9.]+"/.test(index),true);
 });

@@ -1,3 +1,6 @@
+import {loadV2MockupSpec,v2MockupPayload,v2CreatedTask,v2PolledTask} from './printful-v2-mockup.js';
+import {prepareApparelArtwork} from './apparel-finish.js';
+import {selectMockupGroups,rankMockupCandidates} from './product-gallery.js';
 import {printfulReferenceForNewDraft} from './printful-reference.js';
 import {verifiedLegacyEmptyStoreForRecovery} from './printful-diagnostics.js';
 import { FULFILLMENT } from "./entry.js";
@@ -16,7 +19,7 @@ function now(){return new Date().toISOString()}
 function randomHex(byteCount=18){const bytes=new Uint8Array(byteCount);crypto.getRandomValues(bytes);return[...bytes].map(b=>b.toString(16).padStart(2,"0")).join("")}
 function requestKey(id,suffix){return `requests/${id}/${suffix}`}
 function jobKey(id){return `jobs/${id}.json`}
-function mockupDesignId(design){return sanitizeId(`v${design?.version||1}-${design?.product||'Generic'}-${design?.layout||'fit'}-${design?.fill||design?.background||'none'}-${design?.x||'center'}-${design?.scale||100}-${design?.spacing||'standard'}`)}
+function mockupDesignId(design){return sanitizeId(`v${design?.version||1}-${design?.product||'Generic'}-${design?.layout||'fit'}-${design?.fill||design?.background||'none'}-studio2-${design?.x||'center'}-${design?.scale||100}-${design?.spacing||'standard'}${design?.finish?'-'+design.finish:''}`)}
 function mockupKey(id,sku,mockupId="legacy"){return mockupId==="legacy"?`mockups/${id}/${sku}/task.json`:`mockups/${id}/${sku}/${sanitizeId(mockupId)}/task.json`}
 function socialKey(id){return `social/x/${id}.json`}
 function trendKey(id){return `trends/${id}.json`}
@@ -185,20 +188,32 @@ export async function createMockup(request,env){
     const size=await env.IMAGES.info(new Blob([decodeBase64(savedBase64)]).stream());size.design=design;size.product=map.product;
     const placement=map.preferredPlacement||'default';
     stage="printful-catalog";
-    const catalog=await printful(env,`/mockup-generator/printfiles/${map.printfulProductId}`,{method:'GET'});
-    const position=mockupPosition(catalog,map.printfulVariantId,placement,size);
+    let catalog={},position,v2Spec=null;
+    try{
+      catalog=await printful(env,`/mockup-generator/printfiles/${map.printfulProductId}`,{method:'GET'});
+      position=mockupPosition(catalog,map.printfulVariantId,placement,size);
+    }catch(error){
+      if(map.product!=='Tumbler'||!(error.code==='print_area_missing'||error.printfulStatus===404))throw error;
+      stage='printful-v2-catalog';
+      v2Spec=await loadV2MockupSpec((path,options)=>printful(env,path,options),map);
+      position=v2Spec.position;
+    }
     if(Number(design.version)>=4||design.background==='scene-fill'){
       const q=new URLSearchParams({
         token:meta.printAccessToken,product:design.product||map.product,layout:design.layout,
         fill:design.fill||design.background||'ambient',x:design.x,scale:String(design.scale),
         spacing:design.spacing||'standard',areaWidth:String(position.area_width),areaHeight:String(position.area_height)
       });
+      q.set('version',String(design.version));if(design.finish)q.set('finish',design.finish);
       sourceUrl=`${appBase(env,request)}/api/print-source/${encodeURIComponent(requestId)}?${q}`;
     }
-    const payload={variant_ids:[map.printfulVariantId],format:"jpg",width:1200,files:[{placement,image_url:sourceUrl,position}]};
+    if(design.version===5)await prepareApparelArtwork(env,decodeBase64(savedBase64),design.finish,{allowCreate:true});
+    const groups=selectMockupGroups(catalog,map.product);
+    const payload={...(groups.length?{option_groups:groups}:{}),variant_ids:[map.printfulVariantId],format:"jpg",width:1200,files:[{placement,image_url:sourceUrl,position}]};
     stage="printful-create-task";
-    const result=await printful(env,`/mockup-generator/create-task/${map.printfulProductId}`,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(payload)});
-    const record={requestId,sku,mockupId,sourceHash,design,position,taskKey:result.task_key,status:result.status||"pending",createdAt:now(),updatedAt:now(),mockupAccessToken:randomHex(24),sourceUrl,printfulProductId:map.printfulProductId,printfulVariantId:map.printfulVariantId};
+    const result=v2Spec?v2CreatedTask(await printful(env,'/v2/mockup-tasks',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(v2MockupPayload(map,v2Spec,sourceUrl))})):await printful(env,`/mockup-generator/create-task/${map.printfulProductId}`,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(payload)});
+    if(!result.task_key)throw fault('mockup_task_missing','Printful did not return a preview task. Please try again later.',502);
+    const record={...(v2Spec?{providerApi:'v2',v2Spec}:{}),requestId,sku,mockupId,sourceHash,design,position,taskKey:result.task_key,status:result.status||"pending",createdAt:now(),updatedAt:now(),mockupAccessToken:randomHex(24),sourceUrl,printfulProductId:map.printfulProductId,printfulVariantId:map.printfulVariantId};
     await putJson(env,mockupKey(requestId,sku,mockupId),record);
     return json({ok:true,status:record.status,taskKey:record.taskKey,sku,mockupId,design:record.design,waitSeconds:10});
   }catch(error){
@@ -210,10 +225,10 @@ async function persistMockups(env,record,result,request){
   const urls=[];let index=0;
   const candidates=[];
   for(const mockup of result.mockups||[]){
-    if(mockup.mockup_url)candidates.push({url:mockup.mockup_url,title:mockup.display_name||mockup.placement||"Mockup"});
-    for(const extra of mockup.extra||[])if(extra.url)candidates.push({url:extra.url,title:extra.title||extra.option||"Mockup"});
+    if(mockup.mockup_url)candidates.push({url:mockup.mockup_url,title:mockup.display_name||mockup.placement||"Mockup",group:mockup.option_group||""});
+    for(const extra of mockup.extra||[])if(extra.url)candidates.push({url:extra.url,title:extra.title||extra.option||"Mockup",group:extra.option_group||''});
   }
-  for(const item of candidates.slice(0,4)){
+  for(const item of rankMockupCandidates(candidates,FULFILLMENT[record.sku]?.product).slice(0,4)){
     const response=await fetch(item.url);
     if(!response.ok)continue;
     const bytes=await response.arrayBuffer();
@@ -221,9 +236,10 @@ async function persistMockups(env,record,result,request){
     const key=`${folder}/image-${index}.jpg`;
     await env.ARTWORK.put(key,bytes,{httpMetadata:{contentType:"image/jpeg"}});
     const query=new URLSearchParams({token:record.mockupAccessToken});if(record.mockupId)query.set('mockup',record.mockupId);
-    urls.push({title:item.title,url:`${appBase(env,request)}/api/mockup/image/${encodeURIComponent(record.requestId)}/${encodeURIComponent(record.sku)}/${index}?${query}`});
+    urls.push({title:item.title,group:item.group||'',url:`${appBase(env,request)}/api/mockup/image/${encodeURIComponent(record.requestId)}/${encodeURIComponent(record.sku)}/${index}?${query}`});
     index++;
   }
+  if(!urls.length)throw fault('mockup_images_missing','The product preview images are not available yet.',502);
   record.images=urls;record.status="completed";record.updatedAt=now();
   await putJson(env,mockupKey(record.requestId,record.sku,record.mockupId||"legacy"),record);
   return record;
@@ -236,7 +252,7 @@ export async function mockupStatus(request,env){
     let record=await readJson(env,mockupKey(requestId,sku,mockupId));
     if(!record)return json({ok:false,error:"Mockup task not found."},404);
     if(record.status==="completed"&&record.images?.length)return json({ok:true,status:"completed",images:record.images,position:record.position,design:record.design||null});
-    const result=await printful(env,`/mockup-generator/task?task_key=${encodeURIComponent(record.taskKey)}`,{method:"GET"});
+    const result=record.providerApi==='v2'?v2PolledTask(await printful(env,`/v2/mockup-tasks?id=${encodeURIComponent(record.taskKey)}`,{method:'GET'}),record):await printful(env,`/mockup-generator/task?task_key=${encodeURIComponent(record.taskKey)}`,{method:"GET"});
     if(result.status==="failed"){
       record.status="failed";record.error=result.error||"Printful could not generate this mockup.";record.updatedAt=now();await putJson(env,mockupKey(requestId,sku,mockupId),record);
       return json({ok:false,status:"failed",error:record.error},502);

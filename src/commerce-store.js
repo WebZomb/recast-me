@@ -1,3 +1,4 @@
+import {apparelEdgeMask,transparentCanvas,prepareApparelArtwork,pngOutput} from './apparel-finish.js';
 export const fault = (code, message, status = 409) => Object.assign(new Error(message), {code, status, renderControl:true});
 export async function hash(value) {
   return [...new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(value)))].map(b=>b.toString(16).padStart(2,'0')).join('');
@@ -53,6 +54,10 @@ export function normalizeProductDesign(map,raw={}){
   const allowedFill=['full-bleed','ambient','dark','light'];
   const fill=allowedFill.includes(String(raw.fill))?String(raw.fill):(layout==='cover'||layout==='wrap'?'full-bleed':recommended.fill);
   const background=(layout==='cover'||layout==='wrap')?'full-bleed':fill;
+  // Old v4 approvals keep their original composition. New apparel choices opt into v5.
+  if(['Hoodie','T-Shirt'].includes(product)&&['cutout','soft','rectangle'].includes(raw.finish)&&(!rawVersion||rawVersion>=5)){
+    return {version:5,layout:'fit',background:'transparent',fill:'transparent',x,scale:Math.min(100,scale),spacing,product,finish:raw.finish};
+  }
   return {version:4,layout,background,fill,x,scale,spacing,product};
 }
 export function productPrintfile(catalog,variantId,placement){
@@ -84,6 +89,23 @@ export async function composeProductLayout(env,sourceBytes,sourceSize,area,map={
   const outHeight=Math.max(300,Math.round(outWidth*area.height/area.width));
   const stream=()=>new Blob([sourceBytes],{type:'image/jpeg'}).stream();
 
+  if(design.version===5&&['Hoodie','T-Shirt'].includes(design.product)){
+    const art=await prepareApparelArtwork(env,sourceBytes,design.finish);
+    const info=await env.IMAGES.info(new Blob([art]).stream());
+    if(![info.width,info.height].every(n=>Number.isFinite(n)&&n>0))throw fault('apparel_dimensions','Clothing artwork dimensions could not be verified.',503);
+    const fitted=fitDimensions(info.width,info.height,outWidth*.92*Math.min(1,design.scale/100),outHeight*.92*Math.min(1,design.scale/100));
+    const center=design.x==='left'?.30:design.x==='right'?.70:.50;
+    const left=Math.round(Math.max(0,Math.min(outWidth-fitted.width,center*outWidth-fitted.width/2))),top=Math.round((outHeight-fitted.height)/2);
+    let overlay=env.IMAGES.input(new Blob([art]).stream()).transform({width:fitted.width,height:fitted.height,fit:'squeeze',background:'rgba(0,0,0,0)'});
+    if(design.finish==='soft'){
+      const mask=await apparelEdgeMask(fitted.width,fitted.height);
+      overlay=env.IMAGES.input(new Blob([mask],{type:'image/png'}).stream()).draw(overlay,{left:0,top:0,composite:'in'});
+    }
+    // A real transparent base fixes the full print-area geometry without a solid fill.
+    const canvas=await transparentCanvas(outWidth,outHeight);
+    const chain=env.IMAGES.input(new Blob([canvas],{type:'image/png'}).stream()).draw(overlay,{left,top});
+    return {bytes:await pngOutput(chain),mime:'image/png',design,outputSize:{width:outWidth,height:outHeight},method:'apparel-v5-'+design.finish};
+  }
   if(design.layout==='cover'||design.layout==='wrap'){
     const chain=env.IMAGES.input(stream()).transform({width:outWidth,height:outHeight,fit:'cover'});
     return {bytes:await jpegBytes(chain),design,outputSize:{width:outWidth,height:outHeight},method:'full-bleed-cover'};

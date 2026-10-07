@@ -91,7 +91,7 @@ export async function printDesignFile(request,env,job,verifyPaid){
   if(!d.finalKey||!d.finalHash)throw fault('print_not_ready','Print file not ready.',404);
   const object=await env.ARTWORK.get(d.finalKey);
   if(!object)throw fault('print_not_ready','Print file not ready.',404);
-  return new Response(object.body,{headers:{'content-type':'image/jpeg','cache-control':'private, no-store','referrer-policy':'no-referrer','x-content-type-options':'nosniff'}});
+  return new Response(object.body,{headers:{'content-type':d.finalMime||'image/jpeg','cache-control':'private, no-store','referrer-policy':'no-referrer','x-content-type-options':'nosniff'}});
 }
 export async function finishApprovedDesign(env,job){
   const d=await approvedDesign(env,job);
@@ -106,14 +106,14 @@ export async function finishApprovedDesign(env,job){
   const claim=`commerce/finishes/${await hash(job.id)}/${d.sourceHash}.claim`;
   const claimed=await env.ARTWORK.put(claim,'started',{onlyIf:new Headers({'If-None-Match':'*'})});
   if(!claimed)throw fault('finish_in_progress','Print finishing has already started. Check its saved result before retrying.');
-  let finalBytes,finishMethod='preserve-interpolate';
+  let finalBytes,finalMime='image/jpeg',finishMethod='preserve-interpolate';
   const area={width:Number(d.proof?.position?.area_width),height:Number(d.proof?.position?.area_height)};
   const design=d.proof?.design||job.productDesign||null;
   if(design&&Number(design.version)>=4){
     if(!(area.width>0&&area.height>0))throw fault('proof_placement_missing','The approved product layout is missing its print area.',503);
     const info=await env.IMAGES.info(new Blob([bytes]).stream());
     const composed=await composeProductLayout(env,bytes,info,area,{product:job.product},design,4096);
-    finalBytes=composed.bytes;finishMethod='product-layout-v4-clean';
+    finalBytes=composed.bytes;finalMime=composed.mime||'image/jpeg';finishMethod=Number(design.version)===5?'apparel-v5-clean-'+design.finish:'product-layout-v4-clean';
   }else if(job.product==='Mug'&&design?.background==='scene-fill'){
     if(!(area.width>0&&area.height>0))throw fault('proof_placement_missing','The approved mug layout is missing its print area.',503);
     const info=await env.IMAGES.info(new Blob([bytes]).stream());
@@ -125,12 +125,12 @@ export async function finishApprovedDesign(env,job){
     if(!response.ok)throw fault('finish_failed','Print finishing did not complete.',502);
     finalBytes=new Uint8Array(await response.arrayBuffer());
   }
-  if(finalBytes[0]!==255||finalBytes[1]!==216||finalBytes[2]!==255)throw fault('finish_invalid','Print finishing returned an invalid image.',502);
+  if(finalMime==='image/png'?![137,80,78,71,13,10,26,10].every((n,i)=>finalBytes[i]===n):(finalBytes[0]!==255||finalBytes[1]!==216||finalBytes[2]!==255))throw fault('finish_invalid','Print finishing returned an invalid image.',502);
   const finalHash=[...new Uint8Array(await crypto.subtle.digest('SHA-256',finalBytes))].map(b=>b.toString(16).padStart(2,'0')).join('');
-  const finalKey=`commerce/finishes/${await hash(job.id)}/${finalHash}.jpg`;
-  await env.ARTWORK.put(finalKey,finalBytes,{onlyIf:new Headers({'If-None-Match':'*'}),httpMetadata:{contentType:'image/jpeg'}});
+  const finalKey=`commerce/finishes/${await hash(job.id)}/${finalHash}.${finalMime==='image/png'?'png':'jpg'}`;
+  await env.ARTWORK.put(finalKey,finalBytes,{onlyIf:new Headers({'If-None-Match':'*'}),httpMetadata:{contentType:finalMime}});
   return change(env,designKey(job.id),null,v=>{
     if(v?.sourceHash!==d.sourceHash||v?.approvedAt!==d.approvedAt)throw fault('design_changed','Approved design changed unexpectedly.',503);
-    return {...v,finalKey,finalHash,finishMethod,finishedAt:new Date().toISOString()};
+    return {...v,finalKey,finalHash,finalMime,finishMethod,finishedAt:new Date().toISOString()};
   });
 }
