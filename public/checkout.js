@@ -13,7 +13,13 @@ const PRODUCT_ART = {
   "Custom Recast Magnet 3-Pack":"/assets/product-magnet-v16.webp",
   "Custom Recast Coaster 4-Pack":"/assets/product-coaster-v16.webp",
   "HD Digital Recast":"/assets/product-digital-v16.webp",
-  "Recast Pack":"/assets/product-pack-v16.webp"
+  "Recast Pack":"/assets/product-pack-v16.webp",
+  "Custom Recast Sticker":"https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-sticker-printful.jpg?v=1791338074",
+  "Custom Recast Phone Case":"https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-phone-case-printful.jpg?v=1791338079",
+  "Custom Recast Pillow":"https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-pillow-printful.jpg?v=1791338085",
+  "Custom Recast Hardcover Journal":"https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-journal-printful.png?v=1791338090",
+  "Custom Recast Puzzle":"https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-puzzle-printful.jpg?v=1791338101",
+  "Custom Recast Tote Bag":"https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-tote-printful.jpg?v=1791338095"
 };
 
 const PRODUCT_META = {
@@ -30,13 +36,12 @@ const PRODUCT_META = {
   "HD Digital Recast": {order:90,badge:"DIGITAL ONLY",pitch:"Just want the clean artwork? Keep the high-resolution file without ordering merch.",tier:"digital",cta:"Get HD File"},
   "Recast Pack": {order:91,badge:"DIGITAL PACK",pitch:"The complete digital set with useful crops and formats.",tier:"digital",cta:"Get Recast Pack"}
 ,
-  "Custom Recast Sticker Pack": {order:11,badge:"NEW · EASY GIFT",pitch:"A glossy sticker sheet featuring your Recast in a fun, low-cost format.",tier:"secondary",cta:"Shop Sticker Pack"},
-  "Custom Recast Phone Case": {order:12,badge:"NEW · EVERYDAY",pitch:"Carry your Recast every day on a personalized phone case.",tier:"secondary",cta:"Shop Phone Case"},
+  "Custom Recast Sticker": {order:11,badge:"NEW · EASY GIFT",pitch:"A glossy 3×3 sticker featuring your Recast.",tier:"secondary",cta:"Shop Sticker"},
+  "Custom Recast Phone Case": {order:12,badge:"NEW · EVERYDAY",pitch:"Carry your Recast every day on a supplier-verified clear iPhone case.",tier:"secondary",cta:"Shop Phone Case"},
   "Custom Recast Pillow": {order:13,badge:"NEW · HOME",pitch:"A soft personalized accent pillow made from your Recast.",tier:"secondary",cta:"Shop Pillow"},
-  "Custom Recast Notebook": {order:14,badge:"NEW · DESK",pitch:"Put your Recast on a notebook you can use every day.",tier:"secondary",cta:"Shop Notebook"},
-  "Custom Recast Pet Bandana": {order:20,badge:"MORE GIFTS · PETS",pitch:"A personalized bandana made for the pet at the center of your story.",tier:"secondary",cta:"Shop Pet Bandana"},
-  "Custom Recast Puzzle": {order:21,badge:"MORE GIFTS",pitch:"Turn your Recast into a personalized puzzle for a fun keepsake.",tier:"secondary",cta:"Shop Puzzle"},
-  "Custom Recast Tote Bag": {order:22,badge:"MORE GIFTS",pitch:"A roomy personalized tote featuring your Recast artwork.",tier:"secondary",cta:"Shop Tote Bag"}
+  "Custom Recast Hardcover Journal": {order:14,badge:"NEW · DESK",pitch:"Put your Recast on a matte hardcover journal you can use every day.",tier:"secondary",cta:"Shop Journal"},
+  "Custom Recast Puzzle": {order:15,badge:"NEW · GIFT",pitch:"Turn your Recast into a personalized jigsaw puzzle for a fun keepsake.",tier:"secondary",cta:"Shop Puzzle"},
+  "Custom Recast Tote Bag": {order:16,badge:"NEW · CARRY IT",pitch:"A roomy all-over print tote featuring your Recast artwork.",tier:"secondary",cta:"Shop Tote Bag"}
 };
 
 const PRIMARY_PRODUCT_TITLES=new Set(["Custom Recast Mug","Custom Recast Blanket","Custom Recast Poster","Custom Recast Canvas"]);
@@ -51,13 +56,12 @@ const PRODUCT_DESIGN_PRESETS = {
   "Custom Recast Canvas": {product:"Canvas",layout:"cover",fill:"full-bleed",x:"center",scale:100,spacing:"standard",label:"Best setup · full bleed"},
   "Custom Recast Magnet 3-Pack": {product:"Magnet 3-Pack",layout:"cover",fill:"full-bleed",x:"center",scale:100,spacing:"standard",label:"Best setup · full bleed"},
   "Custom Recast Coaster 4-Pack": {product:"Coaster 4-Pack",layout:"cover",fill:"full-bleed",x:"center",scale:100,spacing:"standard",label:"Best setup · full bleed"},
-  "Custom Recast Sticker Pack": {product:"Sticker Pack",layout:"fit",fill:"transparent",x:"center",scale:88,spacing:"standard",label:"Best setup · sticker sheet"},
+  "Custom Recast Sticker": {product:"Sticker",layout:"cover",fill:"full-bleed",x:"center",scale:100,spacing:"standard",label:"Best setup · full sticker"},
   "Custom Recast Phone Case": {product:"Phone Case",layout:"cover",fill:"full-bleed",x:"center",scale:100,spacing:"standard",label:"Best setup · full case"},
   "Custom Recast Pillow": {product:"Pillow",layout:"cover",fill:"full-bleed",x:"center",scale:100,spacing:"standard",label:"Best setup · full pillow"},
-  "Custom Recast Notebook": {product:"Notebook",layout:"cover",fill:"full-bleed",x:"center",scale:100,spacing:"standard",label:"Best setup · full cover"},
-  "Custom Recast Pet Bandana": {product:"Pet Bandana",layout:"cover",fill:"full-bleed",x:"center",scale:100,spacing:"standard",label:"Best setup · full bandana"},
+  "Custom Recast Hardcover Journal": {product:"Hardcover Journal",layout:"cover",fill:"full-bleed",x:"center",scale:100,spacing:"standard",label:"Best setup · full cover"},
   "Custom Recast Puzzle": {product:"Puzzle",layout:"cover",fill:"full-bleed",x:"center",scale:100,spacing:"standard",label:"Best setup · full puzzle"},
-  "Custom Recast Tote Bag": {product:"Tote Bag",layout:"fit",fill:"ambient",x:"center",scale:90,spacing:"standard",label:"Best setup · centered tote"}
+  "Custom Recast Tote Bag": {product:"Tote Bag",layout:"cover",fill:"full-bleed",x:"center",scale:100,spacing:"standard",label:"Best setup · full tote"}
 };
 function presetFor(card){return PRODUCT_DESIGN_PRESETS[card?.dataset?.productTitle]||{product:"Generic",layout:"fit",fill:"ambient",x:"center",scale:100,spacing:"standard",label:"Recommended setup"}}
 
@@ -71,9 +75,7 @@ const ROADMAP_PRODUCTS=[
  {title:"Custom Recast Puzzle",price:"34.99",variant:"252 pieces · US only"},
  {title:"Custom Recast Tote Bag",price:"39.99",variant:"15×15"}
 ];
-function roadmapMarkup(){
- return `<details class="catalog-coming-soon"><summary>More gifts in preparation</summary><p>Sticker Pack · Phone Case · Pillow · Notebook · Pet Bandana · Puzzle · Tote Bag</p><p>These are not available to buy yet. Their exact product previews and fulfillment connections are still being checked.</p></details>`;
-}
+function roadmapMarkup(){ return ""; }
 
 
 // Store cards keep the curated Recast examples the owner approved.
