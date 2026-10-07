@@ -39,7 +39,7 @@ test('candidate verification is admin-only, read-only, and never submits product
  assert.ok(workflow.includes('/api/admin/product-candidates'));
 });
 
-test('sticker pack is the intended low-cost final purchase-flow test, not a single sticker',()=>{
+test('historical sticker-pack proposal stays unmapped; owner now selected the single sticker',()=>{
  const item=RM054_PRODUCT_CANDIDATES.sticker;
  assert.equal(item.title,'Custom Recast Sticker Pack');
  assert.equal(item.variants[0].printfulProductId,505);

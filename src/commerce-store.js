@@ -66,6 +66,15 @@ export function normalizeProductDesign(map,raw={}){
   if(rawVersion===6)return {version:6,layout,background,fill,x,scale,spacing,product,...(['Poster','Framed Poster','Canvas'].includes(product)?{orientation:raw.orientation==='landscape'?'landscape':'portrait'}:{})};
   return {version:4,layout,background,fill,x,scale,spacing,product};
 }
+// Pillow front and back share one supplier-verified template and the same artwork.
+// Older approved revisions retain their original single placement.
+export function productPlacements(map,design={}){
+  if(map.product==='Pillow'&&Number(design.version)>=6)return ['front','back'];
+  return [map.preferredPlacement||'default'];
+}
+export function productionFiles(map,design,url,position){
+  return productPlacements(map,design).map((placement,index)=>({type:index?placement:(map.orderFileType||'default'),url,position}));
+}
 export function productPrintfile(catalog,variantId,placement){
   const variant=catalog?.variant_printfiles?.find(v=>Number(v.variant_id)===Number(variantId));
   const file=catalog?.printfiles?.find(f=>Number(f.printfile_id)===Number(variant?.placements?.[placement]));

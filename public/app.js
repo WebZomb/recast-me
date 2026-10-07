@@ -80,6 +80,12 @@ const PRODUCT_CATALOG = [
   {name:"Blanket",price:"from $74.99",asset:"blanket",image:"/assets/product-blanket-v16.webp",badge:"COZY PICK",pitch:"Big, soft, personal — especially good for pets and gifts.",tier:"secondary"},
   {name:"Mug",price:"from $24.99",asset:"mug",image:"/assets/product-mug-v16.webp",badge:"GIFTABLE",pitch:"A personalized gift that gets used every day.",tier:"secondary"},
   {name:"Tumbler",price:"$49.99",asset:"tumbler",image:"/assets/product-tumbler-v16.webp",badge:"TAKE IT WITH YOU",pitch:"Your Recast on a 20 oz everyday tumbler.",tier:"secondary"},
+  {"name": "Sticker", "price": "$9.99", "image": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-sticker-printful.jpg?v=1791338074", "badge": "NEW", "pitch": "A glossy 3×3 kiss-cut sticker featuring your Recast.", "tier": "secondary"},
+  {"name": "Phone Case", "price": "$29.99", "image": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-phone-case-printful.jpg?v=1791338079", "badge": "NEW", "pitch": "Your Recast on a protective case. Choose your exact phone model.", "tier": "secondary"},
+  {"name": "Pillow", "price": "from $29.99", "image": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-pillow-printful.jpg?v=1791338085", "badge": "NEW", "pitch": "A personal touch for your favorite cozy spot.", "tier": "secondary"},
+  {"name": "Hardcover Journal", "price": "$24.99", "image": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-journal-printful.png?v=1791338090", "badge": "NEW", "pitch": "Keep your ideas in a journal featuring your Recast.", "tier": "secondary"},
+  {"name": "Puzzle", "price": "from $34.99", "image": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-puzzle-printful.jpg?v=1791338101", "badge": "NEW", "pitch": "Piece together your Recast in 252 or 520 pieces.", "tier": "secondary"},
+  {"name": "Tote Bag", "price": "$39.99", "image": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-tote-printful.jpg?v=1791338095", "badge": "NEW", "pitch": "Carry your Recast on a roomy everyday tote.", "tier": "secondary"},
   {name:"Magnet 3-Pack",price:"$24.99",asset:"magnet",image:"/assets/product-magnet-v16.webp",badge:"ADD-ON",pitch:"Three matching magnets for a smaller, easy add-on.",tier:"secondary"},
   {name:"Coaster 4-Pack",price:"$39.99",asset:"coaster",image:"/assets/product-coaster-v16.webp",badge:"ADD-ON",pitch:"Four matching cork-back coasters featuring your artwork.",tier:"secondary"},
 
@@ -120,7 +126,7 @@ document.querySelectorAll('.style-card').forEach(card=>{
   card.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();chooseStyle(card)}})
 });
 
-const EXAMPLE_SKUS={Poster:'RECAST-POSTER-12X16',Hoodie:'RECAST-HOODIE-S','Framed Poster':'RECAST-FRAME-12X16',Canvas:'RECAST-CANVAS-12X16','T-Shirt':'RECAST-TEE-S',Blanket:'RECAST-BLANKET-50X60',Mug:'RECAST-MUG-11OZ',Tumbler:'RECAST-TUMBLER-20OZ','Magnet 3-Pack':'RECAST-MAGNET-SET','Coaster 4-Pack':'RECAST-COASTER-SET'};
+const EXAMPLE_SKUS={"Tote Bag":"RECAST-TOTE-BLACK","Puzzle":"RECAST-PUZZLE-252","Hardcover Journal":"RECAST-JOURNAL-HC","Pillow":"RECAST-PILLOW-14","Phone Case":"RECAST-CASE-IP15","Sticker":"RECAST-STICKER-3X3",Poster:'RECAST-POSTER-12X16',Hoodie:'RECAST-HOODIE-S','Framed Poster':'RECAST-FRAME-12X16',Canvas:'RECAST-CANVAS-12X16','T-Shirt':'RECAST-TEE-S',Blanket:'RECAST-BLANKET-50X60',Mug:'RECAST-MUG-11OZ',Tumbler:'RECAST-TUMBLER-20OZ','Magnet 3-Pack':'RECAST-MAGNET-SET','Coaster 4-Pack':'RECAST-COASTER-SET'};
 function merchCard(item,{featured=false}={}){
   const classes=['product',featured?'featured-product':'secondary-product'].filter(Boolean).join(' ');
   return `<div class="${classes}" ${EXAMPLE_SKUS[item.name]?`data-example-sku="${EXAMPLE_SKUS[item.name]}"`:""}>
