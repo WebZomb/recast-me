@@ -1,19 +1,15 @@
 const grid = document.querySelector("#product-grid");
 const requestLabel = document.querySelector("#request-id");
 
+const STORE_EXAMPLE_ART="/assets/world-comic-v18.webp";
 const PRODUCT_ART = {
-  "Custom Recast Poster":"/assets/product-poster-v16.webp",
-  "Custom Recast Hoodie":"/assets/product-hoodie-v16.webp",
-  "Custom Recast Framed Poster":"/assets/product-desk-frame-v16.webp",
-  "Custom Recast Canvas":"/assets/product-canvas-v16.webp",
-  "Custom Recast T-Shirt":"/assets/product-tshirt-v16.webp",
-  "Custom Recast Blanket":"/assets/product-blanket-v16.webp",
-  "Custom Recast Mug":"/assets/product-mug-v16.webp",
-  "Custom Recast Tumbler":"/assets/product-tumbler-v16.webp",
-  "Custom Recast Magnet 3-Pack":"/assets/product-magnet-v16.webp",
-  "Custom Recast Coaster 4-Pack":"/assets/product-coaster-v16.webp",
-  "HD Digital Recast":"/assets/product-digital-v16.webp",
-  "Recast Pack":"/assets/product-pack-v16.webp"
+  "Custom Recast Poster":STORE_EXAMPLE_ART,"Custom Recast Hoodie":STORE_EXAMPLE_ART,"Custom Recast Framed Poster":STORE_EXAMPLE_ART,
+  "Custom Recast Canvas":STORE_EXAMPLE_ART,"Custom Recast T-Shirt":STORE_EXAMPLE_ART,"Custom Recast Blanket":STORE_EXAMPLE_ART,
+  "Custom Recast Mug":STORE_EXAMPLE_ART,"Custom Recast Tumbler":STORE_EXAMPLE_ART,"Custom Recast Magnet 3-Pack":STORE_EXAMPLE_ART,
+  "Custom Recast Coaster 4-Pack":STORE_EXAMPLE_ART,"HD Digital Recast":STORE_EXAMPLE_ART,"Recast Pack":STORE_EXAMPLE_ART,
+  "Custom Recast Sticker Pack":STORE_EXAMPLE_ART,"Custom Recast Phone Case":STORE_EXAMPLE_ART,"Custom Recast Pillow":STORE_EXAMPLE_ART,
+  "Custom Recast Notebook":STORE_EXAMPLE_ART,"Custom Recast Pet Bandana":STORE_EXAMPLE_ART,"Custom Recast Puzzle":STORE_EXAMPLE_ART,
+  "Custom Recast Tote Bag":STORE_EXAMPLE_ART
 };
 
 const PRODUCT_META = {
@@ -29,6 +25,14 @@ const PRODUCT_META = {
   "Custom Recast Coaster 4-Pack": {order:10,badge:"ADD-ON",pitch:"Four matching cork-back coasters featuring your artwork.",tier:"secondary",cta:"Shop Coaster Set"},
   "HD Digital Recast": {order:90,badge:"DIGITAL ONLY",pitch:"Just want the clean artwork? Keep the high-resolution file without ordering merch.",tier:"digital",cta:"Get HD File"},
   "Recast Pack": {order:91,badge:"DIGITAL PACK",pitch:"The complete digital set with useful crops and formats.",tier:"digital",cta:"Get Recast Pack"}
+,
+  "Custom Recast Sticker Pack": {order:11,badge:"NEW · EASY GIFT",pitch:"A glossy sticker sheet featuring your Recast in a fun, low-cost format.",tier:"secondary",cta:"Shop Sticker Pack"},
+  "Custom Recast Phone Case": {order:12,badge:"NEW · EVERYDAY",pitch:"Carry your Recast every day on a personalized phone case.",tier:"secondary",cta:"Shop Phone Case"},
+  "Custom Recast Pillow": {order:13,badge:"NEW · HOME",pitch:"A soft personalized accent pillow made from your Recast.",tier:"secondary",cta:"Shop Pillow"},
+  "Custom Recast Notebook": {order:14,badge:"NEW · DESK",pitch:"Put your Recast on a notebook you can use every day.",tier:"secondary",cta:"Shop Notebook"},
+  "Custom Recast Pet Bandana": {order:20,badge:"MORE GIFTS · PETS",pitch:"A personalized bandana made for the pet at the center of your story.",tier:"secondary",cta:"Shop Pet Bandana"},
+  "Custom Recast Puzzle": {order:21,badge:"MORE GIFTS",pitch:"Turn your Recast into a personalized puzzle for a fun keepsake.",tier:"secondary",cta:"Shop Puzzle"},
+  "Custom Recast Tote Bag": {order:22,badge:"MORE GIFTS",pitch:"A roomy personalized tote featuring your Recast artwork.",tier:"secondary",cta:"Shop Tote Bag"}
 };
 
 const PRIMARY_PRODUCT_TITLES=new Set(["Custom Recast Mug","Custom Recast Blanket","Custom Recast Poster","Custom Recast Canvas"]);
@@ -42,10 +46,33 @@ const PRODUCT_DESIGN_PRESETS = {
   "Custom Recast Framed Poster": {product:"Framed Poster",layout:"cover",fill:"full-bleed",x:"center",scale:100,spacing:"standard",label:"Best setup · full bleed"},
   "Custom Recast Canvas": {product:"Canvas",layout:"cover",fill:"full-bleed",x:"center",scale:100,spacing:"standard",label:"Best setup · full bleed"},
   "Custom Recast Magnet 3-Pack": {product:"Magnet 3-Pack",layout:"cover",fill:"full-bleed",x:"center",scale:100,spacing:"standard",label:"Best setup · full bleed"},
-  "Custom Recast Coaster 4-Pack": {product:"Coaster 4-Pack",layout:"cover",fill:"full-bleed",x:"center",scale:100,spacing:"standard",label:"Best setup · full bleed"}
+  "Custom Recast Coaster 4-Pack": {product:"Coaster 4-Pack",layout:"cover",fill:"full-bleed",x:"center",scale:100,spacing:"standard",label:"Best setup · full bleed"},
+  "Custom Recast Sticker Pack": {product:"Sticker Pack",layout:"fit",fill:"transparent",x:"center",scale:88,spacing:"standard",label:"Best setup · sticker sheet"},
+  "Custom Recast Phone Case": {product:"Phone Case",layout:"cover",fill:"full-bleed",x:"center",scale:100,spacing:"standard",label:"Best setup · full case"},
+  "Custom Recast Pillow": {product:"Pillow",layout:"cover",fill:"full-bleed",x:"center",scale:100,spacing:"standard",label:"Best setup · full pillow"},
+  "Custom Recast Notebook": {product:"Notebook",layout:"cover",fill:"full-bleed",x:"center",scale:100,spacing:"standard",label:"Best setup · full cover"},
+  "Custom Recast Pet Bandana": {product:"Pet Bandana",layout:"cover",fill:"full-bleed",x:"center",scale:100,spacing:"standard",label:"Best setup · full bandana"},
+  "Custom Recast Puzzle": {product:"Puzzle",layout:"cover",fill:"full-bleed",x:"center",scale:100,spacing:"standard",label:"Best setup · full puzzle"},
+  "Custom Recast Tote Bag": {product:"Tote Bag",layout:"fit",fill:"ambient",x:"center",scale:90,spacing:"standard",label:"Best setup · centered tote"}
 };
 function presetFor(card){return PRODUCT_DESIGN_PRESETS[card?.dataset?.productTitle]||{product:"Generic",layout:"fit",fill:"ambient",x:"center",scale:100,spacing:"standard",label:"Recommended setup"}}
 
+
+const ROADMAP_PRODUCTS=[
+ {title:"Custom Recast Sticker Pack",price:"14.99",variant:"5.83×8.27 sticker sheet"},
+ {title:"Custom Recast Phone Case",price:"29.99",variant:"Popular iPhone models"},
+ {title:"Custom Recast Pillow",price:"39.99",variant:"18×18"},
+ {title:"Custom Recast Notebook",price:"24.99",variant:"5.5×8.5"},
+ {title:"Custom Recast Pet Bandana",price:"34.99",variant:"S–XL"},
+ {title:"Custom Recast Puzzle",price:"34.99",variant:"252 pieces · US only"},
+ {title:"Custom Recast Tote Bag",price:"39.99",variant:"15×15"}
+];
+function roadmapMarkup(){
+ return ROADMAP_PRODUCTS.map(product=>{const meta=PRODUCT_META[product.title];return `<div class="product secondary-product product-roadmap" data-product-title="${product.title}">
+  <div class="product-art"><img src="${PRODUCT_ART[product.title]}" alt="Matching superhero-and-dog example design for ${product.title}" loading="lazy"><span class="example-design-label">Matching example design</span></div>
+  <div class="product-body"><span class="product-badge">${meta.badge}</span><strong>${product.title.replace(/^Custom Recast /,'')}</strong><p class="product-pitch">${meta.pitch}</p><span class="price">from $${product.price}</span><div class="roadmap-variant">${product.variant}</div><div class="product-ready roadmap-ready">Final setup in progress</div><button class="recast-buy" type="button" disabled>Finishing product setup</button><p class="product-mockup-note">Purchasing unlocks after its real Printful preview and automatic fulfillment path pass verification.</p></div>
+ </div>`}).join('');
+}
 
 function lastRequest(){if(window.__recastActiveRequest)return window.__recastActiveRequest;try{return JSON.parse(localStorage.getItem("recast_last_request")||"null")}catch{return null}}
 function showCatalogError(message){
@@ -395,7 +422,7 @@ async function loadCheckout(){
         <p class="checkout-error" role="alert" hidden></p>
       </div>
     </div>`;
-  }).join("")+`<button type="button" class="catalog-more-toggle">See more products</button>`;
+  }).join("")+roadmapMarkup()+`<button type="button" class="catalog-more-toggle">See more products</button>`;
   const moreToggle=grid.querySelector?.(".catalog-more-toggle");
   moreToggle?.addEventListener("click",()=>{grid.classList.add("show-all-products");moreToggle.remove();});
 
