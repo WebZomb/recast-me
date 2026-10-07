@@ -74,3 +74,5 @@ Latest: [RM-050.8 — exact mobile landing hero match](ASTRA-SESSION-RM-0508.md)
 Latest: [RM-050.9 — hero final scale cleanup](ASTRA-SESSION-RM-0509.md).
 
 Latest: [RM-051.0 — Pic 2 precision hero match](ASTRA-SESSION-RM-0510.md).
+
+Latest: [RM-051.1 — product gallery and Printful preview polish](ASTRA-SESSION-RM-0511.md).

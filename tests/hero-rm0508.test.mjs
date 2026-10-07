@@ -5,7 +5,7 @@ import {readFileSync} from 'node:fs';
 test('RM0510 mobile hero uses the approved Pic 2 proportions',()=>{
   const html=readFileSync(new URL('../public/index.html',import.meta.url),'utf8');
   const css=readFileSync(new URL('../public/hero-target-v51.css',import.meta.url),'utf8');
-  assert.match(html,/data-launch-build="RM-051\.0"/);
+  assert.match(html,/data-launch-build="RM-051\.1"/);
   assert.match(html,/hero-target-v51\.css\?v=3/);
   assert.match(css,/padding:32px 7\.5vw 10px!important/);
   assert.match(css,/aspect-ratio:1\.24!important/);

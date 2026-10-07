@@ -1,0 +1,171 @@
+/* RM-051.1 — product-gallery polish. Presentation only; purchase safeguards stay unchanged. */
+
+#product-grid.checkout-catalog{
+  gap:18px!important;
+}
+#product-grid.checkout-catalog .product{
+  border:1px solid rgba(91,79,146,.55)!important;
+  border-radius:22px!important;
+  background:linear-gradient(180deg,rgba(10,11,28,.97),rgba(6,8,22,.98))!important;
+  box-shadow:0 20px 60px rgba(0,0,0,.28)!important;
+  overflow:hidden!important;
+}
+#product-grid.checkout-catalog .product-art{
+  height:clamp(310px,68vw,420px)!important;
+  aspect-ratio:auto!important;
+  background:#f7f7fa!important;
+  border-bottom:1px solid rgba(91,79,146,.34)!important;
+  overflow:hidden!important;
+}
+#product-grid.checkout-catalog .product-art img{
+  width:100%!important;
+  height:100%!important;
+  object-fit:contain!important;
+  object-position:center!important;
+  background:#f7f7fa!important;
+}
+#product-grid.checkout-catalog [data-product-title="Custom Recast Poster"] .product-art,
+#product-grid.checkout-catalog [data-product-title="Custom Recast Canvas"] .product-art,
+#product-grid.checkout-catalog [data-product-title="Custom Recast Framed Poster"] .product-art,
+#product-grid.checkout-catalog [data-product-title="Custom Recast Magnet 3-Pack"] .product-art,
+#product-grid.checkout-catalog [data-product-title="Custom Recast Coaster 4-Pack"] .product-art{
+  height:clamp(285px,62vw,365px)!important;
+}
+#product-grid.checkout-catalog [data-product-title="Custom Recast Hoodie"] .product-art,
+#product-grid.checkout-catalog [data-product-title="Custom Recast T-Shirt"] .product-art{
+  height:clamp(340px,72vw,430px)!important;
+}
+#product-grid.checkout-catalog .example-design-label{
+  left:14px!important;
+  bottom:14px!important;
+  right:auto!important;
+  width:auto!important;
+  max-width:calc(100% - 28px)!important;
+  padding:7px 10px!important;
+  border-radius:9px!important;
+  background:rgba(7,8,17,.82)!important;
+  backdrop-filter:blur(8px)!important;
+  -webkit-backdrop-filter:blur(8px)!important;
+  font-size:10px!important;
+  line-height:1.25!important;
+}
+#product-grid.checkout-catalog .mockup-views{
+  display:flex!important;
+  align-items:center!important;
+  gap:7px!important;
+  padding:10px 14px!important;
+  overflow-x:auto!important;
+  overscroll-behavior-x:contain!important;
+  scrollbar-width:none!important;
+  background:linear-gradient(180deg,rgba(12,13,28,.98),rgba(9,10,23,.98))!important;
+  border-bottom:1px solid rgba(91,79,146,.34)!important;
+}
+#product-grid.checkout-catalog .mockup-views::-webkit-scrollbar{display:none!important}
+#product-grid.checkout-catalog .mockup-view-chip{
+  flex:0 0 auto!important;
+  width:auto!important;
+  min-width:0!important;
+  min-height:34px!important;
+  margin:0!important;
+  padding:6px 12px!important;
+  border:1px solid #3c3d53!important;
+  border-radius:999px!important;
+  background:#11121d!important;
+  color:#b8b9c8!important;
+  font-size:11px!important;
+  font-weight:850!important;
+  line-height:1!important;
+  cursor:pointer!important;
+}
+#product-grid.checkout-catalog .mockup-view-chip[aria-pressed="true"]{
+  border-color:#55dff5!important;
+  color:#fff!important;
+  background:linear-gradient(90deg,rgba(126,63,255,.34),rgba(35,195,236,.26))!important;
+  box-shadow:0 0 18px rgba(43,200,238,.12)!important;
+}
+#product-grid.checkout-catalog .product-body{
+  padding:16px 18px 18px!important;
+}
+#product-grid.checkout-catalog .product-badge{
+  min-height:29px!important;
+  padding:6px 12px!important;
+  border-radius:999px!important;
+  display:flex!important;
+  align-items:center!important;
+  width:100%!important;
+  font-size:9px!important;
+  letter-spacing:.18em!important;
+}
+#product-grid.checkout-catalog .product-body>strong{
+  margin:13px 0 5px!important;
+  font-size:clamp(24px,6vw,31px)!important;
+  letter-spacing:-.035em!important;
+}
+#product-grid.checkout-catalog .product-pitch{
+  margin:0!important;
+  color:#aaa8ba!important;
+  font-size:13px!important;
+  line-height:1.55!important;
+}
+#product-grid.checkout-catalog .price{
+  display:block!important;
+  margin:22px 0 10px!important;
+  color:#fff!important;
+  font-size:25px!important;
+  font-weight:900!important;
+}
+#product-grid.checkout-catalog .recast-variant{
+  min-height:54px!important;
+  border-radius:14px!important;
+  padding:0 14px!important;
+  background:#090a14!important;
+  border:1px solid #343548!important;
+}
+#product-grid.checkout-catalog .real-mockup-ready .product-preview-action{
+  width:auto!important;
+  min-height:34px!important;
+  margin:12px 0 0!important;
+  padding:6px 12px!important;
+  border:1px solid rgba(85,223,245,.35)!important;
+  border-radius:999px!important;
+  background:rgba(13,28,32,.86)!important;
+  color:#9cf0d2!important;
+  box-shadow:none!important;
+  font-size:11px!important;
+  cursor:default!important;
+  opacity:1!important;
+}
+#product-grid.checkout-catalog .recast-buy:not([hidden]){
+  width:100%!important;
+  min-height:52px!important;
+  margin-top:12px!important;
+  border-radius:14px!important;
+  font-size:14px!important;
+}
+#product-grid.checkout-catalog .compact-product-edit{
+  margin-top:10px!important;
+}
+#product-grid.checkout-catalog .mockup-error{
+  margin:10px 0 0!important;
+  padding:10px 12px!important;
+  border:1px solid rgba(255,113,160,.28)!important;
+  border-radius:12px!important;
+  background:rgba(54,15,34,.56)!important;
+  color:#ffc2d5!important;
+  font-size:12px!important;
+  line-height:1.45!important;
+}
+#product-grid.checkout-catalog .mockup-error[hidden]{display:none!important}
+
+@media(max-width:580px){
+  #product-grid.checkout-catalog{gap:14px!important}
+  #product-grid.checkout-catalog .product{border-radius:20px!important}
+  #product-grid.checkout-catalog .product-art{height:min(380px,72vw)!important}
+  #product-grid.checkout-catalog [data-product-title="Custom Recast Poster"] .product-art,
+  #product-grid.checkout-catalog [data-product-title="Custom Recast Canvas"] .product-art,
+  #product-grid.checkout-catalog [data-product-title="Custom Recast Framed Poster"] .product-art,
+  #product-grid.checkout-catalog [data-product-title="Custom Recast Magnet 3-Pack"] .product-art,
+  #product-grid.checkout-catalog [data-product-title="Custom Recast Coaster 4-Pack"] .product-art{height:min(335px,64vw)!important}
+  #product-grid.checkout-catalog [data-product-title="Custom Recast Hoodie"] .product-art,
+  #product-grid.checkout-catalog [data-product-title="Custom Recast T-Shirt"] .product-art{height:min(405px,76vw)!important}
+}

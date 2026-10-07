@@ -149,12 +149,13 @@ export function mockupPosition(catalog, variantId, placement, size, rawDesign=nu
   const file=catalog.printfiles?.find(f=>Number(f.printfile_id)===Number(variant?.placements?.[placement]));
   const raw=rawDesign||size?.design||{};
   const design=normalizeProductDesign({product:size?.product||raw?.product||'Generic'},raw);
-  if(!file || ![file.width,file.height,size.width,size.height].every(n=>Number.isFinite(n)&&n>0))throw fault('print_area_missing','Printful print dimensions are unavailable for this variant.',502);
-  if(Number(design.version)>=4||['scene-fill','full-bleed','ambient','dark','light'].includes(size?.design?.background))return {area_width:file.width,area_height:file.height,width:file.width,height:file.height,top:0,left:0};
-  const scale=Math.min(file.width/size.width,file.height/size.height)*(design.scale/100);
-  const width=Math.max(1,Math.floor(size.width*scale)),height=Math.max(1,Math.floor(size.height*scale));
+  const areaWidth=Number(file?.width),areaHeight=Number(file?.height),sourceWidth=Number(size?.width),sourceHeight=Number(size?.height);
+  if(!file || ![areaWidth,areaHeight,sourceWidth,sourceHeight].every(n=>Number.isFinite(n)&&n>0))throw fault('print_area_missing','Printful print dimensions are unavailable for this variant.',502);
+  if(Number(design.version)>=4||['scene-fill','full-bleed','ambient','dark','light'].includes(size?.design?.background))return {area_width:areaWidth,area_height:areaHeight,width:areaWidth,height:areaHeight,top:0,left:0};
+  const scale=Math.min(areaWidth/sourceWidth,areaHeight/sourceHeight)*(design.scale/100);
+  const width=Math.max(1,Math.floor(sourceWidth*scale)),height=Math.max(1,Math.floor(sourceHeight*scale));
   const center=design.x==='left'?0.25:design.x==='right'?0.75:0.5;
-  return {area_width:file.width,area_height:file.height,width,height,top:Math.floor((file.height-height)/2),left:Math.floor(file.width*center-width/2)};
+  return {area_width:areaWidth,area_height:areaHeight,width,height,top:Math.floor((areaHeight-height)/2),left:Math.floor(areaWidth*center-width/2)};
 }
 
 export async function createMockup(request,env){
