@@ -20,7 +20,7 @@ function now(){return new Date().toISOString()}
 function randomHex(byteCount=18){const bytes=new Uint8Array(byteCount);crypto.getRandomValues(bytes);return[...bytes].map(b=>b.toString(16).padStart(2,"0")).join("")}
 function requestKey(id,suffix){return `requests/${id}/${suffix}`}
 function jobKey(id){return `jobs/${id}.json`}
-function mockupDesignId(design){return sanitizeId(`v${design?.version||1}-${design?.product||'Generic'}-${design?.layout||'fit'}-${design?.fill||design?.background||'none'}-studio2-${design?.x||'center'}-${design?.scale||100}-${design?.spacing||'standard'}${design?.finish?'-'+design.finish:''}`)}
+function mockupDesignId(design){return sanitizeId(`v${design?.version||1}-${design?.product||'Generic'}-${design?.layout||'fit'}-${design?.fill||design?.background||'none'}-${design?.version===6?'accuracy1-'+(design?.orientation||'fixed'):'studio2'}-${design?.x||'center'}-${design?.scale||100}-${design?.spacing||'standard'}${design?.finish?'-'+design.finish:''}`)}
 function mockupKey(id,sku,mockupId="legacy"){return mockupId==="legacy"?`mockups/${id}/${sku}/task.json`:`mockups/${id}/${sku}/${sanitizeId(mockupId)}/task.json`}
 function socialKey(id){return `social/x/${id}.json`}
 function trendKey(id){return `trends/${id}.json`}
@@ -107,7 +107,7 @@ async function printful(env,path,options={}){
   });
   const data=await response.json().catch(()=>({}));
   if(!response.ok||data?.code&&data.code>=400){
-    const msg=data?.error?.message||data?.result||`Printful HTTP ${response.status}`;
+    const msg=data?.error?.message||data?.detail||data?.result||`Printful HTTP ${response.status}`;
     throw Object.assign(new Error(typeof msg==="string"?msg:JSON.stringify(msg)),{status:502,printfulStatus:response.status});
   }
   return data.result??data;
@@ -153,7 +153,12 @@ export function mockupPosition(catalog, variantId, placement, size, rawDesign=nu
   const file=catalog.printfiles?.find(f=>Number(f.printfile_id)===Number(variant?.placements?.[placement]));
   const raw=rawDesign||size?.design||{};
   const design=normalizeProductDesign({product:size?.product||raw?.product||'Generic'},raw);
-  const areaWidth=Number(file?.width),areaHeight=Number(file?.height),sourceWidth=Number(size?.width),sourceHeight=Number(size?.height);
+  let areaWidth=Number(file?.width),areaHeight=Number(file?.height);
+  const sourceWidth=Number(size?.width),sourceHeight=Number(size?.height);
+  if(design.version===6&&design.orientation&&file?.can_rotate){
+    const a=Math.min(areaWidth,areaHeight),b=Math.max(areaWidth,areaHeight);
+    [areaWidth,areaHeight]=design.orientation==='portrait'?[a,b]:[b,a];
+  }
   if(!file || ![areaWidth,areaHeight,sourceWidth,sourceHeight].every(n=>Number.isFinite(n)&&n>0))throw fault('print_area_missing','Printful print dimensions are unavailable for this variant.',502);
   if(Number(design.version)>=4||['scene-fill','full-bleed','ambient','dark','light'].includes(size?.design?.background))return {area_width:areaWidth,area_height:areaHeight,width:areaWidth,height:areaHeight,top:0,left:0};
   const scale=Math.min(areaWidth/sourceWidth,areaHeight/sourceHeight)*(design.scale/100);
@@ -189,6 +194,12 @@ export async function createMockup(request,env){
     const size=await env.IMAGES.info(new Blob([decodeBase64(savedBase64)]).stream());size.design=design;size.product=map.product;
     const placement=map.preferredPlacement||'default';
     stage="printful-catalog";
+    let variantIdentity=null;
+    if(design.version===6){
+      const reply=await printful(env,`/v2/catalog-variants/${map.printfulVariantId}`,{method:'GET'}),row=reply?.data;
+      if(Number(row?.id)!==Number(map.printfulVariantId)||Number(row?.catalog_product_id)!==Number(map.printfulProductId))throw fault('catalog_identity_changed','The supplier product needs a catalog review before previewing.',503);
+      variantIdentity={id:Number(row.id),productId:Number(row.catalog_product_id),name:row.name||null,size:row.size||null,color:row.color||null};
+    }
     let catalog={},position,v2Spec=null;
     try{
       catalog=await printful(env,`/mockup-generator/printfiles/${map.printfulProductId}`,{method:'GET'});
@@ -205,16 +216,16 @@ export async function createMockup(request,env){
         fill:design.fill||design.background||'ambient',x:design.x,scale:String(design.scale),
         spacing:design.spacing||'standard',areaWidth:String(position.area_width),areaHeight:String(position.area_height)
       });
-      q.set('version',String(design.version));if(design.finish)q.set('finish',design.finish);
+      q.set('version',String(design.version));if(design.orientation)q.set('orientation',design.orientation);if(design.finish)q.set('finish',design.finish);
       sourceUrl=`${appBase(env,request)}/api/print-source/${encodeURIComponent(requestId)}?${q}`;
     }
-    if(design.version===5)await prepareApparelArtwork(env,decodeBase64(savedBase64),design.finish,{allowCreate:true});
+    if([5,6].includes(design.version)&&design.finish)await prepareApparelArtwork(env,decodeBase64(savedBase64),design.finish,{allowCreate:true});
     const groups=selectMockupGroups(catalog,map.product);
     const payload={...(groups.length?{option_groups:groups}:{}),variant_ids:[map.printfulVariantId],format:"jpg",width:1200,files:[{placement,image_url:sourceUrl,position}]};
     stage="printful-create-task";
     const result=v2Spec?v2CreatedTask(await printful(env,'/v2/mockup-tasks',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(v2MockupPayload(map,v2Spec,sourceUrl))})):await printful(env,`/mockup-generator/create-task/${map.printfulProductId}`,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(payload)});
     if(!result.task_key)throw fault('mockup_task_missing','Printful did not return a preview task. Please try again later.',502);
-    const record={...(v2Spec?{providerApi:'v2',v2Spec}:{}),requestId,sku,mockupId,sourceHash,design,position,taskKey:result.task_key,status:result.status||"pending",createdAt:now(),updatedAt:now(),mockupAccessToken:randomHex(24),sourceUrl,printfulProductId:map.printfulProductId,printfulVariantId:map.printfulVariantId};
+    const record={variantIdentity,...(v2Spec?{providerApi:'v2',v2Spec}:{}),requestId,sku,mockupId,sourceHash,design,position,taskKey:result.task_key,status:result.status||"pending",createdAt:now(),updatedAt:now(),mockupAccessToken:randomHex(24),sourceUrl,printfulProductId:map.printfulProductId,printfulVariantId:map.printfulVariantId};
     await putJson(env,mockupKey(requestId,sku,mockupId),record);
     return json({ok:true,status:record.status,taskKey:record.taskKey,sku,mockupId,design:record.design,waitSeconds:10});
   }catch(error){
@@ -252,7 +263,7 @@ export async function mockupStatus(request,env){
     await requireRequest(env,requestId,token);
     let record=await readJson(env,mockupKey(requestId,sku,mockupId));
     if(!record)return json({ok:false,error:"Mockup task not found."},404);
-    if(record.status==="completed"&&record.images?.length)return json({ok:true,status:"completed",images:record.images,position:record.position,design:record.design||null});
+    if(record.status==="completed"&&record.images?.length)return json({ok:true,status:"completed",images:record.images,position:record.position,variantIdentity:record.variantIdentity||null,design:record.design||null});
     const result=record.providerApi==='v2'?v2PolledTask(await printful(env,`/v2/mockup-tasks?id=${encodeURIComponent(record.taskKey)}`,{method:'GET'}),record):await printful(env,`/mockup-generator/task?task_key=${encodeURIComponent(record.taskKey)}`,{method:"GET"});
     if(result.status==="failed"){
       record.status="failed";record.error=result.error||"Printful could not generate this mockup.";record.updatedAt=now();await putJson(env,mockupKey(requestId,sku,mockupId),record);
@@ -260,7 +271,7 @@ export async function mockupStatus(request,env){
     }
     if(result.status!=="completed")return json({ok:true,status:"pending",waitSeconds:10});
     record=await persistMockups(env,record,result,request);
-    return json({ok:true,status:"completed",images:record.images,position:record.position,design:record.design||null});
+    return json({ok:true,status:"completed",images:record.images,position:record.position,variantIdentity:record.variantIdentity||null,design:record.design||null});
   }catch(error){return json({ok:false,error:error?.message||String(error)},error.status||500)}
 }
 

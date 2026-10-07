@@ -30,15 +30,15 @@ test('RM0511 checkout deduplicates repeated Printful view labels and uses compac
 
 test('RM0511 apparel defaults are centered transparent fit rather than a large pasted square',()=>{
   const source=readFileSync(new URL('../public/checkout.js',import.meta.url),'utf8');
-  assert.match(source,/"Custom Recast Hoodie": \{product:"Hoodie",layout:"fit",fill:"transparent",x:"center",scale:85/);
-  assert.match(source,/"Custom Recast T-Shirt": \{product:"T-Shirt",layout:"fit",fill:"transparent",x:"center",scale:82/);
+  assert.match(source,/"Custom Recast Hoodie": \{product:"Hoodie",layout:"fit",fill:"transparent",x:"center",scale:100/);
+  assert.match(source,/"Custom Recast T-Shirt": \{product:"T-Shirt",layout:"fit",fill:"transparent",x:"center",scale:100/);
 });
 
 test('RM0511 product UI uses compact view chips and a compact ready badge',()=>{
   const css=readFileSync(new URL('../public/product-polish-v53.css',import.meta.url),'utf8');
   const source=readFileSync(new URL('../public/checkout.js',import.meta.url),'utf8');
   const html=readFileSync(new URL('../public/index.html',import.meta.url),'utf8');
-  assert.match(html,/product-polish-v53\.css\?v=[123]/);
+  assert.match(html,/product-polish-v53\.css\?v=[1234]/);
   assert.match(source,/className="mockup-view-chip"/);
   assert.match(source,/button\.textContent="Preview ready ✓"/);
   assert.match(css,/\.mockup-view-chip\[aria-pressed="true"\]/);

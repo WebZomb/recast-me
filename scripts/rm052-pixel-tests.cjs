@@ -56,12 +56,12 @@ const fs=require('node:fs'),path=require('node:path'),assert=require('node:asser
  const env={IMAGES,ARTWORK:new Bucket()},map={product:'Hoodie'},area={width:4500,height:5400},report={referenceCompositor:'Sharp',segmentation:'fixture only; provider not called',checks:[]};
  for(const finish of ['soft','rectangle','cutout']){
   if(finish==='cutout')await prepareApparelArtwork(env,input,finish,{allowCreate:true});
-  const result=await composeProductLayout(env,input,{width,height},area,map,{finish,scale:85},1200);
+  const result=await composeProductLayout(env,input,{width,height},area,map,{version:6,finish,scale:100},1200);
   fs.writeFileSync(path.join(out,finish+'.png'),result.bytes);
   const pixels=await sharp(result.bytes).ensureAlpha().raw().toBuffer({resolveWithObject:true});
   assert.equal(pixels.info.width,1200);assert.equal(pixels.info.height,1440);assert.equal(pixels.info.channels,4);
   const alpha=(x,y)=>pixels.data[(y*1200+x)*4+3];
-  assert.equal(alpha(0,0),0);assert.equal(alpha(1199,1439),0);assert.equal(alpha(600,720),255);
+  assert.equal(alpha(0,0),0);assert.equal(alpha(1199,1439),0);assert.equal(alpha(Math.round(result.artworkBox.left+result.artworkBox.width/2),Math.round(result.artworkBox.top+result.artworkBox.height/2)),255);
   let opaque=0,transparent=0,partial=0;for(let i=3;i<pixels.data.length;i+=4){if(pixels.data[i]===0)transparent++;else if(pixels.data[i]===255)opaque++;else partial++}
   assert.ok(opaque>10000&&transparent>10000);
   if(finish==='soft')assert.equal(partial,0,'halftone alpha is binary, not soft grayscale');

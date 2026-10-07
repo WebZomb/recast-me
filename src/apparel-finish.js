@@ -65,3 +65,32 @@ export async function transparentCanvas(width,height){
   const header=new Uint8Array(13),view=new DataView(header.buffer);view.setUint32(0,width);view.setUint32(4,height);header[8]=8;
   return join([new Uint8Array(PNG),chunk('IHDR',header),chunk('tRNS',new Uint8Array([0,0])),chunk('IDAT',compressed),chunk('IEND',new Uint8Array())]);
 }
+
+// RM055 / v6 only. Never call this for saved v5 approvals.
+// 100% fills the usable print area, not an arbitrary percentage of a model's shirt.
+export function scenePrintBox(sw,sh,width,height,scale=100,position='center'){
+  if(![sw,sh,width,height,scale].every(n=>Number.isFinite(n)&&n>0))throw fail('apparel_dimensions','Clothing print dimensions are invalid.');
+  const factor=Math.min(width*.98/sw,height*.94/sh)*Math.min(1,Math.max(.70,scale/100));
+  const w=Math.max(1,Math.round(sw*factor)),h=Math.max(1,Math.round(sh*factor));
+  const center=position==='left'?.30:position==='right'?.70:.50;
+  return {width:w,height:h,left:Math.round(Math.max(0,Math.min(width-w,width*center-w/2))),top:Math.round(Math.min(height-h,height*.04))};
+}
+// Rounded, gently irregular silhouette with a sharp central scene and opaque ink
+// dots / transparent gaps. No low-opacity gray haze or black rectangle is printed.
+export async function sceneEdgeMask(width,height){
+  if(!Number.isInteger(width)||!Number.isInteger(height)||width<2||height<2||width*height>24000000)throw fail('apparel_dimensions','Clothing print dimensions are invalid.');
+  const rows=new Uint8Array((width+1)*height),cell=Math.max(1,Math.round(width/1800));
+  const bayer=[0,48,12,60,3,51,15,63,32,16,44,28,35,19,47,31,8,56,4,52,11,59,7,55,40,24,36,20,43,27,39,23,2,50,14,62,1,49,13,61,34,18,46,30,33,17,45,29,10,58,6,54,9,57,5,53,42,26,38,22,41,25,37,21];
+  for(let y=0;y<height;y++)for(let x=0;x<width;x++){
+    const nx=(x/(width-1)-.5)*2,ny=(y/(height-1)-.5)*2;
+    const radius=Math.pow(Math.pow(Math.abs(nx),4)+Math.pow(Math.abs(ny),4),.25);
+    const ripple=.015*Math.sin(nx*31+ny*17)+.010*Math.sin(ny*47-nx*13);
+    const t=Math.min(1,Math.max(0,(.985-radius+ripple)/.235));
+    const coverage=t*t*(3-2*t),threshold=(bayer[(Math.floor(y/cell)%8)*8+Math.floor(x/cell)%8]+.5)/64;
+    const rim=x===0||y===0||x===width-1||y===height-1;
+    rows[y*(width+1)+x+1]=!rim&&coverage>threshold?255:0;
+  }
+  const compressed=new Uint8Array(await new Response(new Blob([rows]).stream().pipeThrough(new CompressionStream('deflate'))).arrayBuffer());
+  const header=new Uint8Array(13),v=new DataView(header.buffer);v.setUint32(0,width);v.setUint32(4,height);header[8]=8;
+  return join([new Uint8Array(PNG),chunk('IHDR',header),chunk('tRNS',new Uint8Array([0,0])),chunk('IDAT',compressed),chunk('IEND',new Uint8Array())]);
+}

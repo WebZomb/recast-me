@@ -12,7 +12,7 @@ test('RM054 keeps the customer-facing subject step deliberately simple',()=>{
  for(const excessive of ['Two or more pets','Horse</option>','Friends / group','Child / teen','Baby</option>','Family + pet','Motorcycle / bike','Home / special place','Memorial / tribute']) assert.equal(html.includes(excessive),false,excessive);
  assert.ok(wizard.includes("quickSubjects=['pet','person','person and pet','couple','family','car','custom']"));
  assert.equal(wizard.includes('Browse all subjects ↓'),false);
- assert.match(html,/data-launch-build="RM-054"/);
+ assert.match(html,/data-launch-build="RM-055"/);
 });
 
 test('simple subjects retain deliberate multi-reference labeling',()=>{

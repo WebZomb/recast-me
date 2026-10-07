@@ -9,12 +9,12 @@ const variant={id:23470,catalog_product_id:909};
 const row={placement:'default',technique:'sublimation',print_area_type:'simple',print_area_width:'9',print_area_height:'7',dpi:150,mockup_styles:[{id:12,category_name:'Lifestyle kitchen',view_name:'Kitchen view',restricted_to_variants:null},{id:13,category_name:'Flat',view_name:'Front',restricted_to_variants:[23470]},{id:14,category_name:'Flat',view_name:'Side',restricted_to_variants:[999]}]};
 test('lifestyle groups are selected only when actually supported; apparel keeps a studio view',()=>{
  const catalog={option_groups:['Christmas','Lifestyle kitchen','Flat','Lifestyle living room']};
- assert.deepEqual(selectMockupGroups(catalog,'Mug'),['Lifestyle kitchen','Flat']);assert.deepEqual(selectMockupGroups(catalog,'T-Shirt'),['Flat']);
+ assert.deepEqual(selectMockupGroups(catalog,'Mug'),['Flat','Lifestyle kitchen']);assert.deepEqual(selectMockupGroups(catalog,'T-Shirt'),['Flat']);
  assert.deepEqual(selectMockupGroups({option_groups:['Christmas']},'Mug'),[]);assert.deepEqual(selectMockupGroups({},'Canvas'),[]);
 });
-test('candidate ordering prefers lifestyle except for apparel and deduplicates URLs',()=>{
+test('candidate ordering prefers product close-ups and keeps lifestyle alternatives',()=>{
  const views=[{url:'a',title:'Default'},{url:'b',title:'Front'},{url:'c',title:'Scene',group:'Lifestyle'},{url:'c',title:'Duplicate'}];
- assert.equal(rankMockupCandidates(views,'Canvas')[0].url,'c');assert.equal(rankMockupCandidates(views,'Hoodie')[0].url,'a');assert.equal(rankMockupCandidates(views,'Mug').length,3);
+ assert.equal(rankMockupCandidates(views,'Canvas')[0].url,'a');assert.equal(rankMockupCandidates(views,'Hoodie')[0].url,'a');assert.equal(rankMockupCandidates(views,'Mug').length,3);
 });
 test('tumbler V2 uses exact catalog identity, supported style and dimensional conversion',()=>{
  const spec=selectV2MockupSpec(map,variant,[row]);assert.deepEqual(spec.styles.map(s=>s.id),[12,13]);
@@ -64,8 +64,8 @@ test('working V1 products do not use V2; new gallery task does not overwrite old
  const env=await setup({PRINTFUL_API_TOKEN:'fixture'});let payload;
  const oldKey=`mockups/${ID}/RECAST-MUG-11OZ/v4-Mug-two-sided-ambient-center-110-standard/task.json`;await env.ARTWORK.put(oldKey,JSON.stringify({approvedAt:'old',images:[{url:'old-proof'}]}));
  t.mock.method(globalThis,'fetch',async(url,options)=>{
-   if(String(url).endsWith('/printfiles/19'))return Response.json({result:{option_groups:['Lifestyle kitchen','Flat'],printfiles:[{printfile_id:43,width:2700,height:1050}],variant_printfiles:[{variant_id:1320,placements:{default:43}}]}});
+   if(String(url).endsWith('/printfiles/19'))return Response.json({result:{option_groups:['Flat','Lifestyle kitchen'],printfiles:[{printfile_id:43,width:2700,height:1050}],variant_printfiles:[{variant_id:1320,placements:{default:43}}]}});
    assert.ok(String(url).endsWith('/create-task/19'));payload=JSON.parse(options.body);return Response.json({result:{task_key:'new-gallery',status:'pending'}});
  });
- const created=await createMockup(req('RECAST-MUG-11OZ'),env);assert.equal(created.status,200);assert.deepEqual(payload.option_groups,['Lifestyle kitchen','Flat']);assert.equal((await(await env.ARTWORK.get(oldKey)).json()).approvedAt,'old');
+ const created=await createMockup(req('RECAST-MUG-11OZ'),env);assert.equal(created.status,200);assert.deepEqual(payload.option_groups,['Flat','Lifestyle kitchen']);assert.equal((await(await env.ARTWORK.get(oldKey)).json()).approvedAt,'old');
 });

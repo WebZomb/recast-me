@@ -245,7 +245,7 @@ export function secureApplication(application) {
               const source=from64(await object.text()),info=await env.IMAGES.info(new Blob([source]).stream());
               const product=url.searchParams.get('product')||'Mug';
               const design={
-                product,version:Number(url.searchParams.get('version')||0),finish:url.searchParams.get('finish')||undefined,
+                product,orientation:url.searchParams.get('orientation')||undefined,version:Number(url.searchParams.get('version')||0),finish:url.searchParams.get('finish')||undefined,
                 layout:url.searchParams.get('layout')||undefined,
                 fill:url.searchParams.get('fill')||undefined,
                 x:url.searchParams.get('x')||'center',

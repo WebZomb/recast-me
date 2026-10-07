@@ -211,25 +211,11 @@
 }
 
 
-/* RM-054 — one consistent temporary superhero + dog storefront story. */
-#product-grid.checkout-catalog .product:not(.real-mockup-ready) .product-art{
-  background:linear-gradient(145deg,#0a0b1c,#16142c 54%,#090b19)!important;
-}
-#product-grid.checkout-catalog .product:not(.real-mockup-ready) .product-art img{
-  width:100%!important;height:100%!important;object-fit:cover!important;object-position:center!important;
-  transform:none!important;filter:none!important;background:#0b0c1b!important;
-}
-#product-grid.checkout-catalog .product-roadmap{
-  border-style:solid!important;border-color:rgba(137,89,255,.42)!important;
-}
-#product-grid.checkout-catalog .roadmap-variant{
-  margin:0 0 10px;padding:11px 13px;border:1px solid #343548;border-radius:13px;
-  background:#090a14;color:#d8d8e5;font-size:12px;font-weight:750;
-}
-#product-grid.checkout-catalog .roadmap-ready{
-  margin-top:10px;padding:10px 12px;border:1px solid rgba(105,218,255,.28);border-radius:12px;
-  background:rgba(12,31,39,.72);color:#a6ecff;font-size:12px;font-weight:850;
-}
-#product-grid.checkout-catalog .product-roadmap .recast-buy[disabled]{
-  opacity:.72!important;background:linear-gradient(90deg,rgba(139,55,255,.58),rgba(31,191,231,.58))!important;color:#fff!important;
-}
+/* RM055: catalog examples are product views, never a shared raw world image. */
+#product-grid.checkout-catalog .product-art img{object-fit:contain!important;transform:none!important}
+.catalog-coming-soon{grid-column:1/-1;padding:18px;border:1px solid #343548;border-radius:16px;color:#c4c3d3;background:#0d0f1d}
+.catalog-coming-soon summary{cursor:pointer;color:#fff;font-weight:750}
+.catalog-coming-soon p{font-size:13px;line-height:1.6}
+
+#product-grid .product-art{position:relative}
+#product-grid:not(.checkout-catalog) .example-design-label{position:absolute;left:8px;bottom:8px;max-width:calc(100% - 16px);border-radius:7px;background:rgba(7,8,17,.85);color:#fff;padding:5px 7px;font-size:9px;line-height:1.4}

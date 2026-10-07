@@ -64,17 +64,17 @@ const scenarios=local?[[pw.chromium,320],[pw.chromium,393],[pw.chromium,1440]]:[
    for(const card of [poster,hoodie]){
     await card.locator('.product-preview-action').click();await card.locator('.recast-buy').waitFor({state:'visible'});
    }
-   assert.equal(writes.find(w=>w.sku==='RECAST-HOODIE-S').design.finish,'cutout');
-   assert.equal(await poster.locator('.mockup-view-chip[aria-pressed="true"]').textContent(),'Lifestyle');
+   assert.equal(writes.find(w=>w.sku==='RECAST-HOODIE-S').design.finish,'soft');
+   assert.equal(await poster.locator('.mockup-view-chip[aria-pressed="true"]').textContent(),'Front');
    assert.equal(await hoodie.locator('.product-preview-action').evaluate(e=>e.getBoundingClientRect().width<e.parentElement.getBoundingClientRect().width*.75),true,'compact ready badge');
-   await hoodie.locator('.recast-buy').click();await page.locator('.recast-final-review').waitFor();assert.match(await page.locator('.final-review-summary').textContent(),/transparent background/);await page.locator('.final-review-x').click();
-   await hoodie.locator('.product-design-controls summary').click();await hoodie.locator('[data-design-finish]').selectOption('soft');
+   await hoodie.locator('.recast-buy').click();await page.locator('.recast-final-review').waitFor();assert.match(await page.locator('.final-review-summary').textContent(),/transparent dot fade/);await page.locator('.final-review-x').click();
+   await hoodie.locator('.product-design-controls summary').click();await hoodie.locator('[data-design-finish]').selectOption('rectangle');
    assert.equal(await hoodie.locator('.recast-buy').isHidden(),true,'new finish invalidates reviewed proof');
    assert.equal(await hoodie.locator('[data-design-layout]').isHidden(),true);
    assert.equal(await hoodie.locator('[data-design-scale]').getAttribute('max'),'100');
    await hoodie.locator('.product-preview-action').click();await hoodie.locator('.recast-buy').waitFor({state:'visible'});
-   assert.equal(writes.at(-1).design.finish,'soft');
-   await hoodie.locator('[data-reset-design]').click();assert.equal(await hoodie.locator('.recast-buy').isHidden(),true);assert.equal(await hoodie.locator('[data-design-finish]').inputValue(),'cutout');
+   assert.equal(writes.at(-1).design.finish,'rectangle');
+   await hoodie.locator('[data-reset-design]').click();assert.equal(await hoodie.locator('.recast-buy').isHidden(),true);assert.equal(await hoodie.locator('[data-design-finish]').inputValue(),'soft');
    for(const card of await page.locator('#product-grid .product').all()){
      await card.scrollIntoViewIfNeeded();
      await card.locator('.product-art img').evaluate(img=>img.complete?Promise.resolve():new Promise((resolve,reject)=>{img.onload=resolve;img.onerror=()=>reject(new Error('fixture image failed'));}));
@@ -85,7 +85,7 @@ const scenarios=local?[[pw.chromium,320],[pw.chromium,393],[pw.chromium,1440]]:[
    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1),false,'horizontal overflow');
    await poster.screenshot({path:path.join(out,`${engine.name()}-${width}-poster.png`)});await hoodie.screenshot({path:path.join(out,`${engine.name()}-${width}-hoodie.png`)});
    assert.deepEqual(errors,[]);assert.ok(writes.every(w=>w.path==='/api/mockup/create'));
-   report.checks.push({engine:engine.name(),width,cards:metrics,cutoutDefault:true,softFinishInvalidates:true,defaultLifestyle:true,exactProofGates:true,writes:writes.length,errors});
+   report.checks.push({engine:engine.name(),width,cards:metrics,sceneBlendDefault:true,softFinishInvalidates:true,productCloseupDefault:true,exactProofGates:true,writes:writes.length,errors});
   }catch(e){report.failures.push({engine:engine.name(),width,error:e.stack,errors});await page.screenshot({path:path.join(out,`${engine.name()}-${width}-failure.png`),fullPage:true}).catch(()=>{})}
   await browser.close();
  }

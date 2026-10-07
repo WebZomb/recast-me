@@ -120,10 +120,11 @@ document.querySelectorAll('.style-card').forEach(card=>{
   card.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();chooseStyle(card)}})
 });
 
+const EXAMPLE_SKUS={Poster:'RECAST-POSTER-12X16',Hoodie:'RECAST-HOODIE-S','Framed Poster':'RECAST-FRAME-12X16',Canvas:'RECAST-CANVAS-12X16','T-Shirt':'RECAST-TEE-S',Blanket:'RECAST-BLANKET-50X60',Mug:'RECAST-MUG-11OZ',Tumbler:'RECAST-TUMBLER-20OZ','Magnet 3-Pack':'RECAST-MAGNET-SET','Coaster 4-Pack':'RECAST-COASTER-SET'};
 function merchCard(item,{featured=false}={}){
   const classes=['product',featured?'featured-product':'secondary-product'].filter(Boolean).join(' ');
-  return `<div class="${classes}">
-    <div class="product-art"><img src="${item.image || `/assets/product-${item.asset}-v09.jpg`}" alt="${item.name}" loading="lazy" decoding="async"></div>
+  return `<div class="${classes}" ${EXAMPLE_SKUS[item.name]?`data-example-sku="${EXAMPLE_SKUS[item.name]}"`:""}>
+    <div class="product-art"><img src="${item.image || `/assets/product-${item.asset}-v09.jpg`}" alt="Style illustration for ${item.name}" loading="lazy" decoding="async">${EXAMPLE_SKUS[item.name]?'<span class="example-design-label">Style illustration · not a size proof</span>':""}</div>
     <div class="product-body">
       <span class="product-badge">${item.badge}</span>
       <strong>${item.name}</strong>
@@ -149,6 +150,7 @@ function renderStaticMerch(){
   }
 }
 renderStaticMerch();
+document.dispatchEvent(new Event("recast-static-catalog"));
 
 const params = new URLSearchParams(location.search);
 if (params.get('debug')==='1') document.querySelector('#debug-status')?.classList.remove('hidden');

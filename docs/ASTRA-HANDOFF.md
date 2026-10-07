@@ -87,3 +87,6 @@ Latest: RM-053 discovery expansion and launch controls. Subjects and Worlds broa
 
 
 Latest: RM-054 restores the approved simple subject step and records the recovered product roadmap (Sticker, Phone Case, Pillow, Notebook; then Pet Bandana, Puzzle, Tote). Seven Shopify products were created as DRAFT only. Exact supplier variant candidates are isolated from checkout; an admin-only GET verifier can read their Printful V2 identities before any fulfillment mapping is enabled. See ASTRA-SESSION-RM-054.md.
+
+
+Latest implementation: [RM055 product accuracy](ASTRA-SESSION-RM-055.md). Distinguish code checks, provider-generated samples, visual-reviewed manifest entries and paid physical tests. Do not claim unverified gifts/tumbler ready.

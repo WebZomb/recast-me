@@ -1,15 +1,19 @@
 const grid = document.querySelector("#product-grid");
 const requestLabel = document.querySelector("#request-id");
 
-const STORE_EXAMPLE_ART="/assets/world-comic-v18.webp";
 const PRODUCT_ART = {
-  "Custom Recast Poster":STORE_EXAMPLE_ART,"Custom Recast Hoodie":STORE_EXAMPLE_ART,"Custom Recast Framed Poster":STORE_EXAMPLE_ART,
-  "Custom Recast Canvas":STORE_EXAMPLE_ART,"Custom Recast T-Shirt":STORE_EXAMPLE_ART,"Custom Recast Blanket":STORE_EXAMPLE_ART,
-  "Custom Recast Mug":STORE_EXAMPLE_ART,"Custom Recast Tumbler":STORE_EXAMPLE_ART,"Custom Recast Magnet 3-Pack":STORE_EXAMPLE_ART,
-  "Custom Recast Coaster 4-Pack":STORE_EXAMPLE_ART,"HD Digital Recast":STORE_EXAMPLE_ART,"Recast Pack":STORE_EXAMPLE_ART,
-  "Custom Recast Sticker Pack":STORE_EXAMPLE_ART,"Custom Recast Phone Case":STORE_EXAMPLE_ART,"Custom Recast Pillow":STORE_EXAMPLE_ART,
-  "Custom Recast Notebook":STORE_EXAMPLE_ART,"Custom Recast Pet Bandana":STORE_EXAMPLE_ART,"Custom Recast Puzzle":STORE_EXAMPLE_ART,
-  "Custom Recast Tote Bag":STORE_EXAMPLE_ART
+  "Custom Recast Poster":"/assets/product-poster-v16.webp",
+  "Custom Recast Hoodie":"/assets/product-hoodie-v16.webp",
+  "Custom Recast Framed Poster":"/assets/product-desk-frame-v16.webp",
+  "Custom Recast Canvas":"/assets/product-canvas-v16.webp",
+  "Custom Recast T-Shirt":"/assets/product-tshirt-v16.webp",
+  "Custom Recast Blanket":"/assets/product-blanket-v16.webp",
+  "Custom Recast Mug":"/assets/product-mug-v16.webp",
+  "Custom Recast Tumbler":"/assets/product-tumbler-v16.webp",
+  "Custom Recast Magnet 3-Pack":"/assets/product-magnet-v16.webp",
+  "Custom Recast Coaster 4-Pack":"/assets/product-coaster-v16.webp",
+  "HD Digital Recast":"/assets/product-digital-v16.webp",
+  "Recast Pack":"/assets/product-pack-v16.webp"
 };
 
 const PRODUCT_META = {
@@ -37,8 +41,8 @@ const PRODUCT_META = {
 
 const PRIMARY_PRODUCT_TITLES=new Set(["Custom Recast Mug","Custom Recast Blanket","Custom Recast Poster","Custom Recast Canvas"]);
 const PRODUCT_DESIGN_PRESETS = {
-  "Custom Recast Hoodie": {product:"Hoodie",layout:"fit",fill:"transparent",x:"center",scale:112,spacing:"standard",finish:"soft",label:"Scene blend · soft fade into fabric"},
-  "Custom Recast T-Shirt": {product:"T-Shirt",layout:"fit",fill:"transparent",x:"center",scale:108,spacing:"standard",finish:"soft",label:"Scene blend · soft fade into fabric"},
+  "Custom Recast Hoodie": {product:"Hoodie",layout:"fit",fill:"transparent",x:"center",scale:100,spacing:"standard",finish:"soft",label:"Scene blend · soft fade into fabric"},
+  "Custom Recast T-Shirt": {product:"T-Shirt",layout:"fit",fill:"transparent",x:"center",scale:100,spacing:"standard",finish:"soft",label:"Scene blend · soft fade into fabric"},
   "Custom Recast Mug": {product:"Mug",layout:"two-sided",fill:"ambient",x:"center",scale:110,spacing:"standard",label:"Best setup · two-sided wrap"},
   "Custom Recast Tumbler": {product:"Tumbler",layout:"two-sided",fill:"ambient",x:"center",scale:108,spacing:"standard",label:"Best setup · two-sided wrap"},
   "Custom Recast Blanket": {product:"Blanket",layout:"cover",fill:"full-bleed",x:"center",scale:100,spacing:"standard",label:"Best setup · full blanket"},
@@ -68,11 +72,44 @@ const ROADMAP_PRODUCTS=[
  {title:"Custom Recast Tote Bag",price:"39.99",variant:"15×15"}
 ];
 function roadmapMarkup(){
- return ROADMAP_PRODUCTS.map(product=>{const meta=PRODUCT_META[product.title];return `<div class="product secondary-product product-roadmap" data-product-title="${product.title}">
-  <div class="product-art"><img src="${PRODUCT_ART[product.title]}" alt="Matching superhero-and-dog example design for ${product.title}" loading="lazy"><span class="example-design-label">Matching example design</span></div>
-  <div class="product-body"><span class="product-badge">${meta.badge}</span><strong>${product.title.replace(/^Custom Recast /,'')}</strong><p class="product-pitch">${meta.pitch}</p><span class="price">from $${product.price}</span><div class="roadmap-variant">${product.variant}</div><div class="product-ready roadmap-ready">Final setup in progress</div><button class="recast-buy" type="button" disabled>Finishing product setup</button><p class="product-mockup-note">Purchasing unlocks after its real Printful preview and automatic fulfillment path pass verification.</p></div>
- </div>`}).join('');
+ return `<details class="catalog-coming-soon"><summary>More gifts in preparation</summary><p>Sticker Pack · Phone Case · Pillow · Notebook · Pet Bandana · Puzzle · Tote Bag</p><p>These are not available to buy yet. Their exact product previews and fulfillment connections are still being checked.</p></details>`;
 }
+
+
+let catalogExamplesPromise;
+function catalogExamples(){
+  return catalogExamplesPromise ||= fetch('/catalog-examples.json?v=2551',{cache:'no-cache'})
+    .then(r=>r.ok?r.json():{examples:{}}).catch(()=>({examples:{}}));
+}
+function trustedExample(row,sku,design){
+  if(!row||row.sku!==sku||row.status!=='provider-verified'||!row.variantIdentity||!row.position||!row.sourceHash||!row.reviewedAt)return false;
+  if(!Number.isSafeInteger(row.variantIdentity.id)||row.variantIdentity.id<=0)return false;
+  if(!['area_width','area_height','width','height'].every(k=>Number.isFinite(row.position[k])&&row.position[k]>0))return false;
+  if(typeof row.image!=='string'||!(/^\/assets\/catalog\/[a-z0-9-]+\.(png|jpg|webp)$/.test(row.image)||/^https:\/\/cdn\.shopify\.com\//.test(row.image)))return false;
+  return !design||['version','product','layout','fill','x','scale','spacing','finish','orientation'].every(k=>(row.design?.[k]??null)===(design[k]??null));
+}
+async function applyCatalogExample(card,sku,{staticCard=false}={}){
+  if(!card||!sku)return;
+  const run=String(Number(card.dataset.exampleRun||0)+1);card.dataset.exampleRun=run;
+  const design=staticCard?null:productDesign(card),data=await catalogExamples(),row=data.examples?.[sku];
+  if(card.dataset.exampleRun!==run||card.classList.contains('real-mockup-ready')||(!staticCard&&stateFor(card).busy))return;
+  if(!staticCard&&card.querySelector('.recast-variant')?.value!==sku)return;
+  const image=card.querySelector('.product-art img'),caption=card.querySelector('.example-design-label');
+  if(!image)return;
+  if(trustedExample(row,sku,design)){
+    image.src=row.image;image.alt=`Printful example for ${row.product} · ${row.variantLabel}`;
+    if(caption)caption.textContent=`Example · ${row.variantLabel} · supplier mockup`;
+    card.dataset.exampleSku=sku;card.dataset.exampleVerified='true';
+  }else{
+    if(caption)caption.textContent='Style illustration · not a size proof';
+    delete card.dataset.exampleVerified;
+  }
+}
+function refreshStaticExamples(){
+  document.querySelectorAll('#product-grid:not(.checkout-catalog) .product[data-example-sku]').forEach(card=>applyCatalogExample(card,card.dataset.exampleSku,{staticCard:true}));
+}
+document.addEventListener('recast-static-catalog',refreshStaticExamples);
+refreshStaticExamples();
 
 function lastRequest(){if(window.__recastActiveRequest)return window.__recastActiveRequest;try{return JSON.parse(localStorage.getItem("recast_last_request")||"null")}catch{return null}}
 function showCatalogError(message){
@@ -99,7 +136,7 @@ function productDesign(card){
   const scale=Number(card?.querySelector?.("[data-design-scale]")?.value||preset.scale);
   const spacing=card?.querySelector?.("[data-design-spacing]")?.value||preset.spacing;
   const fill=card?.querySelector?.("[data-design-fill]")?.value||preset.fill;
-  return {product:preset.product,layout,fill,x,scale,spacing,...(preset.finish?{finish:card?.querySelector?.("[data-design-finish]")?.value||preset.finish}:{})};
+  return {version:6,product:preset.product,layout,fill,x,scale,spacing,...(["Poster","Framed Poster","Canvas"].includes(preset.product)?{orientation:"portrait"}:{}),...(preset.finish?{finish:card?.querySelector?.("[data-design-finish]")?.value||preset.finish}:{})};
 }
 function designSignature(card,sku){return JSON.stringify({sku,design:productDesign(card)})}
 function designControlsMarkup(title,preset){
@@ -117,7 +154,7 @@ function designControlsMarkup(title,preset){
       ${spacing}
       <label data-design-fill-wrap hidden>Background fill<select data-design-fill><option value="ambient" selected>Blend artwork colors</option><option value="transparent" hidden>No added background</option><option value="dark">Dark fill</option><option value="light">Light fill</option><option value="full-bleed">Artwork edge fill</option></select></label>
       <label data-design-position-wrap>Image position<select data-design-x><option value="left">Left</option><option value="center" selected>Center</option><option value="right">Right</option></select></label>
-      <label data-design-scale-wrap>Image size <strong data-design-scale-label>${preset.scale}%</strong><input data-design-scale type="range" min="75" max="${apparel?100:125}" step="${apparel?1:5}" value="${preset.scale}"></label>
+      <label data-design-scale-wrap>Print-area size <strong data-design-scale-label>${preset.scale}%</strong><input data-design-scale type="range" min="75" max="${apparel?100:125}" step="${apparel?1:5}" value="${preset.scale}"></label>
       <button type="button" class="button ghost" data-reset-design>Reset to best setup</button><p class="product-mockup-note">Review a new preview after changing the design.</p>
     </div>
   </details>`;
@@ -161,16 +198,18 @@ function resetProductPreview(card,{invalidate=true}={}){
   card.classList?.remove("real-mockup-ready");
   card.querySelector?.(".mockup-views")?.remove?.();
   delete card.dataset.mockupSignature;delete card.dataset.mockupId;productReviewState.delete(card);
-  const caption=card.querySelector?.(".example-design-label");if(caption)caption.textContent="Example design";
+  const example=card.querySelector?.(".product-art img");if(example){example.src=PRODUCT_ART[card.dataset.productTitle];example.alt="Style illustration; preview your selected size";}
+  const caption=card.querySelector?.(".example-design-label");if(caption)caption.textContent="Style illustration · not a size proof";
   const error=card.querySelector?.(".mockup-error");if(error){error.hidden=true;error.textContent="";}
   const preview=card.querySelector?.(".product-preview-action");
   if(preview){preview.disabled=state.busy;preview.textContent=state.busy?"Waiting for current preview…":"Preview my product";}
   requireFreshPreview(card);
+  applyCatalogExample(card,card?.querySelector?.(".recast-variant")?.value);
 }
 
 function viewLabel(title,index){
   const raw=String(title||"").trim();
-  if(/^default$/i.test(raw))return "3D";
+  if(/^default$/i.test(raw))return "Product";
   if(/handle on left/i.test(raw))return "Handle left";
   if(/handle on right/i.test(raw))return "Handle right";
   if(/product details?|detail/i.test(raw))return "Detail";
@@ -183,7 +222,7 @@ function viewLabel(title,index){
 function uniqueMockupViews(input=[]){
   const seen=new Set(),output=[];
   for(const view of input){
-    const label=/lifestyle|room|interior|sofa|bed|kitchen|desk|home/i.test(view?.group||"")?"Lifestyle":viewLabel(view?.title,output.length);
+    const label=/lifestyle|room|interior|sofa|bed|kitchen|desk|home/i.test(`${view?.group||""} ${view?.title||""}`)?"Lifestyle":viewLabel(view?.title,output.length);
     const key=label.toLowerCase();
     if(seen.has(key))continue;
     seen.add(key);output.push({...view,label});
@@ -236,6 +275,7 @@ function openFinalReview({req,sku,card,button}){
     <div class="final-review-top"><div><span>FINAL CHECK</span><h2 id="recast-review-title">This is the design that will be printed.</h2><p>Check the image, product and placement. After you confirm, checkout is the last customer step.</p></div><button type="button" class="final-review-x" data-final-close aria-label="Close final review">×</button></div>
     <div class="final-review-angles">${views.map((v,i)=>`<figure><img src="${v.url}" alt="${viewLabel(v.title,i)}"><figcaption>${viewLabel(v.title,i)}</figcaption></figure>`).join("")}</div>
     <div class="final-review-summary"><div><small>PRODUCT</small><strong>${card.dataset.productTitle?.replace(/^Custom Recast /,"")||"Product"} · ${card.querySelector(".recast-variant option:checked")?.textContent||card.querySelector(".recast-variant")?.value||sku}</strong></div><div><small>ARTWORK</small><strong>${req.requestId}</strong></div><div><small>PRINT SETTINGS</small><strong>${designSummary(card)}</strong></div></div>
+    <div class="final-review-note"><strong>Size &amp; finish:</strong> The preview is for your selected variant. Actual print placement and color can vary slightly with manufacturing; a screen is not a physical ruler.</div>
     <div class="final-review-note"><strong>Looks right?</strong> The preview watermark is only for protection. Your clean private artwork is used for the print file.</div>
     <p class="final-review-error" role="alert" hidden></p>
     <div class="final-review-actions"><button type="button" class="button ghost" data-final-image>Change image</button><button type="button" class="button ghost" data-final-edit>Edit placement</button><button type="button" class="button primary" data-final-confirm>Confirm design & checkout</button></div>
@@ -314,7 +354,7 @@ async function generateRealMockup({req,sku,card,button}){
       if(!current())return;
       if(response.ok&&data.status==="completed"&&data.images?.length){
         const img=card.querySelector(".product-art img"),views=uniqueMockupViews(data.images);
-        const preferred=views.findIndex(view=>view.label===(presetFor(card).finish?"Front":"Lifestyle")),fallback=views.findIndex(view=>view.label==="3D"),selected=preferred>=0?preferred:fallback>=0?fallback:0;
+        const preferred=views.findIndex(view=>/^(Front|Product|3D|Flat)$/i.test(view.label)),selected=preferred>=0?preferred:0;
         img.src=views[selected].url;img.alt="Your Recast on the actual product mockup";
         card.querySelector(".mockup-views")?.remove();
         if(views.length>1){
@@ -405,7 +445,7 @@ async function loadCheckout(){
     const realPreview=digital?"":`<button class="product-preview-action" data-product="${index}" type="button">Preview my product</button><p class="mockup-error" role="alert" hidden></p>`;
 
     return `<div class="${classes}" data-product-index="${index}" data-product-title="${product.title}" data-active="${active}" data-digital="${digital}">
-      <div class="product-art"><img src="${PRODUCT_ART[product.title]}" alt="Example design on ${product.title}" loading="lazy"><span class="example-design-label">Example design</span></div>
+      <div class="product-art"><img src="${PRODUCT_ART[product.title]}" alt="Style illustration for ${product.title}; generate the selected-size preview before buying" loading="lazy"><span class="example-design-label">Style illustration · not a size proof</span></div>
       <div class="product-body">
         <span class="product-badge">${meta.badge}</span>
         <strong>${product.title.replace(/^Custom Recast /,"")}</strong>
@@ -413,7 +453,7 @@ async function loadCheckout(){
         <span class="price">${priceText}</span>
         ${select}
         ${realPreview}
-        ${preset.finish?'<p class="apparel-finish-note">Recommended: keep the full Recast scene with a broad soft edge fade into the garment, inspired by premium graphic apparel. Your original stays unchanged. Change the finish in Edit design.</p>':""}
+        ${preset.finish?'<p class="apparel-finish-note">Recommended: full scene with soft edges, fitted inside this garment’s printable area. Check the selected size in your product preview.</p>':""}
         <button class="recast-buy" data-product="${index}" data-buy-label="${meta.cta}" ${active&&digital?"":"disabled"} ${active&&!digital?"hidden":""}>
           ${active?(digital?meta.cta:"Continue to final review"):"Not available to buy yet"}
         </button>
@@ -423,6 +463,7 @@ async function loadCheckout(){
       </div>
     </div>`;
   }).join("")+roadmapMarkup()+`<button type="button" class="catalog-more-toggle">See more products</button>`;
+  grid.querySelectorAll(".product[data-product-index]").forEach(card=>applyCatalogExample(card,card.querySelector(".recast-variant")?.value));
   const moreToggle=grid.querySelector?.(".catalog-more-toggle");
   moreToggle?.addEventListener("click",()=>{grid.classList.add("show-all-products");moreToggle.remove();});
 

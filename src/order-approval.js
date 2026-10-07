@@ -113,7 +113,7 @@ export async function finishApprovedDesign(env,job){
     if(!(area.width>0&&area.height>0))throw fault('proof_placement_missing','The approved product layout is missing its print area.',503);
     const info=await env.IMAGES.info(new Blob([bytes]).stream());
     const composed=await composeProductLayout(env,bytes,info,area,{product:job.product},design,4096);
-    finalBytes=composed.bytes;finalMime=composed.mime||'image/jpeg';finishMethod=Number(design.version)===5?'apparel-v5-clean-'+design.finish:'product-layout-v4-clean';
+    finalBytes=composed.bytes;finalMime=composed.mime||'image/jpeg';finishMethod=[5,6].includes(Number(design.version))&&design.finish?'apparel-v'+design.version+'-clean-'+design.finish:'product-layout-v'+design.version+'-clean';
   }else if(job.product==='Mug'&&design?.background==='scene-fill'){
     if(!(area.width>0&&area.height>0))throw fault('proof_placement_missing','The approved mug layout is missing its print area.',503);
     const info=await env.IMAGES.info(new Blob([bytes]).stream());

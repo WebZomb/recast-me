@@ -1,4 +1,4 @@
-import {apparelEdgeMask,transparentCanvas,prepareApparelArtwork,pngOutput} from './apparel-finish.js';
+import {apparelEdgeMask,transparentCanvas,prepareApparelArtwork,pngOutput,sceneEdgeMask,scenePrintBox} from './apparel-finish.js';
 export const fault = (code, message, status = 409) => Object.assign(new Error(message), {code, status, renderControl:true});
 export async function hash(value) {
   return [...new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(value)))].map(b=>b.toString(16).padStart(2,'0')).join('');
@@ -36,6 +36,10 @@ export function recommendedProductDesign(map={}){
 export function normalizeProductDesign(map,raw={}){
   const product=String(map?.product||'Generic'),recommended=recommendedProductDesign(map);
   const rawVersion=Number(raw?.version||0);
+  if(rawVersion===6&&['Hoodie','T-Shirt'].includes(product)){
+    const n=Number(raw.scale),scale=Math.round(Math.max(70,Math.min(100,Number.isFinite(n)?n:100)));
+    return {version:6,layout:'fit',background:'transparent',fill:'transparent',x:['left','center','right'].includes(raw.x)?raw.x:'center',scale,spacing:'standard',product,finish:['soft','cutout','rectangle'].includes(raw.finish)?raw.finish:'soft'};
+  }
   if(product==='Mug'&&rawVersion>0&&rawVersion<4){
     const layout=['single','two-sided','wrap'].includes(String(raw.layout))?String(raw.layout):'single';
     const x=['left','center','right'].includes(String(raw.x))?String(raw.x):'center';
@@ -59,6 +63,7 @@ export function normalizeProductDesign(map,raw={}){
     const apparelScale=Math.min(raw.finish==='soft'?118:100,scale);
     return {version:5,layout:'fit',background:'transparent',fill:'transparent',x,scale:apparelScale,spacing,product,finish:raw.finish};
   }
+  if(rawVersion===6)return {version:6,layout,background,fill,x,scale,spacing,product,...(['Poster','Framed Poster','Canvas'].includes(product)?{orientation:raw.orientation==='landscape'?'landscape':'portrait'}:{})};
   return {version:4,layout,background,fill,x,scale,spacing,product};
 }
 export function productPrintfile(catalog,variantId,placement){
@@ -90,6 +95,19 @@ export async function composeProductLayout(env,sourceBytes,sourceSize,area,map={
   const outHeight=Math.max(300,Math.round(outWidth*area.height/area.width));
   const stream=()=>new Blob([sourceBytes],{type:'image/jpeg'}).stream();
 
+  if(design.version===6&&['Hoodie','T-Shirt'].includes(design.product)){
+    const art=await prepareApparelArtwork(env,sourceBytes,design.finish);
+    const info=await env.IMAGES.info(new Blob([art]).stream());
+    const box=scenePrintBox(info.width,info.height,outWidth,outHeight,design.scale,design.x);
+    let overlay=env.IMAGES.input(new Blob([art]).stream()).transform({width:box.width,height:box.height,fit:'squeeze',background:'rgba(0,0,0,0)'});
+    if(design.finish==='soft'){
+      const mask=await sceneEdgeMask(box.width,box.height);
+      overlay=env.IMAGES.input(new Blob([mask],{type:'image/png'}).stream()).draw(overlay,{left:0,top:0,composite:'in'});
+    }
+    const canvas=await transparentCanvas(outWidth,outHeight);
+    const chain=env.IMAGES.input(new Blob([canvas],{type:'image/png'}).stream()).draw(overlay,{left:box.left,top:box.top});
+    return {bytes:await pngOutput(chain),mime:'image/png',design,outputSize:{width:outWidth,height:outHeight},artworkBox:box,method:'apparel-v6-'+design.finish};
+  }
   if(design.version===5&&['Hoodie','T-Shirt'].includes(design.product)){
     const art=await prepareApparelArtwork(env,sourceBytes,design.finish);
     const info=await env.IMAGES.info(new Blob([art]).stream());
