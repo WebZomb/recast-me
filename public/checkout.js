@@ -31,17 +31,17 @@ const PRODUCT_META = {
   "Custom Recast Blanket": {order:6,badge:"COZY PICK",pitch:"Big, soft, personal — especially good for pets and gifts.",tier:"secondary",cta:"Shop Blanket"},
   "Custom Recast Mug": {order:7,badge:"GIFTABLE",pitch:"A personalized gift that gets used every day.",tier:"secondary",cta:"Shop Mug"},
   "Custom Recast Tumbler": {order:8,badge:"TAKE IT WITH YOU",pitch:"Your Recast on a 20 oz everyday tumbler.",tier:"secondary",cta:"Shop Tumbler"},
-  "Custom Recast Magnet 3-Pack": {order:9,badge:"ADD-ON",pitch:"Three matching magnets for a smaller, easy add-on.",tier:"secondary",cta:"Shop Magnet Set"},
-  "Custom Recast Coaster 4-Pack": {order:10,badge:"ADD-ON",pitch:"Four matching cork-back coasters featuring your artwork.",tier:"secondary",cta:"Shop Coaster Set"},
+  "Custom Recast Magnet 3-Pack": {order:15,badge:"ADD-ON",pitch:"Three matching magnets for a smaller, easy add-on.",tier:"secondary",cta:"Shop Magnet Set"},
+  "Custom Recast Coaster 4-Pack": {order:16,badge:"ADD-ON",pitch:"Four matching cork-back coasters featuring your artwork.",tier:"secondary",cta:"Shop Coaster Set"},
   "HD Digital Recast": {order:90,badge:"DIGITAL ONLY",pitch:"Just want the clean artwork? Keep the high-resolution file without ordering merch.",tier:"digital",cta:"Get HD File"},
   "Recast Pack": {order:91,badge:"DIGITAL PACK",pitch:"The complete digital set with useful crops and formats.",tier:"digital",cta:"Get Recast Pack"}
 ,
-  "Custom Recast Sticker": {order:11,badge:"NEW · EASY GIFT",pitch:"A glossy 3×3 sticker featuring your Recast.",tier:"secondary",cta:"Shop Sticker"},
-  "Custom Recast Phone Case": {order:12,badge:"NEW · EVERYDAY",pitch:"Carry your Recast every day on a supplier-verified clear iPhone case.",tier:"secondary",cta:"Shop Phone Case"},
-  "Custom Recast Pillow": {order:13,badge:"NEW · HOME",pitch:"A soft personalized accent pillow made from your Recast.",tier:"secondary",cta:"Shop Pillow"},
-  "Custom Recast Hardcover Journal": {order:14,badge:"NEW · DESK",pitch:"Put your Recast on a matte hardcover journal you can use every day.",tier:"secondary",cta:"Shop Journal"},
-  "Custom Recast Puzzle": {order:15,badge:"NEW · GIFT",pitch:"Turn your Recast into a personalized jigsaw puzzle for a fun keepsake.",tier:"secondary",cta:"Shop Puzzle"},
-  "Custom Recast Tote Bag": {order:16,badge:"NEW · CARRY IT",pitch:"A roomy all-over print tote featuring your Recast artwork.",tier:"secondary",cta:"Shop Tote Bag"}
+  "Custom Recast Sticker": {order:9,badge:"NEW · EASY GIFT",pitch:"A glossy 3×3 sticker featuring your Recast.",tier:"secondary",cta:"Shop Sticker"},
+  "Custom Recast Phone Case": {order:10,badge:"NEW · EVERYDAY",pitch:"Carry your Recast every day on a supplier-verified clear iPhone case.",tier:"secondary",cta:"Shop Phone Case"},
+  "Custom Recast Pillow": {order:11,badge:"NEW · HOME",pitch:"A soft personalized accent pillow made from your Recast.",tier:"secondary",cta:"Shop Pillow"},
+  "Custom Recast Hardcover Journal": {order:12,badge:"NEW · DESK",pitch:"Put your Recast on a matte hardcover journal you can use every day.",tier:"secondary",cta:"Shop Journal"},
+  "Custom Recast Puzzle": {order:13,badge:"NEW · GIFT",pitch:"Turn your Recast into a personalized jigsaw puzzle for a fun keepsake.",tier:"secondary",cta:"Shop Puzzle"},
+  "Custom Recast Tote Bag": {order:14,badge:"NEW · CARRY IT",pitch:"A roomy all-over print tote featuring your Recast artwork.",tier:"secondary",cta:"Shop Tote Bag"}
 };
 
 const PRIMARY_PRODUCT_TITLES=new Set(["Custom Recast Mug","Custom Recast Blanket","Custom Recast Poster","Custom Recast Canvas"]);
