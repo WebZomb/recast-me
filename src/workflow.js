@@ -645,12 +645,12 @@ export async function adminProductCandidates(request,env){
     const journals=(Array.isArray(listings)?listings:[]).filter(row=>/hardcover.*(journal|notebook)|(journal|notebook).*hardcover/i.test(row.title||row.name||''));
     for(const row of journals.slice(0,3))if(Number.isSafeInteger(Number(row.id)))catalogIds.add(Number(row.id));
     products.push({title:'Hardcover catalog candidates',candidates:journals.map(row=>({id:row.id,title:row.title||row.name}))});
-    for(const id of [...catalogIds].slice(0,12)){
+    for(const id of [...new Set([...journals.map(row=>Number(row.id)),...catalogIds])].slice(0,12)){
       const detail={title:'Supplier catalog '+id,productId:id};
       try{
         const row=await printful(env,`/products/${id}`,{method:'GET'});
         detail.product=row.product;
-        detail.variants=(row.variants||[]).filter(v=>id!==181||variantIds.has(Number(v.id)));
+        detail.variants=row.variants||[];
         detail.printfiles=await printful(env,`/mockup-generator/printfiles/${id}`,{method:'GET'});
       }catch(error){detail.error=error.message;}
       products.push(detail);
