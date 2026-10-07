@@ -1,0 +1,17 @@
+# RM057 — varied supplier examples and Shopify launch draft
+
+Owner expanded launch work on October 7, 2026: finish product pictures with accurate supplier sizes/layouts, vary subjects/adventures, review before replacing website/Shopify product images, and match Shopify styling to the main website.
+
+Baseline is the RM056 follow-up CI commit (record exact SHA below). RM056 browser job112959774630 completed successfully after accepting Cloudflare's canonical support URL. It reran the full324 tests/bundle plus four viewport public audit,18 curated illustrations and isolated social preview→approval→checkout navigation. Production build also passed. No real payment or X post.
+
+Recovered public scene assets and RM055 exact geometry work. New bounded script scripts/rm057-showcase.cjs uses eight existing public demo artworks for15 supplier product examples, preserving the accepted single sticker. No AI generation, checkout, order draft or production calls. Private original-photo recovery files remain excluded from git and all review deliverables. Images are review candidates, not automatically published product media. Source scenes are illustrative AI examples, not measured customer likeness results. Supplier output still has preview watermarks; final print artwork remains clean.
+
+Live supplier run found Poster12×16 now rejects the optional Flat view filter despite exact variant identity passing. Removed only the optional group selection for Poster, as already required by Canvas/Blanket; retains catalog identity and print geometry checks and ranks available returned views.324 tests pass, including optional-filter regression. Deployment and recovered poster proof pending.
+
+Shopify has one live Horizon theme167026655476. Duplicated to unpublished Recast Me — launch review188993994996. Draft has existing approved orbit logo, near-black/violet/cyan colors, custom homepage/catalog cards, gift copy, support/privacy links, and product entry pages routing through Recast design/approval rather than ordinary blank-product add-to-cart. Both global quick-add options disabled. Uses existing catalog images until owner reviews new samples. No theme publication performed. Browser verified home and mug product routing. Theme styling does not change checkout's backend My Store name.
+
+Theme skill validator dependencies were missing; installed official Shopify packages in isolated /tmp helper directory. Individual new Liquid/locales/settings passed; isolated JSON template validation could not see referenced sections. Full-directory validation passed all ten files with only an external hero-image CDN performance warning. Shopify upload then rejected card radius20 (theme max16) and a section-group write ordered before its section. Corrected radius16, wrote Liquid sections first, then JSON; both writes succeeded. No live-theme file edits. Original read files preserved in shopify/rm057-original; draft source in shopify/rm057-draft.
+
+Remaining: inspect each supplier image, resolve failed proof only after concrete fix, package private review gallery, confirm deployment receipt, publish image replacements only after review. Moderation key/activation, X approval, bot protection, private support inbox, Shopify checkout name and controlled owner-paid fulfillment test remain launch gates. Preserve original paid mug job179697346; no duplicate or release.
+
+Rollback: unpublished theme can be left unused; live theme was untouched. Revert Poster view-filter change narrowly if necessary without changing existing approved artwork or supplier IDs.

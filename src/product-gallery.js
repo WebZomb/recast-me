@@ -4,7 +4,7 @@ const studio=/^flat(?:\s|$)|^default$|^standard$|studio|product only/i;
 export function selectMockupGroups(catalog,product){
   // These catalogs advertise Flat groups that reject otherwise valid variants.
   // Ask the provider for its available views; rank the returned views afterward.
-  if(['Canvas','Blanket'].includes(product))return [];
+  if(['Poster','Canvas','Blanket'].includes(product))return [];
   const groups=(catalog?.option_groups||[]).filter(g=>typeof g==='string');
   const flat=groups.find(g=>studio.test(g));
   if(['Hoodie','T-Shirt'].includes(product))return flat?[flat]:[];

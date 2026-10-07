@@ -10,6 +10,7 @@ const row={placement:'front',technique:'sublimation',print_area_type:'simple',pr
 test('lifestyle groups are selected only when actually supported; apparel keeps a studio view',()=>{
  const catalog={option_groups:['Christmas','Lifestyle kitchen','Flat','Lifestyle living room']};
  assert.deepEqual(selectMockupGroups(catalog,'Mug'),['Flat','Lifestyle kitchen']);assert.deepEqual(selectMockupGroups(catalog,'T-Shirt'),['Flat']);
+ assert.deepEqual(selectMockupGroups(catalog,'Poster'),[]);
  assert.deepEqual(selectMockupGroups({option_groups:['Christmas']},'Mug'),[]);assert.deepEqual(selectMockupGroups({},'Canvas'),[]);
 });
 test('candidate ordering prefers product close-ups and keeps lifestyle alternatives',()=>{
