@@ -73,7 +73,20 @@ function subjectTransformation(styleId,subjectType){
   const isPet=subject.includes("pet")||subject.includes("dog")||subject.includes("cat")||subject.includes("puppy")||subject.includes("kitten");
   const isCar=subject.includes("car");
   const isPerson=subject.includes("person")||subject.includes("couple")||subject.includes("family");
-  const theme=SUBJECT_STYLING[styleId]||"an original costume, role and visual styling drawn directly from the customer's custom world";
+  const categoryTheme=styleId.startsWith("cartoon_")
+    ?"a clearly visible original animated interpretation of the selected theme, with identity-faithful styling and a transformed pose, wardrobe or fitted pet accessory"
+    :styleId.startsWith("sports_")
+      ?"custom unbranded sport or fan wardrobe in the selected sport's visual language, with a confident athletic pose and venue lighting; never copy a real team logo, crest, mascot or uniform"
+      :styleId.startsWith("genre_")
+        ?"an original cinema-genre wardrobe and role that clearly matches the selected genre, with an expressive poster-ready pose and cinematic lighting"
+        :styleId.startsWith("era_")
+          ?"period-authentic wardrobe, grooming or pet accessory and a period-appropriate pose that visibly places the subject in the selected decade"
+          :styleId.startsWith("role_")
+            ?"a clear original costume and role matching the selected character concept, with distinctive accessories and environment lighting"
+            :styleId.startsWith("season_")
+              ?"a clearly visible seasonal wardrobe or fitted pet accessory, celebratory pose, and environment lighting matching the selected occasion"
+              :"an original costume, role and visual styling drawn directly from the customer's custom world";
+  const theme=SUBJECT_STYLING[styleId]||categoryTheme;
   return [
     `VISIBLE SUBJECT TRANSFORMATION REQUIRED: ${theme}.`,
     isPet?"PET IDENTITY IS NON-NEGOTIABLE: costume and environment may change, but the animal itself must not be redesigned. Preserve the exact head and muzzle shape, ear size/shape/angle, eye size/spacing/color, nose, expression character, breed/body proportions, leg length, fur length/texture, and the exact boundaries and placement of every coat-color patch and facial marking from the reference. Do not widen or shorten the muzzle, enlarge the eyes, round the skull, change ear proportions, invent spots, or turn the pet into a generic/cuter/cartoon version. Fit costume around the real anatomy without hiding the defining face or markings. The finished pet should be identifiable from the face and coat even if the costume/background are removed. The pet must be visibly transformed by costume, pose and world lighting, but never appear as an unchanged photo cutout pasted onto new scenery.":"",
@@ -86,7 +99,7 @@ function subjectTransformation(styleId,subjectType){
 
 const AUTO_REJECT=["war","invasion","airstrike","bombing","missile strike","battlefield","casualties","mass shooting","school shooting","murder","kidnapping","hostage","terrorism","suicide","self-harm","earthquake","wildfire","flood disaster","plane crash","funeral","obituary","genocide","hate crime"];
 const REVIEW_TERMS=["election","campaign","president","senate","congress","governor","protest","riot","boycott","pandemic","outbreak","public health emergency"];
-const IP_MARKERS=["gta","grand theft auto","rockstar games","disney","pixar","marvel","dc comics","pokemon","naruto","studio ghibli","star wars","harry potter","fortnite","minecraft","batman","superman","spider-man","spiderman","avengers"];
+const IP_MARKERS=["gta","grand theft auto","rockstar games","disney","pixar","marvel","dc comics","pokemon","naruto","studio ghibli","star wars","harry potter","fortnite","minecraft","batman","superman","spider-man","spiderman","avengers","the simpsons","simpsons","family guy","south park","dreamworks","nickelodeon","looney tunes","mickey mouse","mario","zelda","sonic the hedgehog","nfl","nba","mlb","nhl","fifa","uefa","premier league"];
 
 function json(data,status=200){return new Response(JSON.stringify(data),{status,headers:{"content-type":"application/json; charset=utf-8","cache-control":"no-store"}})}
 function randomHex(byteCount=16){const bytes=new Uint8Array(byteCount);crypto.getRandomValues(bytes);return[...bytes].map(b=>b.toString(16).padStart(2,"0")).join("")}
