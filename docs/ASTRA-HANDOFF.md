@@ -70,3 +70,5 @@ Latest: [RM-050.5 — verified-empty-store missing-draft recovery](ASTRA-SESSION
 Latest: [RM-050.7 — inspected recovered-draft release](ASTRA-SESSION-RM-0507.md).
 
 Latest: [RM-050.8 — exact mobile landing hero match](ASTRA-SESSION-RM-0508.md).
+
+Latest: [RM-050.9 — hero final scale cleanup](ASTRA-SESSION-RM-0509.md).
