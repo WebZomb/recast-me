@@ -1,0 +1,5 @@
+# RM055 final publication and audit notes
+
+The full application/manifest commit 75a2efd7b4a89e388bb83ed7f557151b459a460f passed 303 full Node tests, Worker dry-run and WebKit/Chromium fixtures in isolated run 37587656967. The Actions token could not push a change to workflow YAML; the existing authorized GitHub connector published that same tested commit without changing application bytes. Main security run 37588335920 passed. Main live run 37588335966 completed its original production audit successfully; its added sample screenshot stage remained running beyond the expected test time.
+
+This correction adds finite navigation/locator waits, failure screenshots/diagnostics, a global audit watchdog, and unconditional browser closure. All seven exact sample-count/image checks and read-only interception remain. It does not change any storefront/application code, sample image or provider call. Local tests: 303 passed (the workerd test requires CI); full CI and exact-sample live results on this correction remain to be checked. No additional generation, checkout or production is authorized by this audit correction.
