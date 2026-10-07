@@ -1,0 +1,7 @@
+# RM052 release verification correction
+
+2026-10-07 UTC. Application source validated at `5e45e3476807fc9576212502593d57bd5e6381ec`, produced by isolated run `37570400509` from source-delta SHA256 `97d1250e28096fadc673be52c34069ffb80c3c98a0d12c0b60ea88da7efa4d50`. The full Node suite, Worker dry-run, actual PNG raster checks, product WebKit/Chromium fixture tests and existing credit/owner-policy fixture tests succeeded before promotion. See ASTRA-SESSION-RM-052.md and the run's rm052-validation artifact.
+
+Before advancing main, inspection found the existing read-only production audit still hard-coded RM-051.1; it would incorrectly reject RM052 (and RM051.2). This correction derives the expected build from the exact checked-out public/index.html, fails if that marker is missing, checks actual production HTML/DOM against it, and checks the new CSS and checkout asset URLs. GET-only interception and the other browsing/catalog/layout gates are preserved. No application source, product, artwork, order, configuration or provider behavior differs from the validated application source.
+
+Locally ran Node syntax checking on the audit and a new passing regression test for dynamic marker lookup and read-only interception. Main's existing full validation and public live audit must run on the resulting release commit. Do not call live provider generation, background removal or physical print quality verified from these checks. No account notification preferences were changed and no PR/reviewer email was requested.
