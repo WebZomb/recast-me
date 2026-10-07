@@ -72,3 +72,5 @@ Latest: [RM-050.7 — inspected recovered-draft release](ASTRA-SESSION-RM-0507.m
 Latest: [RM-050.8 — exact mobile landing hero match](ASTRA-SESSION-RM-0508.md).
 
 Latest: [RM-050.9 — hero final scale cleanup](ASTRA-SESSION-RM-0509.md).
+
+Latest: [RM-051.0 — Pic 2 precision hero match](ASTRA-SESSION-RM-0510.md).
