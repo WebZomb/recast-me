@@ -76,8 +76,11 @@ function roadmapMarkup(){
 }
 
 
+// Store cards keep the curated Recast examples the owner approved.
+const USE_SUPPLIER_EXAMPLES_ON_STORE_CARDS=false;
 let catalogExamplesPromise;
 function catalogExamples(){
+  if(!USE_SUPPLIER_EXAMPLES_ON_STORE_CARDS)return Promise.resolve({examples:{}});
   return catalogExamplesPromise ||= fetch('/catalog-examples.json?v=2552',{cache:'no-cache'})
     .then(r=>r.ok?r.json():{examples:{}}).catch(()=>({examples:{}}));
 }
@@ -89,7 +92,7 @@ function trustedExample(row,sku,design){
   return !design||['version','product','layout','fill','x','scale','spacing','finish','orientation'].every(k=>(row.design?.[k]??null)===(design[k]??null));
 }
 async function applyCatalogExample(card,sku,{staticCard=false}={}){
-  if(!card||!sku)return;
+  if(!USE_SUPPLIER_EXAMPLES_ON_STORE_CARDS||!card||!sku)return;
   const run=String(Number(card.dataset.exampleRun||0)+1);card.dataset.exampleRun=run;
   const data=await catalogExamples(),row=data.examples?.[sku];
   // Read controls after the await: initial cards apply their presets synchronously.
