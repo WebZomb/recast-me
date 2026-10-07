@@ -1,0 +1,26 @@
+name: RM054 isolated validation
+on:
+  push:
+    branches: [recast/rm054-approved-roadmap]
+permissions:
+  contents: read
+jobs:
+  checks:
+    if: startsWith(github.event.head_commit.message, 'validate:')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      CI: 'true'
+      WRANGLER_SEND_METRICS: 'false'
+    steps:
+      - name: Fetch exact revision
+        run: |
+          git init .
+          git remote add origin "https://github.com/${GITHUB_REPOSITORY}.git"
+          git fetch --depth=1 origin "${GITHUB_SHA}"
+          git checkout --detach FETCH_HEAD
+      - name: Locked tests and bundle
+        run: |
+          npm ci --ignore-scripts --no-audit --no-fund
+          npm test
+          npx --no-install wrangler deploy --dry-run --outdir /tmp/rm054-bundle
