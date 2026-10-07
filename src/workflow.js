@@ -3,6 +3,7 @@ import {prepareApparelArtwork} from './apparel-finish.js';
 import {selectMockupGroups,rankMockupCandidates} from './product-gallery.js';
 import {printfulReferenceForNewDraft} from './printful-reference.js';
 import {verifiedLegacyEmptyStoreForRecovery} from './printful-diagnostics.js';
+import {RM054_PRODUCT_CANDIDATES} from './rm054-product-candidates.js';
 import { FULFILLMENT } from "./entry.js";
 import { runSocialPipeline, socialReadiness } from './social.js';
 import { renderHealth } from './render-health.js';
@@ -611,6 +612,27 @@ export async function adminJobs(request,env){
 export async function adminGenerationErrors(request,env){try{requireAdmin(request,env);const server=await listJson(env,"diagnostics/generation/",100);const client=await listJson(env,"diagnostics/client/",100);const attempts=await listJson(env,"diagnostics/attempts/",100);const errors=[...server,...client,...attempts.filter(x=>x.status==="failed")];errors.sort((a,b)=>String(b.createdAt||b.failedAt||b.updatedAt).localeCompare(String(a.createdAt||a.failedAt||a.updatedAt)));return json({ok:true,errors:errors.slice(0,75)})}catch(error){return json({ok:false,error:error.message},error.status||500)}}
 export async function adminTrends(request,env){try{requireAdmin(request,env);const rows=await listJson(env,"trends/",100);rows.sort((a,b)=>String(b.createdAt).localeCompare(String(a.createdAt)));return json({ok:true,trends:rows})}catch(error){return json({ok:false,error:error.message},error.status||500)}}
 export async function adminSocial(request,env){try{requireAdmin(request,env);const rows=await listJson(env,"social/x/",100);const listed=await env.ARTWORK?.list({prefix:"requests/",limit:1000});const byTweet=new Map();for(const object of listed?.objects||[]){if(!object.key.endsWith("/request.json"))continue;const meta=await readJson(env,object.key);if(meta?.sourceTweet)byTweet.set(String(meta.sourceTweet),meta)}for(const row of rows){const meta=byTweet.get(String(row.tweetId));if(meta){row.recastRequestId=meta.requestId;row.converted=true;row.paid=Boolean(meta.paid)}}rows.sort((a,b)=>String(b.createdAt).localeCompare(String(a.createdAt)));return json({ok:true,requests:rows})}catch(error){return json({ok:false,error:error.message},error.status||500)}}
+export async function adminProductCandidates(request,env){
+  try{
+    requireAdmin(request,env);
+    const products=[];
+    for(const [key,candidate] of Object.entries(RM054_PRODUCT_CANDIDATES)){
+      const variants=[];
+      for(const item of candidate.variants){
+        try{
+          const response=await printful(env,`/v2/catalog-variants/${item.printfulVariantId}`,{method:'GET'});
+          const row=response?.data||{};
+          variants.push({requestedId:item.printfulVariantId,verified:Number(row.id)===Number(item.printfulVariantId),catalogProductId:Number(row.catalog_product_id)||null,name:row.name||null,size:row.size||null,color:row.color||null,availability:row.availability_status||row.availability||null});
+        }catch(error){
+          variants.push({requestedId:item.printfulVariantId,verified:false,error:error.message||String(error),providerStatus:error.printfulStatus||null});
+        }
+      }
+      products.push({key,title:candidate.title,wave:candidate.wave,state:candidate.state,variants});
+    }
+    return json({ok:true,productionSubmitted:false,products});
+  }catch(error){return json({ok:false,error:error.message},error.status||500)}
+}
+
 export async function adminSyncOrders(request,env){try{requireAdmin(request,env);const orders=await syncPaidOrders(env);const legacy=await retryLegacyOwnerReleaseCandidates(env);const printful=await syncPrintfulJobs(env);return json({ok:true,created:orders.created||0,seen:orders.seen||0,legacyChecked:legacy.checked||0,legacyReleased:legacy.released||0,printfulUpdated:printful.updated||0})}catch(error){return json({ok:false,error:error.message},error.status||500)}}
 
 async function finalizePrintArt(env,job){
@@ -1054,6 +1076,7 @@ export async function routeWorkflow(request,env,ctx){
     catch(error){return json({ok:false,error:error.message},error.status||500);}
   }
   if(p==="/api/admin/jobs"&&request.method==="GET")return adminJobs(request,env);
+  if(p==="/api/admin/product-candidates"&&request.method==="GET")return adminProductCandidates(request,env);
   if(p==="/api/admin/generation-errors"&&request.method==="GET")return adminGenerationErrors(request,env);
   if(p==="/api/admin/trends"&&request.method==="GET")return adminTrends(request,env);
   if(p==="/api/admin/social"&&request.method==="GET")return adminSocial(request,env);
