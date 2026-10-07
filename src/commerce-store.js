@@ -29,7 +29,7 @@ export function recommendedProductDesign(map={}){
   const product=String(map?.product||'Generic');
   if(product==='Mug')return {layout:'two-sided',fill:'ambient',x:'center',scale:110,spacing:'standard'};
   if(product==='Tumbler')return {layout:'two-sided',fill:'ambient',x:'center',scale:108,spacing:'standard'};
-  if(product==='Blanket')return {layout:'cover',fill:'full-bleed',x:'center',scale:100,spacing:'standard'};
+  if(product==='Blanket')return {layout:'fit',fill:'ambient',x:'center',scale:92,spacing:'standard'};
   if(['Poster','Framed Poster','Canvas','Magnet 3-Pack','Coaster 4-Pack'].includes(product))return {layout:'cover',fill:'full-bleed',x:'center',scale:100,spacing:'standard'};
   return {layout:'fit',fill:'ambient',x:'center',scale:100,spacing:'standard'};
 }
