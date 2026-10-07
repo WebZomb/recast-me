@@ -312,6 +312,12 @@ export async function highQualityTransform(request,env,{trustedSocialJob=false}=
   let attemptStartedAt=Date.now();
   try{
     if(!env.AI)return json({error:"ai_unavailable",userMessage:"The image engine is temporarily unavailable. Please try again shortly.",reason:"binding"},503);
+    if(env.RENDER_RATE_LIMITER&&!trustedSocialJob){
+      stage="rate-limit";
+      const actor=env.RECAST_CREDIT_WALLET?.id||"uninitialized";
+      const limited=await env.RENDER_RATE_LIMITER.limit({key:`render:${actor}`});
+      if(!limited.success)return json({error:"render_rate_limited",userMessage:"Too many preview requests were sent at once. Wait a moment and try again.",reason:"rate_limit",retryable:true},429);
+    }
     const incoming=await request.formData();stage="parse-form";
     if(env.TURNSTILE_SECRET_KEY&&!trustedSocialJob){
       stage="human-check";
