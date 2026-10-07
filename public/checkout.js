@@ -362,7 +362,7 @@ async function generateRealMockup({req,sku,card,button}){
       if(!current())return;
       if(response.ok&&data.status==="completed"&&data.images?.length){
         const img=card.querySelector(".product-art img"),views=uniqueMockupViews(data.images);
-        const sidePreferred=/^Custom Recast Mug$/i.test(card.dataset.productTitle||"")?views.findIndex(view=>/^(Handle left|Handle right|Left|Right|3D|Product)$/i.test(view.label)):-1;
+        const sidePreferred=/^Custom Recast (Mug|Tumbler)$/i.test(card.dataset.productTitle||"")?views.findIndex(view=>/^(Handle left|Handle right|Left|Right|3D|Product)$/i.test(view.label)):-1;
         const preferred=sidePreferred>=0?sidePreferred:views.findIndex(view=>/^(Product|3D|Flat|Front)$/i.test(view.label)),selected=preferred>=0?preferred:0;
         img.src=views[selected].url;img.alt="Your Recast on the actual product mockup";
         card.querySelector(".mockup-views")?.remove();

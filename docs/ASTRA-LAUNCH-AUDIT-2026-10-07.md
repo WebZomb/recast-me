@@ -1,4 +1,4 @@
-# October 7 live launch audit (in progress)
+# October 7 live launch audit
 
 Baseline: 815283e5703b0db034b72a83ce07a9495cd62843. Owner accepts the single cut-out sticker; no additional sticker pack required. Audit all products and the first mug, preserve exact artwork and existing release authorization.
 
@@ -48,3 +48,13 @@ Costs/actions: public hero art only, one original-photo upload; zero AI inferenc
 
 ## Approval-compatibility checkpoint
 Final normalization review found that adding a default portrait field to every existing v6 puzzle could alter an old approval. Corrected it: v6 puzzles gain orientation only when the request explicitly supplies it; legacy un-oriented proofs remain byte-for-byte normalizable. Regression added;315 tests pass. Canvas/blanket now both generate supplier proofs with current UI settings; live tumbler completion and full final browser CI are still pending at this checkpoint.
+
+
+## Final provider and checkout results
+All final older-product tests completed: blanket50×60 current fit92, canvas12×16 fit90 portrait and tumbler20oz two-sided all returned real provider proofs; images visually inspected. Tumbler succeeds with front placement through the V1 path (V2 remains a guarded fallback); images include both side views and seam views. Customer thumbnail selection now prefers a side view for tumbler, as it already did for mugs, without modifying saved approved proof records.
+
+All six new product categories returned HTTP200 checkout links using their already-completed reviewed demo proofs: sticker, phone14ProMax revision7, pillow14, journal revision7, puzzle252, tote. Plus the earlier actual browser sticker handoff. These seven checkout-link requests were unpaid; zero orders, drafts or production calls. No customer photo/credential appears in committed evidence. The nine phone models were functionally verified against their exact suppliers; the new camera-safe layout was visually checked on14ProMax, not individually re-rendered on all nine. Other pillow sizes passed provider generation under full-bleed before changing the default to fit;14-inch fit was visually rechecked. Customers still must inspect their exact chosen variant proof before checkout.
+
+315 local tests pass. Cloudflare production and mocked-tests/bundle checks passed for the canvas/fixture checkpoint; its complete read-only browser audit passed too, including the lazy-image fix. The following legacy-puzzle patch has deployed successfully; final view-preference/docs checkpoint must be confirmed separately. Cumulative successful supplier mockups this audit:18 initial corrected variants +6 revised new-gift layouts +2 unfiltered older products +3 final older-product presets =29. Initial failures and replacements are recorded above. No AI calls.
+
+Ready for a controlled owner test; NOT an assertion of physical print/shipping quality or broad public launch approval. Remaining concrete gates: (1) Change checkout store label from My Store to Recast Me Ai; Shopify admin currently requires owner login and human challenge. (2) Run one new paid test through the full preview/final-confirm flow and verify automatic Printful fulfillment and eventual delivery. (3) Configure bot protection before promoting free renders; current daily AI cap remains70. Existing mug is pending at Printful, not confirmed shipped. No further sticker pack added.
