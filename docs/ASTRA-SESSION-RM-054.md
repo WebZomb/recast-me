@@ -9,7 +9,7 @@ Keep the subject step simple: My pet, Just me, Me + my pet, Couple, Family, My c
 Creative variety belongs in the organized Worlds/Ideas system. Preserve the expanded animation/art, sports, decades, movies/adventures, fantasy/sci-fi, seasonal and custom paths plus the later generic discovery groups. Do not present protected franchises, celebrity likenesses or real team marks as official licensed presets.
 
 Approved merchandise roadmap from the recovered chat:
-- Main lineup additions: Sticker, Phone Case, Pillow, Notebook.
+- Main lineup additions: Sticker Pack, Phone Case, Pillow, Notebook.
 - More Gifts additions: Pet Bandana, Puzzle, Tote Bag.
 - Pet Bowl remains excluded for now.
 Existing live products remain unchanged.
@@ -19,7 +19,7 @@ Existing live products remain unchanged.
 - Restored the seven approved quick choices and their deliberate photo-reference labeling.
 - Kept backend generalization harmlessly available for custom descriptions; it is not surfaced as extra subject buttons.
 - Created seven Shopify products as DRAFTS only. They are not published and cannot enter the Recast fulfillment map yet:
-  - Sticker gid://shopify/Product/15419551777012 — draft $9.99
+  - Sticker Pack gid://shopify/Product/15419551777012 — draft $14.99
   - Phone Case gid://shopify/Product/15419551940852 — draft $29.99
   - Pillow gid://shopify/Product/15419552137460 — draft $39.99
   - Notebook gid://shopify/Product/15419552366836 — draft $24.99
@@ -48,3 +48,6 @@ Phone Case needs a deliberate supported-device set rather than one generic Shopi
 No current live SKU, order, fulfillment mapping, render-credit rule, owner control, approved artwork, or paid production submission is changed by this branch.
 
 - Added an admin-only GET catalog-candidate verifier. It uses the existing Printful token to read exact V2 variant identity/product IDs without creating mockups, orders, drafts, or production submissions. This is the next safe bridge from public research to exact provider mapping.
+
+## Sticker Pack final-flow test decision
+Owner recalled that the final inexpensive physical checkout test was intended to use a sticker pack. Printful currently offers a 5.83×8.27 Kiss-Cut Sticker Sheet (catalog product 505) at about $5.15 base before shipping/tax. The Shopify draft was therefore corrected from a single 4×4 sticker to Custom Recast Sticker Pack, SKU RECAST-STICKER-PACK, working retail $14.99. The exact Printful V2 catalog variant ID is intentionally left null until the connected-provider verifier confirms it. Do not activate checkout with a guessed variant. Once verified, this product is the preferred final paid end-to-end test because it keeps the physical test inexpensive while exercising Shopify payment → paid-order sync → Recast proof → clean print file → Printful draft → automatic production handoff/tracking. No purchase has been made by the assistant.

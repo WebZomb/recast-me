@@ -4,9 +4,10 @@
 // mockup generation, print geometry, Shopify variant and proof behavior are verified.
 export const RM054_PRODUCT_CANDIDATES = Object.freeze({
   sticker: {
-    wave:"main", title:"Custom Recast Sticker", supplier:"Printful Kiss-Cut Stickers",
-    variants:[{label:"4×4", printfulVariantId:10164, shopifySku:"RECAST-STICKER-4X4"}],
-    draftRetail:9.99, supplierPriceObserved:2.34, state:"draft-unmapped"
+    wave:"main", title:"Custom Recast Sticker Pack", supplier:"Printful Kiss-Cut Sticker Sheet",
+    variants:[{label:"5.83×8.27 sticker sheet", printfulProductId:505, printfulVariantId:null, shopifySku:"RECAST-STICKER-PACK"}],
+    draftRetail:14.99, supplierPriceObserved:5.15, state:"draft-needs-exact-variant",
+    testPurpose:"Final low-cost end-to-end purchase and automatic fulfillment test"
   },
   phoneCase: {
     wave:"main", title:"Custom Recast Phone Case", supplier:"Printful Clear Case for iPhone®",

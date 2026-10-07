@@ -12,7 +12,7 @@ test('approved RM054 roadmap is recorded in the recovered launch order',()=>{
 
 test('new candidates stay outside live fulfillment until provider verification',()=>{
  for(const item of Object.values(RM054_PRODUCT_CANDIDATES)){
-   assert.equal(item.state,'draft-unmapped');
+   assert.ok(['draft-unmapped','draft-needs-exact-variant'].includes(item.state));
    for(const variant of item.variants) if(variant.shopifySku) assert.equal(entry.includes(`"${variant.shopifySku}"`),false,variant.shopifySku);
  }
 });
@@ -22,7 +22,7 @@ test('researched candidate mappings are concrete and bounded',()=>{
    assert.ok(item.supplier.startsWith('Printful '));
    assert.ok(item.draftRetail>0);
    assert.ok(item.supplierPriceObserved>0);
-   for(const variant of item.variants) assert.ok(Number.isSafeInteger(variant.printfulVariantId)&&variant.printfulVariantId>0);
+   for(const variant of item.variants) if(variant.printfulVariantId!==null) assert.ok(Number.isSafeInteger(variant.printfulVariantId)&&variant.printfulVariantId>0);
  }
  assert.match(RM054_PRODUCT_CANDIDATES.puzzle.regionNote,/US only/);
 });
@@ -37,4 +37,13 @@ test('candidate verification is admin-only, read-only, and never submits product
  assert.equal(block.includes("method:'POST'"),false);
  assert.ok(block.includes('productionSubmitted:false'));
  assert.ok(workflow.includes('/api/admin/product-candidates'));
+});
+
+test('sticker pack is the intended low-cost final purchase-flow test, not a single sticker',()=>{
+ const item=RM054_PRODUCT_CANDIDATES.sticker;
+ assert.equal(item.title,'Custom Recast Sticker Pack');
+ assert.equal(item.variants[0].printfulProductId,505);
+ assert.equal(item.variants[0].printfulVariantId,null);
+ assert.match(item.testPurpose,/end-to-end purchase/);
+ assert.equal(entry.includes('RECAST-STICKER-PACK'),false);
 });
