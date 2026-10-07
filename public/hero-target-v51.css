@@ -218,3 +218,52 @@
 @media(prefers-reduced-motion:reduce){
  .hero-glow-a,.hero-glow-b,.hero-light-streak-a,.hero-light-streak-b,.hero-live-product::before,.hero-live-tagline i{animation:none!important}
 }
+
+/* RM058: keep the desktop demonstration together instead of floating an
+   oversized mug above two small cards. Phone composition remains unchanged. */
+@media(min-width:761px){
+ .hero-live-stage{
+   display:grid!important;
+   grid-template-columns:minmax(0,1.3fr) minmax(0,1fr)!important;
+   align-items:end!important;
+   column-gap:6px!important;
+   row-gap:48px!important;
+   aspect-ratio:auto!important;
+   height:auto!important;
+   min-height:0!important;
+   padding:20px 0!important;
+ }
+ .hero-live-flow{
+   position:relative!important;
+   left:auto!important;top:auto!important;bottom:auto!important;
+   width:100%!important;
+   grid-template-columns:minmax(0,1fr) 20px minmax(0,1fr) 20px!important;
+ }
+ .hero-live-product{
+   position:relative!important;
+   right:auto!important;top:auto!important;bottom:auto!important;
+   width:100%!important;
+   min-height:0!important;
+   margin:0 0 36px!important;
+ }
+ .hero-live-product img{filter:none!important}
+ .hero-live-product-label{
+   left:50%!important;bottom:-36px!important;
+   width:88%!important;min-height:30px!important;
+ }
+ .hero-live-tagline{
+   grid-column:1/-1!important;
+   position:relative!important;
+   left:auto!important;bottom:auto!important;
+   transform:none!important;
+   justify-self:center!important;
+ }
+}
+@media(min-width:1000px){
+ .hero{
+   grid-template-columns:minmax(0,1fr) minmax(0,1.15fr)!important;
+   gap:40px!important;
+   min-height:620px!important;
+   padding-top:64px!important;padding-bottom:64px!important;
+ }
+}
