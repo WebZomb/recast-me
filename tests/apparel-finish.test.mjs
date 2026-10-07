@@ -48,7 +48,7 @@ test('transparent canvas is entirely transparent and dimensions are bounded',asy
 });
 test('new garment finishes normalize to v5 transparent; existing approved v4 never changes',()=>{
  const map={product:'Hoodie'};
- for(const finish of ['cutout','soft','rectangle']){const d=normalizeProductDesign(map,{finish,scale:500});assert.equal(d.version,5);assert.equal(d.fill,'transparent');assert.equal(d.scale,100);assert.equal(d.finish,finish)}
+ for(const finish of ['cutout','soft','rectangle']){const d=normalizeProductDesign(map,{finish,scale:500});assert.equal(d.version,5);assert.equal(d.fill,'transparent');assert.equal(d.scale,finish==='soft'?118:100);assert.equal(d.finish,finish)}
  const old=normalizeProductDesign(map,{version:4,layout:'fit',fill:'dark',scale:85,finish:'cutout'});assert.equal(old.version,4);assert.equal(old.fill,'dark');assert.equal(old.finish,undefined);
  assert.equal(normalizeProductDesign({product:'Poster'},{finish:'cutout'}).version,4);
  assert.equal(normalizeProductDesign(map,{finish:'unknown'}).version,4);
@@ -98,4 +98,14 @@ test('approved v5 finish stores and serves clean PNG; token/payment gates remain
  const file=await printDesignFile(new Request('https://recast.test/api/print-design/garment-test?token=private-fixture-print'),env,job,verify);assert.equal(file.headers.get('content-type'),'image/png');assert.equal(paidChecks,1);
  const denied=await printDesignFile(new Request('https://recast.test/api/print-design/garment-test?token=wrong'),env,job,verify);assert.equal(denied.status,404);assert.equal(paidChecks,1);
  await assert.rejects(()=>printDesignFile(new Request('https://recast.test/api/print-design/garment-test?token=private-fixture-print'),env,job,async()=>{throw new Error('unpaid')}),/unpaid/);
+});
+
+test('premium scene-blend apparel can print larger while preserving transparent edge treatment',async()=>{
+ const hoodie=normalizeProductDesign({product:'Hoodie'},{finish:'soft',scale:112});
+ const shirt=normalizeProductDesign({product:'T-Shirt'},{finish:'soft',scale:108});
+ assert.equal(hoodie.scale,112);assert.equal(shirt.scale,108);
+ const IMAGES=pngImages(await transparentCanvas(1000,1200)),env={ARTWORK:new Bucket(),IMAGES};
+ const out=await composeProductLayout(env,CLEAN,{width:640,height:400},{width:4500,height:5400},{product:'Hoodie'},{finish:'soft',scale:112},1000);
+ assert.equal(out.mime,'image/png');assert.match(out.method,/apparel-v5-soft/);
+ assert.ok(IMAGES.calls.some(([op,o])=>op==='draw'&&o.composite==='in'),'scene is masked by edge fade');
 });

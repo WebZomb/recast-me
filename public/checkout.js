@@ -37,8 +37,8 @@ const PRODUCT_META = {
 
 const PRIMARY_PRODUCT_TITLES=new Set(["Custom Recast Mug","Custom Recast Blanket","Custom Recast Poster","Custom Recast Canvas"]);
 const PRODUCT_DESIGN_PRESETS = {
-  "Custom Recast Hoodie": {product:"Hoodie",layout:"fit",fill:"transparent",x:"center",scale:85,spacing:"standard",finish:"cutout",label:"Subject cutout · no background"},
-  "Custom Recast T-Shirt": {product:"T-Shirt",layout:"fit",fill:"transparent",x:"center",scale:82,spacing:"standard",finish:"cutout",label:"Subject cutout · no background"},
+  "Custom Recast Hoodie": {product:"Hoodie",layout:"fit",fill:"transparent",x:"center",scale:112,spacing:"standard",finish:"soft",label:"Scene blend · soft fade into fabric"},
+  "Custom Recast T-Shirt": {product:"T-Shirt",layout:"fit",fill:"transparent",x:"center",scale:108,spacing:"standard",finish:"soft",label:"Scene blend · soft fade into fabric"},
   "Custom Recast Mug": {product:"Mug",layout:"two-sided",fill:"ambient",x:"center",scale:110,spacing:"standard",label:"Best setup · two-sided wrap"},
   "Custom Recast Tumbler": {product:"Tumbler",layout:"two-sided",fill:"ambient",x:"center",scale:108,spacing:"standard",label:"Best setup · two-sided wrap"},
   "Custom Recast Blanket": {product:"Blanket",layout:"cover",fill:"full-bleed",x:"center",scale:100,spacing:"standard",label:"Best setup · full blanket"},
@@ -113,7 +113,7 @@ function designControlsMarkup(title,preset){
     <summary><span>Edit design</span></summary>
     <div class="design-edit-body">
       <label data-layout-label>Layout<select data-design-layout>${layoutOptions}</select></label>
-      ${apparel?`<label>Artwork finish<select data-design-finish><option value="cutout">Subject cutout · no background</option><option value="soft">Soft-edge photo · keep the scene</option><option value="rectangle">Original photo · straight edges</option></select></label><p class="apparel-finish-note">Cutout removes the scene using Cloudflare AI image processing. Check all faces, ears and paws in your preview. Soft-edge photo uses a fine dot fade into the fabric. No colored print box is added.</p>`:""}
+      ${apparel?`<label>Artwork finish<select data-design-finish><option value="soft">Scene blend · fade into fabric</option><option value="cutout">Subject cutout · no background</option><option value="rectangle">Original photo · straight edges</option></select></label><p class="apparel-finish-note">Scene blend keeps the full Recast sharp in the center and gradually dissolves the outer edges into the garment so there is no visible rectangular border. Cutout remains available for designs that work better without a scene.</p>`:""}
       ${spacing}
       <label data-design-fill-wrap hidden>Background fill<select data-design-fill><option value="ambient" selected>Blend artwork colors</option><option value="transparent" hidden>No added background</option><option value="dark">Dark fill</option><option value="light">Light fill</option><option value="full-bleed">Artwork edge fill</option></select></label>
       <label data-design-position-wrap>Image position<select data-design-x><option value="left">Left</option><option value="center" selected>Center</option><option value="right">Right</option></select></label>
@@ -413,7 +413,7 @@ async function loadCheckout(){
         <span class="price">${priceText}</span>
         ${select}
         ${realPreview}
-        ${preset.finish?'<p class="apparel-finish-note">Recommended: AI subject cutout, without a background. Your original stays unchanged. Change the finish in Edit design.</p>':""}
+        ${preset.finish?'<p class="apparel-finish-note">Recommended: keep the full Recast scene with a broad soft edge fade into the garment, inspired by premium graphic apparel. Your original stays unchanged. Change the finish in Edit design.</p>':""}
         <button class="recast-buy" data-product="${index}" data-buy-label="${meta.cta}" ${active&&digital?"":"disabled"} ${active&&!digital?"hidden":""}>
           ${active?(digital?meta.cta:"Continue to final review"):"Not available to buy yet"}
         </button>

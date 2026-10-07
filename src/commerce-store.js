@@ -56,7 +56,8 @@ export function normalizeProductDesign(map,raw={}){
   const background=(layout==='cover'||layout==='wrap')?'full-bleed':fill;
   // Old v4 approvals keep their original composition. New apparel choices opt into v5.
   if(['Hoodie','T-Shirt'].includes(product)&&['cutout','soft','rectangle'].includes(raw.finish)&&(!rawVersion||rawVersion>=5)){
-    return {version:5,layout:'fit',background:'transparent',fill:'transparent',x,scale:Math.min(100,scale),spacing,product,finish:raw.finish};
+    const apparelScale=Math.min(raw.finish==='soft'?118:100,scale);
+    return {version:5,layout:'fit',background:'transparent',fill:'transparent',x,scale:apparelScale,spacing,product,finish:raw.finish};
   }
   return {version:4,layout,background,fill,x,scale,spacing,product};
 }
@@ -93,7 +94,8 @@ export async function composeProductLayout(env,sourceBytes,sourceSize,area,map={
     const art=await prepareApparelArtwork(env,sourceBytes,design.finish);
     const info=await env.IMAGES.info(new Blob([art]).stream());
     if(![info.width,info.height].every(n=>Number.isFinite(n)&&n>0))throw fault('apparel_dimensions','Clothing artwork dimensions could not be verified.',503);
-    const fitted=fitDimensions(info.width,info.height,outWidth*.92*Math.min(1,design.scale/100),outHeight*.92*Math.min(1,design.scale/100));
+    const sizeFactor=Math.min(1.12,design.scale/100);
+    const fitted=fitDimensions(info.width,info.height,outWidth*.96*sizeFactor,outHeight*.96*sizeFactor);
     const center=design.x==='left'?.30:design.x==='right'?.70:.50;
     const left=Math.round(Math.max(0,Math.min(outWidth-fitted.width,center*outWidth-fitted.width/2))),top=Math.round((outHeight-fitted.height)/2);
     let overlay=env.IMAGES.input(new Blob([art]).stream()).transform({width:fitted.width,height:fitted.height,fit:'squeeze',background:'rgba(0,0,0,0)'});
