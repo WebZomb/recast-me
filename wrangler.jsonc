@@ -52,6 +52,13 @@
     "binding": "AI"
   },
   "images": { "binding": "IMAGES" },
+  "ratelimits": [
+    {
+      "name": "RENDER_RATE_LIMITER",
+      "namespace_id": "5301",
+      "simple": { "limit": 8, "period": 60 }
+    }
+  ],
   "previews": {
     "vars": {
       "PRINTFUL_STORE_ID": "18798877",
