@@ -237,16 +237,6 @@ function uniqueMockupViews(input=[]){
   }
   return output;
 }
-function physicalSizeGuide(card){
-  const title=card?.dataset?.productTitle||"";
-  if(!["Custom Recast Poster","Custom Recast Canvas"].includes(title))return "";
-  const option=card.querySelector(".recast-variant option:checked");
-  const label=option?.textContent||"";
-  const m=label.match(/(\d+)\s*[×x]\s*(\d+)/i);if(!m)return "";
-  const w=Number(m[1]),h=Number(m[2]),maxW=24,maxH=36;
-  const pctW=Math.max(22,Math.min(100,w/maxW*100)),pctH=Math.max(22,Math.min(100,h/maxH*100));
-  return `<div class="physical-size-guide"><div class="physical-size-copy"><strong>Actual selected size: ${w}×${h} in</strong><span>Rectangle below is proportional to a 24×36 reference. Room photography can make wall art look larger or smaller.</span></div><div class="physical-size-stage"><div class="physical-size-rect" style="width:${pctW}%;height:${pctH}%"><span>${w}×${h}</span></div></div></div>`;
-}
 function designSummary(card){
   const d=productDesign(card),parts=[];
   parts.push(d.layout==="two-sided"?"Two-sided wrap":d.layout==="wrap"?"Full wrap":d.layout==="cover"?"Full bleed":d.layout==="fit"?"Keep whole image":"One image");
@@ -387,9 +377,7 @@ async function generateRealMockup({req,sku,card,button}){
           });
           card.querySelector(".product-art").after(controls);
         }
-        const caption=card.querySelector(".example-design-label");if(caption)caption.textContent=["Custom Recast Poster","Custom Recast Canvas"].includes(card.dataset.productTitle)?`Your artwork · ${card.querySelector(".recast-variant option:checked")?.textContent||"selected size"} · supplier room mockup`:"Your artwork · product preview";
-        card.querySelector(".physical-size-guide")?.remove();
-        if(["Custom Recast Poster","Custom Recast Canvas"].includes(card.dataset.productTitle)){const wrap=document.createElement("div");wrap.innerHTML=physicalSizeGuide(card);const guide=wrap.firstElementChild;if(guide)card.querySelector(".mockup-views")?.after(guide);}
+        const caption=card.querySelector(".example-design-label");if(caption)caption.textContent=["Custom Recast Poster","Custom Recast Canvas"].includes(card.dataset.productTitle)?`Your artwork · ${card.querySelector(".recast-variant option:checked")?.textContent||"selected size"} · supplier mockup`:"Your artwork · product preview";
         card.dataset.mockupSignature=signature;card.dataset.mockupId=mockupId;
         productReviewState.set(card,{sku,design,mockupId,views:views.slice(0,3),signature});
         card.classList.add("real-mockup-ready");
