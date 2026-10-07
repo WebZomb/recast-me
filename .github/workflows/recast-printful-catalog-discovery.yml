@@ -20,7 +20,7 @@ jobs:
           data=json.load(open('/tmp/products.json'))
           items=data.get('result',{})
           if isinstance(items,dict): items=items.get('products',[])
-          terms=re.compile(r'(sticker|phone case|pillow|notebook|journal|bandana|puzzle|tote)',re.I)
+          terms=re.compile(r'(case)',re.I)
           matches=[p for p in items if terms.search(str(p.get('title','')))]
           print('PRINTFUL_CANDIDATES_BEGIN')
           for p in matches:
