@@ -35,7 +35,26 @@ Object.assign(STYLES,{
  noir:{name:"Film Noir",prompt:"classic black-and-white detective cinema, rain-slick streets, dramatic shadows and timeless wardrobe"},
  christmas:{name:"Holiday Magic",prompt:"warm original holiday portrait, elegant seasonal decor, twinkle lights and cozy cinematic glow"},
  valentine:{name:"Valentine",prompt:"romantic original portrait, refined pink-red light, flowers and premium editorial styling"},
- birthday:{name:"Birthday Celebration",prompt:"colorful premium birthday portrait, tasteful balloons, confetti and celebratory studio lighting"}
+ birthday:{name:"Birthday Celebration",prompt:"colorful premium birthday portrait, tasteful balloons, confetti and celebratory studio lighting"},
+ rockstar:{name:"Rock Star",prompt:"original premium rock-concert portrait, dramatic stage lights, expressive performance styling, no real artist likenesses or logos"},
+ popstar:{name:"Pop Star",prompt:"original polished pop-editorial portrait, colorful stage lighting, album-cover composition, no real artist likenesses or logos"},
+ dj:{name:"DJ Night",prompt:"original premium club portrait, DJ decks, lasers and sophisticated nightlife atmosphere, no brand logos"},
+ "red-carpet":{name:"Red Carpet",prompt:"luxury premiere-night portrait, refined fashion, flash photography and cinematic arrival atmosphere"},
+ beach:{name:"Beach Escape",prompt:"premium golden-hour coastal portrait, tasteful resort styling, natural ocean light and relaxed travel-editorial atmosphere"},
+ paris:{name:"Paris Getaway",prompt:"elegant European travel portrait, café streets and classic architecture, cinematic editorial light without copied film references"},
+ tropical:{name:"Tropical Paradise",prompt:"premium tropical travel portrait, lush palms, turquoise water, vibrant natural light and refined resort styling"},
+ luxury:{name:"Luxury Life",prompt:"high-end editorial portrait, modern architecture, refined wardrobe and premium dramatic lighting"},
+ astronaut:{name:"Astronaut Mission",prompt:"original realistic astronaut mission portrait, unbranded space gear, spacecraft details and planetary cinematic light"},
+ firefighter:{name:"Firefighter Hero",prompt:"respectful original firefighter portrait, professional protective gear, station atmosphere and cinematic light, nonviolent scene"},
+ chef:{name:"Master Chef",prompt:"premium culinary portrait, professional chef styling, elegant kitchen and warm editorial lighting"},
+ pilot:{name:"Pilot",prompt:"original aviation portrait, professional flight styling, aircraft atmosphere and cinematic sky light, no airline logos"},
+ "ancient-egypt":{name:"Ancient Egypt",prompt:"original historical-inspired portrait, monumental ancient Egyptian architecture, rich period-inspired textiles and desert light"},
+ roman:{name:"Ancient Rome",prompt:"original ancient-Rome-inspired portrait, classical architecture, period-inspired wardrobe and cinematic Mediterranean light"},
+ medieval:{name:"Medieval Kingdom",prompt:"original medieval kingdom portrait, castle environment, period-inspired clothing, banners and dramatic torchlight"},
+ renaissance:{name:"Renaissance Portrait",prompt:"museum-inspired Renaissance portrait, period fashion, rich painterly texture and old-master lighting"},
+ "tiny-world":{name:"Tiny World",prompt:"playful original miniature-world illusion, subject appears tiny inside an oversized everyday environment, photoreal cinematic scale"},
+ "giant-world":{name:"Giant World",prompt:"playful original cinematic scale illusion, subject towers over an invented miniature city, non-destructive whimsical scene"},
+ "food-world":{name:"Food Fantasy",prompt:"whimsical original fantasy environment built from colorful food, candy or dessert-inspired scenery, polished storybook realism"}
 });
 
 const SUBJECT_STYLING = {
