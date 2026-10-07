@@ -6,8 +6,8 @@ const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypt
 const base='https://recastmeai.com',out=path.resolve('rm055-public-examples');
 const delay=ms=>new Promise(r=>setTimeout(r,ms));
 const sha=bytes=>crypto.createHash('sha256').update(bytes).digest('hex');
-const defs=[['Hoodie','RECAST-HOODIE-S'],['T-Shirt','RECAST-TEE-S'],['Poster','RECAST-POSTER-12X16'],['Canvas','RECAST-CANVAS-12X16'],['Framed Poster','RECAST-FRAME-12X16'],['Mug','RECAST-MUG-11OZ'],['Blanket','RECAST-BLANKET-50X60'],['Tumbler','RECAST-TUMBLER-20OZ'],['Magnet 3-Pack','RECAST-MAGNET-SET'],['Coaster 4-Pack','RECAST-COASTER-SET']];
-function designFor(product){const d={version:6,product,layout:'cover',fill:'full-bleed',x:'center',scale:100,spacing:'standard'};if(['Hoodie','T-Shirt'].includes(product))Object.assign(d,{layout:'fit',fill:'transparent',finish:'soft'});if(['Mug','Tumbler'].includes(product))Object.assign(d,{layout:'two-sided',fill:'ambient',scale:product==='Mug'?110:108});if(['Poster','Canvas','Framed Poster'].includes(product))d.orientation='portrait';return d}
+const defs=[['Sticker','RECAST-STICKER-3X3'],['Phone Case','RECAST-CASE-IP15'],['Pillow','RECAST-PILLOW-14'],['Hardcover Journal','RECAST-JOURNAL-HC'],['Puzzle','RECAST-PUZZLE-252'],['Tote Bag','RECAST-TOTE-BLACK']];
+function designFor(product){const d={version:6,product,layout:'cover',fill:'full-bleed',x:'center',scale:100,spacing:'standard'};if(['Hoodie','T-Shirt'].includes(product))Object.assign(d,{layout:'fit',fill:'transparent',finish:'soft'});if(['Mug','Tumbler'].includes(product))Object.assign(d,{layout:'two-sided',fill:'ambient',scale:product==='Mug'?110:108});if(['Poster','Canvas','Framed Poster','Hardcover Journal','Phone Case'].includes(product))d.orientation='portrait';return d}
 async function call(relative,options={}){
  const u=new URL(relative,base),method=options.method||'GET';
  if(u.origin!==base)throw Error('Unexpected origin');
