@@ -405,7 +405,7 @@ async function generateRealMockup({req,sku,card,button}){
         const img=card.querySelector(".product-art img"),views=uniqueMockupViews(data.images,card.dataset.productTitle);
         const sidePreferred=/^Custom Recast (Mug|Tumbler)$/i.test(card.dataset.productTitle||"")?views.findIndex(view=>/^(Handle left|Handle right|Left|Right|3D|Product)$/i.test(view.label)):-1;
         const isBlanket=card.dataset.productTitle==='Custom Recast Blanket';
-        const preferredSceneGroup=card.dataset.productTitle==='Custom Recast Coaster 4-Pack'?'Lifestyle 2':isBlanket?'Lifestyle 6':null;
+        const preferredSceneGroup=['Custom Recast Coaster 4-Pack','Custom Recast Hardcover Journal'].includes(card.dataset.productTitle)?'Lifestyle 2':isBlanket?'Lifestyle 6':null;
         const scenePreferred=views.findIndex(view=>view.isScene&&(!preferredSceneGroup||view.group===preferredSceneGroup));
         const preferred=scenePreferred>=0?scenePreferred:sidePreferred>=0?sidePreferred:views.findIndex(view=>/^(Product|3D|Flat|Front)$/i.test(view.label)),selected=preferred>=0?preferred:0;
         showProductView(card,img,views[selected]);
