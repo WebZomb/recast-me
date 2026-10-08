@@ -25,3 +25,6 @@ https://developers.openai.com/api/docs/guides/moderation — image category limi
 https://developers.openai.com/api/docs/guides/images-vision — inline image input and model support.
 https://developers.openai.com/api/docs/guides/structured-outputs — schema and refusal handling.
 https://developers.cloudflare.com/turnstile/get-started/server-side-validation/ — server token validation/action/hostname.
+
+## Deployment receipt
+Main application954679985916ad3ddc13be03431537e1e1010cdd, tree c9fde4881133476e1afffe74da9010779027e4b1: Workers113197337705 SUCCESS. Follow-up c4041bd4951e35d241e9be5572f4bc05a84612c7 corrects the release label in actual public/admin.js (initial attempted admin.html label edit was a no-op); Workers113197785361 SUCCESS. Live admin reload visibly shows RM067 launch protections. GitHub mocked-tests-and-bundle jobs skipped by workflow policy; do not call them passed.366 local tests and local bundle are the validation evidence. Browser audit113197397856 was still running at this receipt. Activation flags/keys remain unchanged; code deployment is not service activation. Cloudflare verification-block screenshot saved privately. Owner handoff required to complete sign-in/private setup; never put keys in chat.
