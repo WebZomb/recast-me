@@ -1,7 +1,7 @@
 import {moderateContent,screenText,CONTENT_MESSAGE} from './content-safety.js';
 import {referenceDirections} from './reference-labels.js';
 import { assertRenderReady, readinessSnapshot, recordRenderHealth } from './render-health.js';
-const PROMPT_VERSION = "identity-viewpoint-v4";
+const PROMPT_VERSION = "identity-all-worlds-v5";
 const DEFAULT_HIGH_QUALITY = "@cf/black-forest-labs/flux-2-dev";
 const DEFAULT_QUICK = "@cf/black-forest-labs/flux-2-dev";
 
@@ -81,7 +81,7 @@ function subjectTransformation(styleId,subjectType){
     isPet?"PET IDENTITY IS NON-NEGOTIABLE: costume and environment may change, but the animal itself must not be redesigned. Preserve the exact head and muzzle shape, ear size/shape/angle, eye size/spacing/color, nose, expression character, breed/body proportions, leg length, fur length/texture, and the exact boundaries and placement of every coat-color patch and facial marking from the reference. Do not widen or shorten the muzzle, enlarge the eyes, round the skull, change ear proportions, invent spots, or turn the pet into a generic/cuter/cartoon version. Fit costume around the real anatomy without hiding the defining face or markings. The finished pet should be identifiable from the face and coat even if the costume/background are removed. Transform the costume, setting and lighting around the same animal. Preserve the observed head angle and muzzle profile when only one view is supplied; do not invent an unseen front-facing face. Do not add a dark eye mask, white blaze, wrinkles, jowls or a flat muzzle unless present in the original. Ignore toys, prints on clothing and background animals as identity references. Natural likeness takes precedence over a dramatic pose. Match scene lighting and shadows so the result should never appear as an unchanged photo cutout.":"",
     "ANATOMY RULE: for every animal visible in any reference, retain its species anatomy: natural animal torso, legs and paws. Never give a pet human hands, fingers, arms, shoulders or an upright human body unless explicitly requested. Royal pets wear fitted capes, collars or crowns on their real animal bodies; royal styling is not a dog head on a human monarch.",
     isCar?"For the car, visibly restyle its paint, lighting and original unbranded trim to fit the world, while retaining its recognizable silhouette and defining features.":"",
-    isPerson?"For each person, visibly change their wardrobe, character role, pose and the lighting on their face while preserving their recognizable face, natural age and proportions.":"",
+    isPerson?"For each person, visibly change their wardrobe, character role, pose only where supported by the reference views and the lighting on their face while preserving their recognizable face, natural age and proportions.":"",
     "Show the costume or themed details on the subject clearly in the finished image. Integrate subject and environment with consistent shadows, perspective, color and light."
   ].filter(Boolean).join(" ");
 }
@@ -171,6 +171,16 @@ function safeNotes(text=""){
   return result.trim()
 }
 
+// Shared by both quality modes and the simplified prompt path; applies even
+// when a mixed group or custom subject label does not contain "pet"/"person".
+const IDENTITY_STYLE_RULES = [
+  "ALL-WORLD LIKENESS: use the original photographs as the authority for identity, never a generic character, breed template, or previous render's altered features. Preserve distinguishing asymmetries and visible identifying details for every person and animal, including mixed groups.",
+  "PEOPLE: keep the reference eye shape, eyelids and spacing, brows, nose bridge and tip, mouth and lip shape, cheekbones, jaw and chin, skin tone, natural age, hairline, hair texture and facial hair. Retain visible freckles and distinguishing marks. Do not beautify, smooth away identity, enlarge eyes, narrow the nose or jaw, or substitute a stock anime face.",
+  "PETS: retain the reference skull and muzzle profile, ear shape and angle, eye spacing, nose, whisker area, fur texture and length, and body proportions. Keep each coat patch, blaze, spot and color boundary on the same anatomical side; do not mirror, simplify away, or invent markings.",
+  "STYLIZED WORLDS: anime, comic, animation, cutout and painted styles change linework, shading, texture, costume and scenery, not the subject's defining facial geometry or marking layout. If exaggerated style would weaken likeness, reduce the exaggeration. For monochrome styles, retain marking boundaries and relative light/dark contrast. Colored scene light must not obscure identifying details.",
+  "FACE VISIBILITY: keep the defining face, eyes, muzzle and ears unobstructed. Adapt helmets, crowns, hair and accessories around them. Preserve the observed head angle when no other view is supplied; do not invent unseen facial features. Likeness takes priority over a new pose or dramatic costume."
+].join(" ");
+
 function makePrompt(styleId,subjectType,notes,inputCount,customWorld="",hasBranch=false){
   const style=styleId==="custom"?null:(STYLES[styleId]||STYLES.game);
   const userDirection=safeNotes(notes);
@@ -182,6 +192,7 @@ function makePrompt(styleId,subjectType,notes,inputCount,customWorld="",hasBranc
 
   return [
     "PRIORITY 1: preserve the exact identity of every real person and pet in the reference images. Identity accuracy outranks costume, pose, style, drama, cuteness, and customer world details.",
+    IDENTITY_STYLE_RULES,
     "PRIORITY 2: faithfully execute the customer's written direction without changing who the subject is.",
     userDirection?`CUSTOMER DIRECTION: ${userDirection}.`:"",
     refs,
@@ -205,6 +216,7 @@ function safePrompt(styleId,subjectType,inputCount,notes="",customWorld="",hasBr
   const style=styleId==="custom"?null:(STYLES[styleId]||STYLES.game);
   const userDirection=safeNotes(notes);
   return [
+    IDENTITY_STYLE_RULES,
     hasBranch?"Use the last image as the previous artwork, and earlier images for the real subject's identity.":inputCount>1?`Use all ${inputCount} reference photos as identity evidence; photo count is not subject count.`:"Preserve the reference subject exactly and recognizably; for pets lock head/muzzle/ear proportions, eye placement and exact coat markings before applying any style.",
     userDirection?`Customer direction, simplified but still important: ${userDirection}.`:"",
     `Subject type: ${subjectType||"person"}.`,

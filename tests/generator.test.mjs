@@ -122,7 +122,7 @@ test('preset pet renders restyle the pet and ignore stale custom world text',asy
   assert.doesNotMatch(prompt,/floating garden/i);
   const saved=JSON.parse(String(env.ARTWORK.objects.get(`requests/${result.requestId}/request.json`)));
   assert.equal(saved.customWorld,'');
-  assert.equal(saved.promptVersion,'identity-viewpoint-v4');
+  assert.equal(saved.promptVersion,'identity-all-worlds-v5');
 });
 
 test('provider-wide free allowance is reported as shared capacity, not a visitor limit',async()=>{
@@ -208,5 +208,28 @@ test('Royal references retain anatomy; provider moderation stops after one call'
     assert.match(prompt,/photo.*same individual/);
     assert.match(prompt,/natural age, hair and beard, body build/);
     assert.doesNotMatch(prompt,/Preserve all 2 reference subjects/);
+  }
+});
+
+
+test('illustrated and realistic worlds preserve identity instructions in both quality modes and mixed groups',async()=>{
+  for(const quality of ['high','quick']){
+    for(const style of ['anime','comic','cutout-comedy','royal','noir','custom']){
+      let prompt='';
+      const env=envFor(async(model,{multipart})=>{
+        const form=await new Response(multipart.body,{headers:{'content-type':multipart.contentType}}).formData();
+        prompt=String(form.get('prompt'));return {image};
+      });
+      const base=submission({style,quality});
+      const body=await base.formData();body.set('subject','family');
+      const response=await highQualityTransform(new Request(base.url,{method:'POST',body}),env);
+      assert.equal(response.status,200,`${quality}/${style}`);
+      assert.match(prompt,/ALL-WORLD LIKENESS/);
+      assert.match(prompt,/stock anime face/);
+      assert.match(prompt,/same anatomical side/);
+      assert.match(prompt,/reduce the exaggeration/);
+      assert.match(prompt,/relative light\/dark contrast/);
+      assert.ok(prompt.indexOf('ALL-WORLD LIKENESS') < prompt.indexOf('SELECTED WORLD:'));
+    }
   }
 });

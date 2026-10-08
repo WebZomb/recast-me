@@ -126,3 +126,5 @@ Latest: [RM067 — photo-policy and bot protection hardening, X safeguards](ASTR
 Latest: [RM068 — existing Gmail sender for alerts](ASTRA-SESSION-RM-068.md). Direct TLS SMTP adapter and clearer test-button setup;372 local tests and dry-run pass. Private Gmail app password and actual delivery acceptance remain required. No PourIQ backend/secret changes.
 
 Latest: [RM069 — protection and X setup checklist](ASTRA-SESSION-RM-069.md). Owner confirms Gmail test receipt (Junk); delivery setup accepted. Actionable private photo/Turnstile/X setup guidance and consistent X credential presence;374 local tests pass. External activation/testing still required.
+
+Latest: [RM070 — likeness across every world](ASTRA-SESSION-RM-070.md). Shared person/pet identity rules including illustrated styles and mixed groups;375 local tests and dry-run pass. Live likeness remains unverified; owner completed both Turnstile happy paths.
