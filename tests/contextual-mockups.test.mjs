@@ -11,6 +11,7 @@ test('context scenes retain exact dimensions, include a flat proof, and exclude 
  const spec=contextualMockupSpec(map,position,[row]);assert.deepEqual(spec.styles.map(s=>s.id),[11,1]);assert.deepEqual(spec.position,position);
  for(const change of [{dpi:300},{placement:'back'},{print_area_type:'advanced'},{print_area_width:53,print_area_height:63},{mockup_styles:[style(9,'Lifestyle','Front',[13222])]}])assert.equal(contextualMockupSpec(map,position,[{...row,...change}]),null);
  assert.equal(contextualMockupSpec({...map,product:'Pillow'},position,[row]),null);
+ assert.equal(contextualMockupSpec({...map,product:'Phone Case'},position,[row]),null);
  assert.equal(contextualMockupSpec({...map,printfulVariantId:13222},position,[row]),null);
  const canvas=contextualMockupSpec({...map,product:'Canvas'},position,[{...row,mockup_styles:[style(12,'Multi-product'),style(13,'Wall'),style(14,'Lifestyle')]}]);assert.deepEqual(canvas.styles.map(s=>s.id),[14,13]);
 });

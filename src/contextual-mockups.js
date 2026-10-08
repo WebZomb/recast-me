@@ -4,6 +4,9 @@ const excluded=/holiday|christmas|halloween|placeholder|details|back|folded|mult
 export function contextualMockupSpec(map,position,rows){
   // Both pillow sides must remain in one proof; the existing V1 path handles them.
   if(map.product==='Pillow')return null;
+  // Phone-case V2 style metadata marked unavailable variant styles unrestricted.
+  // Keep its verified V1 mockup until that catalog inconsistency is resolved.
+  if(map.product==='Phone Case')return null;
   // Live V2 task rejected the published landscape area for this exact large blanket.
   // Retain its working V1 proof and geometry until supplier orientation is resolved.
   if(map.product==='Blanket'&&Number(map.printfulVariantId)===13222)return null;

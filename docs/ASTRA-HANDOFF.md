@@ -104,3 +104,5 @@ Latest: [RM058 — desktop hero alignment](ASTRA-SESSION-RM-058.md). Smaller mug
 Latest: [RM059 — approved lifestyle catalog and visible product-preview loading](ASTRA-SESSION-RM-059.md).15 Shopify product images replaced and read back; matching website images, waiting overlay and duplicate-click guard.324 local tests pass; deployment/browser receipt recorded separately.
 
 Latest work: [RM060 — contextual previews](ASTRA-SESSION-RM-060.md). Sticker example replacement and owner-only supplier view inspection; preview repair still under investigation.
+
+RM060 follow-up: full-picture sticker example/copy live; owner now considering a sticker sheet replacement. Real room preview selectors and closer wall-art views deployed; supplier-specific exceptions remain for60×80blanket/phone-case and both-side pillow. Exact receipts, visual checks and remaining limits in RM060. No blanket claim of launch readiness.
