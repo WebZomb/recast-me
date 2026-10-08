@@ -107,7 +107,7 @@ function isModeration(error){const m=errorText(error);return m.includes("3030")|
 function isQuota(error){const m=errorText(error);return m.includes("3036")||m.includes("daily free allocation")||m.includes("free allocation")||m.includes("used up your daily")||m.includes("quota exceeded")}
 function isCapacity(error){const m=errorText(error);return m.includes("3040")||m.includes("out of capacity")||m.includes("capacity temporarily exceeded")||m.includes("busy")||m.includes("overload")}
 function isTimeout(error){const m=errorText(error);return error?.reason==="timeout"||error?.name==="TimeoutError"||m.includes("timeout")||m.includes("timed out")}
-function isTemporaryUnavailable(error){const m=errorText(error);return m.includes("503")||m.includes("502")||m.includes("504")||m.includes("service unavailable")||m.includes("upstream unavailable")}
+function isTemporaryUnavailable(error){const m=errorText(error);return /\b3043\b/.test(m)||m.includes("503")||m.includes("502")||m.includes("504")||m.includes("service unavailable")||m.includes("upstream unavailable")}
 function providerCode(error){const m=String(error?.message||error||"").match(/\b(3\d{3}|5\d{3})\b/);return m?Number(m[1]):null}
 async function writeGenerationDiagnostic(env,payload){
   const diagnosticId=`GEN-${Date.now().toString(36).toUpperCase()}-${randomHex(2).toUpperCase()}`;

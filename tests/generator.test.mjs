@@ -233,3 +233,25 @@ test('illustrated and realistic worlds preserve identity instructions in both qu
     }
   }
 });
+
+
+test('Cloudflare 3043 records an outage and blocks repeated submissions during cooldown',async()=>{
+  for(const quality of ['high','quick']){
+    let calls=0;
+    const env=envFor(async()=>{calls++;throw new Error('3043: Internal server error')});
+    const response=await highQualityTransform(submission({quality}),env);
+    const body=await response.json();
+    assert.equal(response.status,503);
+    assert.equal(body.reason,'unavailable');
+    assert.match(body.userMessage,/temporarily unavailable/);
+    const diagnostic=await (await env.ARTWORK.get(`diagnostics/generation/${body.diagnosticId}.json`)).json();
+    assert.equal(diagnostic.providerCode,3043);
+    const health=await (await env.ARTWORK.get(`system/render-health-${quality}.json`)).json();
+    assert.equal(health.reason,'unavailable');
+    assert.ok(Date.parse(health.retryAt)>Date.now());
+    const retry=await highQualityTransform(submission({quality}),env);
+    assert.equal(retry.status,503);
+    assert.equal((await retry.json()).reason,'unavailable');
+    assert.equal(calls,1,'no automatic retry or second billed provider call during cooldown');
+  }
+});
