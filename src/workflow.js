@@ -632,6 +632,14 @@ export async function adminSocial(request,env){try{requireAdmin(request,env);con
 export async function adminProductCandidates(request,env){
   try{
     requireAdmin(request,env);
+    const sku=new URL(request.url).searchParams.get('sku');
+    if(sku){
+      const map=FULFILLMENT[sku];
+      if(!map?.printfulProductId||!map?.printfulVariantId)return json({ok:false,error:'Choose a mapped physical SKU.'},400);
+      const catalog=await printful(env,`/mockup-generator/printfiles/${map.printfulProductId}`,{method:'GET'});
+      const styles=await printful(env,`/v2/catalog-products/${map.printfulProductId}/mockup-styles?limit=100`,{method:'GET'});
+      return json({ok:true,productionSubmitted:false,products:[{sku,map,catalog,styles}]});
+    }
     if(new URL(request.url).searchParams.get('product')==='tumbler'){
       const map=FULFILLMENT['RECAST-TUMBLER-20OZ'];
       const variant=await printful(env,`/v2/catalog-variants/${map.printfulVariantId}`,{method:'GET'});

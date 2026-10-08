@@ -96,3 +96,5 @@ $('#check-commerce').onclick=async()=>{const el=$('#commerce-result');el.textCon
 $('#verify-new-products').onclick=async()=>{const el=$('#new-products-result');el.textContent='Checking approved product candidates against Printful…';try{const d=await api('/api/admin/product-candidates');el.textContent=JSON.stringify(d.products,null,2);toast('Product candidate check complete. No order or production was created.')}catch(e){el.textContent=e.message}};
 
 $('#verify-tumbler').onclick=async()=>{const el=$('#new-products-result');el.textContent='Reading tumbler catalog…';try{const d=await api('/api/admin/product-candidates?product=tumbler');el.textContent=JSON.stringify(d.products,null,2)}catch(e){el.textContent=e.message}};
+
+$('#inspect-preview-catalog').onclick=async()=>{const el=$('#new-products-result');el.textContent='Reading supplier preview catalog…';try{const d=await api('/api/admin/product-candidates?sku='+encodeURIComponent($('#inspect-preview-sku').value.trim()));el.textContent=JSON.stringify(d.products,null,2)}catch(e){el.textContent=e.message}};

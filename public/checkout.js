@@ -14,7 +14,7 @@ const PRODUCT_ART = {
   "Custom Recast Coaster 4-Pack":"https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-lifestyle-coaster-rm059.png?v=1791423005&width=1000",
   "HD Digital Recast":"/assets/product-digital-v16.webp",
   "Recast Pack":"/assets/product-pack-v16.webp",
-  "Custom Recast Sticker":"https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-sticker-printful.jpg?v=1791338074",
+  "Custom Recast Sticker":"https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-lifestyle-sticker-rm060.png?v=1791425106&width=1000",
   "Custom Recast Phone Case":"https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-lifestyle-case-rm059.png?v=1791422989&width=1000",
   "Custom Recast Pillow":"https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-lifestyle-pillow-rm059.png?v=1791422893&width=1000",
   "Custom Recast Hardcover Journal":"https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-lifestyle-journal-rm059.png?v=1791422974&width=1000",

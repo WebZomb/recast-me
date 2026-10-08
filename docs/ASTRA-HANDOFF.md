@@ -102,3 +102,5 @@ Latest: [RM057 — varied supplier examples and matching Shopify draft](ASTRA-SE
 Latest: [RM058 — desktop hero alignment](ASTRA-SESSION-RM-058.md). Smaller mug and aligned photo/Recast/product composition above760px; phone rules preserved.
 
 Latest: [RM059 — approved lifestyle catalog and visible product-preview loading](ASTRA-SESSION-RM-059.md).15 Shopify product images replaced and read back; matching website images, waiting overlay and duplicate-click guard.324 local tests pass; deployment/browser receipt recorded separately.
+
+Latest work: [RM060 — contextual previews](ASTRA-SESSION-RM-060.md). Sticker example replacement and owner-only supplier view inspection; preview repair still under investigation.
