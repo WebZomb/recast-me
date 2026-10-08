@@ -1,5 +1,6 @@
 /* RM059 — visible waiting state, scoped to the selected product. */
 #product-grid .product-art{position:relative}
+#product-grid .recast-buy[hidden]{display:none!important}
 .product-preview-loading{position:absolute;inset:0;z-index:3;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:14px;padding:24px;text-align:center;background:rgba(8,8,25,.93);color:#fff;backdrop-filter:blur(8px)}
 .product-preview-loading[hidden]{display:none}
 .product-preview-loading strong{font-size:clamp(20px,3vw,28px);line-height:1.2}
