@@ -640,6 +640,14 @@ export async function adminProductCandidates(request,env){
   try{
     requireAdmin(request,env);
     const sku=new URL(request.url).searchParams.get('sku');
+    if(sku==='RECAST-STICKER-PACK'){
+      // Read-only verification of the pre-existing RM054 sheet candidate.
+      const detail=await printful(env,'/products/505',{method:'GET'});
+      const catalog=await printful(env,'/mockup-generator/printfiles/505',{method:'GET'});
+      const variant=await printful(env,'/v2/catalog-variants/12917',{method:'GET'});
+      const styles=await printful(env,'/v2/catalog-products/505/mockup-styles?limit=100',{method:'GET'});
+      return json({ok:true,productionSubmitted:false,products:[{sku,detail,catalog,variant,styles}]});
+    }
     if(sku){
       const map=FULFILLMENT[sku];
       if(!map?.printfulProductId||!map?.printfulVariantId)return json({ok:false,error:'Choose a mapped physical SKU.'},400);
