@@ -6,9 +6,9 @@ import {setup,ID,TOKEN} from './security-helpers.mjs';
 const map={product:'Blanket',printfulProductId:395,printfulVariantId:10986,preferredPlacement:'default'};
 const position={area_width:9450,area_height:7950,width:9450,height:7950,top:0,left:0};
 const style=(id,group,title='Front',variants=[10986])=>({id,category_name:group,view_name:title,restricted_to_variants:variants});
-const row={placement:'default',technique:'sublimation',print_area_type:'simple',print_area_width:63,print_area_height:53,dpi:150,mockup_styles:[style(1,'Flat'),style(2,'Lifestyle'),style(3,'Lifestyle 2'),style(4,'Folded'),style(5,'Lifestyle 3'),style(6,'Lifestyle 4'),style(7,'Lifestyle','Back'),style(8,'Lifestyle','Front',[13222])]};
+const row={placement:'default',technique:'sublimation',print_area_type:'simple',print_area_width:63,print_area_height:53,dpi:150,mockup_styles:[style(1,'Flat'),style(2,'Lifestyle'),style(3,'Lifestyle 2'),style(4,'Folded'),style(5,'Lifestyle 3'),style(6,'Lifestyle 4'),style(10,'Lifestyle 5'),style(11,'Lifestyle 6'),style(7,'Lifestyle','Back'),style(8,'Lifestyle','Front',[13222])]};
 test('context scenes retain exact dimensions, include a flat proof, and exclude folded/back/wrong variant views',()=>{
- const spec=contextualMockupSpec(map,position,[row]);assert.deepEqual(spec.styles.map(s=>s.id),[2,3,5,1]);assert.deepEqual(spec.position,position);
+ const spec=contextualMockupSpec(map,position,[row]);assert.deepEqual(spec.styles.map(s=>s.id),[6,10,11,1]);assert.deepEqual(spec.position,position);
  for(const change of [{dpi:300},{placement:'back'},{print_area_type:'advanced'},{print_area_width:53,print_area_height:63},{mockup_styles:[style(9,'Lifestyle','Front',[13222])]}])assert.equal(contextualMockupSpec(map,position,[{...row,...change}]),null);
  assert.equal(contextualMockupSpec({...map,product:'Pillow'},position,[row]),null);
 });
@@ -27,5 +27,5 @@ test('new room preview does not reuse or overwrite an old approved proof and use
   assert.ok(u.endsWith('/v2/mockup-tasks'));payload=JSON.parse(opts.body);return Response.json({data:[{id:100,status:'pending'}]});
  });
  const response=await createMockup(new Request('https://recast.test/api/mockup/create',{method:'POST',body:JSON.stringify({requestId:ID,accessToken:TOKEN,sku:'RECAST-BLANKET-50X60',presentation:'room-v1',design:{version:6,layout:'fit',fill:'ambient',scale:92}})}),env),data=await response.json();
- assert.equal(response.status,200,JSON.stringify(data));assert.equal(data.mockupId,old+'-room1');assert.deepEqual(payload.products[0].mockup_style_ids,[2,3,5,1]);assert.equal(payload.products[0].placements[0].layers[0].position.width,63);assert.equal((await(await env.ARTWORK.get(key)).json()).approvedAt,'old');
+ assert.equal(response.status,200,JSON.stringify(data));assert.equal(data.mockupId,old+'-room2');assert.deepEqual(payload.products[0].mockup_style_ids,[6,10,11,1]);assert.equal(payload.products[0].placements[0].layers[0].position.width,63);assert.equal((await(await env.ARTWORK.get(key)).json()).approvedAt,'old');
 });

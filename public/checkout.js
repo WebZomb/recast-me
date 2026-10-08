@@ -14,7 +14,7 @@ const PRODUCT_ART = {
   "Custom Recast Coaster 4-Pack":"https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-lifestyle-coaster-rm059.png?v=1791423005&width=1000",
   "HD Digital Recast":"/assets/product-digital-v16.webp",
   "Recast Pack":"/assets/product-pack-v16.webp",
-  "Custom Recast Sticker":"https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-lifestyle-sticker-rm060.png?v=1791425106&width=1000",
+  "Custom Recast Sticker":"https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-lifestyle-full-picture-sticker-rm060.png?v=1791426248&width=1000",
   "Custom Recast Phone Case":"https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-lifestyle-case-rm059.png?v=1791422989&width=1000",
   "Custom Recast Pillow":"https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-lifestyle-pillow-rm059.png?v=1791422893&width=1000",
   "Custom Recast Hardcover Journal":"https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-lifestyle-journal-rm059.png?v=1791422974&width=1000",
@@ -36,7 +36,7 @@ const PRODUCT_META = {
   "HD Digital Recast": {order:90,badge:"DIGITAL ONLY",pitch:"Just want the clean artwork? Keep the high-resolution file without ordering merch.",tier:"digital",cta:"Get HD File"},
   "Recast Pack": {order:91,badge:"DIGITAL PACK",pitch:"The complete digital set with useful crops and formats.",tier:"digital",cta:"Get Recast Pack"}
 ,
-  "Custom Recast Sticker": {order:9,badge:"NEW · EASY GIFT",pitch:"A glossy 3×3 sticker featuring your Recast.",tier:"secondary",cta:"Shop Sticker"},
+  "Custom Recast Sticker": {order:9,badge:"NEW · EASY GIFT",pitch:"A glossy 3×3 full-picture sticker, adventure background included.",tier:"secondary",cta:"Shop Sticker"},
   "Custom Recast Phone Case": {order:10,badge:"NEW · EVERYDAY",pitch:"Carry your Recast every day on a supplier-verified clear iPhone case.",tier:"secondary",cta:"Shop Phone Case"},
   "Custom Recast Pillow": {order:11,badge:"NEW · HOME",pitch:"A soft personalized accent pillow made from your Recast.",tier:"secondary",cta:"Shop Pillow"},
   "Custom Recast Hardcover Journal": {order:12,badge:"NEW · DESK",pitch:"Put your Recast on a matte hardcover journal you can use every day.",tier:"secondary",cta:"Shop Journal"},
@@ -260,7 +260,7 @@ function viewLabel(title,index){
 function uniqueMockupViews(input=[]){
   const seen=new Set(),labels=new Set(),output=[];let scenes=0;
   for(const view of input){
-    if(!view?.url||seen.has(view.url))continue;
+    if(!view?.url||seen.has(view.url)||/multi-product/i.test(`${view.group||""} ${view.title||""}`))continue;
     seen.add(view.url);
     const isScene=/lifestyle|room|interior|sofa|bed|kitchen|desk|home/i.test(`${view.group||""} ${view.title||""}`);
     const key=isScene?`${view.group||""}|${view.title||""}`:viewLabel(view.title,output.length);
@@ -403,7 +403,8 @@ async function generateRealMockup({req,sku,card,button}){
       if(response.ok&&data.status==="completed"&&data.images?.length){
         const img=card.querySelector(".product-art img"),views=uniqueMockupViews(data.images);
         const sidePreferred=/^Custom Recast (Mug|Tumbler)$/i.test(card.dataset.productTitle||"")?views.findIndex(view=>/^(Handle left|Handle right|Left|Right|3D|Product)$/i.test(view.label)):-1;
-        const scenePreferred=views.findIndex(view=>view.isScene);
+        const isBlanket=card.dataset.productTitle==='Custom Recast Blanket';
+        const scenePreferred=isBlanket?-1:views.findIndex(view=>view.isScene);
         const preferred=scenePreferred>=0?scenePreferred:sidePreferred>=0?sidePreferred:views.findIndex(view=>/^(Product|3D|Flat|Front)$/i.test(view.label)),selected=preferred>=0?preferred:0;
         showProductView(card,img,views[selected]);
         card.querySelector(".mockup-views")?.remove();

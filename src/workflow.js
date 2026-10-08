@@ -189,7 +189,7 @@ export async function createMockup(request,env){
     if(!savedSource)throw fault('artwork_missing','The saved artwork is unavailable.',404);
     const savedBase64=await savedSource.text(),sourceHash=await hash(savedBase64+'|'+JSON.stringify(design));
     const contextual=body.presentation==='room-v1';
-    const mockupId=mockupDesignId(design)+(contextual?'-room1':'');
+    const mockupId=mockupDesignId(design)+(contextual?(['Blanket','Canvas'].includes(map.product)?'-room2':'-room1'):'');
     const existing=await readJson(env,mockupKey(requestId,sku,mockupId));
     if(existing?.sourceHash===sourceHash&&existing.position&&['completed','pending'].includes(existing.status))return json({ok:true,status:existing.status,taskKey:existing.taskKey,sku,mockupId,design:existing.design||design,waitSeconds:10});
     if(!env.IMAGES)throw fault('images_required','Image processing is not configured.',503);

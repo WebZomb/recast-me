@@ -1,9 +1,12 @@
 // Presentation-only supplier scenes. Exact V1 geometry and saved design stay unchanged.
 const scene=/lifestyle|living|room|interior|bed|sofa|kitchen|desk|home/i;
-const excluded=/holiday|christmas|halloween|placeholder|details|back|folded/i;
+const excluded=/holiday|christmas|halloween|placeholder|details|back|folded|multi-product/i;
 export function contextualMockupSpec(map,position,rows){
   // Both pillow sides must remain in one proof; the existing V1 path handles them.
   if(map.product==='Pillow')return null;
+  // Live V2 task rejected the published landscape area for this exact large blanket.
+  // Retain its working V1 proof and geometry until supplier orientation is resolved.
+  if(map.product==='Blanket'&&Number(map.printfulVariantId)===13222)return null;
   const placement=map.preferredPlacement||'default';
   for(const row of rows||[]){
     const width=Number(row.print_area_width),height=Number(row.print_area_height),dpi=Number(row.dpi);
@@ -16,8 +19,8 @@ export function contextualMockupSpec(map,position,rows){
       return lifestyle?(side?0:/front|lifestyle/i.test(s.view_name||'')?1:2):side?3:/^front$|^default$/i.test(s.view_name||'')?4:5;
     };
     styles.sort((a,b)=>order(a)-order(b));
-    const scenes=styles.filter(s=>scene.test(s.category_name||''));
-    const flat=styles.find(s=>!scene.test(s.category_name||'')&&/^flat$|^default$/i.test(s.category_name||''))||styles.find(s=>!scene.test(s.category_name||''));
+    const scenes=styles.filter(s=>scene.test(s.category_name||'')&&(map.product!=='Blanket'||!/^Lifestyle(?: [23])?$/i.test(s.category_name||'')));
+    const flat=styles.find(s=>!scene.test(s.category_name||'')&&/^flat$|^default$|^wall$/i.test(s.category_name||''))||styles.find(s=>!scene.test(s.category_name||''));
     const selected=[];const groups=new Set();
     for(const s of scenes){if(groups.has(s.category_name))continue;selected.push(s);groups.add(s.category_name);if(selected.length===(map.product==='Blanket'?3:2))break;}
     if(flat)selected.push(flat);
