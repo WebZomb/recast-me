@@ -1,7 +1,7 @@
 import {moderateContent,screenText,CONTENT_MESSAGE} from './content-safety.js';
 import {referenceDirections} from './reference-labels.js';
 import { assertRenderReady, readinessSnapshot, recordRenderHealth } from './render-health.js';
-const PROMPT_VERSION = "identity-references-v3";
+const PROMPT_VERSION = "identity-viewpoint-v4";
 const DEFAULT_HIGH_QUALITY = "@cf/black-forest-labs/flux-2-dev";
 const DEFAULT_QUICK = "@cf/black-forest-labs/flux-2-dev";
 
@@ -63,6 +63,7 @@ const SUBJECT_STYLING = {
   halloween:"an unmistakable playful original Halloween costume fitted to the subject, with characterful accessories and theatrical moonlit lighting",
   retro:"a recognizable 1980s inspired wardrobe or pet accessory, period styling and a new expressive editorial pose",
   fantasy:"original ornate fantasy armor or pet barding shaped naturally around the body, a heroic pose and enchanted light on the subject",
+  luxury:"a refined pet-safe bow tie or tailored accessory on the unchanged animal, an elegant modern interior and soft editorial lighting; luxury describes the surroundings and fabric, never a different breed or face",
   royal:"rich ceremonial clothing or a fitted regal pet cape and collar, a poised royal portrait stance and painterly light on the subject",
   future:"sleek original futuristic clothing or fitted pet gear, futuristic details on the subject and neon light reflecting across them",
   comic:"an original graphic-novel hero costume or fitted pet hero gear, expressive dynamic pose and inked color treatment on the subject",
@@ -77,7 +78,7 @@ function subjectTransformation(styleId,subjectType){
   const theme=SUBJECT_STYLING[styleId]||"an original costume, role and visual styling drawn directly from the customer's custom world";
   return [
     `VISIBLE SUBJECT TRANSFORMATION REQUIRED: ${theme}.`,
-    isPet?"PET IDENTITY IS NON-NEGOTIABLE: costume and environment may change, but the animal itself must not be redesigned. Preserve the exact head and muzzle shape, ear size/shape/angle, eye size/spacing/color, nose, expression character, breed/body proportions, leg length, fur length/texture, and the exact boundaries and placement of every coat-color patch and facial marking from the reference. Do not widen or shorten the muzzle, enlarge the eyes, round the skull, change ear proportions, invent spots, or turn the pet into a generic/cuter/cartoon version. Fit costume around the real anatomy without hiding the defining face or markings. The finished pet should be identifiable from the face and coat even if the costume/background are removed. The pet must be visibly transformed by costume, pose and world lighting, but never appear as an unchanged photo cutout pasted onto new scenery.":"",
+    isPet?"PET IDENTITY IS NON-NEGOTIABLE: costume and environment may change, but the animal itself must not be redesigned. Preserve the exact head and muzzle shape, ear size/shape/angle, eye size/spacing/color, nose, expression character, breed/body proportions, leg length, fur length/texture, and the exact boundaries and placement of every coat-color patch and facial marking from the reference. Do not widen or shorten the muzzle, enlarge the eyes, round the skull, change ear proportions, invent spots, or turn the pet into a generic/cuter/cartoon version. Fit costume around the real anatomy without hiding the defining face or markings. The finished pet should be identifiable from the face and coat even if the costume/background are removed. Transform the costume, setting and lighting around the same animal. Preserve the observed head angle and muzzle profile when only one view is supplied; do not invent an unseen front-facing face. Do not add a dark eye mask, white blaze, wrinkles, jowls or a flat muzzle unless present in the original. Ignore toys, prints on clothing and background animals as identity references. Natural likeness takes precedence over a dramatic pose. Match scene lighting and shadows so the result should never appear as an unchanged photo cutout.":"",
     "ANATOMY RULE: for every animal visible in any reference, retain its species anatomy: natural animal torso, legs and paws. Never give a pet human hands, fingers, arms, shoulders or an upright human body unless explicitly requested. Royal pets wear fitted capes, collars or crowns on their real animal bodies; royal styling is not a dog head on a human monarch.",
     isCar?"For the car, visibly restyle its paint, lighting and original unbranded trim to fit the world, while retaining its recognizable silhouette and defining features.":"",
     isPerson?"For each person, visibly change their wardrobe, character role, pose and the lighting on their face while preserving their recognizable face, natural age and proportions.":"",
@@ -184,7 +185,7 @@ function makePrompt(styleId,subjectType,notes,inputCount,customWorld="",hasBranc
     style?`SELECTED WORLD: ${style.name}. ${style.prompt}.`:"SELECTED WORLD: an original world designed from the customer's description.",
     customWorld?`CUSTOM WORLD SETTING (customer's priority): ${safeNotes(customWorld)}.`:"",
     subjectTransformation(styleId,subjectType),
-    "Build the requested world around the recognizable subjects. Keep faces large enough to recognize, with complete heads and ears inside the frame. Prefer a similar head angle to the references when another view is unavailable. Do not invent a new face to force a dramatic pose. Costume and setting provide the transformation; identity and body build stay faithful.",
+    "Build the requested world around the recognizable subjects. Keep faces large enough to recognize, with complete heads and ears inside the frame. Keep the reference head angle when another view is unavailable, including a side profile. A polished profile portrait is preferable to an invented frontal face. Do not invent a new face to force a dramatic pose. Costume and setting provide the transformation; identity and body build stay faithful.",
     "If the customer direction conflicts with a generic style detail, honor the customer's direction first while keeping the broad selected-world mood.",
     "No third-party logos, trademarks, copied famous characters, franchise costumes, branded typography, or recognizable title treatments.",
     "Natural anatomy, believable hands and paws, no duplicated limbs or facial features, no text unless explicitly requested, premium commercial/editorial finish.",

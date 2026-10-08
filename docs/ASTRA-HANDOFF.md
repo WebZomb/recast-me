@@ -110,3 +110,5 @@ RM060 follow-up: full-picture sticker example/copy live; owner now considering a
 Latest: [RM061 — six-picture sticker sheet replacement](ASTRA-SESSION-RM-061.md). Draft product, protected sheet compositor and exact supplier mapping implemented; activation waits for real supplier proof and checkout verification. Historical single-sticker mappings preserved.
 
 RM061 completed: six-picture sheet ACTIVE at14.99; exact supplier preview, final review and Shopify checkout verified on public demo;332 tests and browser CI passed on4276321. Old single archived with historicalmapping preserved. Public Shopify theme is STILL Horizon; styled188993994996 remains draft. Owner publication required by connector restriction before public launch; no physical sample ordered. See RM061 final evidence.
+
+Latest: [RM062 — launch recheck and pet viewpoint preservation](ASTRA-SESSION-RM-062.md). Owner-published matching Shopify theme observed public. Likeness prompt/photo guidance tightened;332 local tests pass, new provider output not yet tested. Moderation remains disabled and paid fulfillment acceptance outstanding.

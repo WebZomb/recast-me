@@ -1,5 +1,5 @@
 import {mergeHistory,privateRecastLink,readRecastLink} from './recast-history.js';
-import {initCreationWizard} from './creation-wizard.js?v=254';
+import {initCreationWizard} from './creation-wizard.js?v=262';
 import {fallbackState,creditSummary} from './quality-policy.js?v=250';
 import {protectedPreviewFile} from './preview-export.js';
 let creditInfo=null;
