@@ -1,6 +1,6 @@
 import {mergeHistory,privateRecastLink,readRecastLink} from './recast-history.js';
 import {initCreationWizard} from './creation-wizard.js?v=262';
-import {fallbackState,creditSummary} from './quality-policy.js?v=250';
+import {fallbackState,creditSummary,recoveryUnverified} from './quality-policy.js?v=263';
 import {protectedPreviewFile} from './preview-export.js';
 let creditInfo=null;
 async function refreshCredits(initialize=false){
@@ -308,9 +308,9 @@ function friendlyGenerationError(data,error){
   if(data?.reviewRequired) return 'This request needs a quick human review before generation.';
   if(data?.code===3036 || data?.reason==='quota') return 'Recast Me has reached its shared AI capacity for today. This is a site-wide limit, not your personal render count. Your photo and settings are still here; nothing was charged.';
   if(data?.code===3030 || data?.reason==='moderation') return `${label} was declined by the image provider’s safety filter. This is not a busy-server message. Your saved pictures are still available; use an existing version or contact support with the reference below.`;
-  if(data?.reason==='timeout') return `${label} timed out before the provider returned the artwork. Your photo and settings are still here — wait for Ready before trying again.`;
-  if(data?.reason==='capacity') return `${label} received a confirmed busy response. Your photo and settings are still here — wait for Ready or choose another ready quality.`;
-  if(data?.reason==='unavailable') return `${label} is temporarily unavailable. Your photo and settings are still here — wait for Ready before trying again.`;
+  if(data?.reason==='timeout') return `${label} timed out before the provider returned the artwork. Your photo and settings are still here — wait for the retry button to become available before trying again.`;
+  if(data?.reason==='capacity') return `${label} received a confirmed busy response. Your photo and settings are still here — wait for the retry button to become available.`;
+  if(data?.reason==='unavailable') return `${label} is temporarily unavailable. Your photo and settings are still here — wait for the retry button to become available before trying again.`;
   return data?.userMessage || `${label} did not finish this time. Your photo and settings are still here.`;
 }
 
@@ -320,6 +320,7 @@ function readinessMessage(mode=selectedQuality()){
   const health=readinessFor(mode);
   if(!readinessSnapshot?.local?.ready)return 'Image creation is unavailable while Recast Me checks its required services.';
   if(!health)return 'Checking render readiness…';
+  if(recoveryUnverified(health))return `${qualityLabel(mode)} · Retry available — recovery not yet confirmed`;
   if(health.ready)return `${qualityLabel(mode)} · Ready`;
   if(health.reason==='quota')return `${qualityLabel(mode)} · Shared capacity paused`;
   if(health.reason==='timeout')return `${qualityLabel(mode)} · Previous attempt timed out — cooling down`;
@@ -352,8 +353,8 @@ function applyReadiness(){
   const ready=Boolean(readinessSnapshot?.local?.ready&&health?.ready&&(mode==='quick'?fallback.standardReady:!fallback.exhausted));
   if(button&&!generationInFlight){button.disabled=!ready;button.textContent=ready?(mode==='quick'?'Create Standard Preview':'Create High-Quality Preview'):fallback.exhausted&&mode==='high'?'High Quality allowance used':'Checking availability…';}
   const copy=document.querySelector('#model-copy');if(copy)copy.textContent=readinessMessage(mode);
-  const dot=document.querySelector('.quality-dot');if(dot)dot.dataset.state=ready?'ready':readinessSnapshot?.local?.ready?'waiting':'error';
-  if(notice){notice.hidden=ready;notice.textContent=ready?'':fallback.exhausted&&mode==='high'?'High Quality allowance used. See your options below.':readinessMessage(mode)+' Your photo and settings stay here.';}
+  const dot=document.querySelector('.quality-dot');if(dot)dot.dataset.state=ready&&!recoveryUnverified(health)?'ready':readinessSnapshot?.local?.ready?'waiting':'error';
+  if(notice){notice.hidden=ready&&!recoveryUnverified(health);notice.textContent=ready&&!recoveryUnverified(health)?'':fallback.exhausted&&mode==='high'?'High Quality allowance used. See your options below.':readinessMessage(mode)+' Your photo and settings stay here.';}
   return ready;
 }
 async function refreshRenderAvailability(){

@@ -17,3 +17,6 @@ export function creditSummary(credits){
   const reset=credits.resetAt&&Number.isFinite(Date.parse(credits.resetAt))?new Date(credits.resetAt).toLocaleString([], {month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}):null;
   return `High Quality: ${daily} of ${credits.freeAllowance??3} daily previews left${bonus?` + ${bonus} purchase credits`:''}.${reset?' Refreshes '+reset+'.':''}${credits.remaining<=0?` Standard: ${credits.standardRemaining??0} left.`:''}`;
 }
+
+// A cooldown permits a deliberate retry; it is not a successful health probe.
+export function recoveryUnverified(health){return Boolean(health?.ready&&health?.lastResult==='failed'&&['capacity','quota','timeout','unavailable'].includes(health.lastReason));}
