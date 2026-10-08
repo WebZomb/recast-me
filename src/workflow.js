@@ -1,3 +1,4 @@
+import {ownerAlertRoute,sendOwnerAlerts} from './owner-alerts.js';
 import {orderIssueId,recordOrderIssue,resolveOrderIssue,loadOrderIssue,listOrderIssues,orderRecoveryAdvice} from './order-issues.js';
 import {loadContextualSpec} from './contextual-mockups.js';
 import {moderationReadiness,checkStoredArtwork} from './content-safety.js';
@@ -1170,6 +1171,8 @@ export async function scheduledWorkflow(controller,env,ctx){
       try{results[name]=await run(env);}catch(error){results[name]={ok:false,error:error.message||String(error)};}
     }
     await putJson(env,'system/commerce-sync.json',{lastRun:now(),...results});
+    try{results.alerts=await sendOwnerAlerts(env);}catch{results.alerts={ok:false,error:'Owner alert check failed. Open alert settings.'};}
+    await putJson(env,'system/commerce-sync.json',{lastRun:now(),...results});
     return results;
   })());
   if(String(env.TREND_SCANNER_ENABLED||"false")==="true")tasks.push(scanTrends(env));
@@ -1179,6 +1182,7 @@ export async function scheduledWorkflow(controller,env,ctx){
 
 export async function routeWorkflow(request,env,ctx){
   const url=new URL(request.url);const p=url.pathname;
+  const alerts=await ownerAlertRoute(request,env,requireAdmin);if(alerts)return alerts;
   if(p==="/api/client-diagnostic"&&request.method==="POST")return clientDiagnostic(request,env);
   if(p==="/api/printful-health"&&request.method==="GET")return printfulHealth(env);
   if(p==="/api/mockup/create"&&request.method==="POST")return createMockup(request,env);

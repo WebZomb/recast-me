@@ -118,3 +118,5 @@ Latest: [RM063 — interrupted sticker print-file recovery](ASTRA-SESSION-RM-063
 Latest: [RM064 — automatic fulfillment reconciliation](ASTRA-SESSION-RM-064.md). External provider confirmations, independent scheduled phases, bounded pagination, accurate hold/partial/tracking UI. Live receipts recorded in session; no new billable order.
 
 Latest: [RM065 — durable skipped-order exceptions and safe owner recovery](ASTRA-SESSION-RM-065.md). Dashboard alerts, exact-order recheck and held 30-day backfill; 349 local tests and Worker dry-run passed. External alert delivery and live launch acceptance remain open.
+
+Latest: [RM066 — configurable owner email and SMS alerts](ASTRA-SESSION-RM-066.md). Editable private destinations/categories/caps, provider readiness and explicit test buttons; scheduled dispatch code prepared, channels default off until owner configuration.358 mocked tests pass; real provider delivery not yet verified.

@@ -48,12 +48,12 @@
         <button data-tab="recovery">Recover artwork</button>
         <button data-tab="errors">Generation Errors</button>
         <button data-tab="limits">Limits &amp; usage</button>
-        <button data-tab="system">System</button>
+        <button data-tab="alerts">Alerts</button><button data-tab="system">System</button>
       </nav>
 
       <section class="tab-panel active" data-panel="orders">
         <div class="panel-heading"><div><div class="eyebrow">FULFILLMENT</div><h2>Orders & production</h2><p>New paid orders can auto-print after the customer confirms the exact design before checkout. Legacy orders and holds may need review. Syncing orders may advance already-authorized jobs.</p></div><button id="sync-orders">Sync paid Shopify orders</button></div>
-        <div class="glass op-card"><h3>Order alerts &amp; recovery</h3><p id="order-sync-health" role="status">Checking automatic sync…</p><p id="order-audit-health" class="muted"></p><p class="muted">Alerts are shown here while the dashboard is open. Email and phone notifications are not configured by this feature.</p><button id="audit-orders" type="button">Check last 30 days for missing orders</button><p class="muted">Checks purchase records without submitting production. Newly recovered jobs stay on hold for inspection.</p><div id="order-issues-list" class="card-list"></div><button id="more-order-issues" type="button" hidden>Load more issue records</button></div>
+        <div class="glass op-card"><h3>Order alerts &amp; recovery</h3><p id="order-sync-health" role="status">Checking automatic sync…</p><p id="order-audit-health" class="muted"></p><p class="muted">Dashboard alerts are always available here. Set your email or phone destination in the Alerts tab.</p><button id="audit-orders" type="button">Check last 30 days for missing orders</button><p class="muted">Checks purchase records without submitting production. Newly recovered jobs stay on hold for inspection.</p><div id="order-issues-list" class="card-list"></div><button id="more-order-issues" type="button" hidden>Load more issue records</button></div>
         <p id="jobs-page-status" class="muted"></p><div id="jobs-list" class="card-list"></div><button type="button" id="more-jobs" hidden>Load more orders</button>
       </section>
 
@@ -103,6 +103,27 @@
         <details class="glass settings-details"><summary>Recent settings changes</summary><pre id="owner-settings-history" data-private-setting></pre></details>
       </section>
 
+      <section class="tab-panel" data-panel="alerts">
+        <div class="panel-heading"><div><div class="eyebrow">OWNER NOTIFICATIONS</div><h2>Where should we alert you?</h2><p>Choose email, text messages, or both. Change your destinations whenever you need.</p></div><button id="reload-alert-settings" type="button" class="secondary">Reload alerts</button></div>
+        <form id="alert-settings-form" class="glass settings-form">
+          <label>Email address<input name="email" type="email" maxlength="254" placeholder="you@example.com" autocomplete="off"></label>
+          <label class="pause-setting"><input name="emailEnabled" type="checkbox"> Enable email alerts</label>
+          <p id="alert-email-ready" role="status"></p><p id="alert-email-last" class="muted"></p>
+          <label>Phone number, including country code<input name="phone" type="tel" maxlength="32" placeholder="+1 212 555 1234" autocomplete="off"></label>
+          <label class="pause-setting"><input name="smsEnabled" type="checkbox"> Enable text alerts</label>
+          <p id="alert-sms-ready" role="status"></p><p id="alert-sms-last" class="muted"></p>
+          <label class="pause-setting"><input name="orderErrors" type="checkbox"> Order errors, payment holds, missing artwork and fulfillment problems</label>
+          <label class="pause-setting"><input name="systemErrors" type="checkbox"> Shopify / Printful sync and daily audit failures</label>
+          <label class="pause-setting"><input name="newOrders" type="checkbox"> New order notifications</label>
+          <label>Maximum messages per channel per day<input name="dailyLimit" type="number" min="1" max="50" step="1" required></label>
+          <label class="pause-setting"><input name="consent" type="checkbox"> These destinations belong to me, or I have permission to send them alerts.</label>
+          <p>Checks run about every 10 minutes while order sync is enabled. Problems are grouped, with up to one reminder per problem per UTC day. Text/email provider charges may apply. Messages contain a general notice; private order details stay in this dashboard. A full site outage needs separate uptime monitoring.</p>
+          <button type="submit">Save alert settings</button><p id="alert-settings-status" role="status"></p>
+        </form>
+        <div class="op-actions"><button id="test-alert-email" type="button" disabled>Send test email</button><button id="test-alert-sms" type="button" disabled>Send test text</button></div>
+        <details class="glass settings-details"><summary>Delivery setup</summary><p>Email uses a verified Resend sender. Texts use a Twilio SMS sender approved for the destination. Connect the services once using private deployment settings; credentials never go in this form. Saving a destination does not by itself connect delivery. Provider acceptance is not proof the message arrived.</p></details>
+      </section>
+
       <section class="tab-panel" data-panel="system">
         <p><a href="/print-finish.html">Compare print finishes →</a></p>
         <p><a href="/model-lab.html">Compare rendering engines →</a></p>
@@ -132,6 +153,6 @@
       <div id="toast" class="toast hidden"></div>
     </section>
   </main>
-  <script src="/admin.js?v=2650" type="module"></script>
+  <script src="/admin.js?v=2660" type="module"></script>
 </body>
 </html>
