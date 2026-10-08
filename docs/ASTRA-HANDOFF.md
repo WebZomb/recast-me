@@ -130,3 +130,5 @@ Latest: [RM069 — protection and X setup checklist](ASTRA-SESSION-RM-069.md). O
 Latest: [RM070 — likeness across every world](ASTRA-SESSION-RM-070.md). Shared person/pet identity rules including illustrated styles and mixed groups;375 local tests and dry-run pass. Live likeness remains unverified; owner completed both Turnstile happy paths.
 
 Latest: [RM071 — free-only baseline screening](ASTRA-SESSION-RM-071.md). Paid visual calls removed; narrower coverage disclosed;375 mocked tests pass. Live provider acceptance and deployment require separate evidence. RM070 deployment was found failed.
+
+Latest: [RM072 — browser readiness after Turnstile](ASTRA-SESSION-RM-072.md). Owner clean-photo acceptance recorded; audit networkidle timeout diagnosed. X deferred by owner; manual marketing test delivered.

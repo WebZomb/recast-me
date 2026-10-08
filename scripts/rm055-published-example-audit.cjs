@@ -16,7 +16,7 @@ const watchdog=setTimeout(()=>{console.error('Read-only example audit exceeded 1
    page=await context.newPage();page.setDefaultTimeout(12000);page.setDefaultNavigationTimeout(30000);
    page.on('pageerror',e=>record.errors.push(e.message));
    page.on('response',r=>{if(r.url().includes('/catalog-examples.json'))record.manifestStatus=r.status()});
-   await page.goto(base+'/?rm055-review='+Date.now(),{waitUntil:'networkidle'});
+   await page.goto(base+'/?rm055-review='+Date.now(),{waitUntil:'domcontentloaded'});
    await page.waitForFunction(()=>document.querySelectorAll('#product-grid .product').length===18,{},{timeout:20000});
    record.examples=await page.locator('#product-grid .product').evaluateAll(rows=>rows.map(row=>({sku:row.dataset.exampleSku,image:row.querySelector('img').src,caption:row.querySelector('.example-design-label')?.textContent||'',verified:row.dataset.exampleVerified||false})));
    assert.equal(record.examples.length,18);assert.equal(new Set(record.examples.map(x=>x.image)).size,18);assert.equal(record.errors.length,0);

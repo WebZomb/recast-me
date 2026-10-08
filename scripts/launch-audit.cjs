@@ -31,7 +31,10 @@ const pause=ms=>new Promise(resolve=>setTimeout(resolve,ms));
     await context.route('**/*',async route=>{const r=route.request();if(!['GET','HEAD','OPTIONS'].includes(r.method())){blocked.push({method:r.method(),path:new URL(r.url()).pathname});return route.abort('blockedbyclient');}return route.continue();});
     const page=await context.newPage();page.on('pageerror',e=>errors.push(e.message));page.on('response',r=>{if(r.status()>=400)failed.push({status:r.status(),path:new URL(r.url()).pathname});});
     try{
-      const response=await page.goto(base+'/?launch-audit='+Date.now(),{waitUntil:'networkidle',timeout:45000});
+      const response=await page.goto(base+'/?launch-audit='+Date.now(),{waitUntil:'domcontentloaded',timeout:45000});
+      // Turnstile may poll indefinitely; page readiness is the rendered UI, not network silence.
+      await page.waitForFunction(()=>document.querySelectorAll('#product-grid .product').length===18,{}, {timeout:20000});
+      await page.locator('.site-header .nav-cta').waitFor({state:'visible',timeout:15000});
       // Test-only eager decoding verifies off-screen rail items without changing the site.
       await page.evaluate(async()=>{const imgs=[...document.images];imgs.forEach(i=>i.loading='eager');await Promise.race([Promise.all(imgs.map(i=>i.decode().catch(()=>null))),new Promise(r=>setTimeout(r,10000))]);});
       await page.screenshot({path:out+'/'+name+'-top.png'});
