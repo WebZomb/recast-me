@@ -24,3 +24,6 @@ https://support.google.com/accounts/answer/185833 (app passwords and 2-Step Veri
 
 ## Deployment / rollback
 Application deployment receipt follows when observed. Roll back RM068 code as a unit or disable email channel; preserve private send claims/counters/settings. Switching provider must not reset deduplication records. Do not claim live delivery until owner confirms receipt.
+
+## Observed deployment receipt
+Application d939055b057b2ebb43422a9b51cda652ed0cb95e, tree4c0d4dee826324ca54cca8d26dc5a78ef109edc4 deployed successfully: Workers Builds113419277142 SUCCESS. Earlier in-progress Workers check113419071250 was replaced by this success result. Local equivalent cf14c72. GitHub mocked-tests-and-bundle skipped;372 local tests are the actual test evidence. Public browser audit113419058177 still in progress at receipt. No live authenticated Gmail submission or inbox delivery verified. Owner private configuration is the next step.
