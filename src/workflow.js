@@ -1164,6 +1164,14 @@ export async function routeWorkflow(request,env,ctx){
   if(p==="/api/mockup/status"&&request.method==="GET")return mockupStatus(request,env);
   let m=p.match(/^\/api\/print-source\/([^/]+)$/);if(m&&request.method==="GET")return servePrintSource(request,env,decodeURIComponent(m[1]));
   m=p.match(/^\/api\/mockup\/image\/([^/]+)\/([^/]+)\/(\d+)$/);if(m&&request.method==="GET")return serveMockupImage(request,env,decodeURIComponent(m[1]),decodeURIComponent(m[2]),Number(m[3]));
+  if(p==="/api/admin/shopify-permissions"&&request.method==="GET"){
+    try{
+      requireAdmin(request,env);
+      const data=await shopifyGraphQL(env,'query RecastGrantedScopes { currentAppInstallation { app { title } accessScopes { handle } } }');
+      const app=data?.currentAppInstallation;
+      return json({ok:true,app:app?.app?.title||null,scopes:(app?.accessScopes||[]).map(s=>s.handle),readOnly:true});
+    }catch(error){return json({ok:false,error:error.message},error.status||500)}
+  }
   if(p==="/api/admin/sync-printful"&&request.method==="POST"){
     try{requireAdmin(request,env);return json(await syncPrintfulJobs(env));}
     catch(error){return json({ok:false,error:error.message},error.status||500)}

@@ -798,3 +798,13 @@ test('supplier sync advances its bounded storage cursor instead of starving late
  await syncPrintfulJobs(env);await syncPrintfulJobs(env);await syncPrintfulJobs(env);
  assert.deepEqual(cursors,[null,'next-page',null]);
 });
+
+
+test('Shopify permission audit is owner-only and returns only app name and scopes',async()=>{
+ const env=await setup({ADMIN_TOKEN:'fixture-admin',SHOPIFY_CLIENT_ID:'fixture',SHOPIFY_CLIENT_SECRET:'fixture',SHOPIFY_SHOP:'fixture'});
+ const url='https://recast.test/api/admin/shopify-permissions';
+ assert.equal((await routeWorkflow(new Request(url),env,{})).status,401);
+ const original=globalThis.fetch;
+ globalThis.fetch=async(_url,opts={})=>{if(String(_url).includes('access_token'))return Response.json({access_token:'fixture',expires_in:3600});assert.match(JSON.parse(opts.body).query,/query RecastGrantedScopes/);return Response.json({data:{currentAppInstallation:{app:{title:'Recast'},accessScopes:[{handle:'read_orders'}]}}})};
+ try{const r=await routeWorkflow(new Request(url,{headers:{authorization:'Bearer fixture-admin'}}),env,{});assert.equal(r.status,200);assert.deepEqual(await r.json(),{ok:true,app:'Recast',scopes:['read_orders'],readOnly:true})}finally{globalThis.fetch=original}
+});
