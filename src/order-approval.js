@@ -108,7 +108,7 @@ export async function finishApprovedDesign(env,job,{ownerRecovery=false}={}){
     if(job.status!=='on_hold'||!job.printFileRecoveryStartedAt||job.printfulOrderId||job.sentToProductionAt||!await env.ARTWORK.head(claim))throw fault('finish_recovery_blocked','This print-file recovery is not eligible.');
   }
   // Never erase the original attempt; one explicitly requested recovery has its own atomic claim.
-  const attempt=ownerRecovery?claim+'.owner-recovery':claim;
+  const attempt=ownerRecovery?claim+'.owner-recovery'+(job.product==='Sticker Sheet'?'.sheet-native-300dpi-v1':''):claim;
   const claimed=await env.ARTWORK.put(attempt,JSON.stringify({startedAt:new Date().toISOString(),ownerRecovery}),{onlyIf:new Headers({'If-None-Match':'*'})});
   if(!claimed)throw fault('finish_in_progress','Print finishing has already started. Check its saved result before retrying.');
   let finalBytes,finalMime='image/jpeg',finishMethod='preserve-interpolate';
@@ -117,7 +117,9 @@ export async function finishApprovedDesign(env,job,{ownerRecovery=false}={}){
   if(design&&Number(design.version)>=4){
     if(!(area.width>0&&area.height>0))throw fault('proof_placement_missing','The approved product layout is missing its print area.',503);
     const info=await env.IMAGES.info(new Blob([bytes]).stream());
-    const composed=await composeProductLayout(env,bytes,info,area,{product:job.product},design,4096);
+    // The supplier sheet is already 300 DPI. Do not inflate its blank RGBA canvas to ~95 MB.
+    const finishWidth=job.product==='Sticker Sheet'?1750:4096;
+    const composed=await composeProductLayout(env,bytes,info,area,{product:job.product},design,finishWidth);
     finalBytes=composed.bytes;finalMime=composed.mime||'image/jpeg';finishMethod=[5,6].includes(Number(design.version))&&design.finish?'apparel-v'+design.version+'-clean-'+design.finish:'product-layout-v'+design.version+'-clean';
   }else if(job.product==='Mug'&&design?.background==='scene-fill'){
     if(!(area.width>0&&area.height>0))throw fault('proof_placement_missing','The approved mug layout is missing its print area.',503);

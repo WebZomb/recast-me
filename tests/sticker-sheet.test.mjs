@@ -23,7 +23,7 @@ test('approved sheet prints six clean pictures once, with payment and token gate
  await env.ARTWORK.put(snapshotKey,b64);await env.ARTWORK.put('commerce/designs/sheet-approved.json',JSON.stringify(design));
  const finished=await finishApprovedDesign(env,job);
  assert.equal(finished.finalMime,'image/png');assert.match(finished.finalKey,/\.png$/);assert.equal(finished.finishMethod,'product-layout-v8-clean');
- assert.equal(draws.length,6);assert.ok(draws.every(o=>!o.repeat&&!o.composite),'no watermark or footer in purchased print');
+ assert.equal(draws.length,6);assert.deepEqual(draws,stickerSheetBoxes({width:800,height:1000},1750,2482).map(({left,top})=>({left,top})),'finish at the exact 300 DPI supplier dimensions');assert.ok(draws.every(o=>!o.repeat&&!o.composite),'no watermark or footer in purchased print');
  await finishApprovedDesign(env,job);assert.equal(draws.length,6,'approved file is immutable and reused');
  let paidChecks=0;
  const response=await printDesignFile(new Request('https://recast.test/api/print-design/sheet-approved?token=fixture-sheet-print'),env,job,async()=>paidChecks++);

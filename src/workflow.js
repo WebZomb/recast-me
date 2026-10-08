@@ -935,14 +935,18 @@ export async function adminJobAction(request,env,id,action){
       await verifyPaidOrder(env,job,{forProduction:true});
       const original=await approvedDesign(env,job);
       if(!original.finalKey&&!await env.ARTWORK.head(`commerce/finishes/${jobHash}/${original.sourceHash}.claim`))throw fault('finish_attempt_missing','No previous print-file attempt exists. Use normal preparation.');
-      if(!await env.ARTWORK.put(`commerce/recoveries/${jobHash}-print.json`,JSON.stringify({startedAt:now()}),{onlyIf:new Headers({'If-None-Match':'*'})}))throw fault('recovery_started','This recovery already started. Inspect its result before retrying.');
+      if(!await env.ARTWORK.put(`commerce/recoveries/${jobHash}-print${job.product==='Sticker Sheet'?'-sheet-native-300dpi-v1':''}.json`,JSON.stringify({startedAt:now()}),{onlyIf:new Headers({'If-None-Match':'*'})}))throw fault('recovery_started','This recovery already started. Inspect its result before retrying.');
       job.status='on_hold';job.holdReason='Recovering approved print file; paid production remains held.';
       job.printFileRecoveryStartedAt ||= now();await saveJob(env,job);
+      try{
       const design=await finishApprovedDesign(env,job,{ownerRecovery:true});
       job.artApprovedAt ||= design.approvedAt;job.printReadyAt=design.finishedAt;job.printReadyMethod=design.finishMethod;
       job.printFileRecoveredAt=now();await saveJob(env,job);
       job=await createPrintfulDraftForJob(env,job,{keepHeld:true});
       return json({ok:true,job,productionSubmitted:false});
+      }catch(error){
+        const latest=await loadJob(env,id);latest.printFileRecoveryError=error.message||String(error);latest.holdReason='Print recovery paused: '+latest.printFileRecoveryError;await saveJob(env,latest);throw error;
+      }
     }
     if(action==="approve-art"){
       if(!job.digital){await verifyPaidOrder(env,job);await approvedDesign(env,job)}
