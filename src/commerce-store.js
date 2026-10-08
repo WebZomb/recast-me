@@ -126,10 +126,13 @@ export async function composeProductLayout(env,sourceBytes,sourceSize,area,map={
     if(Math.abs(area.width/area.height-1750/2482)>.001)throw fault('sheet_template_changed','The sticker sheet template needs a supplier review.',503);
     const boxes=stickerSheetBoxes(sourceSize,outWidth,outHeight);
     const canvas=await transparentCanvas(outWidth,outHeight);
+    // Materialize the identical resized picture once. Six nested resize+draw
+    // pairs exceed the Images binding's ten-transform ceiling.
+    const pictureBytes=await pngOutput(env.IMAGES.input(stream()).transform({width:boxes[0].width,height:boxes[0].height,fit:'squeeze',background:'#ffffff'}));
     let chain=env.IMAGES.input(new Blob([canvas],{type:'image/png'}).stream());
     for(const box of boxes){
       // Flatten each picture itself onto white, keeping ONLY the gaps transparent.
-      const picture=env.IMAGES.input(stream()).transform({width:box.width,height:box.height,fit:'squeeze',background:'#ffffff'});
+      const picture=env.IMAGES.input(new Blob([pictureBytes],{type:'image/png'}).stream());
       chain=chain.draw(picture,{left:box.left,top:box.top});
     }
     return {bytes:await pngOutput(chain),mime:'image/png',design,outputSize:{width:outWidth,height:outHeight},artworkBoxes:boxes,method:'sticker-sheet-v8-six-pictures'};

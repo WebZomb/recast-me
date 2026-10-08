@@ -394,7 +394,7 @@ async function generateRealMockup({req,sku,card,button}){
         :/print dimensions are unavailable|print_area_missing/i.test(internal)
         ?"This product preview is being updated. Your Recast is saved — try again in a moment or choose another product."
         :"We couldn't build this product preview right now. Your Recast is saved — please try again.";
-      console.warn("Recast product preview start failed",JSON.stringify({sku,detail:internal}));
+      console.warn("Recast product preview start failed",JSON.stringify({sku,detail:internal.replace(/https?:\/\/[^\s]+/g,'[protected source]')}));
       throw new Error(customer);
     }
     const mockupId=data.mockupId||"legacy";

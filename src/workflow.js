@@ -228,12 +228,6 @@ export async function createMockup(request,env){
       sourceUrl=`${appBase(env,request)}/api/print-source/${encodeURIComponent(requestId)}?${q}`;
     }
     if([5,6].includes(design.version)&&design.finish)await prepareApparelArtwork(env,decodeBase64(savedBase64),design.finish,{allowCreate:true});
-    if(map.product==='Sticker Sheet'){
-      // Fail locally with an actionable image-processing error before asking
-      // the supplier to fetch a source that the Worker cannot compose.
-      stage='sticker-sheet-compose';
-      await composeProductLayout(env,decodeBase64(savedBase64),size,{width:position.area_width,height:position.area_height},map,design);
-    }
     const placements=productPlacements(map,design);
     for(const other of placements.filter(p=>p!==placement)){
       const area=productPrintfile(catalog,map.printfulVariantId,other);
