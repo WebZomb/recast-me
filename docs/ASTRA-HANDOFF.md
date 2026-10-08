@@ -132,3 +132,5 @@ Latest: [RM070 — likeness across every world](ASTRA-SESSION-RM-070.md). Shared
 Latest: [RM071 — free-only baseline screening](ASTRA-SESSION-RM-071.md). Paid visual calls removed; narrower coverage disclosed;375 mocked tests pass. Live provider acceptance and deployment require separate evidence. RM070 deployment was found failed.
 
 Latest: [RM072 — browser readiness after Turnstile](ASTRA-SESSION-RM-072.md). Owner clean-photo acceptance recorded; audit networkidle timeout diagnosed. X deferred by owner; manual marketing test delivered.
+
+RM072 final: f742c56 Worker SUCCESS (version eb946f30-7cb8-4f66-ac62-dd065fb82436); public browser job113487838190 SUCCESS,375tests,4viewports,18product examples and mocked social checkout. Live Printful reachable. Specific challenge iframe errors separately reported; live challenge not automated. Current private Control Center signed out, so private fulfillment/incident inspection and real safety rejection/physical acceptance still open. Manual daily promo now includes a prominent verified product; revised mug creative delivered, no X posting.
