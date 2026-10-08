@@ -358,7 +358,7 @@ async function shopifyGraphQL(env, query, variables = {}) {
 
 export async function shopifyCatalog(env) {
   const data = await shopifyGraphQL(env, `query RecastCatalog {
-    products(first: 20, query: "vendor:'Recast Me'") {
+    products(first: 100, query: "vendor:'Recast Me'") {
       nodes { id title handle status variants(first: 20) { nodes { id title sku price } } }
     }
   }`);
@@ -370,7 +370,7 @@ async function shopifyStatus(env) {
     const data = await shopifyGraphQL(env, `
       query RecastStatus {
         shop { name myshopifyDomain }
-        products(first: 20, query: "vendor:'Recast Me'") {
+        products(first: 100, query: "vendor:'Recast Me'") {
           nodes {
             id
             title

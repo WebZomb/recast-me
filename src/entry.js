@@ -37,6 +37,7 @@ export const FULFILLMENT = {
   "RECAST-MAGNET-SET":     { printfulProductId: 656, printfulVariantId: 16366, preferredPlacement: "default", orderFileType: "default", quantity: 3, baseCost: 3.39, product: "Magnet 3-Pack", color: "White" },
   "RECAST-COASTER-SET":    { printfulProductId: 611, printfulVariantId: 15662, preferredPlacement: "default", orderFileType: "default", quantity: 4, baseCost: 5.55, product: "Coaster 4-Pack" },
 
+  "RECAST-STICKER-PACK": { printfulProductId: 505, printfulVariantId: 12917, preferredPlacement: "default", orderFileType: "default", quantity: 1, baseCost: 5.15, product: "Sticker Sheet" },
   "RECAST-STICKER-3X3":    { printfulProductId: 358, printfulVariantId: 10163, preferredPlacement: "default", orderFileType: "default", quantity: 1, baseCost: 2.34, product: "Sticker" },
   "RECAST-PILLOW-14":      { printfulProductId: 83, printfulVariantId: 49853, preferredPlacement: "front", orderFileType: "front", quantity: 1, baseCost: 13.57, product: "Pillow" },
   "RECAST-PILLOW-16":      { printfulProductId: 83, printfulVariantId: 49854, preferredPlacement: "front", orderFileType: "front", quantity: 1, baseCost: 14.59, product: "Pillow" },

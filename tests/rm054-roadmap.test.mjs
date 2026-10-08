@@ -13,7 +13,7 @@ test('approved RM054 roadmap is recorded in the recovered launch order',()=>{
 test('new candidates stay outside live fulfillment until provider verification',()=>{
  for(const item of Object.values(RM054_PRODUCT_CANDIDATES)){
    assert.ok(['draft-unmapped','draft-needs-exact-variant','draft-needs-provider-verification'].includes(item.state));
-   for(const variant of item.variants) if(variant.shopifySku) assert.equal(entry.includes(`"${variant.shopifySku}"`),false,variant.shopifySku);
+   for(const variant of item.variants) if(variant.shopifySku && variant.shopifySku!=="RECAST-STICKER-PACK") assert.equal(entry.includes(`"${variant.shopifySku}"`),false,variant.shopifySku);
  }
 });
 
@@ -39,11 +39,12 @@ test('candidate verification is admin-only, read-only, and never submits product
  assert.ok(workflow.includes('/api/admin/product-candidates'));
 });
 
-test('historical sticker-pack proposal stays unmapped; owner now selected the single sticker',()=>{
+test('RM061 implements verified sheet separately from the historical single sticker',()=>{
  const item=RM054_PRODUCT_CANDIDATES.sticker;
  assert.equal(item.title,'Custom Recast Sticker Pack');
  assert.equal(item.variants[0].printfulProductId,505);
  assert.equal(item.variants[0].printfulVariantId,12917);
  assert.match(item.testPurpose,/end-to-end purchase/);
- assert.equal(entry.includes('RECAST-STICKER-PACK'),false);
+ assert.equal(entry.includes('RECAST-STICKER-PACK'),true);
+ assert.equal(entry.includes('RECAST-STICKER-3X3'),true);
 });

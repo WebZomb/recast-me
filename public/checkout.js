@@ -2,6 +2,7 @@ const grid = document.querySelector("#product-grid");
 const requestLabel = document.querySelector("#request-id");
 
 const PRODUCT_ART = {
+  "Custom Recast Sticker Sheet":"https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-lifestyle-sticker-sheet-rm061.png?v=1791427937&width=1000",
   "Custom Recast Poster":"https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-lifestyle-poster-rm059.png?v=1791422885&width=1000",
   "Custom Recast Hoodie":"https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-lifestyle-hoodie-rm059.png?v=1791422966&width=1000",
   "Custom Recast Framed Poster":"https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-lifestyle-frame-rm059.png?v=1791422870&width=1000",
@@ -36,6 +37,7 @@ const PRODUCT_META = {
   "HD Digital Recast": {order:90,badge:"DIGITAL ONLY",pitch:"Just want the clean artwork? Keep the high-resolution file without ordering merch.",tier:"digital",cta:"Get HD File"},
   "Recast Pack": {order:91,badge:"DIGITAL PACK",pitch:"The complete digital set with useful crops and formats.",tier:"digital",cta:"Get Recast Pack"}
 ,
+  "Custom Recast Sticker Sheet": {order:9,badge:"SIX STICKERS · ONE SHEET",pitch:"Six matching full-picture stickers. Your adventure background stays in every one. Glossy 5.83×8.27-inch sheet; indoor use.",tier:"secondary",cta:"Shop Sticker Sheet"},
   "Custom Recast Sticker": {order:9,badge:"NEW · EASY GIFT",pitch:"A glossy 3×3 full-picture sticker, adventure background included.",tier:"secondary",cta:"Shop Sticker"},
   "Custom Recast Phone Case": {order:10,badge:"NEW · EVERYDAY",pitch:"Carry your Recast every day on a supplier-verified clear iPhone case.",tier:"secondary",cta:"Shop Phone Case"},
   "Custom Recast Pillow": {order:11,badge:"NEW · HOME",pitch:"A soft personalized accent pillow made from your Recast.",tier:"secondary",cta:"Shop Pillow"},
@@ -56,6 +58,7 @@ const PRODUCT_DESIGN_PRESETS = {
   "Custom Recast Canvas": {product:"Canvas",layout:"fit",fill:"ambient",x:"center",scale:90,spacing:"standard",label:"Best setup · whole image inside wrapped edges"},
   "Custom Recast Magnet 3-Pack": {product:"Magnet 3-Pack",layout:"cover",fill:"full-bleed",x:"center",scale:100,spacing:"standard",label:"Best setup · full bleed"},
   "Custom Recast Coaster 4-Pack": {product:"Coaster 4-Pack",layout:"cover",fill:"full-bleed",x:"center",scale:100,spacing:"standard",label:"Best setup · full bleed"},
+  "Custom Recast Sticker Sheet": {product:"Sticker Sheet",layout:"six-pictures",fill:"transparent",x:"center",scale:100,spacing:"safe",label:"Six whole pictures · safe peel spacing"},
   "Custom Recast Sticker": {product:"Sticker",layout:"cover",fill:"full-bleed",x:"center",scale:100,spacing:"standard",label:"Best setup · full sticker"},
   "Custom Recast Phone Case": {product:"Phone Case",layout:"fit",fill:"ambient",x:"center",scale:100,spacing:"standard",label:"Best setup · whole image below camera"},
   "Custom Recast Pillow": {product:"Pillow",layout:"fit",fill:"ambient",x:"center",scale:100,spacing:"standard",label:"Best setup · whole image"},
@@ -147,10 +150,12 @@ function productDesign(card){
   const scale=Number(card?.querySelector?.("[data-design-scale]")?.value||preset.scale);
   const spacing=card?.querySelector?.("[data-design-spacing]")?.value||preset.spacing;
   const fill=card?.querySelector?.("[data-design-fill]")?.value||preset.fill;
-  return {version:["Hardcover Journal","Phone Case"].includes(preset.product)?7:6,product:preset.product,layout,fill,x,scale,spacing,...(["Poster","Framed Poster","Canvas","Puzzle"].includes(preset.product)?{orientation:"portrait"}:{}),...(preset.finish?{finish:card?.querySelector?.("[data-design-finish]")?.value||preset.finish}:{})};
+  return {version:preset.product==="Sticker Sheet"?8:["Hardcover Journal","Phone Case"].includes(preset.product)?7:6,product:preset.product,layout,fill,x,scale,spacing,...(["Poster","Framed Poster","Canvas","Puzzle"].includes(preset.product)?{orientation:"portrait"}:{}),...(preset.finish?{finish:card?.querySelector?.("[data-design-finish]")?.value||preset.finish}:{})};
 }
 function designSignature(card,sku){return JSON.stringify({sku,design:productDesign(card)})}
 function designControlsMarkup(title,preset){
+  if(preset.product==='Sticker Sheet')return `<details class="product-design-controls compact-product-edit"><summary><span>Sheet details</span></summary><div class="design-edit-body"><p>Six matching copies of your whole picture, arranged in two columns and three rows. Each picture fits inside a 2.25-inch square and keeps its original proportions. Small white borders and safe gaps let each sticker peel separately.</p><p>One 5.83×8.27-inch sheet per quantity. For flat indoor surfaces. Choose another saved Recast above to change the artwork, then preview the sheet again.</p></div></details>`;
+
   const wrap=['Custom Recast Mug','Custom Recast Tumbler'].includes(title);
   const apparel=Boolean(preset.finish);
   const journal=preset.product==="Hardcover Journal",phone=preset.product==="Phone Case";
@@ -475,7 +480,7 @@ async function loadCheckout(){
   }
 
   const ordered=[...(data.products||[])]
-    .filter(product=>PRODUCT_META[product.title]&&product.status==="ACTIVE")
+    .filter(product=>PRODUCT_META[product.title]&&(product.status==="ACTIVE"||(product.title==="Custom Recast Sticker Sheet"&&product.status==="DRAFT"&&new URLSearchParams(location.search).get("previewDraft")==="sticker-sheet")))
     .sort((a,b)=>{
       const ap=PRIMARY_PRODUCT_TITLES.has(a.title)?0:1,bp=PRIMARY_PRODUCT_TITLES.has(b.title)?0:1;
       return ap-bp||((PRODUCT_META[a.title]?.order??50)-(PRODUCT_META[b.title]?.order??50));

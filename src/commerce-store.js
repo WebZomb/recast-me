@@ -36,6 +36,7 @@ export function recommendedProductDesign(map={}){
 export function normalizeProductDesign(map,raw={}){
   const product=String(map?.product||'Generic'),recommended=recommendedProductDesign(map);
   const rawVersion=Number(raw?.version||0);
+  if(product==='Sticker Sheet')return {version:8,layout:'six-pictures',background:'transparent',fill:'transparent',x:'center',scale:100,spacing:'safe',product};
   if(rawVersion===7&&['Hardcover Journal','Phone Case'].includes(product)){
     const n=Number(raw.scale),scale=Math.round(Math.max(70,Math.min(100,Number.isFinite(n)?n:100)));
     const fill=['ambient','dark','light'].includes(raw.fill)?raw.fill:'ambient';
@@ -102,6 +103,18 @@ async function jpegBytes(chain){
   if(bytes.length<100||bytes[0]!==255||bytes[1]!==216||bytes[2]!==255)throw fault('product_compose_invalid','Product artwork composition returned invalid image data.',502);
   return bytes;
 }
+// Printful 505/12917: six complete pictures, no rogue pixels between cut contours.
+// At 300 DPI the supplier requires >=75px between objects. We use >=120px.
+export function stickerSheetBoxes(sourceSize,width,height){
+  if(![sourceSize.width,sourceSize.height,width,height].every(n=>Number.isFinite(n)&&n>0))throw fault('sheet_dimensions','Sticker sheet dimensions are invalid.');
+  const unit=width/1750,edge=150*unit,gap=120*unit;
+  const maxWidth=Math.min(675*unit,(width-2*edge-gap)/2);
+  const maxHeight=Math.min(675*unit,(height-2*edge-2*gap)/3);
+  const fitted=fitDimensions(sourceSize.width,sourceSize.height,maxWidth,maxHeight);
+  if(Math.min(fitted.width,fitted.height)<150*unit)throw fault('sheet_artwork_too_narrow','Choose a less panoramic picture for readable stickers.');
+  const left=(width-(2*fitted.width+gap))/2,top=(height-(3*fitted.height+2*gap))/2;
+  return Array.from({length:6},(_,i)=>({left:Math.round(left+(i%2)*(fitted.width+gap)),top:Math.round(top+Math.floor(i/2)*(fitted.height+gap)),...fitted}));
+}
 export async function composeProductLayout(env,sourceBytes,sourceSize,area,map={},rawDesign={},targetWidth=2400){
   if(!env.IMAGES?.input)throw fault('images_required','Image processing is not configured.',503);
   const design=normalizeProductDesign(map,rawDesign);
@@ -109,6 +122,18 @@ export async function composeProductLayout(env,sourceBytes,sourceSize,area,map={
   const outHeight=Math.max(300,Math.round(outWidth*area.height/area.width));
   const stream=()=>new Blob([sourceBytes],{type:'image/jpeg'}).stream();
 
+  if(design.product==='Sticker Sheet'){
+    if(Math.abs(area.width/area.height-1750/2482)>.001)throw fault('sheet_template_changed','The sticker sheet template needs a supplier review.',503);
+    const boxes=stickerSheetBoxes(sourceSize,outWidth,outHeight);
+    const canvas=await transparentCanvas(outWidth,outHeight);
+    let chain=env.IMAGES.input(new Blob([canvas],{type:'image/png'}).stream());
+    for(const box of boxes){
+      // Flatten each picture itself onto white, keeping ONLY the gaps transparent.
+      const picture=env.IMAGES.input(stream()).transform({width:box.width,height:box.height,fit:'squeeze',background:'#ffffff'});
+      chain=chain.draw(picture,{left:box.left,top:box.top});
+    }
+    return {bytes:await pngOutput(chain),mime:'image/png',design,outputSize:{width:outWidth,height:outHeight},artworkBoxes:boxes,method:'sticker-sheet-v8-six-pictures'};
+  }
   if(design.version===6&&['Hoodie','T-Shirt'].includes(design.product)){
     const art=await prepareApparelArtwork(env,sourceBytes,design.finish);
     const info=await env.IMAGES.info(new Blob([art]).stream());
