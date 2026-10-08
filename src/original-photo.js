@@ -8,7 +8,7 @@ export async function saveOriginalPhoto(request,env,{trustedSocialJob=false}={})
   const form=await request.formData(),file=form.get('photo');
   if(form.get('consent')!=='yes')throw fault('photo_permission','Please confirm permission to use this photo.',400);
   if(!(file instanceof File)||!['image/jpeg','image/png','image/webp'].includes(file.type)||!file.size||file.size>12000000)throw fault('photo_format','Choose one JPEG, PNG, or WebP photo under 12 MB.',400);
-  const check=trustedSocialJob?{success:true}:await verifyTurnstile(env,String(form.get('turnstileToken')||''),request.headers.get('CF-Connecting-IP')||'');
+  const check=trustedSocialJob?{success:true}:await verifyTurnstile(env,String(form.get('turnstileToken')||''),request.headers.get('CF-Connecting-IP')||'',{action:'original_photo',hostname:new URL(request.url).hostname});
   if(!check.success)throw fault('human_check_failed','Please complete the security check and try again.',403);
   const salt=env.CREDIT_IP_SALT||env.ADMIN_TOKEN;
   if(!salt)throw fault('photo_unavailable','Photo uploads are not configured yet.',503);

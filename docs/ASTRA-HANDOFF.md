@@ -120,3 +120,5 @@ Latest: [RM064 — automatic fulfillment reconciliation](ASTRA-SESSION-RM-064.md
 Latest: [RM065 — durable skipped-order exceptions and safe owner recovery](ASTRA-SESSION-RM-065.md). Dashboard alerts, exact-order recheck and held 30-day backfill; 349 local tests and Worker dry-run passed. External alert delivery and live launch acceptance remain open.
 
 Latest: [RM066 — configurable owner email and SMS alerts](ASTRA-SESSION-RM-066.md). Editable private destinations/categories/caps, provider readiness and explicit test buttons; scheduled dispatch code prepared, channels default off until owner configuration.358 mocked tests pass; real provider delivery not yet verified.
+
+Latest: [RM067 — photo-policy and bot protection hardening, X safeguards](ASTRA-SESSION-RM-067.md).366 mocked tests and dry-run pass; no new paid order. Source improvements do NOT mean services enabled: Cloudflare verification/private credentials block live activation. Existing2orders in production, no audit issues; alert delivery and shipment acceptance remain unverified.

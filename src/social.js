@@ -1,8 +1,8 @@
-import {moderateContent,moderationReadiness,screenText,CONTENT_MESSAGE} from './content-safety.js';
+import {moderateContent,moderationReadiness,screenText,CONTENT_MESSAGE,CONTENT_POLICY_VERSION} from './content-safety.js';
 import {socialIntent} from './social-products.js';
 import {saveOriginalPhoto} from './original-photo.js';
 import {createMockup,mockupStatus} from './workflow.js';
-import {sameOrigin} from './commerce-store.js';
+import {sameOrigin,change} from './commerce-store.js';
 import app from './entry.js';
 import { highQualityTransform } from './highquality.js';
 import { guardedSocialEnvironment } from './render-controls.js';
@@ -130,7 +130,7 @@ async function createPreview(env,job) {
   await env.ARTWORK.put(`social/previews/${job.shareId}.jpg`,await response.arrayBuffer(),{httpMetadata:{contentType:'image/jpeg'}});
   await write(env,`social/shares/${job.shareId}.json`,{requestId:job.requestId,tweetId:job.tweetId,createdAt:stamp()});
   job.link=`${base(env)}/recast.html?share=${job.shareId}`;
-  job.previewReady=true;await saveJob(env,job);
+  job.screeningPolicy=CONTENT_POLICY_VERSION;job.previewReady=true;await saveJob(env,job);
 }
 
 async function postReply(env,job,text,mediaId) {
@@ -174,7 +174,22 @@ async function createProductPreview(env,job){
   if(!protectedImage.ok)throw new Error('Preview protection failed.');
   await env.ARTWORK.put(`social/previews/${job.shareId}.jpg`,await protectedImage.arrayBuffer(),{httpMetadata:{contentType:'image/jpeg'}});
   await write(env,`social/shares/${job.shareId}.json`,{requestId:meta.requestId,tweetId:job.tweetId,sku,createdAt:stamp()});
-  job.link=`${base(env)}/recast.html?share=${job.shareId}`;job.previewReady=true;job.retryAt=null;await saveJob(env,job);return true;
+  job.link=`${base(env)}/recast.html?share=${job.shareId}`;job.screeningPolicy=CONTENT_POLICY_VERSION;job.previewReady=true;job.retryAt=null;await saveJob(env,job);return true;
+}
+
+async function reserveSocialRequest(env,job){
+  const day=new Date().toISOString().slice(0,10);
+  const cap=(raw,fallback,max)=>{const n=Number(raw);return Number.isInteger(n)&&n>=1&&n<=max?n:fallback;};
+  const total=cap(env.X_DAILY_REQUEST_LIMIT,50,200),perAuthor=cap(env.X_AUTHOR_DAILY_REQUEST_LIMIT,3,10);
+  let allowed=false;
+  await change(env,`social/budget/${day}.json`,{requests:{}},state=>{
+    allowed=false;
+    if(state.requests[job.tweetId]===job.authorId){allowed=true;return;}
+    const authors=Object.values(state.requests);
+    if(authors.length>=total||authors.filter(x=>x===job.authorId).length>=perAuthor)return;
+    allowed=true;return {requests:{...state.requests,[job.tweetId]:job.authorId}};
+  });
+  return allowed;
 }
 
 export async function processSocialJob(env,job) {
@@ -186,6 +201,9 @@ export async function processSocialJob(env,job) {
     job.intent=job.intent||socialIntent(job.requestText);
     if(screenText(job.requestText).status==='rejected'){job.error=CONTENT_MESSAGE;await finish(env,job,'needs_review');return;}
     if(!moderationReadiness(env).ready){job.replyStatus='configuration_required';job.error='Enable configured photo safety screening before X processing.';await saveJob(env,job);return;}
+    if(!await reserveSocialRequest(env,job)){job.replyStatus='awaiting_capacity';job.retryAt=new Date(Date.now()+86400000).toISOString();job.error='Daily X request allowance reached.';await saveJob(env,job);return;}
+    await moderateContent(env,{text:job.requestText,required:true});
+    if(job.previewReady&&job.screeningPolicy!==CONTENT_POLICY_VERSION){job.previewReady=false;job.mediaId=null;}
     if(!job.photos.length) {
       const params=new URLSearchParams({source:'x',tweet:job.tweetId,request:job.requestText,style:job.direction.style});
       job.link=`${base(env)}/?${params}`;
@@ -240,7 +258,7 @@ export async function processSocialJob(env,job) {
 export async function runSocialPipeline(env) {
   const ready=socialReadiness(env);
   if(!ready.enabled)return {ok:true,disabled:true};
-  if(!ready.approved||!ready.credentials||!ready.storage||!ready.ai||!ready.contentModeration)return {ok:false,disabled:true,error:'X requires credentials, API access, approval, AI, private storage and enabled image screening.',readiness:ready};
+  if(!ready.approved||!ready.credentials||!ready.storage||!ready.ai||!ready.imageProcessing||!ready.contentModeration)return {ok:false,disabled:true,error:'X requires credentials, API access, approval, AI, private storage and enabled image screening.',readiness:ready};
   const lockKey='system/x-pipeline-lock.json';
   const old=await env.ARTWORK.get(lockKey);
   if(old&&Date.parse((await old.json()).until)>Date.now())return {ok:true,busy:true};

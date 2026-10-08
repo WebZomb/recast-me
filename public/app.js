@@ -409,8 +409,8 @@ async function setupTurnstile(){
       if(window.turnstile)return resolve();
       const script=document.createElement('script');script.src='https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';script.defer=true;script.onload=resolve;script.onerror=reject;document.head.appendChild(script);
     });
-    originalTurnstileWidgetId=window.turnstile.render('#original-turnstile',{sitekey:config.turnstileSiteKey,theme:'dark',size:'flexible',callback:t=>{originalTurnstileToken=t;},'expired-callback':()=>{originalTurnstileToken=''}});
-    turnstileWidgetId=window.turnstile.render('#turnstile-container',{sitekey:config.turnstileSiteKey,theme:'dark',size:'flexible',callback:t=>{turnstileToken=t;clearRecastError()},'expired-callback':()=>{turnstileToken=''}});
+    originalTurnstileWidgetId=window.turnstile.render('#original-turnstile',{action:'original_photo',sitekey:config.turnstileSiteKey,theme:'dark',size:'flexible',callback:t=>{originalTurnstileToken=t;},'error-callback':()=>{originalTurnstileToken=''},'expired-callback':()=>{originalTurnstileToken=''}});
+    turnstileWidgetId=window.turnstile.render('#turnstile-container',{action:'recast',sitekey:config.turnstileSiteKey,theme:'dark',size:'flexible',callback:t=>{turnstileToken=t;clearRecastError()},'error-callback':()=>{turnstileToken=''},'expired-callback':()=>{turnstileToken=''}});
   }catch(error){console.warn('Turnstile setup skipped',error)}
 }
 function resetTurnstile(){

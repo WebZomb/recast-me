@@ -126,14 +126,22 @@ async function writeAttemptReceipt(env,attemptId,payload){
   }catch{}
 }
 
-export async function verifyTurnstile(env,token,ip){
-  if(!env.TURNSTILE_SECRET_KEY)return{success:true,disabled:true};
-  if(!token)return{success:false,error:"missing-token"};
-  const body=new URLSearchParams({secret:String(env.TURNSTILE_SECRET_KEY),response:String(token)});
+export async function verifyTurnstile(env,token,ip,{action,hostname}={}){
+  const configured=Boolean(env.TURNSTILE_SECRET_KEY||env.TURNSTILE_SITE_KEY||String(env.TURNSTILE_REQUIRED)==="true");
+  if(!configured)return {success:true,disabled:true};
+  if(!env.TURNSTILE_SECRET_KEY||!env.TURNSTILE_SITE_KEY)return {success:false,error:"not-configured"};
+  if(typeof token!=="string"||!token||token.length>2048)return {success:false,error:"invalid-token"};
+  if(!action||!hostname)return {success:false,error:"missing-context"};
+  const body=new URLSearchParams({secret:String(env.TURNSTILE_SECRET_KEY),response:token});
   if(ip)body.set("remoteip",ip);
-  const response=await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify",{method:"POST",headers:{"content-type":"application/x-www-form-urlencoded"},body});
-  const data=await response.json().catch(()=>({success:false}));
-  return data;
+  try{
+    const response=await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify",{method:"POST",headers:{"content-type":"application/x-www-form-urlencoded"},body,signal:AbortSignal.timeout(10000)});
+    if(!response.ok)return {success:false,error:"provider-unavailable"};
+    const data=await response.json();
+    if(data?.success!==true)return {success:false,error:"invalid-token"};
+    if(data.action!==action||data.hostname!==hostname)return {success:false,error:"context-mismatch"};
+    return {success:true};
+  }catch{return {success:false,error:"provider-unavailable"};}
 }
 
 function assess(text=""){
@@ -315,9 +323,9 @@ export async function highQualityTransform(request,env,{trustedSocialJob=false}=
       if(!limited.success)return json({error:"render_rate_limited",userMessage:"Too many preview requests were sent at once. Wait a moment and try again.",reason:"rate_limit",retryable:true},429);
     }
     const incoming=await request.formData();stage="parse-form";
-    if(env.TURNSTILE_SECRET_KEY&&!trustedSocialJob){
+    if(!trustedSocialJob){
       stage="human-check";
-      const verification=await verifyTurnstile(env,String(incoming.get("turnstileToken")||""),request.headers.get("CF-Connecting-IP")||"");
+      const verification=await verifyTurnstile(env,String(incoming.get("turnstileToken")||""),request.headers.get("CF-Connecting-IP")||"",{action:"recast",hostname:new URL(request.url).hostname});
       if(!verification.success)return json({error:"human_check_failed",userMessage:"Please complete the security check and try again.",reason:"turnstile"},403);
     }
     const styleId=String(incoming.get("style")||"game");

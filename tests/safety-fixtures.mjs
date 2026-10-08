@@ -1,0 +1,3 @@
+export const visualVerdict=(overrides={})=>({status:'completed',output:[{type:'message',content:[{type:'output_text',text:JSON.stringify({nudity:false,sexual:false,vulgar:false,hate:false,graphic_violence:false,uncertain:false,...overrides})}]}]});
+
+export const moderationVerdict=(flags={})=>({results:[{flagged:Object.values(flags).some(Boolean),categories:{...Object.fromEntries(['sexual','sexual/minors','harassment','harassment/threatening','hate','hate/threatening','illicit','illicit/violent','self-harm','self-harm/intent','self-harm/instructions','violence','violence/graphic'].map(k=>[k,false])),...flags}}]});

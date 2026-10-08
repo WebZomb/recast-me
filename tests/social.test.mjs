@@ -1,3 +1,4 @@
+import {visualVerdict,moderationVerdict} from './safety-fixtures.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { directionFromMention, attachedPhotos, runSocialPipeline, socialRoutes, ingestMentions } from '../src/social.js';
@@ -18,7 +19,8 @@ function setup(t,{quota=false,ambiguous=false,product=false}={}){
   const env={CONTENT_MODERATION_ENABLED:'true',MODERATION_OPENAI_API_KEY:'test-moderation',ADMIN_TOKEN:'test-salt',PRINTFUL_API_TOKEN:'test-printful',PUBLIC_APP_URL:'https://recast.test',X_USER_ID:'999',X_USERNAME:'recastmeai',X_USER_ACCESS_TOKEN:'test',X_BOT_ENABLED:'true',X_BOT_APPROVED:'true',ARTWORK:new Bucket(),TURNSTILE_SECRET_KEY:'enabled',AI:{run:async()=>{calls.ai++;if(quota)throw new Error('3036 daily free allocation');return {image:jpeg.toString('base64')};}},ASSETS:{fetch:async()=>new Response('watermark')},IMAGES:{info:async()=>({width:1024,height:1280}),input:()=>{let drawn=false;const chain={transform:()=>chain,draw:()=>{drawn=true;return chain;},output:async()=>({response:()=>new Response(drawn?'watermarked-public-preview':jpeg)})};return chain;}}};
   t.mock.method(globalThis,'fetch',async(raw,options={})=>{
     const url=new URL(raw instanceof Request?raw.url:String(raw));
-    if(url.hostname==='api.openai.com')return Response.json({results:[{flagged:false,categories:{sexual:false,violence:false}}]});
+    if(url.pathname==='/v1/responses')return Response.json(visualVerdict());
+    if(url.hostname==='api.openai.com')return Response.json(moderationVerdict());
     if(url.pathname.endsWith('/mentions')){calls.mentions.push(url);return Response.json({data:[product?{...tweet,text:'@recastmeai put this photo on a mug'}:tweet],includes:{media:[media]}});}
     if(url.pathname==='/v2/catalog-variants/1320')return Response.json({data:{id:1320,catalog_product_id:19}});
     if(url.pathname==='/mockup-generator/printfiles/19')return Response.json({result:{printfiles:[{printfile_id:43,width:2700,height:1050}],variant_printfiles:[{variant_id:1320,placements:{default:43}}]}});
@@ -122,7 +124,8 @@ test('public checkout cannot bypass the reviewed physical-product proof or subst
   const job=await (await env.ARTWORK.get('social/x/1234.json')).json();
   Object.assign(env,{SHOPIFY_SHOP:'test',SHOPIFY_CLIENT_ID:'client',SHOPIFY_CLIENT_SECRET:'secret'});
   t.mock.method(globalThis,'fetch',async raw=>{
-    if(String(raw).includes('api.openai.com'))return Response.json({results:[{flagged:false,categories:{sexual:false}}]});
+    if(String(raw).endsWith('/responses'))return Response.json(visualVerdict());
+    if(String(raw).includes('api.openai.com'))return Response.json(moderationVerdict());
     if(String(raw).endsWith('/access_token'))return Response.json({access_token:'shop-token',expires_in:3600});
     if(String(raw).includes('/graphql.json'))return Response.json({data:{shop:{name:'Test'},products:{nodes:[{id:'p',title:'Custom Recast Mug',handle:'mug',status:'ACTIVE',variants:{nodes:[{id:'gid://shopify/ProductVariant/123',title:'11 oz',sku:'RECAST-MUG-11OZ',price:'24.99'}]}}]},orders:{nodes:[]}}});
     throw new Error('Unexpected network request');
@@ -150,4 +153,27 @@ test('X rejects explicit wording before downloading or sending a public reply',a
  const job={tweetId:'1234',authorId:'5678',direction:directionFromMention('make me nude','recastmeai'),requestText:'make me nude',photos:[media.url],replyStatus:'queued'};
  await env.ARTWORK.put('social/x/1234.json',JSON.stringify(job));await env.ARTWORK.put('social/pending/1234.json',JSON.stringify({tweetId:'1234'}));
  await runSocialPipeline(env);assert.equal((await(await env.ARTWORK.get('social/x/1234.json')).json()).replyStatus,'needs_review');assert.equal(calls.ai,0);assert.equal(calls.replies.length,0);
+});
+
+test('X reserves an idempotent daily per-author allowance before generating or replying',async t=>{
+  const {env,calls}=setup(t);env.X_AUTHOR_DAILY_REQUEST_LIMIT='1';
+  const {processSocialJob}=await import('../src/social.js');
+  const job=id=>({tweetId:id,authorId:'5678',direction:directionFromMention(tweet.text,'recastmeai'),requestText:'make me a portrait',photos:[],replyStatus:'queued'});
+  const first=job('100');await processSocialJob(env,first);await processSocialJob(env,first);
+  const second=job('101');await processSocialJob(env,second);
+  assert.equal(calls.replies.length,1);assert.equal(calls.ai,0);assert.equal(second.replyStatus,'awaiting_capacity');
+});
+test('X missing image processing blocks intake before any provider call',async t=>{
+  const {env,calls}=setup(t);delete env.IMAGES;
+  const result=await runSocialPipeline(env);assert.equal(result.disabled,true);assert.equal(calls.mentions.length,0);assert.equal(calls.replies.length,0);
+});
+
+test('X rechecks an older cached preview before reusing an uploaded media ID',async t=>{
+  const {env,calls}=setup(t);await runSocialPipeline(env);
+  const job=await(await env.ARTWORK.get('social/x/1234.json')).json();
+  job.replyStatus='artwork_saved';job.screeningPolicy='family-friendly-1';calls.replies.length=0;
+  const previous=globalThis.fetch;
+  t.mock.method(globalThis,'fetch',async(raw,options)=>String(raw).endsWith('/responses')?Response.json(visualVerdict({vulgar:true})):previous(raw,options));
+  const {processSocialJob}=await import('../src/social.js');await processSocialJob(env,job);
+  assert.equal(job.replyStatus,'needs_review');assert.equal(calls.replies.length,0);assert.equal(job.mediaId,null);
 });
