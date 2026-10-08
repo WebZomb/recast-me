@@ -2,6 +2,7 @@ import {loadContextualSpec} from './contextual-mockups.js';
 import {moderationReadiness,checkStoredArtwork} from './content-safety.js';
 import {loadV2MockupSpec,v2MockupPayload,v2CreatedTask,v2PolledTask} from './printful-v2-mockup.js';
 import {prepareApparelArtwork} from './apparel-finish.js';
+import {watermarkProductSource} from './preview-security.js';
 import {selectMockupGroups,rankMockupCandidates} from './product-gallery.js';
 import {printfulReferenceForNewDraft} from './printful-reference.js';
 import {verifiedLegacyEmptyStoreForRecovery} from './printful-diagnostics.js';
@@ -228,6 +229,18 @@ export async function createMockup(request,env){
       sourceUrl=`${appBase(env,request)}/api/print-source/${encodeURIComponent(requestId)}?${q}`;
     }
     if([5,6].includes(design.version)&&design.finish)await prepareApparelArtwork(env,decodeBase64(savedBase64),design.finish,{allowCreate:true});
+    if(map.product==='Sticker Sheet'){
+      const prepared=await hash(sourceHash+'|'+position.area_width+'x'+position.area_height+'|sheet-source-1');
+      const key=`requests/${requestId}/sheet-preview-${prepared}.png`;
+      if(!await env.ARTWORK.head(key)){
+        stage='sticker-sheet-compose';
+        const composed=await composeProductLayout(env,decodeBase64(savedBase64),size,{width:position.area_width,height:position.area_height},map,design);
+        stage='sticker-sheet-watermark';
+        const protectedBytes=await watermarkProductSource(env,composed.bytes,'image/png');
+        await env.ARTWORK.put(key,protectedBytes,{httpMetadata:{contentType:'image/png'}});
+      }
+      const preparedUrl=new URL(sourceUrl);preparedUrl.searchParams.set('prepared',prepared);sourceUrl=preparedUrl.href;
+    }
     const placements=productPlacements(map,design);
     for(const other of placements.filter(p=>p!==placement)){
       const area=productPrintfile(catalog,map.printfulVariantId,other);

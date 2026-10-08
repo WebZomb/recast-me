@@ -4,9 +4,16 @@ import {stickerSheetBoxes,normalizeProductDesign,composeProductLayout,production
 import {finishApprovedDesign,printDesignFile} from '../src/order-approval.js';
 import {FULFILLMENT} from '../src/entry.js';
 import {transparentCanvas} from '../src/apparel-finish.js';
-import {watermarkProductSource} from '../src/preview-security.js';
-import {CLEAN,ID,setup} from './security-helpers.mjs';
+import {watermarkProductSource,secureApplication} from '../src/preview-security.js';
+import {CLEAN,ID,PRINT,setup} from './security-helpers.mjs';
 const map=FULFILLMENT['RECAST-STICKER-PACK'];
+test('prepared sheet preview stays behind its artwork print token',async()=>{
+ const env=await setup(),app=secureApplication({fetch(){throw new Error('unexpected fallthrough')}}),prepared='a'.repeat(64),png=await transparentCanvas(100,142);
+ await env.ARTWORK.put(`requests/${ID}/sheet-preview-${prepared}.png`,png);
+ const request=(token,id=ID,p=prepared)=>app.fetch(new Request(`https://recast.test/api/print-source/${id}?token=${token}&prepared=${p}`),env,{});
+ const allowed=await request(PRINT);assert.equal(allowed.status,200);assert.equal(allowed.headers.get('content-type'),'image/png');assert.deepEqual(new Uint8Array(await allowed.arrayBuffer()),png);
+ assert.equal((await request('wrong')).status,404);assert.equal((await request(PRINT,ID,'b'.repeat(64))).status,404);assert.equal((await request(PRINT,ID,'../../file')).status,404);
+});
 test('approved sheet prints six clean pictures once, with payment and token gates',async()=>{
  const env=await setup(),out=await transparentCanvas(100,142),draws=[];
  env.IMAGES={info:async()=>({width:800,height:1000}),input(){return {transform(){return this},draw(o,p){draws.push(p);return this},async output(){return {response:()=>new Response(out)}}}}};

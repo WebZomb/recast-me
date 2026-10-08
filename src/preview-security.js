@@ -238,6 +238,13 @@ export function secureApplication(application) {
           const id = artworkId(match[1]), meta = await readMeta(env, id);
           if (!equal(meta.printAccessToken, url.searchParams.get('token'))) return json({ error: 'not_found' }, 404);
           if (url.searchParams.get('final') !== '1') {
+            const prepared=url.searchParams.get('prepared');
+            if(prepared){
+              if(!/^[a-f0-9]{64}$/.test(prepared))return json({error:'not_found'},404);
+              const cached=await env.ARTWORK.get(`requests/${id}/sheet-preview-${prepared}.png`);
+              if(!cached)return json({error:'not_found'},404);
+              return imageResponse(cached.body,'image/png');
+            }
             const areaWidth=Number(url.searchParams.get('areaWidth')),areaHeight=Number(url.searchParams.get('areaHeight'));
             const maxArea=url.searchParams.get('presentation')==='room-v1'?20000:12000;
             if(Number.isFinite(areaWidth)&&Number.isFinite(areaHeight)&&areaWidth>0&&areaHeight>0&&areaWidth<=maxArea&&areaHeight<=maxArea&&Math.max(areaWidth,areaHeight)/Math.min(areaWidth,areaHeight)<=8){
