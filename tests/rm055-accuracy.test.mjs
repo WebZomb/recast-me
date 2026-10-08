@@ -53,7 +53,7 @@ test('a sample is accepted only for the exact SKU, exact settings and trusted st
 });
 test('unknown default image titles are product views, not mislabeled 3D room scenes',()=>{
  const c=context();assert.equal(vm.runInNewContext(`viewLabel('Default',0)`,c),'Product');
- assert.equal(vm.runInNewContext(`uniqueMockupViews([{title:'Living room',group:'Default',url:'1'}])[0].label`,c),'Lifestyle');
+ assert.equal(vm.runInNewContext(`uniqueMockupViews([{title:'Living room',group:'Default',url:'1'}])[0].label`,c),'In a room');
 });
 
 test('store cards keep curated examples instead of replacing them with supplier samples',async()=>{

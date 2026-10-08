@@ -233,7 +233,7 @@ function resetProductPreview(card,{invalidate=true}={}){
   if(invalidate)setPreviewLoading(card,false);
   const title=card.dataset.productTitle,img=card.querySelector?.(".product-art img");
   if(img&&title){img.src=PRODUCT_ART[title];img.alt="Example design on "+title;}
-  card.classList?.remove("real-mockup-ready");
+  card.classList?.remove("real-mockup-ready","preview-room-close");
   card.querySelector?.(".mockup-views")?.remove?.();
   delete card.dataset.mockupSignature;delete card.dataset.mockupId;productReviewState.delete(card);
   const example=card.querySelector?.(".product-art img");if(example){example.src=PRODUCT_ART[card.dataset.productTitle];example.alt="Style illustration; preview your selected size";}
@@ -258,15 +258,22 @@ function viewLabel(title,index){
   return raw.replace(/\s+/g," ").slice(0,22)||`View ${index+1}`;
 }
 function uniqueMockupViews(input=[]){
-  const seen=new Set(),output=[];
+  const seen=new Set(),labels=new Set(),output=[];let scenes=0;
   for(const view of input){
-    const label=/lifestyle|room|interior|sofa|bed|kitchen|desk|home/i.test(`${view?.group||""} ${view?.title||""}`)?"Lifestyle":viewLabel(view?.title,output.length);
-    const key=label.toLowerCase();
-    if(seen.has(key))continue;
-    seen.add(key);output.push({...view,label});
-    if(output.length===4)break;
+    if(!view?.url||seen.has(view.url))continue;
+    seen.add(view.url);
+    const isScene=/lifestyle|room|interior|sofa|bed|kitchen|desk|home/i.test(`${view.group||""} ${view.title||""}`);
+    const key=isScene?`${view.group||""}|${view.title||""}`:viewLabel(view.title,output.length);
+    if(labels.has(key))continue;labels.add(key);
+    const label=isScene?(++scenes===1?"In a room":`Room view ${scenes}`):viewLabel(view.title,output.length);
+    output.push({...view,label,isScene});if(output.length===4)break;
   }
   return output;
+}
+function showProductView(card,img,view,close=true){
+  img.src=view.url;img.alt="Your Recast on the actual product mockup";
+  const wall=/^Custom Recast (Poster|Canvas|Framed Poster)$/.test(card.dataset.productTitle||"");
+  card.classList.toggle('preview-room-close',Boolean(wall&&view.isScene&&close));
 }
 function designSummary(card){
   const d=productDesign(card),parts=[];
@@ -345,7 +352,7 @@ async function generateRealMockup({req,sku,card,button}){
     }
     const startRequest=()=>fetch(checkoutEndpoint("/api/mockup/create",req),{
       method:"POST",headers:{"x-recast-request":"1","content-type":"application/json","cache-control":"no-cache"},
-      body:JSON.stringify({requestId:req.requestId,accessToken:req.accessToken,sku,design}),
+      body:JSON.stringify({requestId:req.requestId,accessToken:req.accessToken,sku,design,presentation:"room-v1"}),
       cache:"no-store"
     });
     let create,data;
@@ -396,8 +403,9 @@ async function generateRealMockup({req,sku,card,button}){
       if(response.ok&&data.status==="completed"&&data.images?.length){
         const img=card.querySelector(".product-art img"),views=uniqueMockupViews(data.images);
         const sidePreferred=/^Custom Recast (Mug|Tumbler)$/i.test(card.dataset.productTitle||"")?views.findIndex(view=>/^(Handle left|Handle right|Left|Right|3D|Product)$/i.test(view.label)):-1;
-        const preferred=sidePreferred>=0?sidePreferred:views.findIndex(view=>/^(Product|3D|Flat|Front)$/i.test(view.label)),selected=preferred>=0?preferred:0;
-        img.src=views[selected].url;img.alt="Your Recast on the actual product mockup";
+        const scenePreferred=views.findIndex(view=>view.isScene);
+        const preferred=scenePreferred>=0?scenePreferred:sidePreferred>=0?sidePreferred:views.findIndex(view=>/^(Product|3D|Flat|Front)$/i.test(view.label)),selected=preferred>=0?preferred:0;
+        showProductView(card,img,views[selected]);
         card.querySelector(".mockup-views")?.remove();
         if(views.length>1){
           const controls=document.createElement("div");controls.className="mockup-views";
@@ -406,9 +414,13 @@ async function generateRealMockup({req,sku,card,button}){
             const choice=document.createElement("button");choice.type="button";choice.className="mockup-view-chip";
             choice.textContent=view.label;
             choice.setAttribute("aria-pressed",String(index===selected));
-            choice.addEventListener("click",()=>{img.src=view.url;for(const other of controls.children)other.setAttribute("aria-pressed",String(other===choice));});
+            choice.addEventListener("click",()=>{showProductView(card,img,view);for(const other of controls.children)other.setAttribute("aria-pressed",String(other===choice));});
             controls.append(choice);
           });
+          if(/^Custom Recast (Poster|Canvas|Framed Poster)$/.test(card.dataset.productTitle||"")&&views.some(v=>v.isScene)){
+            const room=views.find(v=>v.isScene),full=document.createElement('button');full.type='button';full.className='mockup-view-chip';full.textContent='Full room';full.setAttribute('aria-pressed','false');
+            full.addEventListener('click',()=>{showProductView(card,img,room,false);for(const other of controls.children)other.setAttribute('aria-pressed',String(other===full));});controls.append(full);
+          }
           card.querySelector(".product-art").after(controls);
         }
         const caption=card.querySelector(".example-design-label");if(caption)caption.textContent=["Custom Recast Poster","Custom Recast Canvas"].includes(card.dataset.productTitle)?`Your artwork · ${card.querySelector(".recast-variant option:checked")?.textContent||"selected size"} · supplier mockup`:"Your artwork · product preview";

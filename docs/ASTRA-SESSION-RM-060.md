@@ -9,3 +9,12 @@ Added owner-authenticated read-only exact mapped-SKU catalog inspection to exist
 One existing public dog-space demo requested as blanket50×60 with existing v6fit92 layout for diagnosis; no AI/customer-upload/order/payment calls. Supplier returned default view. Further visual/provider investigation and fixes pending.
 
 No final blanket or background fix claimed at this checkpoint. Preserve print geometry, old approvals and clean fulfillment files. Revert only this session delta over current main for rollback.
+
+## Contextual supplier previews implementation
+First-stage94ee0c30ebd5f4f620fabd88319cb32f71ba14a0 deployed successfully (Workers113114175026); browser113113987785 all steps succeeded,324 tests. Shopify sticker read-back confirms new media46505398075636.
+
+Owner-only supplier catalog inspection verified Blanket395/10986 has variant-specific simple print area63×53in150dpi and multiple lifestyle plus flat styles; Canvas3/5 has portrait18×22in300dpi and room scenes. New room-v1 preview request selects V2 styles only when exact placement, variant restriction, technique and pixel geometry match the existing V1 print area. No print design/version change. Separate room1 mockup cache prevents replacing existing approved proofs. Folded/back/detail/placeholder styles excluded; preserves a flat proof where available. Pillow retains existing multi-side V1 path. Products without exact compatible V2 scene geometry retain prior V1 behavior.
+
+Frontend retains distinct room views, prefers contextual view, adds whole-scene1.35× wall-art close-up with Full room option. Product-to-furniture proportions unchanged; original supplier images remain final-review proof. Source area bound for new room-v1 previews extended to20000px with aspect bound8 so mapped60×80 blankets and24×36 canvases exceed neither old12000px guard nor silently fall back to raw source. Old preview requests retain legacy guard.
+
+327 Node tests pass, including exact geometry/variant isolation, old proof preservation and V2 payload. Two initial failures were expected outdated label/dedup assertions; retained non-scene label dedup and updated room label expectation. Live new scenes and blanket selection still pending at this checkpoint. No paid order or AI model change.

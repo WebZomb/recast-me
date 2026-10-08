@@ -1,3 +1,4 @@
+import {loadContextualSpec} from './contextual-mockups.js';
 import {moderationReadiness,checkStoredArtwork} from './content-safety.js';
 import {loadV2MockupSpec,v2MockupPayload,v2CreatedTask,v2PolledTask} from './printful-v2-mockup.js';
 import {prepareApparelArtwork} from './apparel-finish.js';
@@ -187,7 +188,8 @@ export async function createMockup(request,env){
     const savedSource=await env.ARTWORK.get(requestKey(requestId,'preview.b64'));
     if(!savedSource)throw fault('artwork_missing','The saved artwork is unavailable.',404);
     const savedBase64=await savedSource.text(),sourceHash=await hash(savedBase64+'|'+JSON.stringify(design));
-    const mockupId=mockupDesignId(design);
+    const contextual=body.presentation==='room-v1';
+    const mockupId=mockupDesignId(design)+(contextual?'-room1':'');
     const existing=await readJson(env,mockupKey(requestId,sku,mockupId));
     if(existing?.sourceHash===sourceHash&&existing.position&&['completed','pending'].includes(existing.status))return json({ok:true,status:existing.status,taskKey:existing.taskKey,sku,mockupId,design:existing.design||design,waitSeconds:10});
     if(!env.IMAGES)throw fault('images_required','Image processing is not configured.',503);
@@ -211,12 +213,17 @@ export async function createMockup(request,env){
       v2Spec=await loadV2MockupSpec((path,options)=>printful(env,path,options),map);
       position=v2Spec.position;
     }
+    if(contextual&&!v2Spec){
+      stage='printful-preview-scenes';
+      v2Spec=await loadContextualSpec((path,options)=>printful(env,path,options),map,position);
+    }
     if(Number(design.version)>=4||design.background==='scene-fill'){
       const q=new URLSearchParams({
         token:meta.printAccessToken,product:design.product||map.product,layout:design.layout,
         fill:design.fill||design.background||'ambient',x:design.x,scale:String(design.scale),
         spacing:design.spacing||'standard',areaWidth:String(position.area_width),areaHeight:String(position.area_height)
       });
+      if(contextual)q.set('presentation','room-v1');
       q.set('version',String(design.version));if(design.orientation)q.set('orientation',design.orientation);if(design.finish)q.set('finish',design.finish);
       sourceUrl=`${appBase(env,request)}/api/print-source/${encodeURIComponent(requestId)}?${q}`;
     }

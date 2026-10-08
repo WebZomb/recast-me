@@ -40,12 +40,12 @@ export function v2MockupPayload(map,spec,sourceUrl){
 }
 export function v2CreatedTask(response){
   const rows=response?.data;
-  if(!Array.isArray(rows)||rows.length!==1||!integer(rows[0].id))throw bad('Printful did not return a verifiable tumbler preview task.');
+  if(!Array.isArray(rows)||rows.length!==1||!integer(rows[0].id))throw bad('Printful did not return a verifiable product preview task.');
   return {task_key:String(rows[0].id),status:'pending'};
 }
 export function v2PolledTask(response,record){
   const rows=(response?.data||[]).filter(r=>String(r.id)===String(record.taskKey));
-  if(rows.length!==1)throw bad('The exact tumbler preview task could not be verified.');
+  if(rows.length!==1)throw bad('The exact product preview task could not be verified.');
   const task=rows[0];
   if(task.status==='failed'||task.failure_reasons?.length)return {status:'failed',error:task.failure_reasons?.map(r=>r.detail).filter(Boolean).join('; ')||'Printful could not finish this preview.'};
   if(task.status!=='completed')return {status:'pending'};
@@ -54,6 +54,6 @@ export function v2PolledTask(response,record){
     const style=record.v2Spec.styles.find(s=>s.id===Number(m.style_id));
     return {mockup_url:m.mockup_url,placement:m.placement,display_name:style.title,option_group:style.group};
   });
-  if(!mockups.length)throw bad('Printful did not return a view for this exact tumbler variant.');
+  if(!mockups.length)throw bad('Printful did not return a view for this exact product variant.');
   return {status:'completed',mockups};
 }

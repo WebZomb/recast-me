@@ -239,7 +239,8 @@ export function secureApplication(application) {
           if (!equal(meta.printAccessToken, url.searchParams.get('token'))) return json({ error: 'not_found' }, 404);
           if (url.searchParams.get('final') !== '1') {
             const areaWidth=Number(url.searchParams.get('areaWidth')),areaHeight=Number(url.searchParams.get('areaHeight'));
-            if(Number.isFinite(areaWidth)&&Number.isFinite(areaHeight)&&areaWidth>0&&areaHeight>0&&areaWidth<=12000&&areaHeight<=12000){
+            const maxArea=url.searchParams.get('presentation')==='room-v1'?20000:12000;
+            if(Number.isFinite(areaWidth)&&Number.isFinite(areaHeight)&&areaWidth>0&&areaHeight>0&&areaWidth<=maxArea&&areaHeight<=maxArea&&Math.max(areaWidth,areaHeight)/Math.min(areaWidth,areaHeight)<=8){
               const object=await env.ARTWORK.get(`requests/${id}/preview.b64`);
               if(!object)throw error('not_found','Saved artwork is unavailable.',404);
               const source=from64(await object.text()),info=await env.IMAGES.info(new Blob([source]).stream());

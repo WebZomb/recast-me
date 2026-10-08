@@ -9,3 +9,8 @@
 .product-preview-loading small{color:#aee8f2;font-size:14px;font-variant-numeric:tabular-nums}
 @keyframes preview-spin{to{transform:rotate(360deg)}}
 @media(prefers-reduced-motion:reduce){.product-preview-spinner{animation:none}}
+
+/* Crop the whole supplier photograph equally: art/furniture proportions stay intact. */
+#product-grid .product.preview-room-close .product-art{overflow:hidden}
+#product-grid .product.preview-room-close .product-art img{transform:scale(1.35)!important;transform-origin:45% 20%!important}
+#product-grid .product .example-design-label{z-index:2}
