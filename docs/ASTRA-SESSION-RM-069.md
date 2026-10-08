@@ -9,3 +9,5 @@ Added src/launch-setup.js with private owner configuration guidance for photo sc
 Remaining external setup: moderation key/activation and live policy tests; Turnstile widget/key pair and live challenge tests; X developer app/user authorization/current access and automation approval, then controlled reply test. SMS still unconnected. Agent browser admin tab is signed out and Cloudflare login previously failed; do not claim private production settings freshly verified or attempt to bypass login. Owner dashboard can show the actual current presence states after refresh.
 
 Rollback the RM069 source/UI module together; leaves fulfillment, image models, alert settings and state untouched. Deployment receipt follows.
+
+Deployment observed: application174d4f9f156fa25356c5c5759853abeac6b6211f, Cloudflare Workers113433694445 SUCCESS. Local equivalent e6ea497. GitHub mocked-tests-and-bundle skipped; local374 tests are the evidence. Public browser audit113433491663 still running at receipt. No private setup or activation verified by agent.
