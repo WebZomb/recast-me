@@ -173,7 +173,7 @@ test('X rechecks an older cached preview before reusing an uploaded media ID',as
   const job=await(await env.ARTWORK.get('social/x/1234.json')).json();
   job.replyStatus='artwork_saved';job.screeningPolicy='family-friendly-1';calls.replies.length=0;
   const previous=globalThis.fetch;
-  t.mock.method(globalThis,'fetch',async(raw,options)=>String(raw).endsWith('/responses')?Response.json(visualVerdict({vulgar:true})):previous(raw,options));
+  t.mock.method(globalThis,'fetch',async(raw,options)=>String(raw).endsWith('/moderations')&&JSON.parse(options.body).input.some(x=>x.type==='image_url')?Response.json(moderationVerdict({sexual:true})):previous(raw,options));
   const {processSocialJob}=await import('../src/social.js');await processSocialJob(env,job);
   assert.equal(job.replyStatus,'needs_review');assert.equal(calls.replies.length,0);assert.equal(job.mediaId,null);
 });

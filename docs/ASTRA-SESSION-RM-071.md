@@ -1,0 +1,15 @@
+# RM071 — free-only baseline screening
+
+2026-10-08. Owner explicitly chose free server-side moderation, existing text filtering and rights requirements after coverage limits were explained. Remote baseline 30efb469489ef6edbaa13065ee2798ac55d7d2c5; local equivalent 96647373b3074bc926d73ffb4f5189efd86f1eaf.
+
+Removed the paid Responses visual-classifier stage from src/content-safety.js. Only omni-moderation-latest at /v1/moderations is called. There is no paid fallback and no Cloudflare vision inference added. Existing text, uploaded image, generated image and saved-artwork call sites remain. Policy baseline-moderation-3 invalidates earlier cache receipts. Bounded atomic daily attempt cap (default200, CONTENT_SCREENING_DAILY_LIMIT) now applies to free moderation calls including text; exhausted limit, HTTP errors and invalid decisions fail closed. Existing provider key/activation settings remain required. No account settings or secrets changed.
+
+This is deliberately narrower than RM067 supplemental screening: free moderation does not comprehensively detect nonsexual nudity, vulgar words/gestures in images, hateful symbols, ownership or illegal material. Admin setup now discloses coverage and free endpoint; public privacy/rights/help copy clarifies requirements and reporting via existing support options. No new automated rights verification or new order-review queue is claimed. Existing administrative order controls remain unchanged. NSFWJS researched (MIT), not installed: client-only checks are bypassable and server inference compatibility/cost/model quality remain unverified. No new subscription, provider credits, paid tests, orders or messages.
+
+Validation: first full suite exposed one outdated social fixture that rejected text before reaching cached-image invalidation; changed fixture to reject the image moderation stage. Targeted28 tests then passed; final full375 tests passed,0failed. Wrangler dry-run and diff whitespace check passed. These are mocked tests, not live classifier-quality tests or proof the zero-balance account accepts free moderation. Live clean-image acceptance still needed; no prohibited material submitted. Existing automatic fulfillment behavior not changed.
+
+Rechecked RM070 application1648bfcd: Workers build and public-browser-audit both FAILED. This corrects the earlier pending receipt; source likeness improvements must not be claimed live from that receipt. Failure details unavailable in check output. This session will record its own deployment status separately.
+
+Rollback: revert RM071 as a unit only with awareness that it restores the paid supplemental dependency and may again block uploads on an unfunded account. Prefer pausing affected uploads if provider unavailable; never bypass screening on errors. Free API pricing does not make hosting/storage/image generation/commerce free.
+
+Sources reviewed: https://developers.openai.com/api/docs/guides/moderation ; https://developers.cloudflare.com/workers-ai/platform/pricing/ ; https://github.com/infinitered/nsfwjs ; https://help.printful.com/hc/en-us/articles/50263862632977-What-is-Printful-s-print-file-content-policy
