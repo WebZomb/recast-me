@@ -1,7 +1,7 @@
 // Bounded owner-authorized preview verification using existing public demo artwork only.
 // No upload, AI inference, checkout, order, or production endpoint is allowed.
 const fs=require('fs'),path=require('path'),crypto=require('crypto');
-const root=path.resolve(__dirname,'..'),base='https://recastmeai.com',out=path.join(root,'rm060-preview-check');
+const root=path.resolve(__dirname,'..'),base='https://recastmeai.com',out=path.join(root,process.env.RECAST_CHECK_REV==='room2'?'rm060-preview-check-room2':'rm060-preview-check');
 const pause=ms=>new Promise(r=>setTimeout(r,ms));
 async function call(route,options={}){const u=new URL(route,base),method=options.method||'GET';if(u.origin!==base||method==='POST'&&u.pathname!=='/api/mockup/create'||!['GET','POST'].includes(method))throw Error('Disallowed endpoint');return fetch(u,{...options,redirect:'error',signal:AbortSignal.timeout(45000),headers:{origin:base,'x-recast-request':'1',...options.headers}})}
 (async()=>{

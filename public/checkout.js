@@ -257,10 +257,11 @@ function viewLabel(title,index){
   if(/\bright\b/i.test(raw))return "Right";
   return raw.replace(/\s+/g," ").slice(0,22)||`View ${index+1}`;
 }
-function uniqueMockupViews(input=[]){
+function uniqueMockupViews(input=[],productTitle=""){
   const seen=new Set(),labels=new Set(),output=[];let scenes=0;
   for(const view of input){
     if(!view?.url||seen.has(view.url)||/multi-product/i.test(`${view.group||""} ${view.title||""}`))continue;
+    if(productTitle==='Custom Recast Blanket'&&/^Lifestyle(?: [2-5])?$/i.test(view.group||""))continue;
     seen.add(view.url);
     const isScene=/lifestyle|room|interior|sofa|bed|kitchen|desk|home/i.test(`${view.group||""} ${view.title||""}`);
     const key=isScene?`${view.group||""}|${view.title||""}`:viewLabel(view.title,output.length);
@@ -318,7 +319,7 @@ function openFinalReview({req,sku,card,button}){
   const views=state.views.slice(0,3);
   modal.innerHTML=`<div class="final-review-backdrop" data-final-close></div><section class="final-review-panel">
     <div class="final-review-top"><div><span>FINAL CHECK</span><h2 id="recast-review-title">This is the design that will be printed.</h2><p>Check the image, product and placement. After you confirm, checkout is the last customer step.</p></div><button type="button" class="final-review-x" data-final-close aria-label="Close final review">×</button></div>
-    <div class="final-review-angles">${views.map((v,i)=>`<figure><img src="${v.url}" alt="${viewLabel(v.title,i)}"><figcaption>${viewLabel(v.title,i)}</figcaption></figure>`).join("")}</div>
+    <div class="final-review-angles">${views.map((v,i)=>`<figure><img src="${v.url}" alt="${v.label||viewLabel(v.title,i)}"><figcaption>${v.label||viewLabel(v.title,i)}</figcaption></figure>`).join("")}</div>
     <div class="final-review-summary"><div><small>PRODUCT</small><strong>${card.dataset.productTitle?.replace(/^Custom Recast /,"")||"Product"} · ${card.querySelector(".recast-variant option:checked")?.textContent||card.querySelector(".recast-variant")?.value||sku}</strong></div><div><small>ARTWORK</small><strong>${req.requestId}</strong></div><div><small>PRINT SETTINGS</small><strong>${designSummary(card)}</strong></div></div>
     <div class="final-review-note"><strong>Size &amp; finish:</strong> The preview is for your selected variant. Actual print placement and color can vary slightly with manufacturing; a screen is not a physical ruler.</div>
     <div class="final-review-note"><strong>Looks right?</strong> The preview watermark is only for protection. Your clean private artwork is used for the print file.</div>
@@ -401,10 +402,10 @@ async function generateRealMockup({req,sku,card,button}){
       const response=await fetch(url,{cache:"no-store"});data=await response.json().catch(()=>({}));
       if(!current())return;
       if(response.ok&&data.status==="completed"&&data.images?.length){
-        const img=card.querySelector(".product-art img"),views=uniqueMockupViews(data.images);
+        const img=card.querySelector(".product-art img"),views=uniqueMockupViews(data.images,card.dataset.productTitle);
         const sidePreferred=/^Custom Recast (Mug|Tumbler)$/i.test(card.dataset.productTitle||"")?views.findIndex(view=>/^(Handle left|Handle right|Left|Right|3D|Product)$/i.test(view.label)):-1;
         const isBlanket=card.dataset.productTitle==='Custom Recast Blanket';
-        const scenePreferred=isBlanket?-1:views.findIndex(view=>view.isScene);
+        const scenePreferred=views.findIndex(view=>view.isScene&&(!isBlanket||view.group==='Lifestyle 6'));
         const preferred=scenePreferred>=0?scenePreferred:sidePreferred>=0?sidePreferred:views.findIndex(view=>/^(Product|3D|Flat|Front)$/i.test(view.label)),selected=preferred>=0?preferred:0;
         showProductView(card,img,views[selected]);
         card.querySelector(".mockup-views")?.remove();

@@ -12,5 +12,5 @@
 
 /* Crop the whole supplier photograph equally: art/furniture proportions stay intact. */
 #product-grid .product.preview-room-close .product-art{overflow:hidden}
-#product-grid .product.preview-room-close .product-art img{transform:scale(1.35)!important;transform-origin:45% 20%!important}
+#product-grid .product.preview-room-close .product-art img{transform:scale(1.35)!important;transform-origin:45% 0%!important}
 #product-grid .product .example-design-label{z-index:2}

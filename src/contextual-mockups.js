@@ -19,7 +19,7 @@ export function contextualMockupSpec(map,position,rows){
       return lifestyle?(side?0:/front|lifestyle/i.test(s.view_name||'')?1:2):side?3:/^front$|^default$/i.test(s.view_name||'')?4:5;
     };
     styles.sort((a,b)=>order(a)-order(b));
-    const scenes=styles.filter(s=>scene.test(s.category_name||'')&&(map.product!=='Blanket'||!/^Lifestyle(?: [23])?$/i.test(s.category_name||'')));
+    const scenes=styles.filter(s=>scene.test(s.category_name||'')&&(map.product!=='Blanket'||!/^Lifestyle(?: [2-5])?$/i.test(s.category_name||'')));
     const flat=styles.find(s=>!scene.test(s.category_name||'')&&/^flat$|^default$|^wall$/i.test(s.category_name||''))||styles.find(s=>!scene.test(s.category_name||''));
     const selected=[];const groups=new Set();
     for(const s of scenes){if(groups.has(s.category_name))continue;selected.push(s);groups.add(s.category_name);if(selected.length===(map.product==='Blanket'?3:2))break;}
