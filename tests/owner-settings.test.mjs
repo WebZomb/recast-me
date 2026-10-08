@@ -100,3 +100,17 @@ test('invalid persisted revision fails closed for runtime overrides',async()=>{
  const env=envFor();await env.ARTWORK.put(SETTINGS_KEY,JSON.stringify({revision:-1,values}));
  await assert.rejects(withOwnerSettings(env),e=>e.code==='settings_storage');
 });
+
+test('owner reset restores only same-browser network allowance and refuses in-flight work',async()=>{
+ const env={...envFor(),RENDER_CREDITS_ENABLED:'true',RENDER_CREDITS_STORAGE_SALT:'true'},a=await wallet(env),bound={...env,RECAST_CREDIT_WALLET:a.wallet};
+ const reset=(authorization='Bearer test-owner-key',cookie=a.cookie)=>ownerSettingsRoute(new Request('https://recast.test/api/admin/reset-my-renders',{method:'POST',headers:{authorization,cookie,'x-recast-request':'1'}}),env);
+ assert.equal((await reset('Bearer wrong')).status,401);
+ assert.equal((await reset('Bearer test-owner-key','')).status,409);
+ const reserved=await reserveCustomerRender(bound);
+ assert.equal((await reset()).status,409);
+ await settleCustomerRender(env,reserved,true);
+ assert.equal((await creditBalance(env,a.wallet)).remaining,2);
+ assert.equal((await reset()).status,200);
+ assert.equal((await creditBalance(env,a.wallet)).remaining,3);
+ assert.equal((await settingsSnapshot(env)).revision,0);
+});

@@ -138,3 +138,5 @@ RM072 final: f742c56 Worker SUCCESS (version eb946f30-7cb8-4f66-ac62-dd065fb8243
 Latest: [RM073 — private launch verification](ASTRA-SESSION-RM-073.md). Signed-in30day audit0issues,2existingPrintfulproductionorders; Shopifyconnection/permissions verified. Disabled unconfigured SMS while preserving Gmail alerts, fixing a concrete source of alerts:failed. Next scheduled cycle, moderation rejection quality and physical shipment acceptance remain open. No new paid action or app-code change.
 
 Latest: [RM074 — Cloudflare3043 classification](ASTRA-SESSION-RM-074.md). Two live provider internal errors confirmed; unavailable classification/cooldown regression passed376tests and dry-run. No paid render; provider recovery unverified.
+
+Latest: [RM075 — owner daily reset](ASTRA-SESSION-RM-075.md). Same-browser authenticated reset button;377tests and dry-run pass. Owner must click in original browser; no personal reset or render recovery claimed.

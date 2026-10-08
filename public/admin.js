@@ -1,5 +1,5 @@
 import {initOwnerAlerts} from './admin-alerts.js?v=rm068';
-import {initOwnerSettings} from './admin-settings.js?v=250';
+import {initOwnerSettings} from './admin-settings.js?v=rm075-250';
 import {attachPrintfulDiagnostic} from './printful-diagnostics.js?v=rm0505';
 const deploymentLabel=document.querySelector('#deployment-identity');
 if(deploymentLabel)deploymentLabel.textContent=`${['recastmeai.com','recast-me.sergz24.workers.dev'].includes(location.hostname)?'Production':'Preview / alternate host'} · ${location.hostname} · RM-069 launch setup`;

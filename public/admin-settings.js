@@ -45,6 +45,11 @@ export function initOwnerSettings(api,notify){
     if(dirty&&!confirm('Discard your unsaved settings and reload?'))return;
     load(true).catch(e=>notify(e.message));
   });
+  document.querySelector('#reset-my-renders').addEventListener('click',async event=>{
+    const button=event.currentTarget;button.disabled=true;
+    try{const data=await api('/api/admin/reset-my-renders',{method:'POST',body:{}});text('reset-my-renders-status',data.message)}
+    catch(e){text('reset-my-renders-status',e.message)}finally{button.disabled=false}
+  });
   function clear(){current=null;dirty=false;form.reset();root.querySelectorAll('[data-private-setting]').forEach(el=>el.textContent='');}
   return {load,clear};
 }

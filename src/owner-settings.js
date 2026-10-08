@@ -1,3 +1,4 @@
+import {walletFor} from './render-credits.js';
 // Owner-only, versioned policy controls. No credentials or arbitrary env keys are editable.
 import {change,read,equal,fault,sameOrigin,privateJson} from './commerce-store.js';
 export const SETTINGS_KEY='system/owner-settings-v1.json';
@@ -42,9 +43,21 @@ function owner(request,env){
   if(!equal(token,env.ADMIN_TOKEN))throw fault('admin_required','Admin authorization required.',401);
 }
 export async function ownerSettingsRoute(request,env){
-  const url=new URL(request.url);if(url.pathname!=='/api/admin/owner-settings')return null;
+  const url=new URL(request.url);if(!['/api/admin/owner-settings','/api/admin/reset-my-renders'].includes(url.pathname))return null;
   try{
     owner(request,env);
+    if(url.pathname==='/api/admin/reset-my-renders'){
+      if(request.method!=='POST')return privateJson({ok:false},405);
+      sameOrigin(request);
+      const wallet=await walletFor(request,env);
+      if(!wallet)throw fault('wallet_missing','Open the creation page in this same browser first, then return here.',409);
+      const now=Date.now();
+      await change(env,`commerce/trials/${wallet.network}.json`,{used:0},old=>{
+        if(old.resetAt>now&&Object.keys(old.active||{}).length)throw fault('render_active','Wait for your current render to finish before resetting.',409);
+        return {used:0,active:{},resetAt:now+86400000,ownerResetAt:new Date(now).toISOString()};
+      });
+      return privateJson({ok:true,message:'Your daily High Quality allowance is restored. Reload the creation page. Shared network limits still apply.'});
+    }
     if(request.method==='GET'){
       const state=await settingsSnapshot(env),day=new Date().toISOString().slice(0,10);
       const [website,social,budget,salt]=await Promise.all([
