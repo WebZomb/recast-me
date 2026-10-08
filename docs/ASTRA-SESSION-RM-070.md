@@ -9,3 +9,5 @@ Tests: all375 local tests passed, including model-boundary mocked requests cover
 Owner screenshots at13:30–13:33ET showed successful Turnstile and completed original-photo and AI previews. This is owner-run happy-path acceptance, not adversarial verification. Owner intends to set TURNSTILE_REQUIRED=true; setting not yet verified. Moderation and X still require configuration and live acceptance. Earlier email receipt accepted by owner. No flags changed in this session.
 
 Rollback src/highquality.js and generator test version/assertions together; preserves previously approved artwork. Deployment receipt follows.
+
+Application pushed to main:1648bfcd05b0d19cfe258e1bce91e7ecb6b81f45; local equivalent cd4b8e8. At final poll Workers113452476513 and public-browser-audit113452466453 remained in progress. CI mocked-tests-and-bundle skipped; local375 tests are the evidence. Deployment not yet confirmed at this checkpoint.
