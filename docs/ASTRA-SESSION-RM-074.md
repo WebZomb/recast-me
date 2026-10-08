@@ -9,3 +9,5 @@ Added generator regression for both quality modes:503/unavailable, preserved dia
 Read-only diagnostic list displayed older items while exact lookup found current incidents; do not trust its zero-recent snapshot as comprehensive. Pagination/list freshness requires a separate bounded investigation. Prior automatic email-only cycle had cleared alerts:failed at18:51ET in browser; no new manual message sent.
 
 Rollback: revert highquality classifier and added generator test; this restores generic reporting for3043. This session's resulting commit is the commit introducing this file; deployment receipt follows when available.
+
+Deployment receipt: application bca858ed679e16a8a3025e258d33212bca56303f (local54bd92a), Workers check113587585036 completed SUCCESS. Public-browser audit113587479070 still running at receipt. Local376tests and dry-run passed; no live3043 reproduction or successful provider render run. Cloudflare public status listed Workers AI operational, so no broad outage claimed from these two individual failures.
