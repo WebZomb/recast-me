@@ -2,7 +2,7 @@ import {initOwnerAlerts} from './admin-alerts.js?v=2660';
 import {initOwnerSettings} from './admin-settings.js?v=250';
 import {attachPrintfulDiagnostic} from './printful-diagnostics.js?v=rm0505';
 const deploymentLabel=document.querySelector('#deployment-identity');
-if(deploymentLabel)deploymentLabel.textContent=`${['recastmeai.com','recast-me.sergz24.workers.dev'].includes(location.hostname)?'Production':'Preview / alternate host'} · ${location.hostname} · RM-067 launch protections`;
+if(deploymentLabel)deploymentLabel.textContent=`${['recastmeai.com','recast-me.sergz24.workers.dev'].includes(location.hostname)?'Production':'Preview / alternate host'} · ${location.hostname} · RM-069 launch setup`;
 const $=s=>document.querySelector(s);const $$=s=>[...document.querySelectorAll(s)];
 const tokenKey='recast_admin_token';let token=sessionStorage.getItem(tokenKey)||'';
 function headers(json=false){return{'x-recast-request':'1',Authorization:`Bearer ${token}`,...(json?{'content-type':'application/json'}:{})}}
@@ -22,6 +22,14 @@ async function loadRenderReadiness(){
   const last=document.createElement('p');last.textContent=`Last check: ${d.render.checkedAt||'none'} · Allowances: see Limits & usage`;
   const social=document.createElement('p');social.textContent=Object.entries(d.social).map(([k,v])=>`${k}: ${v?'ready':'not ready'}`).join(' · ');
   root.append(title,note,last,social);
+  for(const item of d.setup||[]){
+    const card=document.createElement('article');card.className='glass op-card';
+    const heading=document.createElement('h3');heading.textContent=item.name;
+    const state=document.createElement('p');state.textContent=item.state;
+    const steps=document.createElement('ol');
+    for(const text of item.steps){const step=document.createElement('li');step.textContent=text;steps.append(step);}
+    card.append(heading,state,steps);root.append(card);
+  }
 }
 
 async function loadStatus(){const d=await api('/api/admin/status');$('#stat-jobs').textContent=d.jobs.total;$('#stat-awaiting').textContent=`${d.jobs.awaiting} jobs awaiting action · ${d.orderIssues?.openInSnapshot||0}${d.orderIssues?.more?'+':''} order issues`;$('#stat-trends').textContent=d.trends.review;$('#stat-x').textContent=d.xRequests;$('#stat-x-connection').textContent=d.connections.x?'X credentials connected':'Bot disabled until connected';$('#stat-printful').textContent=d.connections.printful?'Connected':'Not ready';$('#stat-generation').textContent=d.generationErrors?.total??0;$('#stat-generation-recent').textContent=`${d.generationErrors?.recent??0} in the last 24h`;$('#system-list').innerHTML=[`<article class="glass system-item"><div class="connection"><i class="dot ${d.contentModeration?.ready?'good':'off'}"></i><strong>Photo content screening</strong></div><span class="muted">${d.contentModeration?.ready?'Configured · live verification required':d.contentModeration?.enabled?'Enabled but missing credentials · requests stop':'Not enabled · public launch blocker'}</span></article>`,...Object.entries(d.connections).filter(([k])=>k!=='admin').map(([k,v])=>`<article class="glass system-item"><div class="connection"><i class="dot ${v?'good':'off'}"></i><strong>${k[0].toUpperCase()+k.slice(1)}</strong></div><span class="muted">${v?'Configured · not yet tested':'Not configured'}</span></article>`),...Object.entries(d.automation||{}).map(([k,v])=>`<article class="glass system-item"><div class="connection"><i class="dot ${v?'good':'off'}"></i><strong>${k}</strong></div><span class="muted">${v?'Enabled':'Safely off'}</span></article>`)].join('')}

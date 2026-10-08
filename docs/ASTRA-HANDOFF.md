@@ -124,3 +124,5 @@ Latest: [RM066 — configurable owner email and SMS alerts](ASTRA-SESSION-RM-066
 Latest: [RM067 — photo-policy and bot protection hardening, X safeguards](ASTRA-SESSION-RM-067.md).366 mocked tests and dry-run pass; no new paid order. Source improvements do NOT mean services enabled: Cloudflare verification/private credentials block live activation. Existing2orders in production, no audit issues; alert delivery and shipment acceptance remain unverified.
 
 Latest: [RM068 — existing Gmail sender for alerts](ASTRA-SESSION-RM-068.md). Direct TLS SMTP adapter and clearer test-button setup;372 local tests and dry-run pass. Private Gmail app password and actual delivery acceptance remain required. No PourIQ backend/secret changes.
+
+Latest: [RM069 — protection and X setup checklist](ASTRA-SESSION-RM-069.md). Owner confirms Gmail test receipt (Junk); delivery setup accepted. Actionable private photo/Turnstile/X setup guidance and consistent X credential presence;374 local tests pass. External activation/testing still required.
