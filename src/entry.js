@@ -288,7 +288,7 @@ async function checkoutLink(request, env, ctx) {
     "Recast Style": recast.styleName || "",
     "Recast Subject": recast.subjectType || "",
     ...(verifiedDesign?{
-      "Recast Layout":verifiedDesign.layout==="two-sided"?"Best setup · image on both sides":verifiedDesign.layout==="wrap"?"Full wrap":verifiedDesign.layout==="cover"?"Best setup · full bleed":verifiedDesign.layout==="fit"?"Keep whole image":"One image",
+      "Recast Layout":verifiedDesign.layout==="six-pictures"?"Six whole pictures · 2 columns × 3 rows":verifiedDesign.layout==="two-sided"?"Best setup · image on both sides":verifiedDesign.layout==="wrap"?"Full wrap":verifiedDesign.layout==="cover"?"Best setup · full bleed":verifiedDesign.layout==="fit"?"Keep whole image":"One image",
       "Recast Position":verifiedDesign.x[0].toUpperCase()+verifiedDesign.x.slice(1),
       "Recast Size":verifiedDesign.scale+"%",
       ...(verifiedDesign.layout==="fit"?{"Recast Fill":verifiedDesign.fill==="dark"?"Dark fill":verifiedDesign.fill==="light"?"Light fill":verifiedDesign.fill==="full-bleed"?"Artwork edge fill":"Blended artwork colors"}:{}),

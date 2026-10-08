@@ -283,6 +283,7 @@ function showProductView(card,img,view,close=true){
 }
 function designSummary(card){
   const d=productDesign(card),parts=[];
+  if(d.product==="Sticker Sheet")return "Six whole pictures · 2 columns × 3 rows · safe peel spacing";
   parts.push(d.layout==="two-sided"?"Two-sided wrap":d.layout==="wrap"?"Full wrap":d.layout==="cover"?"Full bleed":d.layout==="fit"?"Keep whole image":"One image");
   if(d.layout==="two-sided")parts.push(d.spacing==="close"?"Closer spacing":d.spacing==="wide"?"Wider spacing":"Standard spacing");
   if(d.finish)parts.push(d.finish==="cutout"?"Subject cutout · transparent background":d.finish==="soft"?"Soft-edge photo · transparent dot fade":"Original photo · no added background");
@@ -325,7 +326,7 @@ function openFinalReview({req,sku,card,button}){
   modal.innerHTML=`<div class="final-review-backdrop" data-final-close></div><section class="final-review-panel">
     <div class="final-review-top"><div><span>FINAL CHECK</span><h2 id="recast-review-title">This is the design that will be printed.</h2><p>Check the image, product and placement. After you confirm, checkout is the last customer step.</p></div><button type="button" class="final-review-x" data-final-close aria-label="Close final review">×</button></div>
     <div class="final-review-angles">${views.map((v,i)=>`<figure><img src="${v.url}" alt="${v.label||viewLabel(v.title,i)}"><figcaption>${v.label||viewLabel(v.title,i)}</figcaption></figure>`).join("")}</div>
-    <div class="final-review-summary"><div><small>PRODUCT</small><strong>${card.dataset.productTitle?.replace(/^Custom Recast /,"")||"Product"} · ${card.querySelector(".recast-variant option:checked")?.textContent||card.querySelector(".recast-variant")?.value||sku}</strong></div><div><small>ARTWORK</small><strong>${req.requestId}</strong></div><div><small>PRINT SETTINGS</small><strong>${designSummary(card)}</strong></div></div>
+    <div class="final-review-summary"><div><small>PRODUCT</small><strong>${card.dataset.productTitle?.replace(/^Custom Recast /,"")||"Product"} · ${card.querySelector(".recast-variant option:checked")?.textContent||card.querySelector(".recast-variant")?.dataset?.variantLabel||card.querySelector(".recast-variant")?.value||sku}</strong></div><div><small>ARTWORK</small><strong>${req.requestId}</strong></div><div><small>PRINT SETTINGS</small><strong>${designSummary(card)}</strong></div></div>
     <div class="final-review-note"><strong>Size &amp; finish:</strong> The preview is for your selected variant. Actual print placement and color can vary slightly with manufacturing; a screen is not a physical ruler.</div>
     <div class="final-review-note"><strong>Looks right?</strong> The preview watermark is only for protection. Your clean private artwork is used for the print file.</div>
     <div class="final-review-note"><strong>Sending a gift?</strong> Use your own email and billing details at checkout, and your recipient’s name and shipping address. Place separate orders for different addresses. Gift wrapping and gift messages are not currently offered.</div>
@@ -503,7 +504,7 @@ async function loadCheckout(){
       ? `<select class="recast-variant" data-product="${index}">
           ${variants.map(v=>`<option value="${v.sku}">${v.variantTitle} · ${money(v.price)}</option>`).join("")}
          </select>`
-      : `<input type="hidden" class="recast-variant" data-product="${index}" value="${first?.sku||""}">`;
+      : `<input type="hidden" class="recast-variant" data-product="${index}" data-variant-label="${first?.variantTitle||""} · ${money(first?.price)}" value="${first?.sku||""}">`;
     const preset=PRODUCT_DESIGN_PRESETS[product.title]||presetFor({dataset:{productTitle:product.title}});
     const designControls=digital?"":designControlsMarkup(product.title,preset);
     const realPreview=digital?"":`<button class="product-preview-action" data-product="${index}" type="button">Preview my product</button><p class="mockup-error" role="alert" hidden></p>`;
