@@ -13,3 +13,5 @@ Rechecked RM070 application1648bfcd: Workers build and public-browser-audit both
 Rollback: revert RM071 as a unit only with awareness that it restores the paid supplemental dependency and may again block uploads on an unfunded account. Prefer pausing affected uploads if provider unavailable; never bypass screening on errors. Free API pricing does not make hosting/storage/image generation/commerce free.
 
 Sources reviewed: https://developers.openai.com/api/docs/guides/moderation ; https://developers.cloudflare.com/workers-ai/platform/pricing/ ; https://github.com/infinitered/nsfwjs ; https://help.printful.com/hc/en-us/articles/50263862632977-What-is-Printful-s-print-file-content-policy
+
+Deployment receipt: application4ba5a9feff02d5fedd8b6edcf4765d4de6bbb6ad (local84dfcff), tree17099581d4b2cd9e19835f672c69a623d1b37ffe: Cloudflare Workers build SUCCESS observed. Public browser audit still in progress. Local375 tests pass; GitHub mocked-tests-and-bundle skipped. Owner clean-photo acceptance is outstanding. This successful application includes RM070 likeness source; it does not establish likeness quality.
