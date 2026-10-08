@@ -27,9 +27,14 @@ const pause=ms=>new Promise(resolve=>setTimeout(resolve,ms));
   for(const [engine,width,height] of [[webkit,393,852],[chromium,320,740],[chromium,768,1024],[chromium,1440,1000]]){
     const browser=await engine.launch();const name=engine.name()+'-'+width;
     const context=await browser.newContext({viewport:{width,height},deviceScaleFactor:1,reducedMotion:'reduce'});
-    const blocked=[],errors=[],failed=[];
+    const blocked=[],errors=[],challengeFrameErrors=[],failed=[];
     await context.route('**/*',async route=>{const r=route.request();if(!['GET','HEAD','OPTIONS'].includes(r.method())){blocked.push({method:r.method(),path:new URL(r.url()).pathname});return route.abort('blockedbyclient');}return route.continue();});
-    const page=await context.newPage();page.on('pageerror',e=>errors.push(e.message));page.on('response',r=>{if(r.status()>=400)failed.push({status:r.status(),path:new URL(r.url()).pathname});});
+    const page=await context.newPage();page.on('pageerror',e=>{
+      // Isolate the known WebKit cross-origin challenge-frame error caused during
+      // this read-only audit. Keep it visible; do not claim challenge acceptance.
+      if(e.message.includes('challenges.cloudflare.com')&&e.message.includes('from accessing a frame with origin')&&e.message.includes('Protocols, domains, and ports must match'))challengeFrameErrors.push(e.message);
+      else errors.push(e.message);
+    });page.on('response',r=>{if(r.status()>=400)failed.push({status:r.status(),path:new URL(r.url()).pathname});});
     try{
       const response=await page.goto(base+'/?launch-audit='+Date.now(),{waitUntil:'domcontentloaded',timeout:45000});
       // Turnstile may poll indefinitely; page readiness is the rendered UI, not network silence.
@@ -54,19 +59,19 @@ const pause=ms=>new Promise(resolve=>setTimeout(resolve,ms));
       await page.locator('[data-create-step="1"] [data-go-step="2"]').click();
       const emptyPhotoBlocked=await page.locator('[data-create-step="1"]').isVisible();
       await page.screenshot({path:out+'/'+name+'-create.png'});
-      report.browsers.push({name,http:response.status(),metrics,shopReached,firstStep,photoStep,emptyPhotoBlocked,errors,failed,blocked});
+      report.browsers.push({name,http:response.status(),metrics,shopReached,firstStep,photoStep,emptyPhotoBlocked,errors,challengeFrameErrors,failed,blocked});
       if(metrics.build!==expectedBuild)report.failures.push(name+': wrong production build');
       if(metrics.scrollWidth>width+1)report.failures.push(name+': horizontal page overflow');
       if(metrics.products!==18)report.failures.push(name+': missing product cards');
       if(metrics.badAnchors.length||metrics.duplicateIds.length||metrics.brokenImages.length)report.failures.push(name+': broken content structure or images');
       if(!shopReached||!firstStep||!photoStep||!emptyPhotoBlocked||errors.length)report.failures.push(name+': browsing/wizard failure');
       if(metrics.product.x<0||metrics.product.x+metrics.product.width>width+1)report.failures.push(name+': hero product exceeds viewport');
-    }catch(e){report.browsers.push({name,error:e.message,errors,failed,blocked});report.failures.push(name+': '+e.message);}
+    }catch(e){report.browsers.push({name,error:e.message,errors,challengeFrameErrors,failed,blocked});report.failures.push(name+': '+e.message);}
     await browser.close();
   }
   const config=report.health.find(x=>x.path==='/api/public-config')?.body;
   const model=report.health.find(x=>x.path==='/api/model-status')?.body;
-  report.launchGates={botProtectionConfigured:!!config?.turnstileSiteKey,aiCallLimitConfigured:!!model?.renderControls?.configured,aiDailyCallLimit:model?.renderControls?.dailyCallLimit??null,liveGenerationTested:false,paidCheckoutTested:false,privateFulfillmentJobInspected:false};
+  report.launchGates={botProtectionConfigured:!!config?.turnstileSiteKey,aiCallLimitConfigured:!!model?.renderControls?.configured,aiDailyCallLimit:model?.renderControls?.dailyCallLimit??null,liveChallengeTested:false,liveGenerationTested:false,paidCheckoutTested:false,privateFulfillmentJobInspected:false};
   if(!report.launchGates.aiCallLimitConfigured||report.launchGates.aiDailyCallLimit!==70)report.failures.push('Expected site-wide AI daily call limit 70 is not active.');
   fs.writeFileSync(out+'/report.json',JSON.stringify(report,null,2));
   console.log('RECAST_AUDIT_REPORT\n'+JSON.stringify(report,null,2));
