@@ -480,7 +480,7 @@ async function loadCheckout(){
   }
 
   const ordered=[...(data.products||[])]
-    .filter(product=>PRODUCT_META[product.title]&&(product.status==="ACTIVE"||(product.title==="Custom Recast Sticker Sheet"&&product.status==="DRAFT"&&new URLSearchParams(location.search).get("previewDraft")==="sticker-sheet")))
+    .filter(product=>PRODUCT_META[product.title]&&product.status==="ACTIVE")
     .sort((a,b)=>{
       const ap=PRIMARY_PRODUCT_TITLES.has(a.title)?0:1,bp=PRIMARY_PRODUCT_TITLES.has(b.title)?0:1;
       return ap-bp||((PRODUCT_META[a.title]?.order??50)-(PRODUCT_META[b.title]?.order??50));

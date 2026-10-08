@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {stickerSheetBoxes,normalizeProductDesign,composeProductLayout,productionFiles,hash} from '../src/commerce-store.js';
 import {finishApprovedDesign,printDesignFile} from '../src/order-approval.js';
+import {productFromMention} from '../src/social-products.js';
 import {FULFILLMENT} from '../src/entry.js';
 import {transparentCanvas} from '../src/apparel-finish.js';
 import {watermarkProductSource,secureApplication} from '../src/preview-security.js';
@@ -37,6 +38,9 @@ test('sheet uses one exact supplier sheet while historical single remains intact
  const d=normalizeProductDesign(map,{version:4,layout:'cover',scale:900,fill:'dark'});
  assert.equal(d.version,8);assert.equal(d.layout,'six-pictures');assert.equal(d.scale,100);assert.equal(d.fill,'transparent');
  assert.equal(productionFiles(map,d,'clean.png',{}).length,1);assert.equal(productionFiles(map,d,'clean.png',{})[0].type,'default');
+ for(const text of ['put this on a sticker','sticker sheet','a pack of stickers']){
+  const intent=productFromMention(text);assert.equal(intent.sku,'RECAST-STICKER-PACK');assert.equal(intent.design.version,8);assert.equal(intent.design.layout,'six-pictures');
+ }
 });
 test('six pictures preserve aspect and safe cut spacing at preview and print resolutions',()=>{
  for(const width of [1750,2400,4096])for(const source of [{width:1024,height:1024},{width:800,height:1200},{width:1200,height:800}]){

@@ -5,7 +5,7 @@ export function productFromMention(text=''){
     [/\bhoodie\b/,'RECAST-HOODIE-M','Hoodie'],[/\bt[ -]?shirt\b/,'RECAST-TEE-M','T-Shirt'],
     [/\bframed (?:poster|print)\b/,'RECAST-FRAME-8X10','Framed Poster'],[/\bposter\b/,'RECAST-POSTER-12X16','Poster'],
     [/\bcanvas\b/,'RECAST-CANVAS-12X16','Canvas'],[/\bblanket\b/,'RECAST-BLANKET-50X60','Blanket'],
-    [/\btumbler\b/,'RECAST-TUMBLER-20OZ','Tumbler'],[/\bstickers?\b/,'RECAST-STICKER-3X3','Sticker'],
+    [/\btumbler\b/,'RECAST-TUMBLER-20OZ','Tumbler'],[/\bstickers?\b/,'RECAST-STICKER-PACK','Sticker Sheet'],
     [/\bphone case\b/,'RECAST-CASE-IP14','Phone Case'],[/\bpillow\b/,'RECAST-PILLOW-14','Pillow'],
     [/\b(journal|notebook)\b/,'RECAST-JOURNAL-HC','Hardcover Journal'],[/\bpuzzle\b/,'RECAST-PUZZLE-252','Puzzle'],
     [/\btote(?: bag)?\b/,'RECAST-TOTE-BLACK','Tote Bag'],[/\bmagnets?\b/,'RECAST-MAGNET-SET','Magnet 3-Pack'],
@@ -14,6 +14,7 @@ export function productFromMention(text=''){
   const row=options.find(([pattern])=>pattern.test(t));
   if(!row)return null;
   const [,sku,product]=row;
+  if(product==='Sticker Sheet')return {sku,product,design:{version:8,product,layout:'six-pictures',fill:'transparent',x:'center',scale:100,spacing:'safe'}};
   const drink=['Mug','Tumbler'].includes(product),apparel=['Hoodie','T-Shirt'].includes(product),safe=['Phone Case','Hardcover Journal'].includes(product);
   const cover=['Poster','Framed Poster','Sticker','Puzzle','Magnet 3-Pack','Coaster 4-Pack'].includes(product);
   return {sku,product,design:{version:safe?7:6,product,layout:drink?'two-sided':cover?'cover':'fit',fill:apparel?'transparent':cover?'full-bleed':'ambient',x:'center',scale:product==='Canvas'?90:product==='Blanket'?92:drink?108:100,spacing:'standard',...(apparel?{finish:'soft'}:{}),...(['Canvas','Puzzle'].includes(product)?{orientation:'portrait'}:{})}};
