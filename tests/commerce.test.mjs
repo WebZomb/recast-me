@@ -699,3 +699,40 @@ test('RM0507 recovered release blocks a changed Printful draft before paid produ
   const saved=await read(o.env,`jobs/${o.job.id}.json`);assert.equal(saved.status,'on_hold');assert.equal(saved.sentToProductionAt,undefined);
  }finally{globalThis.fetch=original}
 });
+
+test('RM063 one owner recovery preserves approved pixels and creates only a held draft',async()=>{
+ const o=await orderSetup();await o.action('proof');await o.action('approve',{revision:1,confirm:'APPROVE_FOR_PRINT'});
+ o.env.IMAGES=imageMock({fail:true});await assert.rejects(finishApprovedDesign(o.env,o.job),/TEST_IMAGE_SERVICE_FAILURE/);
+ const d=await approvedDesign(o.env,o.job),originalClaim=`commerce/finishes/${await hash(o.job.id)}/${d.sourceHash}.claim`;
+ const claimBytes=await(await o.env.ARTWORK.get(originalClaim)).text();
+ Object.assign(o.job,{preapprovedCheckout:true,autoPrintFailedAt:new Date(Date.now()-600000).toISOString(),autoPrintError:'Network connection lost.',status:'auto_print_review'});
+ await o.env.ARTWORK.put(`jobs/${o.job.id}.json`,JSON.stringify(o.job));o.env.IMAGES=imageMock();
+ Object.assign(o.env,{SHOPIFY_CLIENT_ID:'fixture-client',SHOPIFY_CLIENT_SECRET:'fixture-secret',SHOPIFY_SHOP:'fixture-store',PRINTFUL_API_TOKEN:'fixture-printful',PRINTFUL_STORE_ID:'123',PUBLIC_APP_URL:'https://recast.test'});
+ const original=globalThis.fetch;let drafts=0,confirms=0;
+ globalThis.fetch=async(url,options={})=>{
+  const path=String(url);
+  if(path.includes('access_token'))return Response.json({access_token:'fixture-token',expires_in:3600});
+  if(path.includes('graphql.json'))return Response.json({data:{order:{...paid,lineItems:{pageInfo:{hasNextPage:false},nodes:[{id:o.job.lineId,sku:o.job.sku,quantity:1,customAttributes:[{key:'Artwork ID',value:ID}]}]}},tagsAdd:{userErrors:[]}}});
+  if(path.endsWith('/confirm')){confirms++;throw Error('must not confirm');}
+  if(path==='https://api.printful.com/orders'){drafts++;assert.equal((await read(o.env,`jobs/${o.job.id}.json`)).status,'on_hold');return Response.json({result:{id:9876,status:'draft'}});}
+  throw Error('Unexpected '+path);
+ };
+ try{
+  let r=await adminJobAction(adminRequest({confirm:'WRONG'}),o.env,o.job.id,'recover-print-file');assert.equal(r.status,409);assert.equal(drafts,0);
+  r=await adminJobAction(adminRequest({confirm:'RECOVER_PRINT_FILE'}),o.env,o.job.id,'recover-print-file');assert.equal(r.status,200,JSON.stringify(await r.clone().json()));
+  const saved=await read(o.env,`jobs/${o.job.id}.json`);assert.equal(saved.status,'on_hold');assert.equal(saved.printfulOrderId,9876);assert.ok(saved.recoveredPrintfulDraftAt);assert.equal(saved.sentToProductionAt,undefined);
+  const finished=await approvedDesign(o.env,saved);assert.equal(finished.sourceHash,d.sourceHash);assert.equal(finished.snapshotKey,d.snapshotKey);assert.deepEqual(Buffer.from(await(await o.env.ARTWORK.get(finished.finalKey)).arrayBuffer()),CLEAN);
+  assert.equal(await(await o.env.ARTWORK.get(originalClaim)).text(),claimBytes);
+  r=await adminJobAction(adminRequest({confirm:'RECOVER_PRINT_FILE'}),o.env,o.job.id,'recover-print-file');assert.equal(r.status,409);assert.equal(drafts,1);assert.equal(confirms,0);
+ }finally{globalThis.fetch=original}
+});
+
+test('RM063 finishing recovery cannot silently retry normal or already-retried image attempts',async()=>{
+ const o=await orderSetup();await o.action('proof');await o.action('approve',{revision:1,confirm:'APPROVE_FOR_PRINT'});
+ o.env.IMAGES=imageMock({fail:true});await assert.rejects(finishApprovedDesign(o.env,o.job));
+ await assert.rejects(finishApprovedDesign(o.env,o.job),e=>e.code==='finish_in_progress');
+ await assert.rejects(finishApprovedDesign(o.env,o.job,{ownerRecovery:true}),e=>e.code==='finish_recovery_blocked');
+ Object.assign(o.job,{status:'on_hold',printFileRecoveryStartedAt:new Date().toISOString()});
+ await assert.rejects(finishApprovedDesign(o.env,o.job,{ownerRecovery:true}),/TEST_IMAGE_SERVICE_FAILURE/);
+ await assert.rejects(finishApprovedDesign(o.env,o.job,{ownerRecovery:true}),e=>e.code==='finish_in_progress');
+});

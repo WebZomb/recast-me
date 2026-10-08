@@ -93,7 +93,7 @@ export async function printDesignFile(request,env,job,verifyPaid){
   if(!object)throw fault('print_not_ready','Print file not ready.',404);
   return new Response(object.body,{headers:{'content-type':d.finalMime||'image/jpeg','cache-control':'private, no-store','referrer-policy':'no-referrer','x-content-type-options':'nosniff'}});
 }
-export async function finishApprovedDesign(env,job){
+export async function finishApprovedDesign(env,job,{ownerRecovery=false}={}){
   const d=await approvedDesign(env,job);
   if(d.finalKey)return d;
   const stored=await env.ARTWORK.get(d.snapshotKey);
@@ -104,7 +104,12 @@ export async function finishApprovedDesign(env,job){
   if(!env.IMAGES)throw fault('images_required','Print finishing needs Cloudflare Images.',503);
   // Durable claim: timeout/crash requires review, never a silent billable retry.
   const claim=`commerce/finishes/${await hash(job.id)}/${d.sourceHash}.claim`;
-  const claimed=await env.ARTWORK.put(claim,'started',{onlyIf:new Headers({'If-None-Match':'*'})});
+  if(ownerRecovery){
+    if(job.status!=='on_hold'||!job.printFileRecoveryStartedAt||job.printfulOrderId||job.sentToProductionAt||!await env.ARTWORK.head(claim))throw fault('finish_recovery_blocked','This print-file recovery is not eligible.');
+  }
+  // Never erase the original attempt; one explicitly requested recovery has its own atomic claim.
+  const attempt=ownerRecovery?claim+'.owner-recovery':claim;
+  const claimed=await env.ARTWORK.put(attempt,JSON.stringify({startedAt:new Date().toISOString(),ownerRecovery}),{onlyIf:new Headers({'If-None-Match':'*'})});
   if(!claimed)throw fault('finish_in_progress','Print finishing has already started. Check its saved result before retrying.');
   let finalBytes,finalMime='image/jpeg',finishMethod='preserve-interpolate';
   const area={width:Number(d.proof?.position?.area_width),height:Number(d.proof?.position?.area_height)};

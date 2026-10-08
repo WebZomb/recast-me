@@ -724,10 +724,10 @@ async function finalizePhysicalJob(env,job){
   job.printReadyAt=design.finishedAt;job.printReadyMethod=design.finishMethod;job.status='ready_for_printful_draft';
   return saveJob(env,job);
 }
-async function createPrintfulDraftForJob(env,job){
+async function createPrintfulDraftForJob(env,job,{keepHeld=false}={}){
   if(job.digital)throw fault('physical_only','Digital products do not use Printful.',400);
   if(job.printfulOrderId)return job;
-  if(job.status==='on_hold'||job.paymentRevokedAt)throw fault('order_hold','This order is on hold.');
+  if((job.status==='on_hold'&&!keepHeld)||job.paymentRevokedAt)throw fault('order_hold','This order is on hold.');
   await verifyPaidOrder(env,job,{forProduction:true});
   const design=await approvedDesign(env,job);
   if(!design.proof?.position)throw fault('proof_placement_missing','Review a product preview with verified placement before printing.');
@@ -740,7 +740,8 @@ async function createPrintfulDraftForJob(env,job){
   if(!await env.ARTWORK.put(claim,JSON.stringify({startedAt:now(),externalId,referenceVersion:2}),{onlyIf:new Headers({'If-None-Match':'*'})}))throw fault('draft_started','Draft submission already started; review Printful before retrying.');
   const payload={external_id:externalId,recipient:job.recipient,items:[{variant_id:map.printfulVariantId,quantity:Number(job.quantity||1)*Number(map.quantity||1),files:productionFiles(map,design.proof.design,sourceUrl,design.proof.position)}]};
   const result=await printful(env,"/orders",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(payload)});
-  job.printfulExternalId=externalId;job.printfulOrderId=result.id;job.printfulStatus=result.status||"draft";job.printSourceUrl=sourceUrl;job.status="printful_draft_ready";job.printfulCreatedAt=now();
+  job.printfulExternalId=externalId;job.printfulOrderId=result.id;job.printfulStatus=result.status||"draft";job.printSourceUrl=sourceUrl;job.status=keepHeld?'on_hold':'printful_draft_ready';job.printfulCreatedAt=now();
+  if(keepHeld){job.recoveredPrintfulDraftAt=now();job.holdReason=`Recovered Printful draft #${result.id} — inspect before paid production.`;delete job.autoPrintError;}
   // Persist the provider result before a separate Shopify tagging call can fail.
   await saveJob(env,job);
   await addShopifyOrderTags(env,job.orderId,["RECAST_PRINTFUL_DRAFT"]);
@@ -762,11 +763,11 @@ async function sendPrintfulProductionForJob(env,job){
 }
 async function autoProcessPreapprovedJob(env,job){
   if(!job.preapprovedCheckout||String(env.AUTO_PRINT_PREAPPROVED_ENABLED||"false")!=="true")return job;
-  if(job.sentToProductionAt)return job;
+  if(job.sentToProductionAt||job.status==='on_hold'||job.paymentRevokedAt)return job;
   try{
-    if(!job.printReadyAt)job=await finalizePhysicalJob(env,job);
-    if(!job.printfulOrderId)job=await createPrintfulDraftForJob(env,job);
-    if(!job.sentToProductionAt)job=await sendPrintfulProductionForJob(env,job);
+    if(!job.printReadyAt){job.autoPrintStage='print-file preparation';await saveJob(env,job);job=await finalizePhysicalJob(env,job);}
+    if(!job.printfulOrderId){job.autoPrintStage='Printful draft creation';await saveJob(env,job);job=await createPrintfulDraftForJob(env,job);}
+    if(!job.sentToProductionAt){job.autoPrintStage='Printful production confirmation';await saveJob(env,job);job=await sendPrintfulProductionForJob(env,job);}
     job.autoPrintCompletedAt=now();delete job.autoPrintError;return saveJob(env,job);
   }catch(error){
     job.autoPrintError=error.message||String(error);job.autoPrintFailedAt=now();
@@ -862,9 +863,9 @@ async function processOwnerReleasedLegacyJob(env,job){
     return saveJob(env,job);
   }
   try{
-    if(!job.printReadyAt)job=await finalizePhysicalJob(env,job);
-    if(!job.printfulOrderId)job=await createPrintfulDraftForJob(env,job);
-    if(!job.sentToProductionAt)job=await sendPrintfulProductionForJob(env,job);
+    if(!job.printReadyAt){job.autoPrintStage='print-file preparation';await saveJob(env,job);job=await finalizePhysicalJob(env,job);}
+    if(!job.printfulOrderId){job.autoPrintStage='Printful draft creation';await saveJob(env,job);job=await createPrintfulDraftForJob(env,job);}
+    if(!job.sentToProductionAt){job.autoPrintStage='Printful production confirmation';await saveJob(env,job);job=await sendPrintfulProductionForJob(env,job);}
     job.ownerReleasedAt ||= now();job.ownerReleaseCompletedAt=now();delete job.ownerReleaseError;
     return saveJob(env,job);
   }catch(error){
@@ -924,6 +925,25 @@ export async function retryLegacyOwnerReleaseCandidates(env){
 export async function adminJobAction(request,env,id,action){
   try{
     requireAdmin(request,env);let job=await loadJob(env,id);
+    if(action==="recover-print-file"){
+      const body=await request.json().catch(()=>({}));
+      if(body.confirm!=="RECOVER_PRINT_FILE")throw fault('confirmation_required','Confirm the single print-file recovery attempt.');
+      if(job.digital||!job.preapprovedCheckout||job.printfulOrderId||job.sentToProductionAt||job.paymentRevokedAt)throw fault('recovery_blocked','This order is not eligible for print-file recovery.');
+      if(!job.autoPrintFailedAt||Date.now()-Date.parse(job.autoPrintFailedAt)<300000||!Number.isFinite(Date.parse(job.autoPrintFailedAt)))throw fault('recovery_wait','Review the failed attempt after five minutes.');
+      const jobHash=await hash(job.id);
+      for(const suffix of ['draft','confirm'])if(await env.ARTWORK.head(`commerce/production/${jobHash}-${suffix}.json`))throw fault('provider_attempt_exists','A Printful attempt already exists. Inspect it before any recovery.');
+      await verifyPaidOrder(env,job,{forProduction:true});
+      const original=await approvedDesign(env,job);
+      if(!original.finalKey&&!await env.ARTWORK.head(`commerce/finishes/${jobHash}/${original.sourceHash}.claim`))throw fault('finish_attempt_missing','No previous print-file attempt exists. Use normal preparation.');
+      if(!await env.ARTWORK.put(`commerce/recoveries/${jobHash}-print.json`,JSON.stringify({startedAt:now()}),{onlyIf:new Headers({'If-None-Match':'*'})}))throw fault('recovery_started','This recovery already started. Inspect its result before retrying.');
+      job.status='on_hold';job.holdReason='Recovering approved print file; paid production remains held.';
+      job.printFileRecoveryStartedAt ||= now();await saveJob(env,job);
+      const design=await finishApprovedDesign(env,job,{ownerRecovery:true});
+      job.artApprovedAt ||= design.approvedAt;job.printReadyAt=design.finishedAt;job.printReadyMethod=design.finishMethod;
+      job.printFileRecoveredAt=now();await saveJob(env,job);
+      job=await createPrintfulDraftForJob(env,job,{keepHeld:true});
+      return json({ok:true,job,productionSubmitted:false});
+    }
     if(action==="approve-art"){
       if(!job.digital){await verifyPaidOrder(env,job);await approvedDesign(env,job)}
       job.artApprovedAt=now();job.status=job.digital?"digital_ready":"art_approved_needs_high_res";await saveJob(env,job);return json({ok:true,job});
@@ -1158,7 +1178,7 @@ export async function routeWorkflow(request,env,ctx){
   if(p==="/api/admin/trends"&&request.method==="GET")return adminTrends(request,env);
   if(p==="/api/admin/social"&&request.method==="GET")return adminSocial(request,env);
   if(p==="/api/admin/sync-orders"&&request.method==="POST")return adminSyncOrders(request,env);
-  m=p.match(/^\/api\/admin\/job\/([^/]+)\/(approve-art|finalize-art|hold|create-draft|recover-missing-draft|release-recovered-draft|send-production)$/);if(m&&request.method==="POST")return adminJobAction(request,env,decodeURIComponent(m[1]),m[2]);
+  m=p.match(/^\/api\/admin\/job\/([^/]+)\/(recover-print-file|approve-art|finalize-art|hold|create-draft|recover-missing-draft|release-recovered-draft|send-production)$/);if(m&&request.method==="POST")return adminJobAction(request,env,decodeURIComponent(m[1]),m[2]);
   if(p==="/api/admin/poll-x"&&request.method==="POST"){try{requireAdmin(request,env);return json(await pollXMentions(env))}catch(error){return json({ok:false,error:error.message},error.status||500)}}
   if(p==="/api/admin/scan-trends"&&request.method==="POST"){try{requireAdmin(request,env);return json(await scanTrends(env))}catch(error){return json({ok:false,error:error.message},error.status||500)}}
   m=p.match(/^\/api\/admin\/trend\/([^/]+)\/(approve|reject)$/);if(m&&request.method==="POST")return adminTrendAction(request,env,decodeURIComponent(m[1]),m[2]);
