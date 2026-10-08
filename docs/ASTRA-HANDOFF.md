@@ -114,3 +114,5 @@ RM061 completed: six-picture sheet ACTIVE at14.99; exact supplier preview, final
 Latest: [RM062 — launch recheck and pet viewpoint preservation](ASTRA-SESSION-RM-062.md). Owner-published matching Shopify theme observed public. Likeness prompt/photo guidance tightened;332 local tests pass, new provider output not yet tested. Moderation remains disabled and paid fulfillment acceptance outstanding.
 
 Latest: [RM063 — interrupted sticker print-file recovery](ASTRA-SESSION-RM-063.md). Controlled owner recovery creates a held draft; paid production remains a separate inspection/release.
+
+Latest: [RM064 — automatic fulfillment reconciliation](ASTRA-SESSION-RM-064.md). External provider confirmations, independent scheduled phases, bounded pagination, accurate hold/partial/tracking UI. Live receipts recorded in session; no new billable order.

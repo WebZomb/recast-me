@@ -5,7 +5,7 @@ import {creditRoute,walletFor,bindCustomerCredits,creditBalance,reserveCustomerR
 import {reserveBudget,guardedEnvironment} from '../src/render-controls.js';
 import {hash,read,normalizeProductDesign} from '../src/commerce-store.js';
 import {customerDesignAction,designFor,approvedDesign,finishApprovedDesign,printDesignFile} from '../src/order-approval.js';
-import {reconcileShopifyOrder,verifyPaidOrder,adminJobAction,routeWorkflow,customerOrderStatus,syncPrintfulJobs,retryLegacyOwnerReleaseCandidates} from '../src/workflow.js';
+import {reconcileShopifyOrder,verifyPaidOrder,adminJobAction,routeWorkflow,customerOrderStatus,syncPrintfulJobs,retryLegacyOwnerReleaseCandidates,scheduledWorkflow} from '../src/workflow.js';
 import {secureApplication} from '../src/preview-security.js';
 import {FULFILLMENT} from '../src/entry.js';
 const salt='test-only-ip-salt-with-at-least-32-characters';
@@ -735,4 +735,66 @@ test('RM063 finishing recovery cannot silently retry normal or already-retried i
  Object.assign(o.job,{status:'on_hold',printFileRecoveryStartedAt:new Date().toISOString()});
  await assert.rejects(finishApprovedDesign(o.env,o.job,{ownerRecovery:true}),/TEST_IMAGE_SERVICE_FAILURE/);
  await assert.rejects(finishApprovedDesign(o.env,o.job,{ownerRecovery:true}),e=>e.code==='finish_in_progress');
+});
+
+test('supplier acceptance reconciles a held draft without another confirmation, even if Shopify tags fail',async()=>{
+ const o=await orderSetup();Object.assign(o.env,{PRINTFUL_API_TOKEN:'fixture',PRINTFUL_STORE_ID:'7',SHOPIFY_CLIENT_ID:'fixture',SHOPIFY_CLIENT_SECRET:'fixture',SHOPIFY_SHOP:'fixture'});
+ Object.assign(o.job,{status:'on_hold',printfulOrderId:1234,printfulExternalId:'rm-existing',holdReason:'Inspect recovered draft',recoveredPrintfulDraftAt:new Date().toISOString()});
+ await o.env.ARTWORK.put(`jobs/${o.job.id}.json`,JSON.stringify(o.job));
+ const original=globalThis.fetch;let confirms=0;
+ globalThis.fetch=async(url,opts={})=>{
+  if(String(url).startsWith('https://api.printful.com/')){if(opts.method!=='GET')confirms++;return Response.json({result:{id:1234,external_id:'rm-existing',store:7,status:'pending'}});}
+  throw Error('Shopify temporarily unavailable');
+ };
+ try{
+  assert.equal((await syncPrintfulJobs(o.env)).updated,1);
+  const saved=await read(o.env,`jobs/${o.job.id}.json`);
+  assert.equal(saved.status,'in_printful_production');assert.ok(saved.sentToProductionAt);assert.ok(saved.productionObservedAt);
+  assert.equal(saved.holdReason,undefined);assert.match(saved.shopifyTagError,/could not be updated/);assert.equal(confirms,0);
+  const timestamp=saved.sentToProductionAt;await syncPrintfulJobs(o.env);
+  assert.equal((await read(o.env,`jobs/${o.job.id}.json`)).sentToProductionAt,timestamp);assert.equal(confirms,0);
+ }finally{globalThis.fetch=original}
+});
+
+test('supplier identity mismatches never release held jobs',async()=>{
+ const o=await orderSetup();o.env.PRINTFUL_API_TOKEN='fixture';
+ Object.assign(o.job,{status:'on_hold',printfulOrderId:1234,printfulExternalId:'expected'});
+ await o.env.ARTWORK.put(`jobs/${o.job.id}.json`,JSON.stringify(o.job));
+ const original=globalThis.fetch;globalThis.fetch=async()=>Response.json({result:{id:1234,external_id:'wrong',status:'pending'}});
+ try{assert.equal((await syncPrintfulJobs(o.env)).updated,0);const j=await read(o.env,`jobs/${o.job.id}.json`);assert.equal(j.status,'on_hold');assert.equal(j.sentToProductionAt,undefined);assert.match(j.lastPrintfulSyncError,/identity mismatch/);}finally{globalThis.fetch=original}
+});
+
+test('supplier hold is shown as review, never healthy production',async()=>{
+ const o=await orderSetup();o.env.PRINTFUL_API_TOKEN='fixture';Object.assign(o.job,{status:'in_printful_production',printfulOrderId:1234,sentToProductionAt:new Date().toISOString()});await o.env.ARTWORK.put(`jobs/${o.job.id}.json`,JSON.stringify(o.job));
+ const original=globalThis.fetch;globalThis.fetch=async(url)=>{if(String(url).startsWith('https://api.printful.com/'))return Response.json({result:{id:1234,status:'onhold'}});throw Error('Shopify unavailable')};
+ try{await syncPrintfulJobs(o.env);assert.equal((await read(o.env,`jobs/${o.job.id}.json`)).status,'printful_failed')}finally{globalThis.fetch=original}
+});
+
+test('Printful-only admin sync requires owner authorization',async()=>{
+ const env=await setup({ADMIN_TOKEN:'fixture-admin'});
+ const r=await routeWorkflow(new Request('https://recast.test/api/admin/sync-printful',{method:'POST'}),env,{});
+ assert.equal(r.status,401);
+});
+
+
+test('scheduled provider reconciliation still runs when Shopify is unavailable',async()=>{
+ const o=await orderSetup();Object.assign(o.env,{ORDER_SYNC_ENABLED:'true',PRINTFUL_API_TOKEN:'fixture'});
+ Object.assign(o.job,{printfulOrderId:88,status:'on_hold'});await o.env.ARTWORK.put(`jobs/${o.job.id}.json`,JSON.stringify(o.job));
+ const original=globalThis.fetch;let providerReads=0;
+ globalThis.fetch=async(url,opts={})=>{if(String(url)==='https://api.printful.com/orders/88'){assert.equal(opts.method,'GET');providerReads++;return Response.json({result:{id:88,status:'pending'}})}throw Error('Shopify offline')};
+ try{await scheduledWorkflow({cron:'*/10 * * * *'},o.env,{});assert.equal(providerReads,1);assert.equal((await read(o.env,`jobs/${o.job.id}.json`)).status,'in_printful_production');const run=await read(o.env,'system/commerce-sync.json');assert.equal(run.orders.ok,false);assert.equal(run.printful.updated,1)}finally{globalThis.fetch=original}
+});
+
+test('partial supplier shipments do not fulfill the entire Shopify line',async()=>{
+ const o=await orderSetup();o.env.PRINTFUL_API_TOKEN='fixture';Object.assign(o.job,{printfulOrderId:88,sentToProductionAt:new Date().toISOString()});await o.env.ARTWORK.put(`jobs/${o.job.id}.json`,JSON.stringify(o.job));
+ const original=globalThis.fetch;let fulfillmentWrites=0;
+ globalThis.fetch=async(url,opts={})=>{if(String(url)==='https://api.printful.com/orders/88')return Response.json({result:{id:88,status:'partial',shipments:[{shipped_at:'2026-10-08',tracking_url:'https://tracking.example/1'}]}});if(String(opts.body).includes('RecastCreateFulfillment'))fulfillmentWrites++;throw Error('Shopify offline')};
+ try{await syncPrintfulJobs(o.env);assert.equal((await read(o.env,`jobs/${o.job.id}.json`)).status,'partially_shipped');assert.equal(fulfillmentWrites,0)}finally{globalThis.fetch=original}
+});
+
+test('supplier sync advances its bounded storage cursor instead of starving later jobs',async()=>{
+ const env=await setup({PRINTFUL_API_TOKEN:'fixture'}),cursors=[];
+ env.ARTWORK.list=async({cursor})=>{cursors.push(cursor||null);return {objects:[],truncated:!cursor,cursor:cursor?undefined:'next-page'}};
+ await syncPrintfulJobs(env);await syncPrintfulJobs(env);await syncPrintfulJobs(env);
+ assert.deepEqual(cursors,[null,'next-page',null]);
 });

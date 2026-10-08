@@ -525,18 +525,32 @@ export async function serveApprovedPrint(request,env,id){
 
 export async function syncPrintfulJobs(env){
   if(!env.ARTWORK||!env.PRINTFUL_API_TOKEN)return{ok:false,updated:0,error:"Printful or R2 missing"};
-  const jobs=await listJson(env,"jobs/",100);let updated=0;
+  const cursorKey='system/printful-sync-cursor.json',cursorState=await readJson(env,cursorKey);
+  const page=await env.ARTWORK.list({prefix:'jobs/',limit:100,...(cursorState?.cursor?{cursor:cursorState.cursor}:{})});
+  const jobs=(await Promise.all(page.objects.map(o=>readJson(env,o.key)))).filter(Boolean);let updated=0;
   for(const job of jobs){
     if(!job.printfulOrderId||job.digital)continue;
     if(["canceled","failed"].includes(String(job.status)))continue;
     try{
       const order=await printful(env,`/orders/${encodeURIComponent(job.printfulOrderId)}`,{method:"GET"});
+      if(String(order.id)!==String(job.printfulOrderId)||(job.printfulExternalId&&order.external_id!==job.printfulExternalId)||(order.store!==undefined&&String(order.store)!==String(env.PRINTFUL_STORE_ID||"")))throw new Error("Printful order identity mismatch; reconciliation stopped.");
       job.printfulStatus=order.status||job.printfulStatus;
+      delete job.lastPrintfulSyncError;
+      // Observe an existing supplier acceptance; never submit or charge from status sync.
+      if(["pending","inprocess","partial","fulfilled"].includes(order.status)&&!job.sentToProductionAt){
+        job.sentToProductionAt=now();job.productionObservedAt=job.sentToProductionAt;
+      }
+      if(job.sentToProductionAt&&["pending","inprocess","partial","fulfilled"].includes(order.status)){
+        if(job.holdReason)job.previousHoldReason=job.holdReason;
+        delete job.holdReason;delete job.autoPrintError;delete job.ownerReleaseError;
+      }
       const shipment=(order.shipments||[])[0]||null;
       if(shipment){job.trackingNumber=shipment.tracking_number||job.trackingNumber||null;job.trackingUrl=shipment.tracking_url||job.trackingUrl||null;job.carrier=shipment.carrier||job.carrier||null;job.shippedAt=shipment.shipped_at||job.shippedAt||null}
-      if(order.status==="fulfilled"||shipment?.shipped_at)job.status="shipped";
-      else if(order.status==="failed")job.status="printful_failed";
+      if(order.status==="fulfilled")job.status="shipped";
+      else if(order.status==="partial")job.status="partially_shipped";
+      else if(["failed","onhold"].includes(order.status))job.status="printful_failed";
       else if(order.status==="canceled")job.status="canceled";
+      else if(order.status==="draft"&&job.sentToProductionAt)job.status="printful_failed";
       else if(job.sentToProductionAt)job.status="in_printful_production";
       const visibleTags=["RECAST_PRINTFUL_DRAFT"];
       if(job.sentToProductionAt)visibleTags.push("RECAST_PRINTFUL_SUBMITTED");
@@ -547,12 +561,16 @@ export async function syncPrintfulJobs(env){
         try{await createShopifyShipmentFulfillment(env,job,shipment);}
         catch(error){job.shopifyFulfillmentError=error.message||String(error);job.shopifyFulfillmentFailedAt=now();visibleTags.push("RECAST_SHOPIFY_FULFILLMENT_REVIEW");}
       }
-      await addShopifyOrderTags(env,job.orderId,visibleTags);
+      // Save provider truth even when Shopify is unavailable.
       await saveJob(env,job);updated++;
+      try{if(await addShopifyOrderTags(env,job.orderId,visibleTags)===false)throw new Error("Shopify status tags could not be updated; will retry on the next status sync.");delete job.shopifyTagError;}
+      catch(error){job.shopifyTagError=error.message||String(error);}
+      await saveJob(env,job);
       const meta=await requestMeta(env,job.requestId);if(meta){meta.fulfillment=job.status;meta.updatedAt=now();await putJson(env,requestKey(job.requestId,"request.json"),meta)}
     }catch(error){job.lastPrintfulSyncError=error.message;await saveJob(env,job)}
   }
-  await putJson(env,"system/printful-sync.json",{lastRun:now(),updated});return{ok:true,updated}
+  await putJson(env,cursorKey,{cursor:page.truncated?page.cursor:null});
+  await putJson(env,"system/printful-sync.json",{lastRun:now(),updated,more:Boolean(page.truncated)});return{ok:true,updated}
 }
 
 async function loadJob(env,id){const job=await readJson(env,jobKey(id));if(!job)throw Object.assign(new Error("Fulfillment job not found."),{status:404});return job}
@@ -633,7 +651,7 @@ export async function clientDiagnostic(request,env){
 }
 
 export async function adminStatus(request,env){
-  try{requireAdmin(request,env);const jobs=await listJson(env,"jobs/",100);const trends=await listJson(env,"trends/",100);const socials=await listJson(env,"social/x/",100);const genErrors=await listJson(env,"diagnostics/generation/",100);const clientErrors=await listJson(env,"diagnostics/client/",100);const attempts=await listJson(env,"diagnostics/attempts/",100);return json({ok:true,version:"1.0.2",jobs:{total:jobs.length,awaiting:jobs.filter(x=>!String(x.status).includes("completed")&&!String(x.status).includes("shipped")).length},trends:{total:trends.length,review:trends.filter(x=>x.status==="review").length},generationErrors:{total:genErrors.length+clientErrors.length,recent:[...genErrors,...clientErrors].filter(x=>Date.now()-Date.parse(x.createdAt||0)<86400000).length,attempts:attempts.length},xRequests:socials.length,contentModeration:moderationReadiness(env),connections:{shopify:Boolean(env.SHOPIFY_CLIENT_ID&&env.SHOPIFY_CLIENT_SECRET),printful:Boolean(env.PRINTFUL_API_TOKEN),images:Boolean(env.IMAGES),x:Boolean(env.X_USER_ACCESS_TOKEN&&env.X_USER_ID),admin:true},automation:{orderSync:String(env.ORDER_SYNC_ENABLED||"false")==="true",xBot:String(env.X_BOT_ENABLED||"false")==="true",trendScanner:String(env.TREND_SCANNER_ENABLED||"false")==="true",retentionCleanup:String(env.RETENTION_CLEANUP_ENABLED||"false")==="true"}})}catch(error){return json({ok:false,error:error.message},error.status||500)}
+  try{requireAdmin(request,env);const jobs=await listJson(env,"jobs/",100);const trends=await listJson(env,"trends/",100);const socials=await listJson(env,"social/x/",100);const genErrors=await listJson(env,"diagnostics/generation/",100);const clientErrors=await listJson(env,"diagnostics/client/",100);const attempts=await listJson(env,"diagnostics/attempts/",100);return json({ok:true,version:"1.0.2",jobs:{total:jobs.length,awaiting:jobs.filter(x=>/hold|review|failed|awaiting_customer|product_layout/.test(String(x.status))||x.shopifyFulfillmentError||x.lastPrintfulSyncError||x.shopifyTagError).length},trends:{total:trends.length,review:trends.filter(x=>x.status==="review").length},generationErrors:{total:genErrors.length+clientErrors.length,recent:[...genErrors,...clientErrors].filter(x=>Date.now()-Date.parse(x.createdAt||0)<86400000).length,attempts:attempts.length},xRequests:socials.length,contentModeration:moderationReadiness(env),connections:{shopify:Boolean(env.SHOPIFY_CLIENT_ID&&env.SHOPIFY_CLIENT_SECRET),printful:Boolean(env.PRINTFUL_API_TOKEN),images:Boolean(env.IMAGES),x:Boolean(env.X_USER_ACCESS_TOKEN&&env.X_USER_ID),admin:true},automation:{orderSync:String(env.ORDER_SYNC_ENABLED||"false")==="true",xBot:String(env.X_BOT_ENABLED||"false")==="true",trendScanner:String(env.TREND_SCANNER_ENABLED||"false")==="true",retentionCleanup:String(env.RETENTION_CLEANUP_ENABLED||"false")==="true"}})}catch(error){return json({ok:false,error:error.message},error.status||500)}
 }
 export async function adminJobs(request,env){
  try{
@@ -1124,10 +1142,13 @@ export async function scheduledWorkflow(controller,env,ctx){
   if(controller.cron==='* * * * *')return pollXMentions(env);
   const tasks=[];
   if(String(env.ORDER_SYNC_ENABLED||"false")==="true")tasks.push((async()=>{
-    const orders=await syncPaidOrders(env);
-    const legacy=await retryLegacyOwnerReleaseCandidates(env);
-    const printful=await syncPrintfulJobs(env);
-    return{orders,legacy,printful};
+    // Read provider truth first so externally confirmed orders cannot be reconfirmed.
+    const results={};
+    for(const [name,run] of [['printful',syncPrintfulJobs],['orders',syncPaidOrders],['legacy',retryLegacyOwnerReleaseCandidates]]){
+      try{results[name]=await run(env);}catch(error){results[name]={ok:false,error:error.message||String(error)};}
+    }
+    await putJson(env,'system/commerce-sync.json',{lastRun:now(),...results});
+    return results;
   })());
   if(String(env.TREND_SCANNER_ENABLED||"false")==="true")tasks.push(scanTrends(env));
   if(String(env.RETENTION_CLEANUP_ENABLED||"false")==="true")tasks.push(cleanupExpiredUnpaid(env));
@@ -1142,6 +1163,10 @@ export async function routeWorkflow(request,env,ctx){
   if(p==="/api/mockup/status"&&request.method==="GET")return mockupStatus(request,env);
   let m=p.match(/^\/api\/print-source\/([^/]+)$/);if(m&&request.method==="GET")return servePrintSource(request,env,decodeURIComponent(m[1]));
   m=p.match(/^\/api\/mockup\/image\/([^/]+)\/([^/]+)\/(\d+)$/);if(m&&request.method==="GET")return serveMockupImage(request,env,decodeURIComponent(m[1]),decodeURIComponent(m[2]),Number(m[3]));
+  if(p==="/api/admin/sync-printful"&&request.method==="POST"){
+    try{requireAdmin(request,env);return json(await syncPrintfulJobs(env));}
+    catch(error){return json({ok:false,error:error.message},error.status||500)}
+  }
   if(p==="/api/order-status"&&request.method==="GET")return customerOrderStatus(request,env);
   const designPreview=p.match(/^\/api\/order-design\/([a-zA-Z0-9._-]+)\/preview$/);
   if(designPreview&&request.method==='GET'){

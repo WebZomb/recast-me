@@ -16,8 +16,10 @@ function orderStatusLabel(j){
  if(status==='design_confirmed')return 'Design confirmed — preparing your print file';
  if(status==='ready_for_printful_draft')return 'Print file ready — preparing production';
  if(status==='printful_draft_ready')return 'Production order prepared';
- if(status==='submitted_to_printful'||status==='in_printful_production')return 'In production';
+ if(status==='submitted_to_printful'||status==='in_printful_production')return j.printfulStatus==='pending'?'Accepted — waiting for production':'In production';
+ if(status==='canceled')return 'Order canceled';
  if(status==='shipped')return 'Shipped';
+ if(status==='partially_shipped')return 'Part of your order has shipped';
  if(status==='auto_print_review'||status==='owner_release_review'||status==='printful_failed')return 'Paused for a production check';
  if(status==='payment_hold')return 'Payment needs review';
  if(status==='awaiting_customer_approval')return 'Design approval needed';
@@ -54,7 +56,7 @@ async function load(){
   document.querySelector('#order-subtitle').textContent=`Artwork ID: ${requestId}`;
   card.innerHTML=`<div id="order-message" role="status" aria-live="polite"></div><div class="order-state"><strong>${d.request.paid?'Order detected':'Waiting for a paid order'}</strong><span>${esc(d.request.orderName||'Artwork saved')}</span></div>
   ${d.creditsEnabled&&jobs.length?'<div class="download-box"><h3>Keep creating</h3><p id="credit-status">Checking your High Quality purchase credits…</p><button id="check-bonus" class="button ghost">Check my purchase credits</button><a id="create-more" class="button primary" href="/#start">Try another idea →</a></div>':''}
-  <div class="order-items">${jobs.length?jobs.map(j=>`<article class="order-item"><h2>${esc(j.product)}</h2><p>Status: ${esc(orderStatusLabel(j))}${j.printfulStatus?` · ${esc(j.printfulStatus)}`:''}</p>${designCard(j)}</article>`).join(''):'<p>After payment is verified, your order will appear here automatically.</p>'}</div>
+  <div class="order-items">${jobs.length?jobs.map(j=>`<article class="order-item"><h2>${esc(j.product)}</h2><p>Status: ${esc(orderStatusLabel(j))}</p>${['auto_print_review','owner_release_review','printful_failed','on_hold'].includes(j.status)?'<p>Your order is saved and needs a fulfillment check. Please do not place it again. You can contact us through Orders &amp; support below.</p>':''}${j.trackingUrl&&/^https:\/\//i.test(j.trackingUrl)?`<a class="button primary" href="${esc(j.trackingUrl)}" target="_blank" rel="noopener noreferrer">Track shipment →</a>`:''}${designCard(j)}</article>`).join(''):'<p>After payment is verified, your order will appear here automatically.</p>'}</div>
   ${d.request.digitalEntitlement?`<div class="download-box"><h3>Your digital artwork</h3><a class="button primary" href="/api/digital-download/${encodeURIComponent(requestId)}?token=${encodeURIComponent(token)}">Download purchased artwork</a></div>`:''}
   <p class="order-note">Keep this private order link. It gives access to this artwork and its orders.</p>${!d.request.paid?'<button id="delete-recast" class="delete-recast">Delete this unpaid Recast</button>':''}`;
   card.querySelectorAll('[data-consent]').forEach(el=>el.onchange=()=>{card.querySelector(`[data-action="approve"][data-job="${CSS.escape(el.dataset.consent)}"]`).disabled=!el.checked});
