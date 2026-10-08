@@ -59,7 +59,7 @@ test('unknown default image titles are product views, not mislabeled 3D room sce
 test('store cards keep curated examples instead of replacing them with supplier samples',async()=>{
   assert.match(checkout,/USE_SUPPLIER_EXAMPLES_ON_STORE_CARDS=false/);
   assert.match(checkout,/if\(!USE_SUPPLIER_EXAMPLES_ON_STORE_CARDS\|\|!card\|\|!sku\)return/);
-  assert.match(checkout,/Style illustration · not a size proof/);
+  assert.match(checkout,/Lifestyle example · preview your selected size/);
 });
 
 test('published samples match exact mapped suppliers and only visually reviewed products',async()=>{

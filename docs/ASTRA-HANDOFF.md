@@ -100,3 +100,5 @@ Latest: [RM-056 — gifts, restored Shopify mug, content safeguards and X produc
 Latest: [RM057 — varied supplier examples and matching Shopify draft](ASTRA-SESSION-RM-057.md).15 products/33 supplier views ready for owner image review; draft theme188993994996 unpublished. Poster fix0a692ec live; browser checks passed. Keep moderation/X and physical-order gates explicit.
 
 Latest: [RM058 — desktop hero alignment](ASTRA-SESSION-RM-058.md). Smaller mug and aligned photo/Recast/product composition above760px; phone rules preserved.
+
+Latest: [RM059 — approved lifestyle catalog and visible product-preview loading](ASTRA-SESSION-RM-059.md).15 Shopify product images replaced and read back; matching website images, waiting overlay and duplicate-click guard.324 local tests pass; deployment/browser receipt recorded separately.

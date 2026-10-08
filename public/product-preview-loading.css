@@ -1,0 +1,10 @@
+/* RM059 — visible waiting state, scoped to the selected product. */
+#product-grid .product-art{position:relative}
+.product-preview-loading{position:absolute;inset:0;z-index:3;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:14px;padding:24px;text-align:center;background:rgba(8,8,25,.93);color:#fff;backdrop-filter:blur(8px)}
+.product-preview-loading[hidden]{display:none}
+.product-preview-loading strong{font-size:clamp(20px,3vw,28px);line-height:1.2}
+.product-preview-loading p{margin:0;max-width:30ch;color:#d6d1ec;line-height:1.5;font-size:16px}
+.product-preview-spinner{width:48px;height:48px;border:4px solid #514366;border-top-color:#78ddf0;border-right-color:#af65ff;border-radius:50%;animation:preview-spin 1s linear infinite}
+.product-preview-loading small{color:#aee8f2;font-size:14px;font-variant-numeric:tabular-nums}
+@keyframes preview-spin{to{transform:rotate(360deg)}}
+@media(prefers-reduced-motion:reduce){.product-preview-spinner{animation:none}}

@@ -71,23 +71,23 @@ const STYLES = [
 ];
 
 const PRODUCT_CATALOG = [
-  {name:"Poster",price:"from $29.99",asset:"poster",image:"/assets/product-poster-v16.webp",badge:"MOST POPULAR",pitch:"The easiest way to turn your Recast into wall art.",tier:"featured"},
-  {name:"Hoodie",price:"from $59.99",asset:"hoodie",image:"/assets/product-hoodie-v16.webp",badge:"FAN FAVORITE",pitch:"Wear your Recast as a premium statement piece.",tier:"featured"},
-  {name:"Framed Poster",price:"from $44.99",asset:"framed-poster",image:"/assets/product-desk-frame-v16.webp",badge:"DESK + WALL",pitch:"8×10 desk size or larger framed wall art — ready to display and gift.",tier:"featured"},
-  {name:"Canvas",price:"from $69.99",asset:"canvas",image:"/assets/product-canvas-v16.webp",badge:"GALLERY PICK",pitch:"A bold upgrade for artwork that deserves more presence.",tier:"featured"},
+  {name:"Poster",price:"from $29.99",asset:"poster",image:"https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-lifestyle-poster-rm059.png?v=1791422885&width=1000",badge:"MOST POPULAR",pitch:"The easiest way to turn your Recast into wall art.",tier:"featured"},
+  {name:"Hoodie",price:"from $59.99",asset:"hoodie",image:"https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-lifestyle-hoodie-rm059.png?v=1791422966&width=1000",badge:"FAN FAVORITE",pitch:"Wear your Recast as a premium statement piece.",tier:"featured"},
+  {name:"Framed Poster",price:"from $44.99",asset:"framed-poster",image:"https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-lifestyle-frame-rm059.png?v=1791422870&width=1000",badge:"DESK + WALL",pitch:"8×10 desk size or larger framed wall art — ready to display and gift.",tier:"featured"},
+  {name:"Canvas",price:"from $69.99",asset:"canvas",image:"https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-lifestyle-canvas-rm059.png?v=1791422862&width=1000",badge:"GALLERY PICK",pitch:"A bold upgrade for artwork that deserves more presence.",tier:"featured"},
 
-  {name:"T-Shirt",price:"from $34.99",asset:"tshirt",image:"/assets/product-tshirt-v16.webp",badge:"WEAR IT",pitch:"An easy everyday way to show off your Recast.",tier:"secondary"},
-  {name:"Blanket",price:"from $74.99",asset:"blanket",image:"/assets/product-blanket-v16.webp",badge:"COZY PICK",pitch:"Big, soft, personal — especially good for pets and gifts.",tier:"secondary"},
-  {name:"Mug",price:"from $24.99",asset:"mug",image:"/assets/product-mug-v16.webp",badge:"GIFTABLE",pitch:"A personalized gift that gets used every day.",tier:"secondary"},
-  {name:"Tumbler",price:"$49.99",asset:"tumbler",image:"/assets/product-tumbler-v16.webp",badge:"TAKE IT WITH YOU",pitch:"Your Recast on a 20 oz everyday tumbler.",tier:"secondary"},
+  {name:"T-Shirt",price:"from $34.99",asset:"tshirt",image:"https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-lifestyle-tshirt-rm059.png?v=1791422934&width=1000",badge:"WEAR IT",pitch:"An easy everyday way to show off your Recast.",tier:"secondary"},
+  {name:"Blanket",price:"from $74.99",asset:"blanket",image:"https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-lifestyle-blanket-rm059.png?v=1791422915&width=1000",badge:"COZY PICK",pitch:"Big, soft, personal — especially good for pets and gifts.",tier:"secondary"},
+  {name:"Mug",price:"from $24.99",asset:"mug",image:"https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-lifestyle-mug-rm059.png?v=1791422827&width=1000",badge:"GIFTABLE",pitch:"A personalized gift that gets used every day.",tier:"secondary"},
+  {name:"Tumbler",price:"$49.99",asset:"tumbler",image:"https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-lifestyle-tumbler-rm059.png?v=1791422982&width=1000",badge:"TAKE IT WITH YOU",pitch:"Your Recast on a 20 oz everyday tumbler.",tier:"secondary"},
   {"name": "Sticker", "price": "$9.99", "image": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-sticker-printful.jpg?v=1791338074", "badge": "NEW", "pitch": "A glossy 3×3 kiss-cut sticker featuring your Recast.", "tier": "secondary"},
-  {"name": "Phone Case", "price": "$29.99", "image": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-phone-case-printful.jpg?v=1791338079", "badge": "NEW", "pitch": "Your Recast on a protective case. Choose your exact phone model.", "tier": "secondary"},
-  {"name": "Pillow", "price": "from $29.99", "image": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-pillow-printful.jpg?v=1791338085", "badge": "NEW", "pitch": "A personal touch for your favorite cozy spot.", "tier": "secondary"},
-  {"name": "Hardcover Journal", "price": "$24.99", "image": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-journal-printful.png?v=1791338090", "badge": "NEW", "pitch": "Keep your ideas in a journal featuring your Recast.", "tier": "secondary"},
-  {"name": "Puzzle", "price": "from $34.99", "image": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-puzzle-printful.jpg?v=1791338101", "badge": "NEW", "pitch": "Piece together your Recast in 252 or 520 pieces.", "tier": "secondary"},
-  {"name": "Tote Bag", "price": "$39.99", "image": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-tote-printful.jpg?v=1791338095", "badge": "NEW", "pitch": "Carry your Recast on a roomy everyday tote.", "tier": "secondary"},
-  {name:"Magnet 3-Pack",price:"$24.99",asset:"magnet",image:"/assets/product-magnet-v16.webp",badge:"ADD-ON",pitch:"Three matching magnets for a smaller, easy add-on.",tier:"secondary"},
-  {name:"Coaster 4-Pack",price:"$39.99",asset:"coaster",image:"/assets/product-coaster-v16.webp",badge:"ADD-ON",pitch:"Four matching cork-back coasters featuring your artwork.",tier:"secondary"},
+  {"name": "Phone Case", "price": "$29.99", "image": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-lifestyle-case-rm059.png?v=1791422989&width=1000", "badge": "NEW", "pitch": "Your Recast on a protective case. Choose your exact phone model.", "tier": "secondary"},
+  {"name": "Pillow", "price": "from $29.99", "image": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-lifestyle-pillow-rm059.png?v=1791422893&width=1000", "badge": "NEW", "pitch": "A personal touch for your favorite cozy spot.", "tier": "secondary"},
+  {"name": "Hardcover Journal", "price": "$24.99", "image": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-lifestyle-journal-rm059.png?v=1791422974&width=1000", "badge": "NEW", "pitch": "Keep your ideas in a journal featuring your Recast.", "tier": "secondary"},
+  {"name": "Puzzle", "price": "from $34.99", "image": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-lifestyle-puzzle-rm059.png?v=1791422922&width=1000", "badge": "NEW", "pitch": "Piece together your Recast in 252 or 520 pieces.", "tier": "secondary"},
+  {"name": "Tote Bag", "price": "$39.99", "image": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-lifestyle-tote-rm059.png?v=1791422941&width=1000", "badge": "NEW", "pitch": "Carry your Recast on a roomy everyday tote.", "tier": "secondary"},
+  {name:"Magnet 3-Pack",price:"$24.99",asset:"magnet",image:"https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-lifestyle-magnet-rm059.png?v=1791422997&width=1000",badge:"ADD-ON",pitch:"Three matching magnets for a smaller, easy add-on.",tier:"secondary"},
+  {name:"Coaster 4-Pack",price:"$39.99",asset:"coaster",image:"https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-lifestyle-coaster-rm059.png?v=1791423005&width=1000",badge:"ADD-ON",pitch:"Four matching cork-back coasters featuring your artwork.",tier:"secondary"},
 
   {name:"HD Digital Recast",price:"$4.99",asset:"digital",image:"/assets/product-digital-v16.webp",badge:"DIGITAL ONLY",pitch:"Just want the clean artwork? Keep the high-resolution file without ordering merch.",tier:"digital"},
   {name:"Recast Pack",price:"$9.99",asset:"pack",image:"/assets/product-pack-v16.webp",badge:"DIGITAL PACK",pitch:"The complete digital set with high-resolution art plus useful crops and formats.",tier:"digital"}
@@ -130,7 +130,7 @@ const EXAMPLE_SKUS={"Tote Bag":"RECAST-TOTE-BLACK","Puzzle":"RECAST-PUZZLE-252",
 function merchCard(item,{featured=false}={}){
   const classes=['product',featured?'featured-product':'secondary-product'].filter(Boolean).join(' ');
   return `<div class="${classes}" ${EXAMPLE_SKUS[item.name]?`data-example-sku="${EXAMPLE_SKUS[item.name]}"`:""}>
-    <div class="product-art"><img src="${item.image || `/assets/product-${item.asset}-v09.jpg`}" alt="Style illustration for ${item.name}" loading="lazy" decoding="async">${EXAMPLE_SKUS[item.name]?'<span class="example-design-label">Style illustration · not a size proof</span>':""}</div>
+    <div class="product-art"><img src="${item.image || `/assets/product-${item.asset}-v09.jpg`}" alt="Style illustration for ${item.name}" loading="lazy" decoding="async">${EXAMPLE_SKUS[item.name]?'<span class="example-design-label">Lifestyle example · preview your selected size</span>':""}</div>
     <div class="product-body">
       <span class="product-badge">${item.badge}</span>
       <strong>${item.name}</strong>

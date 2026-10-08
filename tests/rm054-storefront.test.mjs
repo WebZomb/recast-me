@@ -5,8 +5,8 @@ const checkout=readFileSync(new URL('../public/checkout.js',import.meta.url),'ut
 const html=readFileSync(new URL('../public/index.html',import.meta.url),'utf8');
 test('RM055 supersedes the withdrawn global raw-art example and restores product-specific illustrations',()=>{
  assert.doesNotMatch(checkout,/STORE_EXAMPLE_ART|world-comic-v18/);
- for(const asset of ['poster','hoodie','tshirt','canvas','mug','blanket'])assert.ok(checkout.includes(`product-${asset}-v16.webp`));
- assert.match(checkout,/Style illustration · not a size proof/);
+ for(const asset of ['poster','hoodie','tshirt','canvas','mug','blanket'])assert.ok(checkout.includes(`recast-lifestyle-${asset}-rm059.png`));
+ assert.match(checkout,/Lifestyle example · preview your selected size/);
 });
 test('withdrawn roadmap does not duplicate active products or expose unverified buy buttons',()=>{
  const start=checkout.indexOf('function roadmapMarkup'),end=checkout.indexOf('let catalogExamplesPromise',start),block=checkout.slice(start,end);

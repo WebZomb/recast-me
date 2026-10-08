@@ -2,24 +2,24 @@ const grid = document.querySelector("#product-grid");
 const requestLabel = document.querySelector("#request-id");
 
 const PRODUCT_ART = {
-  "Custom Recast Poster":"/assets/product-poster-v16.webp",
-  "Custom Recast Hoodie":"/assets/product-hoodie-v16.webp",
-  "Custom Recast Framed Poster":"/assets/product-desk-frame-v16.webp",
-  "Custom Recast Canvas":"/assets/product-canvas-v16.webp",
-  "Custom Recast T-Shirt":"/assets/product-tshirt-v16.webp",
-  "Custom Recast Blanket":"/assets/product-blanket-v16.webp",
-  "Custom Recast Mug":"/assets/product-mug-v16.webp",
-  "Custom Recast Tumbler":"/assets/product-tumbler-v16.webp",
-  "Custom Recast Magnet 3-Pack":"/assets/product-magnet-v16.webp",
-  "Custom Recast Coaster 4-Pack":"/assets/product-coaster-v16.webp",
+  "Custom Recast Poster":"https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-lifestyle-poster-rm059.png?v=1791422885&width=1000",
+  "Custom Recast Hoodie":"https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-lifestyle-hoodie-rm059.png?v=1791422966&width=1000",
+  "Custom Recast Framed Poster":"https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-lifestyle-frame-rm059.png?v=1791422870&width=1000",
+  "Custom Recast Canvas":"https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-lifestyle-canvas-rm059.png?v=1791422862&width=1000",
+  "Custom Recast T-Shirt":"https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-lifestyle-tshirt-rm059.png?v=1791422934&width=1000",
+  "Custom Recast Blanket":"https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-lifestyle-blanket-rm059.png?v=1791422915&width=1000",
+  "Custom Recast Mug":"https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-lifestyle-mug-rm059.png?v=1791422827&width=1000",
+  "Custom Recast Tumbler":"https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-lifestyle-tumbler-rm059.png?v=1791422982&width=1000",
+  "Custom Recast Magnet 3-Pack":"https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-lifestyle-magnet-rm059.png?v=1791422997&width=1000",
+  "Custom Recast Coaster 4-Pack":"https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-lifestyle-coaster-rm059.png?v=1791423005&width=1000",
   "HD Digital Recast":"/assets/product-digital-v16.webp",
   "Recast Pack":"/assets/product-pack-v16.webp",
   "Custom Recast Sticker":"https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-sticker-printful.jpg?v=1791338074",
-  "Custom Recast Phone Case":"https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-phone-case-printful.jpg?v=1791338079",
-  "Custom Recast Pillow":"https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-pillow-printful.jpg?v=1791338085",
-  "Custom Recast Hardcover Journal":"https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-journal-printful.png?v=1791338090",
-  "Custom Recast Puzzle":"https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-puzzle-printful.jpg?v=1791338101",
-  "Custom Recast Tote Bag":"https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-tote-printful.jpg?v=1791338095"
+  "Custom Recast Phone Case":"https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-lifestyle-case-rm059.png?v=1791422989&width=1000",
+  "Custom Recast Pillow":"https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-lifestyle-pillow-rm059.png?v=1791422893&width=1000",
+  "Custom Recast Hardcover Journal":"https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-lifestyle-journal-rm059.png?v=1791422974&width=1000",
+  "Custom Recast Puzzle":"https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-lifestyle-puzzle-rm059.png?v=1791422922&width=1000",
+  "Custom Recast Tote Bag":"https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-lifestyle-tote-rm059.png?v=1791422941&width=1000"
 };
 
 const PRODUCT_META = {
@@ -108,7 +108,7 @@ async function applyCatalogExample(card,sku,{staticCard=false}={}){
     if(caption)caption.textContent=`${row.viewType==='Room'?'Room example':'Example'} · ${row.variantLabel} · supplier mockup`;
     card.dataset.exampleSku=sku;card.dataset.exampleVerified='true';
   }else{
-    if(caption)caption.textContent='Style illustration · not a size proof';
+    if(caption)caption.textContent='Lifestyle example · preview your selected size';
     delete card.dataset.exampleVerified;
   }
 }
@@ -200,18 +200,44 @@ function requireFreshPreview(card){
   if(!buy||card?.dataset?.digital==="true"||card?.dataset?.active!=="true")return;
   buy.disabled=true;buy.hidden=true;buy.textContent="Continue to final review";
 }
+function setPreviewLoading(card,busy){
+  const state=stateFor(card);
+  clearInterval(state.loadingTimer);state.loadingTimer=null;
+  const art=card.querySelector?.('.product-art');
+  if(!art)return;
+  art.setAttribute('aria-busy',String(busy));
+  let panel=art.querySelector('.product-preview-loading');
+  if(!busy){if(panel)panel.hidden=true;return;}
+  if(!panel){
+    panel=document.createElement('div');panel.className='product-preview-loading';
+    panel.innerHTML='<span class="product-preview-spinner" aria-hidden="true"></span><strong role="status">Preparing your product preview</strong><p>We’re placing your artwork on your selected product. Please keep this page open.</p><small data-preview-elapsed aria-hidden="true">Just started…</small>';
+    art.append(panel);
+  }
+  panel.hidden=false;
+  panel.querySelector('p').textContent='We’re placing your artwork on your selected product. Please keep this page open.';
+  const started=Date.now(),elapsed=panel.querySelector('[data-preview-elapsed]');
+  elapsed.textContent='Just started…';
+  state.loadingTimer=setInterval(()=>{
+    if(card.isConnected===false){setPreviewLoading(card,false);return;}
+    const seconds=Math.floor((Date.now()-started)/1000);
+    elapsed.textContent=`${seconds}s elapsed`;
+    if(seconds>=30)panel.querySelector('p').textContent='Still preparing your preview. Some products take longer. There’s no need to click again.';
+  },1000);
+  art.scrollIntoView?.({block:'center',behavior:'smooth'});
+}
 function resetProductPreview(card,{invalidate=true}={}){
   if(!card)return;
   const summary=card?.querySelector?.('[data-design-summary]');
   if(summary){const preset=presetFor(card),design=productDesign(card);summary.textContent=['layout','fill','x','scale','spacing','finish'].every(k=>design[k]===preset[k])?'Recommended layout applied':'Custom layout';}
   const state=stateFor(card);if(invalidate){state.run++;state.busy=false;}
+  if(invalidate)setPreviewLoading(card,false);
   const title=card.dataset.productTitle,img=card.querySelector?.(".product-art img");
   if(img&&title){img.src=PRODUCT_ART[title];img.alt="Example design on "+title;}
   card.classList?.remove("real-mockup-ready");
   card.querySelector?.(".mockup-views")?.remove?.();
   delete card.dataset.mockupSignature;delete card.dataset.mockupId;productReviewState.delete(card);
   const example=card.querySelector?.(".product-art img");if(example){example.src=PRODUCT_ART[card.dataset.productTitle];example.alt="Style illustration; preview your selected size";}
-  const caption=card.querySelector?.(".example-design-label");if(caption)caption.textContent="Style illustration · not a size proof";
+  const caption=card.querySelector?.(".example-design-label");if(caption)caption.textContent="Lifestyle example · preview your selected size";
   const error=card.querySelector?.(".mockup-error");if(error){error.hidden=true;error.textContent="";}
   const preview=card.querySelector?.(".product-preview-action");
   if(preview){preview.disabled=state.busy;preview.textContent=state.busy?"Waiting for current preview…":"Preview my product";}
@@ -302,11 +328,13 @@ function openFinalReview({req,sku,card,button}){
 
 async function generateRealMockup({req,sku,card,button}){
   if(!sku||!card||!button)return;
+  if(stateFor(card).busy)return;
   const state=stateFor(card),run=++state.run,design=productDesign(card),signature=JSON.stringify({sku,design});
   state.busy=true;
   resetProductPreview(card,{invalidate:false});
   const errorCopy=card.querySelector(".mockup-error");
   button.disabled=true;button.textContent="Preparing real product preview…";
+  setPreviewLoading(card,true);
   const current=()=>stateFor(card).run===run&&designSignature(card,sku)===signature;
   const safeWait=async ms=>{await sleep(ms);return current()};
   try{
@@ -403,6 +431,8 @@ async function generateRealMockup({req,sku,card,button}){
     const message=error?.message||String(error);button.title=message;
     if(errorCopy){errorCopy.textContent=message;errorCopy.hidden=false;}
     requireFreshPreview(card);
+  }finally{
+    if(stateFor(card).run===run)setPreviewLoading(card,false);
   }
 }
 
@@ -459,7 +489,7 @@ async function loadCheckout(){
     const realPreview=digital?"":`<button class="product-preview-action" data-product="${index}" type="button">Preview my product</button><p class="mockup-error" role="alert" hidden></p>`;
 
     return `<div class="${classes}" data-product-index="${index}" data-product-title="${product.title}" data-active="${active}" data-digital="${digital}">
-      <div class="product-art"><img src="${PRODUCT_ART[product.title]}" alt="Style illustration for ${product.title}; generate the selected-size preview before buying" loading="lazy"><span class="example-design-label">Style illustration · not a size proof</span></div>
+      <div class="product-art"><img src="${PRODUCT_ART[product.title]}" alt="Style illustration for ${product.title}; generate the selected-size preview before buying" loading="lazy"><span class="example-design-label">Lifestyle example · preview your selected size</span></div>
       <div class="product-body">
         <span class="product-badge">${meta.badge}</span>
         <strong>${product.title.replace(/^Custom Recast /,"")}</strong>

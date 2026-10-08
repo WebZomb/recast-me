@@ -4,7 +4,7 @@ import {readFileSync} from 'node:fs';
 test('published-example audit keeps all eighteen curated products, closes browsers and has finite waits',()=>{
  const script=readFileSync(new URL('../scripts/rm055-published-example-audit.cjs',import.meta.url),'utf8');
  assert.ok(script.includes('record.examples.length,18'));
- assert.ok(script.includes("assert.match(row.caption,/Style illustration/)"));
+ assert.ok(script.includes("assert.match(row.caption,/Lifestyle example/)"));
  assert.ok(script.includes('finally{await browser.close();report()}'));
  assert.ok(script.includes('setDefaultTimeout(12000)'));
  assert.ok(script.includes('timeout:20000'));

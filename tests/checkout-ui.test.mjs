@@ -12,7 +12,7 @@ function setup(fetcher){
     querySelector:s=>s==='.product-art img'?img:s==='.example-design-label'?caption:s==='.mockup-error'?error:s==='.product-preview-action'?preview:s==='.recast-buy'?button:s==='[data-design-layout]'?layout:s==='[data-design-x]'?x:s==='[data-design-scale]'?scale:s==='[data-design-spacing]'?spacing:s==='[data-design-fill]'?fill:null};
   const grid={querySelectorAll:()=>[],innerHTML:'marketing',children:[],classList:{add(){},remove(){}},replaceChildren(){this.innerHTML='';this.children=[]},append(...items){this.children.push(...items)}};
   const document={querySelector:s=>s==='#product-grid'?grid:s==='#request-id'?{textContent:''}:s.startsWith('.recast-variant')?{value:'RECAST-MUG-15OZ'}:s.startsWith('[data-product-index')?card:null,querySelectorAll:s=>s==='.recast-buy'?[button]:[],addEventListener:(name,fn)=>listeners[name]=fn,createElement:()=>({children:[],setAttribute(){},addEventListener(name,fn){this[name]=fn},append(...x){this.children.push(...x)}})};
-  const context={document,window:{},localStorage:{getItem:()=>JSON.stringify({requestId:'old',accessToken:'old-token'})},location:{origin:'https://recast.test'},URL,console:{warn(){}},setTimeout,fetch:async(...args)=>{calls.push(args);return fetcher(...args)}};
+  const context={document,window:{},localStorage:{getItem:()=>JSON.stringify({requestId:'old',accessToken:'old-token'})},location:{origin:'https://recast.test'},URL,console:{warn(){}},setTimeout,setInterval,clearInterval,fetch:async(...args)=>{calls.push(args);return fetcher(...args)}};
   vm.runInNewContext(source,context);
   return {context,grid,button,error,card,calls,select:async(id='new')=>{context.window.__recastActiveRequest={requestId:id,accessToken:`${id}-token`};await listeners['recast-artwork-selected']()}};
 }
@@ -45,8 +45,8 @@ test('live homepage uses the correct Recast step image and original mug merchand
   assert.doesNotMatch(html,/<\/div>\/div>/);
   assert.match(html,/recast-node-art"><img src="\/assets\/world-game-v18\.webp"/);
   assert.match(html,/product-node-art"><img src="https:\/\/cdn\.shopify\.com\/[^"]*recast-neon-mug-cutout-v48\.png/);
-  assert.ok(app.includes('image:"/assets/product-mug-v16.webp"'));
-  assert.ok(checkout.includes('"Custom Recast Mug":"/assets/product-mug-v16.webp"'));
+  assert.ok(app.includes('recast-lifestyle-mug-rm059.png'));
+  assert.ok(checkout.includes('recast-lifestyle-mug-rm059.png'));
 });
 
 test('homepage keeps the entire store catalog visible',()=>{
@@ -101,7 +101,7 @@ test('stale product button cannot buy previous artwork after selection changed',
 test('mockup failure is visible in an inline alert on touch devices',async()=>{
  const app=setup(async()=>({ok:false,json:async()=>({error:'Printful is not connected.'})}));
  const alert={hidden:true,textContent:''};const button={textContent:'Preview',disabled:false};
- app.context.mockupArgs={req:{requestId:'saved',accessToken:'test'},sku:'RECAST-MUG-11OZ',card:{dataset:{productTitle:'Custom Recast Mug',active:'false',digital:'false'},classList:{add(){},remove(){}},querySelector:()=>alert},button};
+ app.context.mockupArgs={req:{requestId:'saved',accessToken:'test'},sku:'RECAST-MUG-11OZ',card:{dataset:{productTitle:'Custom Recast Mug',active:'false',digital:'false'},classList:{add(){},remove(){}},querySelector:s=>s==='.product-art'?null:alert},button};
  await vm.runInNewContext('generateRealMockup(mockupArgs)',app.context);
  assert.equal(alert.hidden,false);assert.match(alert.textContent,/couldn't build this product preview/i);assert.doesNotMatch(alert.textContent,/Worker:|Stage:/);assert.equal(button.disabled,false);
 });

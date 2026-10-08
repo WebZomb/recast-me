@@ -20,7 +20,7 @@ const watchdog=setTimeout(()=>{console.error('Read-only example audit exceeded 1
    await page.waitForFunction(()=>document.querySelectorAll('#product-grid .product').length===18,{},{timeout:20000});
    record.examples=await page.locator('#product-grid .product').evaluateAll(rows=>rows.map(row=>({sku:row.dataset.exampleSku,image:row.querySelector('img').src,caption:row.querySelector('.example-design-label')?.textContent||'',verified:row.dataset.exampleVerified||false})));
    assert.equal(record.examples.length,18);assert.equal(new Set(record.examples.map(x=>x.image)).size,18);assert.equal(record.errors.length,0);
-   for(const row of record.examples.filter(x=>x.sku)){assert.equal(row.verified,false);assert.match(row.caption,/Style illustration/);}
+   for(const row of record.examples.filter(x=>x.sku)){assert.equal(row.verified,false);assert.match(row.caption,/Lifestyle example/);}
    for(const [sku,label] of [['RECAST-HOODIE-S','hoodie'],['RECAST-FRAME-12X16','frame']]){
     const card=page.locator('#product-grid .product[data-example-sku="'+sku+'"]');
     await card.scrollIntoViewIfNeeded({timeout:8000});
