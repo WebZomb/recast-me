@@ -1,3 +1,4 @@
+import {orderIssueId,recordOrderIssue,resolveOrderIssue,loadOrderIssue,listOrderIssues,orderRecoveryAdvice} from './order-issues.js';
 import {loadContextualSpec} from './contextual-mockups.js';
 import {moderationReadiness,checkStoredArtwork} from './content-safety.js';
 import {loadV2MockupSpec,v2MockupPayload,v2CreatedTask,v2PolledTask} from './printful-v2-mockup.js';
@@ -432,14 +433,19 @@ export async function verifyPaidOrder(env,job,{forProduction=false}={}){
   return order;
 }
 
-export async function reconcileShopifyOrder(env,order){
-  if(order.lineItems?.pageInfo?.hasNextPage)throw fault('order_review','An order has more than 250 lines and needs manual review.',503);
-  let created=0,seen=0,walletId=null;
+export async function reconcileShopifyOrder(env,order,{allowAutomation=true,holdNewJobs=false}={}){
+  if(order.lineItems?.pageInfo?.hasNextPage){await recordOrderIssue(env,order,null,'order_review','This order has more than 250 lines. Review the complete order in Shopify before fulfillment.');return {created:0,seen:0,issues:1};}
+  let created=0,seen=0,issues=0,walletId=null;
   const eligible=orderEligible(order,env);
   for(const line of order.lineItems?.nodes||[]){
-    const requestId=artworkFromLine(line);if(!requestId||!line.sku||!FULFILLMENT[line.sku])continue;
-    if(!/^RC-[A-Z0-9-]{8,60}$/.test(requestId))continue;
-    const meta=await requestMeta(env,requestId);if(!meta)continue;
+    const requestId=artworkFromLine(line);
+    let issue=null;
+    if(!line.sku||!FULFILLMENT[line.sku])issue=['product_mapping_missing','No supported fulfillment mapping exists for this purchased SKU. Restore and verify the exact supplier mapping before rechecking.'];
+    else if(!requestId)issue=['artwork_reference_missing','The purchased item has no Artwork ID. Recover the original approved artwork reference from the purchase; do not guess or substitute an image.'];
+    else if(!/^RC-[A-Z0-9-]{8,60}$/.test(requestId))issue=['artwork_reference_invalid','The purchased Artwork ID is invalid. Verify the original purchase reference before rechecking.'];
+    const meta=!issue?await requestMeta(env,requestId):null;
+    if(!issue&&!meta)issue=['artwork_missing','The purchased artwork record is unavailable. Recover the original saved artwork before rechecking; do not regenerate a replacement.'];
+    if(issue){if(eligible){await recordOrderIssue(env,order,line,...issue);issues++;}continue;}
     walletId ||= meta.creditWalletId||null;seen++;
     const legacy=sanitizeId(`${order.name}-${requestId}-${line.sku}`);
     const id=await env.ARTWORK.head(jobKey(legacy))?legacy:sanitizeId(`${order.id.split('/').pop()}-${line.id.split('/').pop()}`);
@@ -453,22 +459,25 @@ export async function reconcileShopifyOrder(env,order){
     const checkoutApproved=Boolean(!map.digital&&layoutComplete&&preapproval);
     if(eligible){
       const job={id,lineId:line.id,orderId:order.id,orderName:order.name,orderCreatedAt:order.createdAt,financialStatus:order.displayFinancialStatus,requestId,sku:line.sku,quantity:line.quantity,product:map.product,digital:Boolean(map.digital),productDesignRequired:!map.digital,productDesign,productProofHash,productMockupId,approvedPreviewToken,preapprovedCheckout:checkoutApproved,preapprovalToken:checkoutApproved?preapproval.token:null,recipient:recipientFromOrder(order),status:map.digital?'digital_fulfillment_pending':checkoutApproved?'design_confirmed':layoutComplete?'awaiting_customer_approval':'product_layout_review',createdAt:now(),updatedAt:now(),printfulVariantId:map.printfulVariantId||null,printfulProductId:map.printfulProductId||null};
+      const priorIssue=await loadOrderIssue(env,await orderIssueId(order.id,line.id));
+      if(holdNewJobs||priorIssue?.status==='open'){job.status='on_hold';job.holdReason='Recovered by order audit. Inspect the original purchase and approved design before using fulfillment controls.';}
       const put=await env.ARTWORK.put(jobKey(id),JSON.stringify(job),{onlyIf:new Headers({'If-None-Match':'*'})});if(put)created++;
       if(checkoutApproved&&put){
         await putJson(env,`commerce/designs/${id}.json`,{revision:1,selectedRequestId:requestId,approvedAt:preapproval.approvedAt,preapprovedAt:preapproval.approvedAt,snapshotKey:preapproval.snapshotKey,sourceHash:preapproval.sourceHash,printToken:randomHex(24),proof:{images:preapproval.images||[],position:preapproval.position,design:preapproval.design,sku:line.sku,quantity:line.quantity,sourceHash:preapproval.sourceHash}});
       }
       await putJson(env,`commerce/request-jobs/${requestId}/${id}.json`,{id});
-      if(checkoutApproved&&String(env.AUTO_PRINT_PREAPPROVED_ENABLED||"false")==="true"){
+      if(allowAutomation&&checkoutApproved&&String(env.AUTO_PRINT_PREAPPROVED_ENABLED||"false")==="true"){
         const currentJob=put?job:await loadJob(env,id);
         await autoProcessPreapprovedJob(env,currentJob).catch(()=>null);
       }
-      if(!checkoutApproved&&!map.digital&&Array.isArray(order.tags)&&order.tags.includes("RECAST_SEND_PRODUCTION")){
+      if(allowAutomation&&!checkoutApproved&&!map.digital&&Array.isArray(order.tags)&&order.tags.includes("RECAST_SEND_PRODUCTION")){
         const currentJob=put?job:await loadJob(env,id);
         await processOwnerReleasedLegacyJob(env,currentJob).catch(()=>null);
       }
     }else if(await env.ARTWORK.head(jobKey(id))){
       await change(env,jobKey(id),null,j=>({...j,financialStatus:order.displayFinancialStatus,paymentRevokedAt:now(),status:j.sentToProductionAt?j.status:'payment_hold'}));
     }
+    await resolveOrderIssue(env,order.id,line.id);
     await change(env,requestKey(requestId,'request.json'),null,m=>{
       if(!m)return undefined;
       m.paid=eligible;m.financialStatus=order.displayFinancialStatus;m.orderName=order.name;m.updatedAt=now();
@@ -478,26 +487,38 @@ export async function reconcileShopifyOrder(env,order){
     });
   }
   await reconcileOrderCredits(env,order,walletId);
-  return {created,seen};
+  await resolveOrderIssue(env,order.id);
+  return {created,seen,issues};
 }
 
-export async function syncPaidOrders(env){
+export async function syncPaidOrders(env,{audit=false}={}){
   if(!env.ARTWORK)return{ok:false,error:'R2 missing'};
   // Updated orders include refunds and cancellations, not only paid orders.
   // Bounded pages persist their cursor; the next sync resumes instead of losing orders.
-  const key='system/order-sync-cursor.json',old=await readJson(env,key);
+  const key=audit?'system/order-audit-cursor.json':'system/order-sync-cursor.json',old=await readJson(env,key);
   const until=old?.cursor?old.until:now();
-  const since=old?.since||new Date(Date.now()-30*86400000).toISOString();
-  let cursor=old?.cursor||null,created=0,seen=0,more=false;
+  const since=(audit&&!old?.cursor?null:old?.since)||new Date(Date.now()-30*86400000).toISOString();
+  let cursor=old?.cursor||null,created=0,seen=0,issues=0,more=false;
   for(let page=0;page<4;page++){
     const data=await shopifyGraphQL(env,SYNC_ORDERS_QUERY,{after:cursor,query:`updated_at:>='${since}' updated_at:<='${until}'`});
-    for(const order of data.orders?.nodes||[]){const result=await reconcileShopifyOrder(env,order);created+=result.created;seen+=result.seen}
+    if(!data.orders?.nodes||!data.orders?.pageInfo)throw new Error('Shopify returned an incomplete order page; the sync cursor was not advanced.');
+    for(const order of data.orders.nodes){
+      try{const result=await reconcileShopifyOrder(env,order,{allowAutomation:!audit,holdNewJobs:audit});created+=result.created;seen+=result.seen;issues+=result.issues||0;}
+      catch(error){await recordOrderIssue(env,order,null,'order_sync_failed','Order reconciliation failed. Recheck this order after restoring the connection or configuration.');issues++;}
+    }
     more=Boolean(data.orders?.pageInfo?.hasNextPage);cursor=data.orders?.pageInfo?.endCursor||null;
     if(!more)break;
   }
   await putJson(env,key,more?{since,until,cursor}:{since:new Date(Date.parse(until)-60000).toISOString(),cursor:null});
-  await putJson(env,'system/order-sync.json',{lastRun:now(),created,seen,more});
-  return{ok:true,created,seen,more};
+  await putJson(env,audit?'system/order-audit.json':'system/order-sync.json',{lastRun:now(),created,seen,issues,more});
+  return{ok:true,created,seen,issues,more};
+}
+
+export async function auditRecentOrdersIfDue(env){
+  const state=await readJson(env,'system/order-audit.json');
+  const cursor=await readJson(env,'system/order-audit-cursor.json');
+  if(!cursor?.cursor&&state?.lastRun&&Date.now()-Date.parse(state.lastRun)<86400000)return {ok:true,skipped:true};
+  return syncPaidOrders(env,{audit:true});
 }
 
 async function prepareOrderProof(request,env,job,meta){
@@ -652,7 +673,7 @@ export async function clientDiagnostic(request,env){
 }
 
 export async function adminStatus(request,env){
-  try{requireAdmin(request,env);const jobs=await listJson(env,"jobs/",100);const trends=await listJson(env,"trends/",100);const socials=await listJson(env,"social/x/",100);const genErrors=await listJson(env,"diagnostics/generation/",100);const clientErrors=await listJson(env,"diagnostics/client/",100);const attempts=await listJson(env,"diagnostics/attempts/",100);return json({ok:true,version:"1.0.2",jobs:{total:jobs.length,awaiting:jobs.filter(x=>/hold|review|failed|awaiting_customer|product_layout/.test(String(x.status))||x.shopifyFulfillmentError||x.lastPrintfulSyncError||x.shopifyTagError).length},trends:{total:trends.length,review:trends.filter(x=>x.status==="review").length},generationErrors:{total:genErrors.length+clientErrors.length,recent:[...genErrors,...clientErrors].filter(x=>Date.now()-Date.parse(x.createdAt||0)<86400000).length,attempts:attempts.length},xRequests:socials.length,contentModeration:moderationReadiness(env),connections:{shopify:Boolean(env.SHOPIFY_CLIENT_ID&&env.SHOPIFY_CLIENT_SECRET),printful:Boolean(env.PRINTFUL_API_TOKEN),images:Boolean(env.IMAGES),x:Boolean(env.X_USER_ACCESS_TOKEN&&env.X_USER_ID),admin:true},automation:{orderSync:String(env.ORDER_SYNC_ENABLED||"false")==="true",xBot:String(env.X_BOT_ENABLED||"false")==="true",trendScanner:String(env.TREND_SCANNER_ENABLED||"false")==="true",retentionCleanup:String(env.RETENTION_CLEANUP_ENABLED||"false")==="true"}})}catch(error){return json({ok:false,error:error.message},error.status||500)}
+  try{requireAdmin(request,env);const jobs=await listJson(env,"jobs/",100);const issuePage=await listOrderIssues(env);const trends=await listJson(env,"trends/",100);const socials=await listJson(env,"social/x/",100);const genErrors=await listJson(env,"diagnostics/generation/",100);const clientErrors=await listJson(env,"diagnostics/client/",100);const attempts=await listJson(env,"diagnostics/attempts/",100);return json({ok:true,version:"1.0.2",orderIssues:{openInSnapshot:issuePage.issues.filter(x=>x.status==='open').length,more:Boolean(issuePage.cursor)},jobs:{total:jobs.length,awaiting:jobs.filter(x=>/hold|review|failed|awaiting_customer|product_layout/.test(String(x.status))||x.shopifyFulfillmentError||x.lastPrintfulSyncError||x.shopifyTagError).length},trends:{total:trends.length,review:trends.filter(x=>x.status==="review").length},generationErrors:{total:genErrors.length+clientErrors.length,recent:[...genErrors,...clientErrors].filter(x=>Date.now()-Date.parse(x.createdAt||0)<86400000).length,attempts:attempts.length},xRequests:socials.length,contentModeration:moderationReadiness(env),connections:{shopify:Boolean(env.SHOPIFY_CLIENT_ID&&env.SHOPIFY_CLIENT_SECRET),printful:Boolean(env.PRINTFUL_API_TOKEN),images:Boolean(env.IMAGES),x:Boolean(env.X_USER_ACCESS_TOKEN&&env.X_USER_ID),admin:true},automation:{orderSync:String(env.ORDER_SYNC_ENABLED||"false")==="true",xBot:String(env.X_BOT_ENABLED||"false")==="true",trendScanner:String(env.TREND_SCANNER_ENABLED||"false")==="true",retentionCleanup:String(env.RETENTION_CLEANUP_ENABLED||"false")==="true"}})}catch(error){return json({ok:false,error:error.message},error.status||500)}
 }
 export async function adminJobs(request,env){
  try{
@@ -662,7 +683,7 @@ export async function adminJobs(request,env){
   const page=await env.ARTWORK.list({prefix:'jobs/',limit:100,...(cursor?{cursor}:{})});
   const jobs=(await Promise.all(page.objects.map(o=>readJson(env,o.key)))).filter(Boolean);
   jobs.sort((a,b)=>String(b.createdAt).localeCompare(String(a.createdAt)));
-  return json({ok:true,jobs,cursor:page.truncated?page.cursor:null,partial:Boolean(page.truncated)});
+  return json({ok:true,jobs:jobs.map(j=>({...j,recoveryAdvice:orderRecoveryAdvice(j)})),cursor:page.truncated?page.cursor:null,partial:Boolean(page.truncated)});
  }catch(error){return json({ok:false,error:error.message},error.status||500)}
 }
 export async function adminGenerationErrors(request,env){try{requireAdmin(request,env);const server=await listJson(env,"diagnostics/generation/",100);const client=await listJson(env,"diagnostics/client/",100);const attempts=await listJson(env,"diagnostics/attempts/",100);const errors=[...server,...client,...attempts.filter(x=>x.status==="failed")];errors.sort((a,b)=>String(b.createdAt||b.failedAt||b.updatedAt).localeCompare(String(a.createdAt||a.failedAt||a.updatedAt)));return json({ok:true,errors:errors.slice(0,75)})}catch(error){return json({ok:false,error:error.message},error.status||500)}}
@@ -869,7 +890,7 @@ async function recoverLegacyApprovedDesign(env,job){
 }
 
 async function processOwnerReleasedLegacyJob(env,job){
-  if(job.digital||job.sentToProductionAt)return job;
+  if(job.digital||job.sentToProductionAt||job.status==='on_hold'||job.paymentRevokedAt)return job;
   let design=await designFor(env,job);
   if(!design?.approvedAt){
     design=await recoverLegacyApprovedDesign(env,job);
@@ -1145,7 +1166,7 @@ export async function scheduledWorkflow(controller,env,ctx){
   if(String(env.ORDER_SYNC_ENABLED||"false")==="true")tasks.push((async()=>{
     // Read provider truth first so externally confirmed orders cannot be reconfirmed.
     const results={};
-    for(const [name,run] of [['printful',syncPrintfulJobs],['orders',syncPaidOrders],['legacy',retryLegacyOwnerReleaseCandidates]]){
+    for(const [name,run] of [['printful',syncPrintfulJobs],['orders',syncPaidOrders],['audit',auditRecentOrdersIfDue],['legacy',retryLegacyOwnerReleaseCandidates]]){
       try{results[name]=await run(env);}catch(error){results[name]={ok:false,error:error.message||String(error)};}
     }
     await putJson(env,'system/commerce-sync.json',{lastRun:now(),...results});
@@ -1209,6 +1230,23 @@ export async function routeWorkflow(request,env,ctx){
   if(p==='/api/admin/render-readiness'&&request.method==='GET'){
     try{requireAdmin(request,env);return json({ok:true,render:await renderHealth(env),social:socialReadiness(env),quotaAction:'Cloudflare error 3036 requires Workers Paid billing. A code update cannot increase the shared free allowance.'});}
     catch(error){return json({ok:false,error:error.message},error.status||500);}
+  }
+  if(p==='/api/admin/order-issues'&&request.method==='GET'){
+    try{requireAdmin(request,env);const cursor=url.searchParams.get('cursor');if(cursor&&cursor.length>2048)throw fault('cursor','Invalid page cursor',400);
+      return json({ok:true,...await listOrderIssues(env,cursor),sync:await readJson(env,'system/commerce-sync.json'),audit:await readJson(env,'system/order-audit.json'),orderSync:await readJson(env,'system/order-sync.json'),enabled:String(env.ORDER_SYNC_ENABLED||'false')==='true'});
+    }catch(error){return json({ok:false,error:error.message},error.status||500);}
+  }
+  if(p==='/api/admin/audit-orders'&&request.method==='POST'){
+    try{requireAdmin(request,env);sameOrigin(request);return json(await syncPaidOrders(env,{audit:true}));}
+    catch(error){return json({ok:false,error:error.message},error.status||500);}
+  }
+  m=p.match(/^\/api\/admin\/order-issue\/([a-f0-9]{64})\/recheck$/);
+  if(m&&request.method==='POST'){
+    try{requireAdmin(request,env);sameOrigin(request);const issue=await loadOrderIssue(env,m[1]);if(!issue)throw fault('missing_issue','Order issue not found.',404);
+      const data=await shopifyGraphQL(env,VERIFY_ORDER_QUERY,{id:issue.orderId});if(!data.order||data.order.id!==issue.orderId)throw fault('missing_order','The original Shopify order could not be verified.',409);
+      const result=await reconcileShopifyOrder(env,data.order,{allowAutomation:false,holdNewJobs:true});
+      return json({ok:true,...result,issue:await loadOrderIssue(env,m[1]),productionSubmitted:false});
+    }catch(error){return json({ok:false,error:error.message},error.status||500);}
   }
   if(p==="/api/admin/jobs"&&request.method==="GET")return adminJobs(request,env);
   if(p==="/api/admin/product-candidates"&&request.method==="GET")return adminProductCandidates(request,env);

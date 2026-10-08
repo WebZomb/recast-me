@@ -116,3 +116,5 @@ Latest: [RM062 — launch recheck and pet viewpoint preservation](ASTRA-SESSION-
 Latest: [RM063 — interrupted sticker print-file recovery](ASTRA-SESSION-RM-063.md). Controlled owner recovery creates a held draft; paid production remains a separate inspection/release.
 
 Latest: [RM064 — automatic fulfillment reconciliation](ASTRA-SESSION-RM-064.md). External provider confirmations, independent scheduled phases, bounded pagination, accurate hold/partial/tracking UI. Live receipts recorded in session; no new billable order.
+
+Latest: [RM065 — durable skipped-order exceptions and safe owner recovery](ASTRA-SESSION-RM-065.md). Dashboard alerts, exact-order recheck and held 30-day backfill; 349 local tests and Worker dry-run passed. External alert delivery and live launch acceptance remain open.

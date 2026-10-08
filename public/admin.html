@@ -53,6 +53,7 @@
 
       <section class="tab-panel active" data-panel="orders">
         <div class="panel-heading"><div><div class="eyebrow">FULFILLMENT</div><h2>Orders & production</h2><p>New paid orders can auto-print after the customer confirms the exact design before checkout. Legacy orders and holds may need review. Syncing orders may advance already-authorized jobs.</p></div><button id="sync-orders">Sync paid Shopify orders</button></div>
+        <div class="glass op-card"><h3>Order alerts &amp; recovery</h3><p id="order-sync-health" role="status">Checking automatic sync…</p><p id="order-audit-health" class="muted"></p><p class="muted">Alerts are shown here while the dashboard is open. Email and phone notifications are not configured by this feature.</p><button id="audit-orders" type="button">Check last 30 days for missing orders</button><p class="muted">Checks purchase records without submitting production. Newly recovered jobs stay on hold for inspection.</p><div id="order-issues-list" class="card-list"></div><button id="more-order-issues" type="button" hidden>Load more issue records</button></div>
         <p id="jobs-page-status" class="muted"></p><div id="jobs-list" class="card-list"></div><button type="button" id="more-jobs" hidden>Load more orders</button>
       </section>
 
@@ -131,6 +132,6 @@
       <div id="toast" class="toast hidden"></div>
     </section>
   </main>
-  <script src="/admin.js?v=2641" type="module"></script>
+  <script src="/admin.js?v=2650" type="module"></script>
 </body>
 </html>
