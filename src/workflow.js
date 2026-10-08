@@ -325,7 +325,7 @@ async function shopifyGraphQL(env,query,variables={}){
   const data=await response.json().catch(()=>({}));if(!response.ok||data.errors?.length)throw new Error(data.errors?.map(e=>e.message).join("; ")||`Shopify HTTP ${response.status}`);return data.data;
 }
 
-async function addShopifyOrderTags(env,orderId,tags=[]){
+async function addShopifyOrderTags(env,orderId,tags=[],{throwOnError=false}={}){
   const clean=[...new Set(tags.map(x=>String(x||"").trim()).filter(Boolean))];
   if(!orderId||!clean.length)return null;
   try{
@@ -334,6 +334,7 @@ async function addShopifyOrderTags(env,orderId,tags=[]){
     if(errors.length)throw new Error(errors.map(e=>e.message).join("; "));
     return true;
   }catch(error){
+    if(throwOnError)throw error;
     console.warn("Shopify order tag update failed",orderId,clean,error?.message||error);
     return false;
   }
@@ -563,7 +564,7 @@ export async function syncPrintfulJobs(env){
       }
       // Save provider truth even when Shopify is unavailable.
       await saveJob(env,job);updated++;
-      try{if(await addShopifyOrderTags(env,job.orderId,visibleTags)===false)throw new Error("Shopify status tags could not be updated; will retry on the next status sync.");delete job.shopifyTagError;}
+      try{await addShopifyOrderTags(env,job.orderId,visibleTags,{throwOnError:true});delete job.shopifyTagError;}
       catch(error){job.shopifyTagError=error.message||String(error);}
       await saveJob(env,job);
       const meta=await requestMeta(env,job.requestId);if(meta){meta.fulfillment=job.status;meta.updatedAt=now();await putJson(env,requestKey(job.requestId,"request.json"),meta)}

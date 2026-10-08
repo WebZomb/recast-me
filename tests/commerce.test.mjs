@@ -750,7 +750,7 @@ test('supplier acceptance reconciles a held draft without another confirmation, 
   assert.equal((await syncPrintfulJobs(o.env)).updated,1);
   const saved=await read(o.env,`jobs/${o.job.id}.json`);
   assert.equal(saved.status,'in_printful_production');assert.ok(saved.sentToProductionAt);assert.ok(saved.productionObservedAt);
-  assert.equal(saved.holdReason,undefined);assert.match(saved.shopifyTagError,/could not be updated/);assert.equal(confirms,0);
+  assert.equal(saved.holdReason,undefined);assert.match(saved.shopifyTagError,/unavailable/);assert.equal(confirms,0);
   const timestamp=saved.sentToProductionAt;await syncPrintfulJobs(o.env);
   assert.equal((await read(o.env,`jobs/${o.job.id}.json`)).sentToProductionAt,timestamp);assert.equal(confirms,0);
  }finally{globalThis.fetch=original}
