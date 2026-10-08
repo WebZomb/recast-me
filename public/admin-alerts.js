@@ -6,7 +6,7 @@ export function initOwnerAlerts(api,notify){
  async function load(force=false){
   const d=await api('/api/admin/alert-settings');
   for(const c of ['email','sms']){
-   document.querySelector('#alert-'+c+'-ready').textContent=d.readiness[c]?'Delivery service configured. Send a test to verify receipt.':'Delivery service not connected. You can save your destination now.';
+   document.querySelector('#alert-'+c+'-ready').textContent=(d.setup?.[c]||(d.readiness[c]?'Delivery service configured. Send a test to verify receipt.':'Delivery service not connected. You can save your destination now.'))+(!d.values[c==='email'?'emailEnabled':'smsEnabled']?' Enable this channel and save to use its test button.':'');
    document.querySelector('#alert-'+c+'-last').textContent=message(d.last?.[c]);
    document.querySelector('#test-alert-'+c).disabled=!d.readiness[c]||!d.values[c==='email'?'emailEnabled':'smsEnabled'];
   }
@@ -21,7 +21,7 @@ export function initOwnerAlerts(api,notify){
   if(dirty){notify('Save your changes before sending a test.');return;}
   if(!confirm(`Send one test ${c==='email'?'email':'text message'} to your saved destination? Provider charges may apply.`))return;
   const button=document.querySelector('#test-alert-'+c);button.disabled=true;
-  try{const d=await api('/api/admin/alert-test',{method:'POST',body:{channel:c,confirm:'SEND_TEST_ALERT'}});status.textContent=message(d.result);await load();}catch(e){status.textContent=e.message}finally{button.disabled=false}
+  try{const d=await api('/api/admin/alert-test',{method:'POST',body:{channel:c,confirm:'SEND_TEST_ALERT'}});status.textContent=message(d.result);await load();}catch(e){status.textContent=e.message}finally{await load().catch(()=>{});}
  };
  document.querySelector('#reload-alert-settings').onclick=()=>{if(dirty&&!confirm('Discard unsaved alert changes?'))return;load(true).catch(e=>notify(e.message))};
  return {load,clear(){current=null;dirty=false;form.reset();status.textContent='';for(const c of ['email','sms'])document.querySelector('#alert-'+c+'-last').textContent='';}};

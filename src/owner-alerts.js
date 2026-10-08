@@ -1,5 +1,6 @@
 // Owner destinations stay in private R2. Provider credentials are deployment secrets.
 import {change,read,hash,fault,sameOrigin,privateJson} from './commerce-store.js';
+import {gmailReady,sendGmailAlert} from './gmail-alerts.js';
 const SETTINGS='system/owner-alert-settings.json';
 const defaults={email:'',phone:'',emailEnabled:false,smsEnabled:false,orderErrors:true,systemErrors:true,newOrders:false,dailyLimit:10,consent:false};
 export function validateAlertSettings(raw){
@@ -15,7 +16,12 @@ export function validateAlertSettings(raw){
   if((values.emailEnabled||values.smsEnabled)&&!values.consent)throw fault('alert_consent','Confirm that these destinations belong to you or that you have permission.',400);
   return values;
 }
-export function alertReadiness(env){return {email:Boolean(env.ALERT_RESEND_API_KEY&&env.ALERT_EMAIL_FROM),sms:Boolean(/^AC[a-f0-9]{32}$/i.test(env.ALERT_TWILIO_ACCOUNT_SID||'')&&env.ALERT_TWILIO_AUTH_TOKEN&&/^\+[1-9]\d{7,14}$/.test(env.ALERT_SMS_FROM||''))}}
+export function emailProvider(env){return env.ALERT_EMAIL_PROVIDER==='gmail'?'gmail':'resend'}
+export function alertSetup(env){
+ const ready=alertReadiness(env);
+ return {email:ready.email?'Sender configured. Send a test and confirm receipt.':emailProvider(env)==='gmail'?'Gmail needs its sender address and app password in Cloudflare before you can send a test.':'Email sender is not connected. Configure Gmail or Resend in Cloudflare first.',sms:ready.sms?'Text sender configured. Send a test and confirm receipt.':'Texts need a connected Twilio sender before you can send a test.'};
+}
+export function alertReadiness(env){return {email:emailProvider(env)==='gmail'?gmailReady(env):Boolean(env.ALERT_RESEND_API_KEY&&env.ALERT_EMAIL_FROM),sms:Boolean(/^AC[a-f0-9]{32}$/i.test(env.ALERT_TWILIO_ACCOUNT_SID||'')&&env.ALERT_TWILIO_AUTH_TOKEN&&/^\+[1-9]\d{7,14}$/.test(env.ALERT_SMS_FROM||''))}}
 export async function alertSettings(env){const old=await read(env,SETTINGS);return old?{...old,values:validateAlertSettings(old.values)}:{revision:0,values:{...defaults},updatedAt:null}}
 async function page(env,prefix,cursor){const p=await env.ARTWORK.list({prefix,limit:50,...(cursor?{cursor}:{})});return {rows:(await Promise.all(p.objects.map(o=>read(env,o.key)))).filter(Boolean),cursor:p.truncated?p.cursor:null}}
 async function collect(env,values){
@@ -52,10 +58,12 @@ export async function deliverOwnerAlert(env,state,channel,eventIds,{test=false}=
   // No customer details, artwork IDs, private tokens or raw exception text leave Recast.
   const text=test?'Recast Me test alert. Open your Control Center to manage alerts.':`Recast Me: ${eventIds.length} alert(s) need review. Open your Control Center. Do not reorder affected purchases.`;
   let response;
-  if(channel==='email')response=await fetch('https://api.resend.com/emails',{method:'POST',headers:{Authorization:`Bearer ${env.ALERT_RESEND_API_KEY}`,'Content-Type':'application/json','Idempotency-Key':identity},body:JSON.stringify({from:env.ALERT_EMAIL_FROM,to:[destination],subject:test?'Recast Me test alert':'Recast Me needs your attention',text}),signal:AbortSignal.timeout(15000)});
+  if(channel==='email'&&emailProvider(env)==='gmail'){
+   result={...result,...await sendGmailAlert(env,{to:destination,subject:test?'Recast Me test alert':'Recast Me needs your attention',text,identity})};
+  }else if(channel==='email')response=await fetch('https://api.resend.com/emails',{method:'POST',headers:{Authorization:`Bearer ${env.ALERT_RESEND_API_KEY}`,'Content-Type':'application/json','Idempotency-Key':identity},body:JSON.stringify({from:env.ALERT_EMAIL_FROM,to:[destination],subject:test?'Recast Me test alert':'Recast Me needs your attention',text}),signal:AbortSignal.timeout(15000)});
   else response=await fetch(`https://api.twilio.com/2010-04-01/Accounts/${env.ALERT_TWILIO_ACCOUNT_SID}/Messages.json`,{method:'POST',headers:{Authorization:'Basic '+btoa(env.ALERT_TWILIO_ACCOUNT_SID+':'+env.ALERT_TWILIO_AUTH_TOKEN),'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({From:env.ALERT_SMS_FROM,To:destination,Body:text}),signal:AbortSignal.timeout(15000)});
-  if(!response.ok){result={...result,status:'rejected',httpStatus:response.status};}
-  else{const data=await response.json();result={...result,status:channel==='sms'&&['failed','undelivered'].includes(data.status)?'rejected':data.id||data.sid?'accepted':'unknown',providerId:data.id||data.sid||null};}
+  if(response&&!response.ok){result={...result,status:'rejected',httpStatus:response.status};}
+  else if(response){const data=await response.json();result={...result,status:channel==='sms'&&['failed','undelivered'].includes(data.status)?'rejected':data.id||data.sid?'accepted':'unknown',providerId:data.id||data.sid||null};}
  }catch(error){result={...result,status:error.code?.startsWith('alert_')?'blocked':'unknown',reason:error.code?.startsWith('alert_')?error.code:'connection_result_unknown'};}
  await env.ARTWORK.put(key,JSON.stringify(result));await env.ARTWORK.put(`system/alert-last-${channel}.json`,JSON.stringify(result));
  return result;
@@ -81,7 +89,7 @@ export async function ownerAlertRoute(request,env,requireAdmin){
  const p=new URL(request.url).pathname;if(!['/api/admin/alert-settings','/api/admin/alert-test'].includes(p))return null;
  try{
   requireAdmin(request,env);
-  if(p.endsWith('alert-settings')&&request.method==='GET')return privateJson({ok:true,...await alertSettings(env),readiness:alertReadiness(env),last:{email:await read(env,'system/alert-last-email.json'),sms:await read(env,'system/alert-last-sms.json')},dispatch:await read(env,'system/owner-alert-dispatch.json')});
+  if(p.endsWith('alert-settings')&&request.method==='GET')return privateJson({ok:true,...await alertSettings(env),readiness:alertReadiness(env),setup:alertSetup(env),emailProvider:emailProvider(env),last:{email:await read(env,'system/alert-last-email.json'),sms:await read(env,'system/alert-last-sms.json')},dispatch:await read(env,'system/owner-alert-dispatch.json')});
   if(request.method!=='POST')return privateJson({ok:false,error:'Method not allowed'},405);
   sameOrigin(request);const raw=await request.text();if(raw.length>4096)throw fault('alert_settings','Request too large.',413);let body;try{body=JSON.parse(raw)}catch{throw fault('alert_settings','Invalid settings JSON.',400)}
   if(p.endsWith('alert-test')){

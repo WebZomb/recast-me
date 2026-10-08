@@ -34,6 +34,7 @@
     "AI_DAILY_CALL_LIMIT": "70",
     "AI_DAILY_BUDGET_CENTS": "500",
     "AI_CALL_RESERVE_CENTS": "7",
+    "ALERT_EMAIL_PROVIDER": "gmail",
     "ORDER_SYNC_ENABLED": "true",
     "AUTO_PRINT_PREAPPROVED_ENABLED": "true",
     "X_BOT_ENABLED": "false",
