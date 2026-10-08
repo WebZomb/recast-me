@@ -11,3 +11,6 @@ Remaining external setup: moderation key/activation and live policy tests; Turns
 Rollback the RM069 source/UI module together; leaves fulfillment, image models, alert settings and state untouched. Deployment receipt follows.
 
 Deployment observed: application174d4f9f156fa25356c5c5759853abeac6b6211f, Cloudflare Workers113433694445 SUCCESS. Local equivalent e6ea497. GitHub mocked-tests-and-bundle skipped; local374 tests are the evidence. Public browser audit113433491663 still running at receipt. No private setup or activation verified by agent.
+
+## Mobile stale dashboard follow-up
+Owner screenshots at13:00ET show the old render-readiness block with no setup cards. Inspection found admin.html still referencing /admin.js?v=2660 from RM066, and the email module likewise retained its earlier version. Bumped entry script to rm0691 and email module to rm068 so reload requests new URLs. This addresses stale client assets; screenshot alone does not prove the underlying cache cause. No authentication/session reset needed. Syntax and whitespace checks used for this small asset-reference edit; no redundant full test suite.

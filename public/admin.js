@@ -1,4 +1,4 @@
-import {initOwnerAlerts} from './admin-alerts.js?v=2660';
+import {initOwnerAlerts} from './admin-alerts.js?v=rm068';
 import {initOwnerSettings} from './admin-settings.js?v=250';
 import {attachPrintfulDiagnostic} from './printful-diagnostics.js?v=rm0505';
 const deploymentLabel=document.querySelector('#deployment-identity');
