@@ -28,3 +28,28 @@
  .render-time-hint strong{font-size:13px}
 }
 @media(prefers-reduced-motion:reduce){#loading.render-wait-active .generation-track span{animation:none!important;transform:translateX(65%)!important}#loading.render-wait-active .loader-orbit{animation:none!important}}
+
+/* The original global .loading span spinner selector affects every span, not
+   just a spinner. Neutralize it for the clock and clock icon explicitly:
+   neither the time nor its glyph may rotate, grow a ring, or inherit borders. */
+#loading .render-elapsed > .render-clock-icon,
+#loading .render-elapsed > #generation-clock{
+  width:auto!important;height:auto!important;min-width:0!important;min-height:0!important;
+  animation:none!important;transform:none!important;
+  border:0!important;border-radius:0!important;
+  background:transparent!important;box-shadow:none!important;
+  display:inline-block!important;position:static!important;
+  line-height:1.2!important;
+}
+#loading .render-elapsed > .render-clock-icon{color:#70e2f6;flex:none;}
+#loading .render-elapsed > #generation-clock{
+  color:#ddf5ff;white-space:nowrap;font-variant-numeric:tabular-nums;
+  font-size:14px;font-weight:800;letter-spacing:.01em;
+}
+#loading.render-wait-active .generation-track > span{
+  height:100%!important;border:0!important;border-radius:99px!important;
+  display:block!important;
+}
+@media(max-width:530px){
+ #loading .render-elapsed > #generation-clock{font-size:13px!important}
+}

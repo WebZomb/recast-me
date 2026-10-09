@@ -21,16 +21,23 @@ test('Public beta switches only High Quality to verified fal and preserves budge
 });
 test('Customer render timing and consent are accurate and clearly presented',()=>{
  const html=read('public/index.html');
- assert.match(html,/id="render-time-hint"/);
- assert.match(html,/High-quality previews generally take about 30–40 seconds/);
+ assert.doesNotMatch(html,/id="render-time-hint"/);
+ assert.doesNotMatch(html,/id="generation-wait-note"/);
+ assert.doesNotMatch(html,/30–40 seconds/); // The estimate lives only in the active waiting screen.
  assert.match(html,/id="generation-clock"/);
  assert.match(html,/fal\.ai or Cloudflare Workers AI/);
- assert.match(html,/render-wait-v1\.css\?v=1/);
- assert.match(html,/app\.js\?v=268/);
- assert.match(html,/moving bar shows activity, not percent complete/);
+ assert.match(html,/render-wait-v1\.css\?v=2/);
+ assert.match(html,/app\.js\?v=269/);
+ assert.match(html,/aria-label="An animation indicating the render is still in progress, not a percentage"/);
+ assert.match(html,/id="generation-elapsed" class="render-elapsed" role="timer"/);
  const css=read('public/render-wait-v1.css');
  assert.match(css,/@keyframes recastRenderSweep/);
  assert.match(css,/prefers-reduced-motion:reduce/);
+ assert.match(css,/#loading \.render-elapsed > #generation-clock/);
+ assert.match(css,/#loading \.render-elapsed > \.render-clock-icon/);
+ assert.match(css,/animation:none!important;transform:none!important/);
+ assert.match(css,/border:0!important;border-radius:0!important/);
+ assert.match(css,/#loading\.render-wait-active \.generation-track > span/);
 });
 test('Render overlay stages are timed, honest, visible, and stop cleanly',()=>{
  const source=read('public/app.js');
@@ -39,6 +46,8 @@ test('Render overlay stages are timed, honest, visible, and stop cleanly',()=>{
  assert.match(source,/startGenerationUI\(selectedQuality\(\),'preparing'\)/);
  assert.match(source,/advanceGenerationUI\('rendering'\)/);
  assert.match(source,/advanceGenerationUI\('finishing'\)/);
+ assert.equal((source.match(/30–40 seconds/g)||[]).length,2,'Estimate is only rendered in a single phase-specific detail field');
+ assert.doesNotMatch(source,/render-time-hint-title|generation-wait-note/);
  assert.doesNotMatch(source,/Promise\.race\(/);
  let now=0,intervalCreated=0,intervalCleared=0;
  const nodes={};
@@ -76,7 +85,7 @@ test('Render overlay stages are timed, honest, visible, and stop cleanly',()=>{
  now+=23000;api.tickGenerationUI();
  assert.match(node('#generation-detail').textContent,/Standard preview/);
  assert.doesNotMatch(node('#generation-detail').textContent,/30–40 seconds/);
- assert.match(node('#generation-wait-note').textContent,/Standard render time varies/);
+ assert.doesNotMatch(node('#generation-detail').textContent,/30–40 seconds/);
  api.stopGenerationUI();
  assert.equal(intervalCreated,2);
  assert.ok(intervalCleared>=1);
