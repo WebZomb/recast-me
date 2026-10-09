@@ -64,7 +64,10 @@ const policy={highDaily:3,standardDaily:5,purchaseBonus:3,websiteCalls:70,social
    // HQ providers are genuinely unavailable, but Standard's separate Cloudflare
    // model is not known to be down: explicit warning and explicit customer opt-in.
    Object.assign(state,{hqOutage:true,quickDown:false,remaining:3,free:3,bonus:0});
-   await page.evaluate(()=>window.dispatchEvent(new Event('focus')));await page.waitForTimeout(750);
+   // Focus refresh is deliberately rate-limited for 15 seconds in production.
+   // Reload guarantees a fresh mocked /api/render-readiness response and avoids
+   // asserting on a stale in-browser snapshot immediately after the fixture changes.
+   await page.reload({waitUntil:'networkidle'});
    assert.equal(await page.locator('#quality-fallback').isVisible(),true);
    assert.match(await page.locator('#quality-fallback-reason').textContent(),/different Cloudflare model/);
    await page.locator('#choose-standard').click();
@@ -72,7 +75,7 @@ const policy={highDaily:3,standardDaily:5,purchaseBonus:3,websiteCalls:70,social
    assert.equal(await page.locator('#generate-button').isEnabled(),true);
    // When any approved HQ host recovers, restore HQ by default without a Standard render.
    Object.assign(state,{hqOutage:false});
-   await page.evaluate(()=>window.dispatchEvent(new Event('focus')));await page.waitForTimeout(750);
+   await page.reload({waitUntil:'networkidle'});
    assert.equal(await page.locator('input[name="qualityMode"][value="high"]').isChecked(),true);
    assert.equal(await page.locator('#quality-fallback').isHidden(),true);
    Object.assign(state,{hqOutage:false,quickDown:false,remaining:3,free:3,bonus:3});
