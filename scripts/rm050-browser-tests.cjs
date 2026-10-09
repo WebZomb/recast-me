@@ -104,7 +104,17 @@ const policy={highDaily:3,standardDaily:5,purchaseBonus:3,websiteCalls:70,social
    assert.equal(state.saved.at(-1).confirm,'INCREASE_LIMITS');
    await page.screenshot({path:path.join(out,`${engine.name()}-${width}-admin.png`)});
    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1),false,'admin overflow');assert.deepEqual(errors,[]);
-   report.checks.push({engine:engine.name(),width,hqOnly:true,outageHidesStandard:true,exhaustionWarning:true,bonusReturnsToHQ:true,collapsedEditsAndReset:true,adminSettingsSave:true,higherBudgetConfirmed:true,pageErrors:errors});
+   await page.goto('http://recast.test/model-lab.html',{waitUntil:'networkidle'});
+   await page.locator('#use-demo-dog').click();
+   assert.equal(await page.locator('#host').inputValue(),'fal');
+   assert.equal(await page.locator('#engine').inputValue(),'dev');
+   assert.equal(await page.locator('#subject').inputValue(),'pet');
+   const demo=await page.locator('#reference').evaluate(input=>({count:input.files?.length,name:input.files?.[0]?.name,size:input.files?.[0]?.size}));
+   assert.equal(demo.count,1);assert.match(demo.name,/jack-russell/i);assert.ok(demo.size>1000);
+   assert.match(await page.locator('#status').textContent(),/Demo dog loaded/);
+   assert.deepEqual(errors,[]);
+
+   report.checks.push({engine:engine.name(),width,hqOnly:true,outageHidesStandard:true,exhaustionWarning:true,bonusReturnsToHQ:true,collapsedEditsAndReset:true,adminSettingsSave:true,higherBudgetConfirmed:true,modelLabDemoDog:true,pageErrors:errors});
   }catch(e){report.failures.push({engine:engine.name(),width,error:e.stack,pageErrors:errors});await page.screenshot({path:path.join(out,`${engine.name()}-${width}-failure.png`)}).catch(()=>{});}
   await browser.close();
  }
