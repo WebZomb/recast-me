@@ -282,8 +282,6 @@ function updateQualityUI(){
   if(copy)copy.textContent=mode==='quick'
     ? 'Standard Preview · detail and likeness may be lower than High Quality'
     : 'High-Quality Preview · best likeness, prompt accuracy, and detail';
-  const timing=document.querySelector('#render-time-hint-title');
-  if(timing)timing.textContent=mode==='quick'?'Standard rendering times vary with demand.':'High-quality previews generally take about 30–40 seconds.';
 }
 document.querySelectorAll('input[name="qualityMode"]').forEach(input=>input.addEventListener('change',()=>{updateQualityUI();applyReadiness();refreshRenderAvailability();}));
 
@@ -291,7 +289,6 @@ function tickGenerationUI(){
   const status=document.querySelector('#generation-status');
   const detail=document.querySelector('#generation-detail');
   const clock=document.querySelector('#generation-clock');
-  const waitNote=document.querySelector('#generation-wait-note');
   const seconds=Math.max(0,Math.floor((Date.now()-generationStartedAt)/1000));
   const label=generationMode==='quick'?'Standard':'High Quality';
   let title,description;
@@ -303,10 +300,10 @@ function tickGenerationUI(){
     description='Loading your protected preview and preparing it for the product gallery.';
   }else if(seconds<18){
     title='Creating your '+label+' preview…';
-    description=generationMode==='quick'?'Your request is underway. Rendering times vary with demand. Please keep this page open.':'Your request is underway. High-quality previews usually take about 30–40 seconds. Please keep this page open.';
+    description=generationMode==='quick'?'Standard rendering times vary with demand. Please keep this page open.':'High-quality previews usually take about 30–40 seconds. Please keep this page open.';
   }else if(seconds<45){
     title='Making your Recast…';
-    description=generationMode==='quick'?'Your Standard preview is still being created. Its timing varies with demand.':'Still waiting for your artwork. Around 30–40 seconds is typical for High Quality; times can vary.';
+    description=generationMode==='quick'?'Your Standard preview is still being created. Please keep this page open.':'High-quality previews usually take about 30–40 seconds. Please keep this page open.';
   }else if(seconds<90){
     title='Still working on your Recast…';
     description='This is taking longer than usual, but the render may still finish. We will not automatically start a second paid render.';
@@ -317,8 +314,6 @@ function tickGenerationUI(){
   if(status&&status.textContent!==title)status.textContent=title;
   if(detail&&detail.textContent!==description)detail.textContent=description;
   if(clock)clock.textContent=Math.floor(seconds/60)+':'+String(seconds%60).padStart(2,'0')+' elapsed';
-  const note=generationMode==='quick'?'Standard render time varies. Please keep this page open. This animation shows activity, not percent complete.':'Typical High Quality time: 30–40 seconds. Please keep this page open. The moving bar shows activity, not percent complete.';
-  if(waitNote&&waitNote.textContent!==note)waitNote.textContent=note;
 }
 function startGenerationUI(mode=selectedQuality(),phase='preparing'){
   clearInterval(generationTimer);

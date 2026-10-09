@@ -44,6 +44,23 @@ const policy={highDaily:3,standardDaily:5,purchaseBonus:3,websiteCalls:70,social
   const page=await context.newPage();page.on('pageerror',e=>errors.push(e.message));page.setDefaultTimeout(12000);
   try{
    await page.goto('http://recast.test/',{waitUntil:'networkidle'});
+   assert.equal(await page.locator('#render-time-hint').count(),0,'Only the waiting screen contains the time estimate');
+   const timerStyles=await page.evaluate(()=>{
+    const loader=document.querySelector('#loading');
+    loader.classList.remove('hidden');loader.classList.add('render-wait-active');
+    const info=['#generation-clock','.render-clock-icon'].map(selector=>{
+      const el=loader.querySelector(selector),computed=getComputedStyle(el),box=el.getBoundingClientRect();
+      return {animation:computed.animationName,transform:computed.transform,border:computed.borderTopWidth,width:box.width,height:box.height};
+    });
+    loader.classList.remove('render-wait-active');loader.classList.add('hidden');
+    return info;
+   });
+   for(const part of timerStyles){
+     assert.equal(part.animation,'none','Elapsed time and clock icon must never spin');
+     assert.equal(part.transform,'none','Elapsed timer must be stationary');
+     assert.equal(part.border,'0px','Elapsed timer must not inherit spinner rings');
+     assert.ok(part.width>0&&part.height<35,'Timer typography must be a readable single line');
+   }
    assert.equal(await page.locator('#quality-fallback').isHidden(),true);
    assert.equal((await page.locator('#render-credits').textContent()).includes('Standard:'),false);
    await page.locator('.product-design-controls').waitFor({state:'attached'});assert.equal(await page.locator('.product-design-controls').count(),1);
