@@ -26,7 +26,7 @@ test('Customer render timing and consent are accurate and clearly presented',()=
  assert.match(html,/id="generation-clock"/);
  assert.match(html,/fal\.ai or Cloudflare Workers AI/);
  assert.match(html,/render-wait-v1\.css\?v=1/);
- assert.match(html,/app\.js\?v=267/);
+ assert.match(html,/app\.js\?v=268/);
  assert.match(html,/moving bar shows activity, not percent complete/);
  const css=read('public/render-wait-v1.css');
  assert.match(css,/@keyframes recastRenderSweep/);
@@ -72,6 +72,12 @@ test('Render overlay stages are timed, honest, visible, and stop cleanly',()=>{
  api.stopGenerationUI(true);
  assert.equal(node('#loading').classList.contains('render-wait-active'),false);
  assert.equal(node('#generation-progress').style.width,'100%');
- assert.equal(intervalCreated,1);
+ api.startGenerationUI('quick','rendering');
+ now+=23000;api.tickGenerationUI();
+ assert.match(node('#generation-detail').textContent,/Standard preview/);
+ assert.doesNotMatch(node('#generation-detail').textContent,/30–40 seconds/);
+ assert.match(node('#generation-wait-note').textContent,/Standard render time varies/);
+ api.stopGenerationUI();
+ assert.equal(intervalCreated,2);
  assert.ok(intervalCleared>=1);
 });
