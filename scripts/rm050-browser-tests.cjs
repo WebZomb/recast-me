@@ -8,7 +8,7 @@ const policy={highDaily:3,standardDaily:5,purchaseBonus:3,websiteCalls:70,social
  const report={type:'Mocked APIs and image placeholders; not a live provider or visual-art acceptance test',checks:[],failures:[]};
  for(const [engine,width] of [[webkit,393],[chromium,320],[chromium,1440]]){
   const browser=await engine.launch(),context=await browser.newContext({viewport:{width,height:900},reducedMotion:'reduce'});
-  const state={remaining:3,free:3,bonus:0,standardRemaining:5,busy:false,settings:{...policy},revision:0,saved:[]},errors=[];
+  const state={remaining:3,free:3,bonus:0,standardRemaining:5,busy:false,hqOutage:false,quickDown:false,settings:{...policy},revision:0,saved:[]},errors=[];
   await context.route('**/*',async route=>{
    const request=route.request(),url=new URL(request.url()),p=url.pathname;
    if(url.hostname!=='recast.test'){
@@ -25,7 +25,7 @@ const policy={highDaily:3,standardDaily:5,purchaseBonus:3,websiteCalls:70,social
    if(p==='/api/render-credits')d={...d,enabled:true,initialized:true,freeAllowance:3,standardAllowance:5,purchaseBonus:3,resetAt:'2026-10-07T20:00:00Z',standardResetAt:'2026-10-07T20:00:00Z',...Object.fromEntries(['remaining','free','bonus','standardRemaining'].map(k=>[k,state[k]]))};
    else if(p==='/api/request/RC-TEST0001-ABCDEF/preview')d={ok:true,watermarked:true,image:'data:image/webp;base64,'+fs.readFileSync(path.join(root,'assets/world-game-v18.webp')).toString('base64')};
    else if(p==='/api/public-config')d.turnstileSiteKey=null;
-   else if(p==='/api/render-readiness'){d=structuredClone(ready);d.modes.high.ready=!state.busy;}
+   else if(p==='/api/render-readiness'){d=structuredClone(ready);d.modes.high.ready=!state.busy&&!state.hqOutage;d.modes.high.reason=state.hqOutage?'unavailable':null;d.modes.quick.ready=!state.quickDown;d.standardOutageAvailable=state.hqOutage&&!state.quickDown;}
    else if(p==='/api/model-status')d={ok:true,modes:{high:{label:'High Quality',model:'dev'},quick:{label:'Standard',model:'klein9'}},availability:ready};
    else if(p==='/api/checkout-options')d.products=[{title:'Custom Recast Mug',status:'ACTIVE',variants:[{sku:'RECAST-MUG-11OZ',variantTitle:'11 oz',price:'24.99'}]}];
    else if(p==='/api/admin/status')Object.assign(d,{jobs:{total:1,awaiting:1},trends:{review:0},xRequests:0,connections:{printful:true,admin:true},generationErrors:{total:0,recent:0},automation:{}});
@@ -61,12 +61,46 @@ const policy={highDaily:3,standardDaily:5,purchaseBonus:3,websiteCalls:70,social
    await page.screenshot({path:path.join(out,`${engine.name()}-${width}-customer.png`)});
    Object.assign(state,{remaining:3,bonus:3});await page.evaluate(()=>window.dispatchEvent(new Event('focus')));await page.waitForTimeout(500);
    assert.equal(await page.locator('input[name="qualityMode"][value="high"]').isChecked(),true);assert.equal(await page.locator('#quality-fallback').isHidden(),true);
+   // HQ providers are genuinely unavailable, but Standard's separate Cloudflare
+   // model is not known to be down: explicit warning and explicit customer opt-in.
+   Object.assign(state,{hqOutage:true,quickDown:false,remaining:3,free:3,bonus:0});
+   // A quality change refreshes the readiness API immediately, without
+   // resetting the three-step creation wizard (a reload hides this panel).
+   await page.locator('input[name="qualityMode"][value="high"]').dispatchEvent('change');
+   await page.waitForFunction(()=>!document.querySelector('#quality-fallback').hidden);
+   assert.equal(await page.locator('#quality-fallback').isVisible(),true);
+   assert.match(await page.locator('#quality-fallback-reason').textContent(),/different Cloudflare model/);
+   await page.locator('#choose-standard').click();
+   assert.equal(await page.locator('input[name="qualityMode"][value="quick"]').isChecked(),true);
+   assert.equal(await page.locator('#generate-button').isEnabled(),true);
+   // When any approved HQ host recovers, restore HQ by default without a Standard render.
+   Object.assign(state,{hqOutage:false});
+   await page.locator('input[name="qualityMode"][value="quick"]').dispatchEvent('change');
+   await page.waitForFunction(()=>document.querySelector('input[name="qualityMode"][value="high"]').checked&&document.querySelector('#quality-fallback').hidden);
+   assert.equal(await page.locator('input[name="qualityMode"][value="high"]').isChecked(),true);
+   assert.equal(await page.locator('#quality-fallback').isHidden(),true);
+   Object.assign(state,{hqOutage:false,quickDown:false,remaining:3,free:3,bonus:3});
    await page.goto('http://recast.test/admin.html',{waitUntil:'networkidle'});
    await page.locator('#admin-token').fill('fixture-not-a-real-secret');await page.locator('#admin-login button').click();await page.waitForTimeout(300);
    await page.locator('[data-tab="limits"]').click();assert.equal(await page.locator('[name="purchaseBonus"]').inputValue(),'3');
-   await page.locator('[name="highDaily"]').fill('2');await page.locator('#owner-settings-form [type="submit"]').click();await page.waitForTimeout(200);
+   await page.locator('[name="highDaily"]').fill('2');
+   const saveOwner=page.locator('#owner-settings-form [type="submit"]');
+   // WebKit intermittently never considers this button "stable" after a long
+   // mobile scroll. Verify the pointer hit target, then send a real mouse click
+   // instead of a synthetic DOM form.submit() or disabling the assertion.
+   async function saveByPointer(){
+    await saveOwner.evaluate(node=>node.scrollIntoView({block:'center',behavior:'instant'}));
+    const target=await saveOwner.evaluate(node=>{
+      const r=node.getBoundingClientRect(),x=r.left+r.width/2,y=r.top+r.height/2;
+      const hit=document.elementFromPoint(x,y);
+      return {x,y,visible:r.width>0&&r.height>0,receivesPointer:Boolean(hit&&(hit===node||node.contains(hit)))};
+    });
+    assert.ok(target.visible&&target.receivesPointer,'Save settings button must be a visible mobile pointer target');
+    await page.mouse.click(target.x,target.y);await page.waitForTimeout(300);
+   }
+   await saveByPointer();
    assert.equal(state.saved.at(-1).values.highDaily,2);
-   page.on('dialog',d=>d.accept());await page.locator('[name="budgetCents"]').fill('6.00');await page.locator('#owner-settings-form [type="submit"]').click();await page.waitForTimeout(200);
+   page.on('dialog',d=>d.accept());await page.locator('[name="budgetCents"]').fill('6.00');await saveByPointer();
    assert.equal(state.saved.at(-1).confirm,'INCREASE_LIMITS');
    await page.screenshot({path:path.join(out,`${engine.name()}-${width}-admin.png`)});
    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1),false,'admin overflow');assert.deepEqual(errors,[]);

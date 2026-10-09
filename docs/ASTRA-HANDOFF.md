@@ -142,3 +142,11 @@ Latest: [RM074 — Cloudflare3043 classification](ASTRA-SESSION-RM-074.md). Two 
 Latest: [RM075 — owner daily reset](ASTRA-SESSION-RM-075.md). Same-browser authenticated reset button;377tests and dry-run pass. Owner must click in original browser; no personal reset or render recovery claimed.
 
 Latest: [RM076 — controlled HQ outage reproduction](ASTRA-SESSION-RM-076.md). Both authorized tests failed3043, including established sample; provider recovery unverified. Honest retry status and owner support references,378tests/dry-run pass. No third paid call or model switch.
+
+Latest proposed integration: [RM096 — optional fal FLUX.2 dev host, verified owner-only pilot and safe provider routing](ASTRA-SESSION-RM-096.md). App changes remain on a separate review branch and are disabled by default. Do not infer customer-path acceptance, live provider recovery or production activation from the tests.
+
+Latest staged review: [RM097 — owner-only provider-job diagnostics and CI/canary evidence](ASTRA-SESSION-RM-097.md). Adds safe admin-only fal attempt review without paid calls, 391 local tests pass, dry-run passes; PR #16 WebKit CI passed on rerun after original flake. No live Fal customer route or runtime-canary acceptance yet.
+
+Latest staged development: [RM098 — fal-first fixed host priority, conditional Standard choice, accepted-job safety and actual remote-runtime canary](ASTRA-SESSION-RM-098.md). 402 local tests and Worker dry-run passed. One owner-approved public-demo Cloudflare remote preview generated through fal; preview terminated and temporary secrets cleaned. PR #16 remains draft, all public fal flags off, full Recast live acceptance not yet proven.
+
+Latest production-rollout preparation: [RM099 — owner-only fal Model Lab deployment gate](ASTRA-SESSION-RM-099.md). Public route remains Cloudflare with explicit fal auto flags OFF, owner canary flag ON only behind admin token. Fal secret is set separately, never committed. Dry-run passes; do not claim deployment or owner full-flow acceptance without receipts.

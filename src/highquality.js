@@ -1,4 +1,5 @@
 import {moderateContent,screenText,CONTENT_MESSAGE} from './content-safety.js';
+import {makeFalCompactPrompt} from './fal-prompt.js';
 import {referenceDirections} from './reference-labels.js';
 import { assertRenderReady, readinessSnapshot, recordRenderHealth } from './render-health.js';
 const PROMPT_VERSION = "identity-all-worlds-v5";
@@ -249,7 +250,7 @@ async function runModel(form,env,model){
   // deliberate later action create the next attempt.
   const result=await env.AI.run(model,{multipart:{body:serialized.body,contentType:serialized.headers.get("content-type")}}, {rejectIfBusy:true});
   if(!result?.image)throw new Error("Image model returned no image.");
-  return result.image
+  return {image:result.image,providerUsed:result.providerUsed||'cloudflare',providerRequestId:result.providerRequestId||null}
 }
 
 async function tryGeneration(env,model,prompt,inputFiles,kind,settings){
@@ -257,9 +258,11 @@ async function tryGeneration(env,model,prompt,inputFiles,kind,settings){
   // provider call, so the old 125s/60s timers could discard a late successful
   // result while the inference continued. Capacity is handled by rejectIfBusy;
   // genuine provider timeouts are classified from the provider error itself.
-  const image=await runModel(makeForm(prompt,inputFiles,settings),env,model);
+  const output=await runModel(makeForm(prompt,inputFiles,settings),env,model);
   return{
-    image,
+    image:output.image,
+    providerUsed:output.providerUsed,
+    providerRequestId:output.providerRequestId,
     modelUsed:model,
     attemptKind:kind,
     usedSafeRetry:kind.includes("safe"),
@@ -268,7 +271,9 @@ async function tryGeneration(env,model,prompt,inputFiles,kind,settings){
 }
 
 async function generateHighQuality({env,model,styleId,subjectType,notes,customWorld,inputFiles,hasBranch}){
-  const main=makePrompt(styleId,subjectType,notes,inputFiles.length,customWorld,hasBranch);
+  const main=env.RECAST_HQ_SELECTED_PROVIDER==='fal'
+    ?makeFalCompactPrompt({styleId,subjectType,style:STYLES[styleId],notes:safeNotes(notes),customWorld:safeNotes(customWorld),inputCount:inputFiles.length,hasBranch})
+    :makePrompt(styleId,subjectType,notes,inputFiles.length,customWorld,hasBranch);
   const steps=Math.max(8,Math.min(30,Number(env.IMAGE_HIGH_QUALITY_STEPS||18)));
   const guidance=Math.max(1,Math.min(10,Number(env.IMAGE_HIGH_QUALITY_GUIDANCE||5)));
   const settings={width:1024,height:1280,guidance,steps};
@@ -276,6 +281,7 @@ async function generateHighQuality({env,model,styleId,subjectType,notes,customWo
   try{
     return await tryGeneration(env,model,main,inputFiles,"high-primary",settings)
   }catch(firstError){
+    if(firstError?.reason==='pending')throw firstError;
     if(isQuota(firstError))throw Object.assign(new Error("quota"),{reason:"quota",code:3036,cause:firstError});
     if(isModeration(firstError))throw Object.assign(new Error("moderation"),{reason:"moderation",code:3030,cause:firstError});
     if(isTimeout(firstError))throw Object.assign(new Error("timeout"),{reason:"timeout",cause:firstError});
@@ -309,10 +315,10 @@ async function generateQuick({env,model,styleId,subjectType,notes,customWorld,in
   throw Object.assign(new Error("provider"),{reason:"provider",cause:firstError});
 }
 
-async function store(env,{requestId,accessToken,styleId,subjectType,notes,customWorld,parentRequestId,source,sourceTweet,qualityMode,inputs,image,previewMime,safety,modelUsed,attemptKind}){
+async function store(env,{requestId,accessToken,styleId,subjectType,notes,customWorld,parentRequestId,source,sourceTweet,qualityMode,inputs,image,previewMime,safety,modelUsed,attemptKind,providerUsed,promptVersion}){
   if(!env.ARTWORK)return{persisted:false,storageError:"ARTWORK binding is missing."};
   const now=new Date().toISOString();
-  const metadata={creditWalletId:env.RECAST_CREDIT_WALLET?.id||null,requestId,accessToken,styleId,styleName:STYLES[styleId]?.name||"Custom World",subjectType,notes,customWorld,parentRequestId:parentRequestId||null,previewMime,source:source||"site",sourceTweet:sourceTweet||null,safety,status:"preview_ready",createdAt:now,updatedAt:now,inputCount:inputs.length,paid:false,fulfillment:"not_started",modelUsed,attemptKind,qualityMode,promptVersion:PROMPT_VERSION};
+  const metadata={creditWalletId:env.RECAST_CREDIT_WALLET?.id||null,requestId,accessToken,styleId,styleName:STYLES[styleId]?.name||"Custom World",subjectType,notes,customWorld,parentRequestId:parentRequestId||null,previewMime,source:source||"site",sourceTweet:sourceTweet||null,safety,status:"preview_ready",createdAt:now,updatedAt:now,inputCount:inputs.length,paid:false,fulfillment:"not_started",modelUsed,providerUsed:providerUsed||'cloudflare',attemptKind,qualityMode,promptVersion:promptVersion||PROMPT_VERSION};
   try{
     for(let i=0;i<inputs.length;i++)await env.ARTWORK.put(requestKey(requestId,`input-${i}.jpg`),await inputs[i].arrayBuffer());
     await env.ARTWORK.put(requestKey(requestId,"preview.b64"),image);
@@ -426,10 +432,10 @@ export async function highQualityTransform(request,env,{trustedSocialJob=false}=
     const requestId=`RC-${Date.now().toString(36).toUpperCase()}-${randomHex(3).toUpperCase()}`;
     const accessToken=randomHex(32);
     safety.outputScreening=await moderateContent(env,{images:[new File([Uint8Array.from(atob(image),c=>c.charCodeAt(0))],"output",{type:previewMime})]});
-    const stored=await store(env,{requestId,accessToken,styleId,subjectType,notes,customWorld,parentRequestId,source,sourceTweet,qualityMode,inputs:inputFiles,image,previewMime,safety,modelUsed:generated.modelUsed,attemptKind:generated.attemptKind});
+    const stored=await store(env,{requestId,accessToken,styleId,subjectType,notes,customWorld,parentRequestId,source,sourceTweet,qualityMode,inputs:inputFiles,image,previewMime,safety,modelUsed:generated.modelUsed,providerUsed:generated.providerUsed,promptVersion:generated.providerUsed==='fal'?'fal-identity-world-v1':PROMPT_VERSION,attemptKind:generated.attemptKind});
 
-    await writeAttemptReceipt(env,clientAttemptId,{status:"success",completedAt:new Date().toISOString(),durationMs:Date.now()-attemptStartedAt,requestId,qualityMode,modelUsed:generated.modelUsed,attemptKind:generated.attemptKind,persisted:stored.persisted});
-    return json({ok:true,requestId,accessToken,style:STYLES[styleId]?.name||"Custom World",image:`data:${previewMime};base64,${image}`,persisted:stored.persisted,storageError:stored.storageError,qualityMode,qualityLabel:qualityMode==="quick"?"Standard Preview":"High-Quality Preview",modelUsed:generated.modelUsed,usedSafeRetry:generated.usedSafeRetry,usedFastFallback:false,promptVersion:PROMPT_VERSION,clientAttemptId});
+    await writeAttemptReceipt(env,clientAttemptId,{status:"success",completedAt:new Date().toISOString(),durationMs:Date.now()-attemptStartedAt,requestId,qualityMode,modelUsed:generated.modelUsed,providerUsed:generated.providerUsed,providerRequestId:generated.providerRequestId,attemptKind:generated.attemptKind,persisted:stored.persisted});
+    return json({ok:true,requestId,accessToken,style:STYLES[styleId]?.name||"Custom World",image:`data:${previewMime};base64,${image}`,persisted:stored.persisted,storageError:stored.storageError,qualityMode,qualityLabel:qualityMode==="quick"?"Standard Preview":"High-Quality Preview",modelUsed:generated.modelUsed,providerUsed:generated.providerUsed,usedSafeRetry:generated.usedSafeRetry,usedFastFallback:false,promptVersion:generated.providerUsed==='fal'?'fal-identity-world-v1':PROMPT_VERSION,clientAttemptId});
   }catch(error){
     const reason=error?.reason||"provider";
     if(['capacity','quota','timeout','unavailable'].includes(reason))await recordRenderHealth(env,env.RECAST_RENDER_SCOPE==='social'?'social':qualityMode,'failed',reason);
@@ -439,6 +445,7 @@ export async function highQualityTransform(request,env,{trustedSocialJob=false}=
     if(reason==="quota")return json({error:"shared_ai_capacity_used",code:3036,reason:"quota",retryable:false,diagnosticId,qualityMode,userMessage:"Recast Me has reached its shared AI capacity for today. This is a site-wide limit, not your personal render count. Your photo is safe, and nothing was charged."},429);
     if(reason==="content_policy"||reason==="content_screening_unavailable")return json({error:reason,reason,retryable:reason!=="content_policy",userMessage:error.message},error.status||503);
     if(reason==="moderation")return json({error:"generation_declined",code:3030,reason:"moderation",retryable:false,diagnosticId,qualityMode,userMessage:"This photo or request was declined by the image safety check. Choose a different, family-friendly photo or idea. Nothing was charged."},422);
+    if(reason==="pending")return json({error:"generation_under_review",reason:"pending",retryable:false,diagnosticId,qualityMode,userMessage:"The image service accepted this request, but its result has not been confirmed. To avoid duplicate costs, please do not retry the same image while we review its status. Your previous saved previews are safe."},503);
     if(reason==="capacity")return json({error:"engine_busy",reason:"capacity",retryable:true,diagnosticId,qualityMode,userMessage:"The image engine returned a confirmed busy response. Your photo and settings are safe; wait for the retry button to become available before trying again."},503);
     if(reason==="timeout")return json({error:"engine_timeout",reason:"timeout",retryable:true,diagnosticId,qualityMode,userMessage:"The image provider timed out before returning the artwork. Your photo and settings are safe; wait for the retry button to become available before trying again."},504);
     if(reason==="unavailable")return json({error:"engine_unavailable",reason:"unavailable",retryable:true,diagnosticId,qualityMode,userMessage:"The image provider is temporarily unavailable. Your photo and settings are safe; wait for the retry button to become available before trying again."},503);

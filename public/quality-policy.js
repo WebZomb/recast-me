@@ -4,12 +4,15 @@ export function fallbackState(snapshot,credits,mode='high'){
   const exhausted=known&&credits.remaining<=0;
   const date=value=>value&&Number.isFinite(Date.parse(value))?new Date(value).toLocaleString([], {month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}):null;
   const reset=date(credits?.resetAt),bonus=credits?.purchaseBonus??3;
-  const show=exhausted; // Provider outages and a stale selection do not unlock Standard.
-  let message=show?`You’ve used your High Quality previews for now. You can try Standard, but it may have less detail or a weaker likeness. Not happy with it? ${reset?'High Quality refreshes '+reset+'.':'Come back after your daily reset.'} Or buy an item with a design you already love to get ${bonus} bonus High Quality previews for your next Recast.`:'';
+  const outage=Boolean(known&&!exhausted&&snapshot?.standardOutageAvailable===true);
+  const show=exhausted||outage; // Outage eligibility is calculated server-side, not inferred from a browser timer.
+  let message=outage
+    ?'High Quality is temporarily unavailable on the approved rendering routes. You can choose Standard, which uses a different Cloudflare model, but it may also fail if Cloudflare is having problems. Standard may have less detail or a weaker likeness. This is optional: you can wait for High Quality. A successful Standard preview uses only a Standard credit and keeps your High Quality credits.'
+    :exhausted?`You’ve used your High Quality previews for now. You can try Standard, but it may have less detail or a weaker likeness. Not happy with it? ${reset?'High Quality refreshes '+reset+'.':'Come back after your daily reset.'} Or buy an item with a design you already love to get ${bonus} bonus High Quality previews for your next Recast.`:'';
   const standardReady=Boolean(show&&snapshot?.local?.ready&&snapshot?.modes?.quick?.ready&&credits.standardRemaining>0);
   if(show&&credits.standardRemaining<=0)message+=` Your Standard previews are also used.${date(credits.standardResetAt)?' They refresh '+date(credits.standardResetAt)+'.':''}`;
   if(show)message+=' Credits do not change an order already confirmed for printing or bypass site availability limits.';
-  return {show,exhausted,standardReady,message,returnToHigh:mode==='quick'&&!exhausted};
+  return {show,exhausted,outage,standardReady,message,returnToHigh:mode==='quick'&&!exhausted&&!outage};
 }
 export function creditSummary(credits){
   if(!credits?.enabled)return '';

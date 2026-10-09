@@ -75,7 +75,7 @@ export async function reserveCustomerRender(env,now=Date.now()){
   const ticket=randomToken();
   if(env.RECAST_RENDER_MODE==='quick'){
     const balance=await creditBalance(env,wallet,now);
-    if(balance.remaining>0)throw fault('standard_locked','High Quality previews are available. Use High Quality first.',409);
+    if(balance.remaining>0&&env.RECAST_STANDARD_OUTAGE_APPROVED!=='true')throw fault('standard_locked','High Quality previews are available. Use High Quality first. Standard is only available early during a confirmed provider outage with your explicit choice.',409);
     const key=standardKey(wallet.network);
     await change(env,key,{used:0},previous=>{
       const v=windowState(previous,now);

@@ -101,6 +101,13 @@
           <button type="submit">Save settings</button><p id="owner-settings-save-status" role="status" data-private-setting></p>
         </form>
         <details class="glass settings-details"><summary>Engine configuration &amp; policy details</summary><pre id="owner-engines" data-private-setting></pre><p id="owner-settings-note" data-private-setting></p></details>
+        <details class="glass settings-details" id="provider-recovery-details">
+          <summary>Rendering providers &amp; failed-job review</summary>
+          <p class="muted">Private diagnostic view only. No render or paid recovery attempt is started here. Cloudflare and fal must pass owner checks before public switching can be enabled.</p>
+          <button type="button" id="refresh-provider-jobs" class="secondary">Check provider records</button>
+          <pre id="provider-health-text" data-private-setting></pre>
+          <div id="provider-jobs" data-private-setting role="status"></div>
+        </details>
         <details class="glass settings-details"><summary>Recent settings changes</summary><pre id="owner-settings-history" data-private-setting></pre></details>
       </section>
 

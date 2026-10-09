@@ -2,6 +2,10 @@ import { shopifyCatalog } from "./index.js";
 import {saveOriginalPhoto} from './original-photo.js';
 import { WATERMARK_TILE_BASE64, WATERMARK_FOOTER_BASE64 } from './watermark-tile.js';
 import { digest, guardedEnvironment, renderControlStatus, budgetStatus, submissionFingerprint } from './render-controls.js';
+import {selectHighQualityProvider,providerStatus} from './provider-routing.js';
+import {providerJobIndex} from './provider-jobs.js';
+import {wrapImageProvider} from './fal-service.js';
+import {standardOutageEligible} from './render-health.js';
 
 import { creditRoute, bindCustomerCredits, creditsEnabled, settleCustomerRender } from './render-credits.js';
 import { withOwnerSettings, ownerSettingsRoute } from './owner-settings.js';
@@ -13,7 +17,7 @@ export const WATERMARK_LABEL = '@RecastMeAi • PREVIEW';
 const IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
 const PRIVATE_HEADERS = { 'cache-control': 'private, no-store', 'x-content-type-options': 'nosniff', 'referrer-policy': 'no-referrer' };
 const META_FIELDS = ['requestId', 'styleId', 'styleName', 'subjectType', 'notes', 'customWorld', 'parentRequestId', 'qualityMode', 'status', 'createdAt', 'updatedAt', 'inputCount', 'paid', 'fulfillment', 'orderName', 'digitalEntitlement', 'modelUsed', 'attemptKind', 'promptVersion'];
-const GENERATED_FIELDS = ['ok', 'requestId', 'accessToken', 'style', 'persisted', 'qualityMode', 'qualityLabel', 'modelUsed', 'usedSafeRetry', 'usedFastFallback', 'promptVersion', 'clientAttemptId'];
+const GENERATED_FIELDS = ['ok', 'requestId', 'accessToken', 'style', 'persisted', 'qualityMode', 'qualityLabel', 'modelUsed', 'usedSafeRetry', 'usedFastFallback', 'promptVersion', 'providerUsed', 'clientAttemptId'];
 const REVOKED = new Set(['REFUNDED', 'PARTIALLY_REFUNDED', 'VOIDED', 'CANCELED', 'CANCELLED']);
 const error = (code, message, status = 503) => Object.assign(new Error(message), { code, status });
 const json = (data, status = 200) => new Response(JSON.stringify(data), { status, headers: { ...PRIVATE_HEADERS, 'content-type': 'application/json; charset=utf-8' } });
@@ -186,6 +190,14 @@ export function secureApplication(application) {
         // Public diagnostic routes previously exposed operational order data or
         // bypassed normal rendering. Internal service calls are not HTTP routes.
         if (path.startsWith('/api/admin/') || ['/api/shopify-status', '/api/printful-status', '/api/storage-test', '/api/ai-test'].includes(path)) requireOwner(request, env);
+        if(path==='/api/admin/provider-jobs'&&request.method==='GET'){
+          requireOwner(request,env);
+          return json(await providerJobIndex(env,url.searchParams));
+        }
+        if(path==='/api/admin/provider-status'&&request.method==='GET'){
+          requireOwner(request,env);
+          return json({ok:true,...await providerStatus(env)});
+        }
         if(path==='/api/admin/commerce-check'&&request.method==='GET'){
           const configured={shop:Boolean(env.SHOPIFY_SHOP),clientId:Boolean(env.SHOPIFY_CLIENT_ID),clientSecret:Boolean(env.SHOPIFY_CLIENT_SECRET)};
           try{const catalog=await shopifyCatalog(env);return json({ok:true,configured,connected:true,productCount:catalog.recastProducts.length});}
@@ -286,6 +298,32 @@ export function secureApplication(application) {
           const form = await request.clone().formData();
           env={...env,RECAST_RENDER_MODE:form.get('qualityMode')==='quick'?'quick':'high'};
           fingerprint = await submissionFingerprint(form, path + url.search);
+          // Standard is normally locked until all HQ credits are used. Only a
+          // fresh, explicit customer choice during an independently confirmed
+          // HQ operational outage can unlock Standard while HQ credits remain.
+          if(!path.startsWith('/api/admin/')&&env.RECAST_RENDER_MODE==='quick'&&form.get('standardOutageConsent')==='yes'){
+            if(!await standardOutageEligible(env))throw error('standard_outage_not_available','High Quality availability changed. Refresh the preview options before trying Standard.',409);
+            env={...env,RECAST_STANDARD_OUTAGE_APPROVED:'true'};
+          }
+          if(path==='/api/admin/model-test' && form.get('ownerProvider')==='cloudflare'){
+            requireOwner(request,env);
+            // Explicit owner comparison tests the requested host, not whatever
+            // the public auto selector would have picked. Keep normal budget,
+            // moderation, protection, and no-retry handling.
+            env={...env,RECAST_HQ_PROVIDER:'cloudflare'};
+            if(env.RECAST_RENDER_MODE==='high')env=wrapImageProvider(env,{host:'cloudflare'});
+          }
+          if(path==='/api/admin/model-test' && form.get('ownerProvider')==='fal'){
+            requireOwner(request,env);
+            if(env.FAL_OWNER_TEST_ENABLED!=='true')throw error('owner_fal_not_enabled','fal owner test requires explicit activation.',503);
+            env={...env,RECAST_HQ_PROVIDER:'fal',FAL_PROVIDER_ENABLED:'true',RECAST_OWNER_PILOT_REQUEST:'true'};
+          }
+          if(env.RECAST_RENDER_MODE==='high' && ['fal','auto'].includes(String(env.RECAST_HQ_PROVIDER||'cloudflare'))){
+            const selected=await selectHighQualityProvider(env,form);
+            const estimated=selected.host==='fal'?selected.prices.falUsd:selected.prices.cloudflareUsd;
+            const reserve=Math.max(Number(env.AI_CALL_RESERVE_CENTS||7),Math.ceil(estimated*100)+1);
+            env=wrapImageProvider({...env,RECAST_PROVIDER_ATTEMPT_ID:fingerprint||crypto.randomUUID(),AI_CALL_RESERVE_CENTS:String(reserve)},selected);
+          }
           request = await prepareRefinement(request, env, form);
         }
         const guarded = guardedEnvironment(env, fingerprint);
