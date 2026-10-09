@@ -5,6 +5,7 @@ import { digest, guardedEnvironment, renderControlStatus, budgetStatus, submissi
 import {selectHighQualityProvider,providerStatus} from './provider-routing.js';
 import {providerJobIndex} from './provider-jobs.js';
 import {wrapImageProvider} from './fal-service.js';
+import {standardOutageEligible} from './render-health.js';
 
 import { creditRoute, bindCustomerCredits, creditsEnabled, settleCustomerRender } from './render-credits.js';
 import { withOwnerSettings, ownerSettingsRoute } from './owner-settings.js';
@@ -297,6 +298,21 @@ export function secureApplication(application) {
           const form = await request.clone().formData();
           env={...env,RECAST_RENDER_MODE:form.get('qualityMode')==='quick'?'quick':'high'};
           fingerprint = await submissionFingerprint(form, path + url.search);
+          // Standard is normally locked until all HQ credits are used. Only a
+          // fresh, explicit customer choice during an independently confirmed
+          // HQ operational outage can unlock Standard while HQ credits remain.
+          if(!path.startsWith('/api/admin/')&&env.RECAST_RENDER_MODE==='quick'&&form.get('standardOutageConsent')==='yes'){
+            if(!await standardOutageEligible(env))throw error('standard_outage_not_available','High Quality availability changed. Refresh the preview options before trying Standard.',409);
+            env={...env,RECAST_STANDARD_OUTAGE_APPROVED:'true'};
+          }
+          if(path==='/api/admin/model-test' && form.get('ownerProvider')==='cloudflare'){
+            requireOwner(request,env);
+            // Explicit owner comparison tests the requested host, not whatever
+            // the public auto selector would have picked. Keep normal budget,
+            // moderation, protection, and no-retry handling.
+            env={...env,RECAST_HQ_PROVIDER:'cloudflare'};
+            if(env.RECAST_RENDER_MODE==='high')env=wrapImageProvider(env,{host:'cloudflare'});
+          }
           if(path==='/api/admin/model-test' && form.get('ownerProvider')==='fal'){
             requireOwner(request,env);
             if(env.FAL_OWNER_TEST_ENABLED!=='true')throw error('owner_fal_not_enabled','fal owner test requires explicit activation.',503);

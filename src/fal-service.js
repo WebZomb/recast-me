@@ -47,7 +47,7 @@ export async function runFalEdit(env,model,originalRequest){
  const localId=String(env.RECAST_PROVIDER_ATTEMPT_ID||crypto.randomUUID()).replace(/[^a-zA-Z0-9._-]/g,'').slice(0,100);
  await receipt(env,localId,{host:'fal',model:'fal-ai/flux-2/edit',status:'submitting',startedAt:new Date().toISOString(),imageCount:input.image_urls.length,width:input.image_size.width,height:input.image_size.height,steps:input.num_inference_steps},{initial:true,required:true});
  const headers={...FAL_PILOT_HEADERS,Authorization:'Key '+env.FAL_API_KEY};
- let submitted=false,requestId='',statusUrl='',resultUrl='';
+ let submitted=false,receivedFinalResult=false,requestId='',statusUrl='',resultUrl='';
  try{
   const submit=await fetch(HOST+FAL_PATH,{method:'POST',headers,body:JSON.stringify(input),signal:AbortSignal.timeout(30000)});
   if(!submit.ok){const providerError=reasonFromHttp(submit.status);await receipt(env,localId,{status:'rejected_before_ack',httpStatus:submit.status});throw providerError;}
@@ -67,6 +67,7 @@ export async function runFalEdit(env,model,originalRequest){
     const result=await fetch(resultUrl,{headers:{Authorization:headers.Authorization},signal:AbortSignal.timeout(20000)});
     if(!result.ok)throw Object.assign(new Error('503 completed provider job could not be retrieved'),{reason:'unavailable'});
     const body=await json(result);
+    receivedFinalResult=true;
     const image=decodeFalInlineResult(body,input);
     await receipt(env,localId,{status:'completed',completedAt:new Date().toISOString(),requestId,bytes:Math.round(image.image.length*.75)});
     await recordProviderResult(env,'fal','success');
@@ -78,10 +79,14 @@ export async function runFalEdit(env,model,originalRequest){
   await receipt(env,localId,{status:'pending_for_recovery',requestId,lastCheckedAt:new Date().toISOString()});
   throw Object.assign(new Error('Provider job is still processing; do not submit the same job again.'),{reason:'timeout',pendingRequestId:requestId});
  }catch(error){
-  // A completed result may still be recoverable by its recorded request ID.
-  const status=error.pendingRequestId?'pending_for_recovery':submitted?'accepted_unknown_outcome':'submission_uncertain';
+  // Accepted jobs are NOT safe for a second paid submission until their
+  // recorded provider request ID is reconciled, including connection loss.
+  const ambiguous=Boolean(submitted&&!receivedFinalResult);
+  const status=error.pendingRequestId?'pending_for_recovery':receivedFinalResult?'completed_output_unavailable':submitted?'accepted_unknown_outcome':'submission_uncertain';
   await receipt(env,localId,{status,requestId:requestId||null,error:publicError(error)});
-  await recordProviderResult(env,'fal','failed',error.reason||'provider');
+  if(ambiguous)await recordProviderResult(env,'fal','pending','awaiting_result');
+  else if(['unavailable','capacity','timeout'].includes(error.reason))await recordProviderResult(env,'fal','failed',error.reason);
+  if(ambiguous)throw Object.assign(new Error('Your image job was accepted, but its result is still being checked. Please do not start another paid attempt.'),{reason:'pending',pendingRequestId:requestId,cause:error});
   throw error;
  }
 }
@@ -89,7 +94,14 @@ export async function runCloudflareTracked(env,model,request,options){
  try{
   const result=await env.AI.run(model,request,options);
   await recordProviderResult(env,'cloudflare','success');return {...result,providerUsed:'cloudflare'};
- }catch(error){await recordProviderResult(env,'cloudflare','failed',String(error.message||'').includes('3043')?'unavailable':'provider');throw error}
+ }catch(error){
+  const message=String(error?.message||error).toLowerCase();
+  const operational=/\b3043\b|\b503\b|upstream unavailable|service unavailable/.test(message)?'unavailable'
+    :/\b3040\b|out of capacity|busy/.test(message)?'capacity'
+    :/timed out|timeout/.test(message)?'timeout':null;
+  if(operational)await recordProviderResult(env,'cloudflare','failed',operational);
+  throw error
+ }
 }
 export function wrapImageProvider(env,selection){
  if(!selection||!['cloudflare','fal'].includes(selection.host))return env;

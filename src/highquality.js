@@ -281,6 +281,7 @@ async function generateHighQuality({env,model,styleId,subjectType,notes,customWo
   try{
     return await tryGeneration(env,model,main,inputFiles,"high-primary",settings)
   }catch(firstError){
+    if(firstError?.reason==='pending')throw firstError;
     if(isQuota(firstError))throw Object.assign(new Error("quota"),{reason:"quota",code:3036,cause:firstError});
     if(isModeration(firstError))throw Object.assign(new Error("moderation"),{reason:"moderation",code:3030,cause:firstError});
     if(isTimeout(firstError))throw Object.assign(new Error("timeout"),{reason:"timeout",cause:firstError});
@@ -444,6 +445,7 @@ export async function highQualityTransform(request,env,{trustedSocialJob=false}=
     if(reason==="quota")return json({error:"shared_ai_capacity_used",code:3036,reason:"quota",retryable:false,diagnosticId,qualityMode,userMessage:"Recast Me has reached its shared AI capacity for today. This is a site-wide limit, not your personal render count. Your photo is safe, and nothing was charged."},429);
     if(reason==="content_policy"||reason==="content_screening_unavailable")return json({error:reason,reason,retryable:reason!=="content_policy",userMessage:error.message},error.status||503);
     if(reason==="moderation")return json({error:"generation_declined",code:3030,reason:"moderation",retryable:false,diagnosticId,qualityMode,userMessage:"This photo or request was declined by the image safety check. Choose a different, family-friendly photo or idea. Nothing was charged."},422);
+    if(reason==="pending")return json({error:"generation_under_review",reason:"pending",retryable:false,diagnosticId,qualityMode,userMessage:"The image service accepted this request, but its result has not been confirmed. To avoid duplicate costs, please do not retry the same image while we review its status. Your previous saved previews are safe."},503);
     if(reason==="capacity")return json({error:"engine_busy",reason:"capacity",retryable:true,diagnosticId,qualityMode,userMessage:"The image engine returned a confirmed busy response. Your photo and settings are safe; wait for the retry button to become available before trying again."},503);
     if(reason==="timeout")return json({error:"engine_timeout",reason:"timeout",retryable:true,diagnosticId,qualityMode,userMessage:"The image provider timed out before returning the artwork. Your photo and settings are safe; wait for the retry button to become available before trying again."},504);
     if(reason==="unavailable")return json({error:"engine_unavailable",reason:"unavailable",retryable:true,diagnosticId,qualityMode,userMessage:"The image provider is temporarily unavailable. Your photo and settings are safe; wait for the retry button to become available before trying again."},503);

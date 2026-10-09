@@ -23,39 +23,37 @@ export async function providerHealth(env){
  return {fal,cloudflare:cloudflare||oldCloudflare};
 }
 function healthy(item){
- if(!item)return true; // Unknown status can be used only if explicitly enabled.
- if(item.status==='success')return true;
- if(item.status==='failed'||item.status==='pending'||item.status==='ambiguous')return false;
- return false;
+ // Explicit owner approval AND observed provider success are both required
+ // for any new public fal/Cloudflare auto route. Unknown is never healthy.
+ return item?.status==='success';
 }
 export async function selectHighQualityProvider(env,form){
  const policy=String(env.RECAST_HQ_PROVIDER||'cloudflare').toLowerCase();
  if(!['cloudflare','fal','auto'].includes(policy))throw Object.assign(new Error('The image provider policy needs owner review.'),{code:'render_provider_config',status:503});
  const enabled=env.FAL_PROVIDER_ENABLED==='true'&&typeof env.FAL_API_KEY==='string'&&env.FAL_API_KEY.length>20;
- const photos=[...form.keys()].filter(k=>/^image_[0-3]$/.test(k)&&form.get(k) instanceof File&&form.get(k).size>0).length || 1;
+ const photos=[...form.keys()].filter(k=>/^image_[0-3]$/.test(k)&&form.get(k) instanceof File&&form.get(k).size>0).length||1;
  const prices=estimateHighQualityCosts({steps:bounded(env.IMAGE_HIGH_QUALITY_STEPS,18),photos});
- if(policy==='cloudflare')return {host:CF,prices,configured:true,policy};
- if(!enabled){
-  if(policy==='fal')throw Object.assign(new Error('The selected image provider is not configured.'),{code:'render_provider_config',status:503});
-  return {host:CF,prices,configured:true,policy};
- }
- const health=await providerHealth(env);
+ const strategy='fal-first-confirmed-availability';
+ if(policy==='cloudflare')return {host:CF,prices,configured:true,policy,strategy:'legacy-cloudflare'};
  if(policy==='fal'){
+  if(!enabled)throw Object.assign(new Error('The selected image provider is not configured.'),{code:'render_provider_config',status:503});
+  const health=await providerHealth(env);
   if(env.FAL_PROVIDER_VERIFIED!=='true'&&env.RECAST_OWNER_PILOT_REQUEST!=='true')throw Object.assign(new Error('The fal provider has not passed customer acceptance.'),{code:'render_provider_unverified',status:503});
   if(!healthy(health.fal)&&env.RECAST_OWNER_PILOT_REQUEST!=='true')throw Object.assign(new Error('The fal image engine needs an owner recovery check. Your photo is safe.'),{code:'render_provider_unavailable',status:503});
-  return {host:FAL,prices,configured:true,policy};
+  return {host:FAL,prices,configured:true,policy,strategy};
  }
- // Auto requires explicit owner acknowledgement before sending customer images
- // to the independently hosted provider.
- const falAllowed=env.FAL_PROVIDER_VERIFIED==='true'&&healthy(health.fal);
- const cfAllowed=(env.CF_PROVIDER_VERIFIED==='true'||health.cloudflare?.status==='success')&&healthy(health.cloudflare);
- const candidates=[...(falAllowed?[{host:FAL,cost:prices.falUsd}]:[]),...(cfAllowed?[{host:CF,cost:prices.cloudflareUsd}]:[])].sort((a,b)=>a.cost-b.cost);
- if(!candidates.length)throw Object.assign(new Error('Both approved image providers are unavailable. Your photo and credits are safe.'),{code:'render_providers_unavailable',status:503});
- return {host:candidates[0].host,prices,configured:true,policy};
+ const health=await providerHealth(env);
+ const falAllowed=enabled&&env.FAL_PROVIDER_VERIFIED==='true'&&healthy(health.fal);
+ const cfAllowed=env.CF_PROVIDER_VERIFIED==='true'&&healthy(health.cloudflare);
+ // Stable preference avoids per-job price decision and associated jitter.
+ // Explicit failure records keep this provider closed until verified by owner.
+ if(falAllowed)return {host:FAL,prices,configured:true,policy,strategy};
+ if(cfAllowed)return {host:CF,prices,configured:true,policy,strategy,usingBackup:true};
+ throw Object.assign(new Error('Neither approved High Quality engine is currently confirmed ready. Your photo and credits are safe.'),{code:'render_providers_unavailable',status:503});
 }
 export async function providerStatus(env){
  const state=await providerHealth(env),costs=estimateHighQualityCosts({steps:bounded(env.IMAGE_HIGH_QUALITY_STEPS,18)});
- return {mode:String(env.RECAST_HQ_PROVIDER||'cloudflare'),falEnabled:env.FAL_PROVIDER_ENABLED==='true',falConfigured:!!env.FAL_API_KEY, falVerified:env.FAL_PROVIDER_VERIFIED==='true',cloudflareVerified:env.CF_PROVIDER_VERIFIED==='true'||state.cloudflare?.status==='success',health:state,costs,costsAreEstimates:true};
+ return {mode:String(env.RECAST_HQ_PROVIDER||'cloudflare'),falEnabled:env.FAL_PROVIDER_ENABLED==='true',falConfigured:!!env.FAL_API_KEY, falVerified:env.FAL_PROVIDER_VERIFIED==='true',cloudflareVerified:env.CF_PROVIDER_VERIFIED==='true',health:state,costs,costsAreEstimates:true,priority:['fal','cloudflare'],priorityRule:'prefer a verified healthy fal host; Cloudflare is the backup'};
 }
 export async function recordProviderResult(env,host,status,reason=null){
  if(!env.ARTWORK||![CF,FAL].includes(host))return;

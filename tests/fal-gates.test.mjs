@@ -22,7 +22,9 @@ test('fal jobs cannot submit if private durable receipt cannot be written',async
 });
 test('Auto health shows not ready if fal and Cloudflare are both unverified or failed',async()=>{
  const e=env({RECAST_HQ_PROVIDER:'auto'});assert.equal((await renderHealth(e,'high')).ready,false);
- e.FAL_PROVIDER_VERIFIED='true';assert.equal((await renderHealth(e,'high')).ready,true);
+ e.FAL_PROVIDER_VERIFIED='true';assert.equal((await renderHealth(e,'high')).ready,false);
+ await e.ARTWORK.put('system/providers/hq-fal.json',JSON.stringify({status:'success',lastSuccessAt:new Date().toISOString()}));
+ assert.equal((await renderHealth(e,'high')).ready,true);
  await e.ARTWORK.put('system/providers/hq-fal.json',JSON.stringify({status:'failed',reason:'unavailable'}));assert.equal((await renderHealth(e,'high')).ready,false);
 });
 

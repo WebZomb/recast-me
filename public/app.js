@@ -370,6 +370,13 @@ async function refreshRenderAvailability(){
 }
 function syncRetryControls(){
   const retry=document.querySelector('#retry-generation');
+  const errorCard=document.querySelector('#preview-error');
+  if(errorCard&&!errorCard.classList.contains('hidden')&&errorCard.dataset.retryable==='false'){
+    if(retry){retry.classList.add('hidden');retry.disabled=true;}
+    const switchButton=document.querySelector('#switch-quality-generation');
+    if(switchButton){switchButton.classList.add('hidden');switchButton.disabled=true;}
+    return;
+  }
   const switchMode=document.querySelector('#switch-quality-generation');
   const failed=readinessFor(lastAttemptQuality);
   if(retry&&!retry.classList.contains('hidden')){
@@ -442,6 +449,7 @@ function clearPreviewCanvas(){
 function clearPreviewError(){
   document.querySelector('#preview-error')?.classList.add('hidden');
   const ref=document.querySelector('#preview-error-reference');
+  const card=document.querySelector('#preview-error');if(card)delete card.dataset.retryable;
   if(ref){ref.textContent='';ref.classList.add('hidden')}
 }
 function showPreviewError(message,{diagnosticId='',retryable=true}={}){
@@ -455,6 +463,7 @@ function showPreviewError(message,{diagnosticId='',retryable=true}={}){
     if(diagnosticId){ref.textContent=`Support reference: ${diagnosticId}`;ref.classList.remove('hidden')}
     else{ref.textContent='';ref.classList.add('hidden')}
   }
+  if(box)box.dataset.retryable=retryable===false?'false':'true';
   if(retry){retry.classList.toggle('hidden',retryable===false);retry.disabled=retryable===false;}
   if(switchMode)switchMode.classList.toggle('hidden',retryable===false);
   box?.classList.remove('hidden');
@@ -633,12 +642,12 @@ async function logClientGenerationIssue(kind,message,extra={}){
     return await response.json().catch(()=>({}));
   }catch{return{}}
 }
-function forceVisibleFailure(message,diagnosticId=''){
+function forceVisibleFailure(message,diagnosticId='',retryable=true){
   const section=document.querySelector('#preview-section');
   const frame=document.querySelector('.preview-frame');
   section?.classList.remove('hidden');
   try{
-    showPreviewError(message,{diagnosticId,retryable:true});
+    showPreviewError(message,{diagnosticId,retryable});
   }catch(error){
     // Last-resort DOM fallback. Even if styling/JS around the normal card breaks,
     // the customer will still see a usable failure state instead of a blank section.
@@ -650,7 +659,7 @@ function forceVisibleFailure(message,diagnosticId=''){
         fallback.className='preview-emergency-error';
         frame.appendChild(fallback);
       }
-      fallback.innerHTML=`<strong>We couldn’t finish this preview.</strong><p>${String(message||'Please try again.').replaceAll('<','&lt;').replaceAll('>','&gt;')}</p><button type="button" id="preview-emergency-retry">Try again</button>`;
+      fallback.innerHTML=`<strong>We couldn’t finish this preview.</strong><p>${String(message||'Please try again.').replaceAll('<','&lt;').replaceAll('>','&gt;')}</p>${retryable?'<button type="button" id="preview-emergency-retry">Try again</button>':''}`;
       fallback.querySelector('#preview-emergency-retry')?.addEventListener('click',()=>form.requestSubmit(),{once:true});
     }else{
       alert(message||'We could not finish this preview. Please try again.');
@@ -710,7 +719,7 @@ form.addEventListener('submit',async e=>{
 
   try{
     const credits=await refreshCredits(true);
-    if(credits.enabled&&(selectedQuality()==='quick'?(credits.remaining>0?0:credits.standardRemaining):credits.remaining)<=0)throw Object.assign(new Error('Your selected preview allowance is used. Check the reset time and available options below.'),{publicMessage:'Your selected preview allowance is used. Check the reset time and available options below.'});
+    if(credits.enabled&&(selectedQuality()==='quick'?((credits.remaining>0&&!currentFallback().outage)?0:credits.standardRemaining):credits.remaining)<=0)throw Object.assign(new Error('Your selected preview allowance is used. Check the reset time and available options below.'),{publicMessage:'Your selected preview allowance is used. Check the reset time and available options below.'});
     const fd=new FormData();
     fd.append('style',styleSelect.value);
     const customWorld=styleSelect.value==='custom'?document.querySelector('#custom-world').value.trim():'';
@@ -729,6 +738,7 @@ form.addEventListener('submit',async e=>{
     const qualityMode=selectedQuality();
     lastAttemptQuality=qualityMode;
     fd.append('qualityMode',qualityMode);
+    if(qualityMode==='quick'&&currentFallback().outage)fd.append('standardOutageConsent','yes');
     fd.append('clientAttemptId',currentClientAttemptId);
     if(turnstileToken)fd.append('turnstileToken',turnstileToken);
 
@@ -819,7 +829,7 @@ form.addEventListener('submit',async e=>{
       const keep=document.querySelector('#keep-last-preview');
       if(keep)keep.classList.toggle('hidden',!hasSuccessfulPreview);
     }catch{
-      forceVisibleFailure(publicMessage,diagnosticId);
+      forceVisibleFailure(publicMessage,diagnosticId,err.retryable!==false);
     }
     showRecastError(publicMessage);
 

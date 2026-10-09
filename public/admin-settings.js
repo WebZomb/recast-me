@@ -59,6 +59,8 @@ export function initOwnerSettings(api,notify){
     const state=r=>(r?.status||'not checked')+(r?.checkedAt?' · '+r.checkedAt:'');
     healthEl.textContent=[
       'HQ routing: '+provider.mode,
+      'Priority: fal FLUX.2 dev first (typically cheaper for one photo), verified Cloudflare FLUX.2 dev as backup.',
+      'If both HQ routes fail, Standard uses a different Cloudflare model only when the customer explicitly chooses the quality downgrade. No paid readiness probes.',
       'fal: '+state(fal)+' · '+(provider.falConfigured?'key available':'not configured')+' · '+(provider.falVerified?'verified':'unverified'),
       'Cloudflare: '+state(cf)+' · '+(provider.cloudflareVerified?'verified':'unverified'),
       'Prices are estimates, not billing guarantees.'
