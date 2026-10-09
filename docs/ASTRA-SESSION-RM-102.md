@@ -1,0 +1,29 @@
+# RM102 — Public fal High Quality beta + customer render waiting UX (2026-10-09)
+ 
+## User decision
+The owner explicitly requested that fal, already successful through Recast's owner-only Model Lab (33 second verified screenshot with watermarked Jack Russell, royal cape, palace), be enabled as High Quality on the live customer website now, **without another approval/test step**. The owner requested preserving the previous setup in a local document and returning to launch polish. Recast must clearly state **High Quality generally takes about 30–40 seconds** and give customers an engaging, truthful waiting experience.
+
+## Baseline and rollback before making changes
+- Public website `https://recastmeai.com`, Worker name `recast-me`. GitHub main commit before these edits `29b9f340e6cb18c34ade8505303082b6222580d5`. The last confirmed pre-switch Wrangler deployment was `1a6367a4-9f83-456e-b21b-33084e0049e3` (immediately preceding `11a06f88-8ca9-4af6-a84c-1bf2a19c537e`). Retain the ability to `wrangler rollback 1a6367a4-9f83-456e-b21b-33084e0049e3 --name recast-me --yes` with correct authorization, after reviewing subsequent secret changes.
+- Complete no-secret pre-change local file snapshot and SHA256 manifest: `C:\Users\sergz\Documents\Recast-Diagnostics-20261008\Recast-Rollback-PreFalPublic-20261009\`. Document `ROLLBACK-README.md` includes original flags. A copy also exists in project `docs/RECAST-ROLLBACK-PRE-FAL-20261009.md`. The original variables were `RECAST_HQ_PROVIDER=cloudflare`, `FAL_PROVIDER_ENABLED=false`, `FAL_PROVIDER_VERIFIED=false`, `CF_PROVIDER_VERIFIED=false`, `FAL_OWNER_TEST_ENABLED=true`. Existing order automation, private artwork, image processing, moderation and credits were NOT changed. No key values included.
+- Immediately prior to this change a read-only Cloudflare R2 read of `system/providers/hq-fal.json` returned `status=success`, `lastSuccessAt=2026-10-09T17:15:27.657Z`. The successful owner demo render proves this provider works in actual protected Recast, but does not establish general uptime. Cloudflare FLUX.2 dev still has unverified 3043, so Cloudflare HQ backup flag remains OFF.
+
+## Actual staged source changes
+1. `wrangler.jsonc`: `RECAST_HQ_PROVIDER=fal`, `FAL_PROVIDER_ENABLED=true`, `FAL_PROVIDER_VERIFIED=true`. `CF_PROVIDER_VERIFIED=false`; owner-only test remains available. Standard stays Cloudflare Klein-9B. Daily protection stays 3 HQ/5 Standard per visitor, max 70 site calls/day, $5 shared daily reservation guard, and $7-cent HQ reservation floor. No merchant/order/payment flags changed.
+2. `public/index.html`: a restrained render-time hint by the Generate button, visible only within creation step; modifies consent so people understand that their images may go to fal.ai or Cloudflare Workers AI; adds elapsed timer in the existing loading overlay and honest "this is activity, not percent complete" note. Includes versioned `/render-wait-v1.css` and bumps app.js asset version to v267 to avoid stale cache.
+3. `public/render-wait-v1.css`: responsive dark/bespoke progress card, legible on narrow phones; animated indeterminate activity sweep and orbit; reduced-motion support; no invented completion percentage.
+4. `public/app.js`: UI timer starts with photo preparation; "preparing" → "rendering" → "finalizing" phases correspond to actual client boundaries, **not** fake server progress. Shows high quality 30–40 sec estimate (not guaranteed), elapsed m:ss time, after 45 seconds warns slower render may still complete, after 90 seconds asks customer to keep page open and avoid new paid attempts. Keeps one paid request, no abort-on-browser-timeout, no automatic fallback/second cost, preserves previous saved artwork and support references. Standard shows separate variable-time message.
+5. New `tests/render-wait-ui.test.mjs` validates production routing safety flags, consent, asset version, accessible render copy, timer progression, indeterminate UX, and preservation of original money/credit/order guardrails.
+
+## Evidence / acceptance
+- Diagnostic remote PC connection explicitly verified by listing Desktop Commander device and successfully running Node on DESKTOP-GFOHB7M.
+- **407/407 local Node tests passed**, no failures or skips (previous baseline 404).
+- Cloudflare Wrangler `deploy --dry-run` passed, 139 public assets (one new stylesheet).
+- IMPORTANT: this document was created **before live deployment**. Do not claim public customers use fal until actual Wrangler deploy and external public smoke. A new beta render from the public homepage was not submitted in this session, respecting the owner request to enable without extra test steps.
+- Production key `FAL_API_KEY` and other secret names remain stored in Cloudflare; never print/key copy/upload secrets.
+- Once deployed, check effective flags and read-only readiness; fall back to prior Worker version if significant regression. The owner may submit a real customer demo after deployment and report results.
+
+## Known limitations
+- The default public customer flow is synchronous. Accepted fal jobs that outlive the web response have an owner-visible durable record but require manual reconciliation before repeat attempts; do not claim full asynchronous recovery is implemented. 
+- The fixed fal-first decision is fast. Cloudflare HQ remains unverified and isn't used as an automatic backup until recovery is independently confirmed. When HQ has a confirmed operational outage, optional Standard (a different model but also on Cloudflare) can be offered with reduced-quality/shared-platform warning and customer opt-in; never silent.
+- Monitoring, real-world latency distribution, provider billing, user visual QA and Shopify/Printful paid-order fulfillment are separate launch acceptance items. This release deliberately does not alter them.
