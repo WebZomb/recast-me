@@ -264,6 +264,9 @@ function inferSubject(subject,notes){
 }
 
 let generationTimer=null;
+let generationStartedAt=0;
+let generationPhase='preparing';
+let generationMode='high';
 function selectedQuality(){
   return document.querySelector('input[name="qualityMode"]:checked')?.value==='quick'?'quick':'high';
 }
@@ -279,27 +282,62 @@ function updateQualityUI(){
   if(copy)copy.textContent=mode==='quick'
     ? 'Standard Preview · detail and likeness may be lower than High Quality'
     : 'High-Quality Preview · best likeness, prompt accuracy, and detail';
+  const timing=document.querySelector('#render-time-hint-title');
+  if(timing)timing.textContent=mode==='quick'?'Standard rendering times vary with demand.':'High-quality previews generally take about 30–40 seconds.';
 }
 document.querySelectorAll('input[name="qualityMode"]').forEach(input=>input.addEventListener('change',()=>{updateQualityUI();applyReadiness();refreshRenderAvailability();}));
 
-function startGenerationUI(mode=selectedQuality()){
+function tickGenerationUI(){
   const status=document.querySelector('#generation-status');
   const detail=document.querySelector('#generation-detail');
-  const progress=document.querySelector('#generation-progress');
-  const started=Date.now();
-  if(status) status.textContent='Creating your '+qualityLabel(mode)+'…';
-  if(detail) detail.textContent='High-quality artwork can take a few minutes. Keep this page open.';
-  if(progress) progress.style.width='100%';
+  const clock=document.querySelector('#generation-clock');
+  const seconds=Math.max(0,Math.floor((Date.now()-generationStartedAt)/1000));
+  const label=generationMode==='quick'?'Standard':'High Quality';
+  let title,description;
+  if(generationPhase==='preparing'){
+    title='Preparing your photos…';
+    description='Getting your images ready for the renderer. Your original photos stay unchanged.';
+  }else if(generationPhase==='finishing'){
+    title='Your artwork is ready!';
+    description='Loading your protected preview and preparing it for the product gallery.';
+  }else if(seconds<18){
+    title='Creating your '+label+' preview…';
+    description=generationMode==='quick'?'Your request is underway. Rendering times vary with demand. Please keep this page open.':'Your request is underway. High-quality previews usually take about 30–40 seconds. Please keep this page open.';
+  }else if(seconds<45){
+    title='Making your Recast…';
+    description='Still waiting for your artwork. Around 30–40 seconds is typical for High Quality; times can vary.';
+  }else if(seconds<90){
+    title='Still working on your Recast…';
+    description='This is taking longer than usual, but the render may still finish. We will not automatically start a second paid render.';
+  }else{
+    title='Your render is taking longer…';
+    description='Please keep this page open. We will display the result or provide a support reference if the request cannot finish.';
+  }
+  if(status&&status.textContent!==title)status.textContent=title;
+  if(detail&&detail.textContent!==description)detail.textContent=description;
+  if(clock)clock.textContent=Math.floor(seconds/60)+':'+String(seconds%60).padStart(2,'0')+' elapsed';
+}
+function startGenerationUI(mode=selectedQuality(),phase='preparing'){
   clearInterval(generationTimer);
-  generationTimer=setInterval(()=>{
-    const seconds=Math.floor((Date.now()-started)/1000);
-    if(detail) detail.textContent=`${Math.floor(seconds/60)}:${String(seconds%60).padStart(2,'0')} elapsed · Waiting for your artwork. Keep this page open.`;
-  },1000);
+  generationStartedAt=Date.now();
+  generationMode=mode;
+  generationPhase=phase;
+  document.querySelector('#loading')?.classList.add('render-wait-active');
+  const progress=document.querySelector('#generation-progress');
+  if(progress)progress.style.width='36%';
+  tickGenerationUI();
+  generationTimer=setInterval(tickGenerationUI,1000);
+}
+function advanceGenerationUI(phase){
+  if(!generationTimer){startGenerationUI(selectedQuality(),phase);return;}
+  generationPhase=phase;
+  tickGenerationUI();
 }
 function stopGenerationUI(success=false){
-  clearInterval(generationTimer); generationTimer=null;
+  clearInterval(generationTimer);generationTimer=null;
+  document.querySelector('#loading')?.classList.remove('render-wait-active');
   const progress=document.querySelector('#generation-progress');
-  if(progress) progress.style.width=success?'100%':'0%';
+  if(progress)progress.style.width=success?'100%':'0%';
 }
 function friendlyGenerationError(data,error){
   const mode=data?.qualityMode||selectedQuality();
@@ -716,6 +754,7 @@ form.addEventListener('submit',async e=>{
   document.querySelector('#preview-title').textContent=hasSuccessfulPreview?'Creating another version…':'Creating your Recast…';
   button.disabled=true;button.textContent='Preparing photos…';
   section.classList.remove('hidden');section.scrollIntoView({behavior:'smooth'});loading.classList.remove('hidden');
+  startGenerationUI(selectedQuality(),'preparing');
 
   try{
     const credits=await refreshCredits(true);
@@ -754,7 +793,7 @@ form.addEventListener('submit',async e=>{
     }
 
     button.textContent=qualityMode==='quick'?'Creating Standard Preview…':'Creating High-Quality Preview…';
-    startGenerationUI(qualityMode);
+    advanceGenerationUI('rendering');
     // Do not locally abort an in-flight image generation request. A browser timer
     // cannot cancel Workers AI and can create an orphaned paid render whose result
     // is discarded. Let the provider/Worker return the authoritative outcome.
@@ -773,6 +812,7 @@ form.addEventListener('submit',async e=>{
 
     addRecentVersion({requestId:data.requestId,accessToken:data.accessToken,styleName:data.style,styleId:styleSelect.value,subjectType:submittedSubject,customWorld,notes:document.querySelector('#notes').value,qualityMode:data.qualityMode||lastAttemptQuality,createdAt:new Date().toISOString()});
 
+    advanceGenerationUI('finishing');
     try{await renderWatermark(data.image)}catch(error){throw Object.assign(new Error('preview display failed'),{publicMessage:'Your image was created, but the preview could not be displayed correctly. Please try once more.'})}
 
     const successTitle=`${data.style} preview ready.`;
