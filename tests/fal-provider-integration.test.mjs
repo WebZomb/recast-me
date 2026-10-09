@@ -17,7 +17,7 @@ test('fal-shaped JPEG fixture: screened twice, 1 queue POST, private R2, waterma
   if(String(url).startsWith('https://api.openai.com/v1/moderations'))return content();
   if(String(url)==='https://queue.fal.run/fal-ai/flux-2/edit'){
    const json=JSON.parse(options.body);assert.equal(json.num_inference_steps,18);assert.equal(json.image_urls.length,1);assert.ok(json.prompt.length<2500);assert.match(json.prompt,/royal/i);assert.match(json.prompt,/EXACT original dog\/animal/i);assert.equal(json.image_size.width,1024);
-   assert.equal(options.headers['X-Fal-No-Retry'],'1');assert.equal(options.headers['X-Fal-Store-IO'],'0');
+   assert.equal(new Headers(options.headers).get('X-Fal-No-Retry'),'1');assert.equal(new Headers(options.headers).get('X-Fal-Store-IO'),'0');
    return Response.json({request_id:JOB,status_url:BASE+'/requests/'+JOB+'/status',response_url:BASE+'/requests/'+JOB});
   }
   if(String(url)===BASE+'/requests/'+JOB+'/status')return Response.json({status:'COMPLETED'});

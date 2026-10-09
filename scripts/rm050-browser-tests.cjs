@@ -106,6 +106,9 @@ const policy={highDaily:3,standardDaily:5,purchaseBonus:3,websiteCalls:70,social
    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1),false,'admin overflow');assert.deepEqual(errors,[]);
    await page.goto('http://recast.test/model-lab.html',{waitUntil:'networkidle'});
    await page.locator('#use-demo-dog').click();
+   // The button loads a public WebP asynchronously; clicking ends before fetch.
+   // Wait for the actual completion message before asserting selected controls.
+   await page.waitForFunction(()=>document.querySelector('#status')?.textContent?.includes('Demo dog loaded'),null,{timeout:15000});
    assert.equal(await page.locator('#host').inputValue(),'fal');
    assert.equal(await page.locator('#engine').inputValue(),'dev');
    assert.equal(await page.locator('#subject').inputValue(),'pet');

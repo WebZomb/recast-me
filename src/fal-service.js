@@ -44,9 +44,14 @@ async function json(response){
 export async function runFalEdit(env,model,originalRequest){
  if(!env.FAL_API_KEY||typeof env.FAL_API_KEY!=='string'||env.FAL_PROVIDER_ENABLED!=='true')throw Object.assign(new Error('Fal provider is not configured'),{reason:'configuration'});
  const input=await prepareFalInput(model,originalRequest);
+ // Wrangler secret put can preserve a trailing newline from redirected files.
+ // Normalize ONLY surrounding whitespace; reject any internal control characters
+ // and build Headers eagerly, before the first paid provider request.
+ const credential=String(env.FAL_API_KEY||'').trim();
+ if(credential.length<21||/\s/.test(credential)||/[\x00-\x1f\x7f]/.test(credential))throw Object.assign(new Error('Fal API credential needs to be reconfigured.'),{reason:'configuration'});
+ const headers=new Headers({...FAL_PILOT_HEADERS,Authorization:'Key '+credential});
  const localId=String(env.RECAST_PROVIDER_ATTEMPT_ID||crypto.randomUUID()).replace(/[^a-zA-Z0-9._-]/g,'').slice(0,100);
  await receipt(env,localId,{host:'fal',model:'fal-ai/flux-2/edit',status:'submitting',startedAt:new Date().toISOString(),imageCount:input.image_urls.length,width:input.image_size.width,height:input.image_size.height,steps:input.num_inference_steps},{initial:true,required:true});
- const headers={...FAL_PILOT_HEADERS,Authorization:'Key '+env.FAL_API_KEY};
  let submitted=false,receivedFinalResult=false,requestId='',statusUrl='',resultUrl='';
  try{
   const submit=await fetch(HOST+FAL_PATH,{method:'POST',headers,body:JSON.stringify(input),signal:AbortSignal.timeout(30000)});
@@ -60,11 +65,11 @@ export async function runFalEdit(env,model,originalRequest){
   await receipt(env,localId,{status:'accepted',requestId,acknowledgedAt:new Date().toISOString()});
   const deadline=Date.now()+MAX_WAIT_MS;
   while(Date.now()<deadline){
-   const response=await fetch(statusUrl,{headers:{Authorization:headers.Authorization},signal:AbortSignal.timeout(12000)});
+   const response=await fetch(statusUrl,{headers:{Authorization:headers.get('Authorization')},signal:AbortSignal.timeout(12000)});
    if(!response.ok)throw Object.assign(new Error('503 failed checking provider job'),{reason:'unavailable'});
    const state=await json(response);
    if(state.status==='COMPLETED'){
-    const result=await fetch(resultUrl,{headers:{Authorization:headers.Authorization},signal:AbortSignal.timeout(20000)});
+    const result=await fetch(resultUrl,{headers:{Authorization:headers.get('Authorization')},signal:AbortSignal.timeout(20000)});
     if(!result.ok)throw Object.assign(new Error('503 completed provider job could not be retrieved'),{reason:'unavailable'});
     const body=await json(result);
     receivedFinalResult=true;
