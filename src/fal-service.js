@@ -20,12 +20,22 @@ function reasonFromHttp(status){
  return Object.assign(new Error('503 service unavailable'),{reason:'unavailable'});
 }
 function publicError(error){const m=String(error?.message||error).slice(0,200);return m.replace(/Key\s+\S+/gi,'Key [redacted]')}
-async function receipt(env,id,updates){
+async function receipt(env,id,updates,{initial=false,required=false}={}){
  try{
-  if(!env.ARTWORK)return;
-  const key='system/providers/fal-jobs/'+id+'.json',old=await env.ARTWORK.get(key),previous=old?await old.json():{};
-  await env.ARTWORK.put(key,JSON.stringify({...previous,...updates,updatedAt:new Date().toISOString()}),{httpMetadata:{contentType:'application/json'}});
- }catch{} // Provider submission remains authoritative; diagnostics must never retry.
+  if(!env.ARTWORK?.put||!env.ARTWORK?.get)throw Error('Private job ledger is unavailable.');
+  const key='system/providers/fal-jobs/'+id+'.json',old=await env.ARTWORK.get(key);
+  if(initial&&old)throw Error('This render already has a durable provider claim.');
+  const previous=old?await old.json():{};
+  const saved=await env.ARTWORK.put(key,JSON.stringify({...previous,...updates,updatedAt:new Date().toISOString()}),{
+   ...(initial?{onlyIf:new Headers({'If-None-Match':'*'})}:{}),
+   httpMetadata:{contentType:'application/json'}
+  });
+  if(initial&&!saved)throw Error('The provider claim is already reserved.');
+  return Boolean(saved);
+ }catch(error){
+  if(required)throw Object.assign(new Error('Render job tracking is temporarily unavailable. No new image request was sent.'),{reason:'configuration',cause:error});
+  return false; // After dispatch, NEVER replay an ambiguous accepted request.
+ }
 }
 async function json(response){
  const raw=await response.text();
@@ -35,7 +45,7 @@ export async function runFalEdit(env,model,originalRequest){
  if(!env.FAL_API_KEY||typeof env.FAL_API_KEY!=='string'||env.FAL_PROVIDER_ENABLED!=='true')throw Object.assign(new Error('Fal provider is not configured'),{reason:'configuration'});
  const input=await prepareFalInput(model,originalRequest);
  const localId=String(env.RECAST_PROVIDER_ATTEMPT_ID||crypto.randomUUID()).replace(/[^a-zA-Z0-9._-]/g,'').slice(0,100);
- await receipt(env,localId,{host:'fal',model:'fal-ai/flux-2/edit',status:'submitting',startedAt:new Date().toISOString(),imageCount:input.image_urls.length,width:input.image_size.width,height:input.image_size.height,steps:input.num_inference_steps});
+ await receipt(env,localId,{host:'fal',model:'fal-ai/flux-2/edit',status:'submitting',startedAt:new Date().toISOString(),imageCount:input.image_urls.length,width:input.image_size.width,height:input.image_size.height,steps:input.num_inference_steps},{initial:true,required:true});
  const headers={...FAL_PILOT_HEADERS,Authorization:'Key '+env.FAL_API_KEY};
  let submitted=false,requestId='',statusUrl='',resultUrl='';
  try{

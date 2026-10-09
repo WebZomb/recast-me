@@ -1,4 +1,5 @@
 import {budgetStatus} from './render-controls.js';
+import {providerHealth} from './provider-routing.js';
 const PREFIX='system/render-health',LEGACY_KEY='system/render-health.json',MODES=new Set(['high','quick','social']);
 const BLOCKING_REASONS=new Set(['capacity','quota','timeout','unavailable']);
 const modeName=m=>MODES.has(m)?m:'high',key=m=>`${PREFIX}-${modeName(m)}.json`,scopedKey=(env,m)=>m==='high'&&['fal','cloudflare'].includes(env.RECAST_HQ_SELECTED_PROVIDER)?`${PREFIX}-high-${env.RECAST_HQ_SELECTED_PROVIDER}.json`:key(m),nowMs=n=>n instanceof Date?n.getTime():Number(n??Date.now()),parseMs=v=>{const n=Date.parse(v||'');return Number.isFinite(n)?n:0};
@@ -15,6 +16,16 @@ export function localReadiness(env){const missing=[];if(env.RENDER_PAUSED==='tru
 export async function renderHealth(env,mode='high',now=Date.now()){
   const local=localReadiness(env),selected=modeName(mode);
   if(!local.ready)return{state:'unconfigured',ready:false,mode:selected,reason:'configuration',missing:local.missing,checkedAt:null,retryAt:null,lastResult:null,lastReason:'configuration',lastSuccessAt:null,lastFailureAt:null,visitorDailyLimit:null};
+  if(selected==='high'&&['fal','auto'].includes(String(env.RECAST_HQ_PROVIDER||'cloudflare'))){
+   const mode=env.RECAST_HQ_PROVIDER,health=await providerHealth(env);
+   const approvedFal=(env.FAL_PROVIDER_VERIFIED==='true'||env.RECAST_OWNER_PILOT_REQUEST==='true')&&env.FAL_PROVIDER_ENABLED==='true'&&Boolean(env.FAL_API_KEY);
+   const approvedCf=env.CF_PROVIDER_VERIFIED==='true'||health.cloudflare?.status==='success';
+   const falReady=approvedFal&&health.fal?.status!=='failed'&&health.fal?.status!=='ambiguous';
+   const cfReady=approvedCf&&health.cloudflare?.status!=='failed'&&health.cloudflare?.status!=='ambiguous';
+   const ready=mode==='fal'?falReady:falReady||cfReady;
+   const result=mode==='fal'?health.fal:(falReady?health.fal:health.cloudflare);
+   return {state:ready?'ready':'paused',ready,mode:selected,reason:ready?null:'unavailable',checkedAt:result?.checkedAt||null,retryAt:null,lastResult:result?.status||null,lastReason:result?.reason||null,lastSuccessAt:result?.lastSuccessAt||null,lastFailureAt:result?.lastFailureAt||null,visitorDailyLimit:null};
+  }
   const current=nowMs(now),selectedKey=scopedKey(env,selected),last=await readJson(env,selectedKey)||(selected==='social'?await readJson(env,LEGACY_KEY):null),retry=parseMs(last?.retryAt),blocked=last?.status==='failed'&&BLOCKING_REASONS.has(last?.reason)&&retry>current;
   return{state:blocked?'paused':'ready',ready:!blocked,mode:selected,reason:blocked?last.reason:null,checkedAt:last?.checkedAt||null,retryAt:blocked?last.retryAt:null,lastResult:last?.status||null,lastReason:last?.reason||null,lastSuccessAt:last?.lastSuccessAt||null,lastFailureAt:last?.lastFailureAt||null,visitorDailyLimit:null};
 }

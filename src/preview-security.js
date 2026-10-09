@@ -295,7 +295,7 @@ export function secureApplication(application) {
           if(path==='/api/admin/model-test' && form.get('ownerProvider')==='fal'){
             requireOwner(request,env);
             if(env.FAL_OWNER_TEST_ENABLED!=='true')throw error('owner_fal_not_enabled','fal owner test requires explicit activation.',503);
-            env={...env,RECAST_HQ_PROVIDER:'fal',FAL_PROVIDER_ENABLED:'true'};
+            env={...env,RECAST_HQ_PROVIDER:'fal',FAL_PROVIDER_ENABLED:'true',RECAST_OWNER_PILOT_REQUEST:'true'};
           }
           if(env.RECAST_RENDER_MODE==='high' && ['fal','auto'].includes(String(env.RECAST_HQ_PROVIDER||'cloudflare'))){
             const selected=await selectHighQualityProvider(env,form);

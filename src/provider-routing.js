@@ -41,7 +41,8 @@ export async function selectHighQualityProvider(env,form){
  }
  const health=await providerHealth(env);
  if(policy==='fal'){
-  if(!healthy(health.fal))throw Object.assign(new Error('The fal image engine needs a recovery check. Your photo is safe.'),{code:'render_provider_unavailable',status:503});
+  if(env.FAL_PROVIDER_VERIFIED!=='true'&&env.RECAST_OWNER_PILOT_REQUEST!=='true')throw Object.assign(new Error('The fal provider has not passed customer acceptance.'),{code:'render_provider_unverified',status:503});
+  if(!healthy(health.fal)&&env.RECAST_OWNER_PILOT_REQUEST!=='true')throw Object.assign(new Error('The fal image engine needs an owner recovery check. Your photo is safe.'),{code:'render_provider_unavailable',status:503});
   return {host:FAL,prices,configured:true,policy};
  }
  // Auto requires explicit owner acknowledgement before sending customer images
