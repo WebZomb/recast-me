@@ -144,3 +144,5 @@ Latest: [RM075 — owner daily reset](ASTRA-SESSION-RM-075.md). Same-browser aut
 Latest: [RM076 — controlled HQ outage reproduction](ASTRA-SESSION-RM-076.md). Both authorized tests failed3043, including established sample; provider recovery unverified. Honest retry status and owner support references,378tests/dry-run pass. No third paid call or model switch.
 
 Latest proposed integration: [RM096 — optional fal FLUX.2 dev host, verified owner-only pilot and safe provider routing](ASTRA-SESSION-RM-096.md). App changes remain on a separate review branch and are disabled by default. Do not infer customer-path acceptance, live provider recovery or production activation from the tests.
+
+Latest staged review: [RM097 — owner-only provider-job diagnostics and CI/canary evidence](ASTRA-SESSION-RM-097.md). Adds safe admin-only fal attempt review without paid calls, 391 local tests pass, dry-run passes; PR #16 WebKit CI passed on rerun after original flake. No live Fal customer route or runtime-canary acceptance yet.

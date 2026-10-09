@@ -3,6 +3,7 @@ import {saveOriginalPhoto} from './original-photo.js';
 import { WATERMARK_TILE_BASE64, WATERMARK_FOOTER_BASE64 } from './watermark-tile.js';
 import { digest, guardedEnvironment, renderControlStatus, budgetStatus, submissionFingerprint } from './render-controls.js';
 import {selectHighQualityProvider,providerStatus} from './provider-routing.js';
+import {providerJobIndex} from './provider-jobs.js';
 import {wrapImageProvider} from './fal-service.js';
 
 import { creditRoute, bindCustomerCredits, creditsEnabled, settleCustomerRender } from './render-credits.js';
@@ -188,6 +189,10 @@ export function secureApplication(application) {
         // Public diagnostic routes previously exposed operational order data or
         // bypassed normal rendering. Internal service calls are not HTTP routes.
         if (path.startsWith('/api/admin/') || ['/api/shopify-status', '/api/printful-status', '/api/storage-test', '/api/ai-test'].includes(path)) requireOwner(request, env);
+        if(path==='/api/admin/provider-jobs'&&request.method==='GET'){
+          requireOwner(request,env);
+          return json(await providerJobIndex(env,url.searchParams));
+        }
         if(path==='/api/admin/provider-status'&&request.method==='GET'){
           requireOwner(request,env);
           return json({ok:true,...await providerStatus(env)});

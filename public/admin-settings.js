@@ -50,6 +50,35 @@ export function initOwnerSettings(api,notify){
     try{const data=await api('/api/admin/reset-my-renders',{method:'POST',body:{}});text('reset-my-renders-status',data.message)}
     catch(e){text('reset-my-renders-status',e.message)}finally{button.disabled=false}
   });
+  async function loadProviderRecords(){
+    const healthEl=document.getElementById('provider-health-text'),jobEl=document.getElementById('provider-jobs');
+    if(!healthEl||!jobEl)return;
+    healthEl.textContent='Checking provider health…';jobEl.textContent='';
+    const [provider,jobs]=await Promise.all([api('/api/admin/provider-status'),api('/api/admin/provider-jobs')]);
+    const fal=provider.health?.fal||{},cf=provider.health?.cloudflare||{};
+    const state=r=>(r?.status||'not checked')+(r?.checkedAt?' · '+r.checkedAt:'');
+    healthEl.textContent=[
+      'HQ routing: '+provider.mode,
+      'fal: '+state(fal)+' · '+(provider.falConfigured?'key available':'not configured')+' · '+(provider.falVerified?'verified':'unverified'),
+      'Cloudflare: '+state(cf)+' · '+(provider.cloudflareVerified?'verified':'unverified'),
+      'Prices are estimates, not billing guarantees.'
+    ].join(String.fromCharCode(10));
+    const entries=jobs.items||[];
+    if(!entries.length){jobEl.textContent='No stored fal job attempts.';return;}
+    const title=document.createElement('p');title.textContent=entries.length+' recent fal attempt(s)';jobEl.append(title);
+    const list=document.createElement('ul');list.style.paddingLeft='22px';
+    for(const item of entries){
+      const el=document.createElement('li');el.style.margin='12px 0';
+      const date=item.updatedAt||item.createdAt||'unknown time';
+      el.textContent=(item.status||'unknown')+' · '+date+(item.requestId?' · job '+item.requestId:'')+(item.lastError?' · '+item.lastError:'');
+      list.append(el);
+    }
+    jobEl.append(list);
+    if(jobs.hasMore){const p=document.createElement('p');p.textContent='Additional historical records are available; viewing this page did not resubmit any render.';jobEl.append(p)}
+  }
+  const providerPanel=document.getElementById('provider-recovery-details');
+  providerPanel?.addEventListener('toggle',()=>{if(providerPanel.open&&current)loadProviderRecords().catch(e=>notify(e.message))});
+  document.getElementById('refresh-provider-jobs')?.addEventListener('click',()=>loadProviderRecords().catch(e=>notify(e.message)));
   function clear(){current=null;dirty=false;form.reset();root.querySelectorAll('[data-private-setting]').forEach(el=>el.textContent='');}
   return {load,clear};
 }
