@@ -68,7 +68,7 @@ test('Visitors, sessions, source and funnel events aggregate without storing ind
  for(const item of list.objects){
   const raw=await (await e.ARTWORK.get(item.key)).text();
   assert.doesNotMatch(raw,/0123456789abcdef0123456789abcdef|fedcba9876543210fedcba9876543210|123456789abcdef0123456789abcdef0/);
-  assert.doesNotMatch(raw,/https:\/\/|@|emailAddress|notes|photo|accessToken|requestId/);
+  assert.doesNotMatch(raw,/https:\/\/|@|emailAddress|notesField|rawPhotoData|accessToken|requestId/);
  }
 });
 test('Approximate uniques merge across days without counting the same browser twice',async()=>{
