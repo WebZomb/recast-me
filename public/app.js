@@ -16,6 +16,7 @@ async function refreshCredits(initialize=false){
   }catch(e){if(display){display.hidden=false;display.textContent=e.message}throw e}
 }
 refreshCredits(true).catch(()=>{});
+fetch('/api/credit-packs/catalog',{cache:'no-store'}).then(r=>r.json()).then(data=>{const link=document.querySelector('#credit-gifts-link');if(link)link.hidden=!data.enabled}).catch(()=>{});
 try{
   const path=sessionStorage.getItem('recast_order_return');
   if(path&&path.startsWith('/order.html?')){const box=document.querySelector('#return-to-order');box.hidden=false;box.querySelector('a').href=path;}
