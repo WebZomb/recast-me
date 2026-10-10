@@ -14,6 +14,7 @@ import { runSocialPipeline, socialReadiness } from './social.js';
 import { renderHealth } from './render-health.js';
 import { change, hash, fault, sameOrigin, privateJson, normalizeProductDesign, productPlacements, productionFiles, productPrintfile, composeMugLayout, composeProductLayout } from './commerce-store.js';
 import { reconcileOrderCredits, orderEligible, creditsEnabled, walletFor, creditBalance } from './render-credits.js';
+import {reconcilePaidCreditOrder,creditLineSku} from './credit-packs.js';
 import { designFor, publicDesign, customerDesignAction, approvedDesign, finishApprovedDesign, printDesignFile } from './order-approval.js';
 import { SYNC_ORDERS_QUERY, VERIFY_ORDER_QUERY } from './order-queries.js';
 
@@ -439,7 +440,11 @@ export async function reconcileShopifyOrder(env,order,{allowAutomation=true,hold
   if(order.lineItems?.pageInfo?.hasNextPage){await recordOrderIssue(env,order,null,'order_review','This order has more than 250 lines. Review the complete order in Shopify before fulfillment.');return {created:0,seen:0,issues:1};}
   let created=0,seen=0,issues=0,walletId=null;
   const eligible=orderEligible(order,env);
+  // Credit SKUs are digital entitlements, not Printful products. Payment and
+  // the checkout claim must agree before any redeemable code can be issued.
+  if((order.lineItems?.nodes||[]).some(l=>creditLineSku(l.sku)))await reconcilePaidCreditOrder(env,order);
   for(const line of order.lineItems?.nodes||[]){
+    if(creditLineSku(line.sku)){seen++;continue;}
     const requestId=artworkFromLine(line);
     let issue=null;
     if(!line.sku||!FULFILLMENT[line.sku])issue=['product_mapping_missing','No supported fulfillment mapping exists for this purchased SKU. Restore and verify the exact supplier mapping before rechecking.'];

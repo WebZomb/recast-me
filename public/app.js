@@ -1,7 +1,7 @@
 import {ADVENTURE_GUIDES} from './adventure-guides.js?v=1';
 import {mergeHistory,privateRecastLink,readRecastLink} from './recast-history.js';
 import {initCreationWizard} from './creation-wizard.js?v=262';
-import {fallbackState,creditSummary,recoveryUnverified} from './quality-policy.js?v=265';
+import {fallbackState,creditSummary,recoveryUnverified} from './quality-policy.js?v=266';
 import {protectedPreviewFile} from './preview-export.js';
 let creditInfo=null;
 async function refreshCredits(initialize=false){
@@ -16,6 +16,7 @@ async function refreshCredits(initialize=false){
   }catch(e){if(display){display.hidden=false;display.textContent=e.message}throw e}
 }
 refreshCredits(true).catch(()=>{});
+fetch('/api/credit-packs/catalog',{cache:'no-store'}).then(r=>r.json()).then(data=>{const link=document.querySelector('#credit-gifts-link');if(link)link.hidden=!data.enabled}).catch(()=>{});
 try{
   const path=sessionStorage.getItem('recast_order_return');
   if(path&&path.startsWith('/order.html?')){const box=document.querySelector('#return-to-order');box.hidden=false;box.querySelector('a').href=path;}
@@ -788,7 +789,7 @@ form.addEventListener('submit',async e=>{
 
   try{
     const credits=await refreshCredits(true);
-    if(credits.enabled&&(selectedQuality()==='quick'?((credits.remaining>0&&!currentFallback().outage)?0:credits.standardRemaining):credits.remaining)<=0)throw Object.assign(new Error('Your selected preview allowance is used. Check the reset time and available options below.'),{publicMessage:'Your selected preview allowance is used. Check the reset time and available options below.'});
+    if(credits.enabled&&(selectedQuality()==='quick'?((credits.purchasedStandard>0||credits.remaining<=0||currentFallback().outage)?(credits.standardEffectiveRemaining??credits.standardRemaining):0):credits.remaining)<=0)throw Object.assign(new Error('Your selected preview allowance is used. Check the reset time and available options below.'),{publicMessage:'Your selected preview allowance is used. Check the reset time and available options below.'});
     const fd=new FormData();
     fd.append('style',styleSelect.value);
     const customWorld=styleSelect.value==='custom'?document.querySelector('#custom-world').value.trim():'';
