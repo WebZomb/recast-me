@@ -90,7 +90,7 @@ export async function reserveCustomerRender(env,now=Date.now()){
       const ticket=await reserveExtraCredit(env,wallet.id,'standard',now,{purchasedOnly:balance.free+balance.bonus>0});
       if(ticket)return ticket;
     }
-    if(balance.free+balance.bonus>0&&env.RECAST_STANDARD_OUTAGE_APPROVED!=='true')throw fault('standard_locked','High Quality starter previews are available. Free Standard unlocks when starter and merchandise bonus previews are used, or during a verified outage.',409);
+    if(balance.remaining>0&&env.RECAST_STANDARD_OUTAGE_APPROVED!=='true')throw fault('standard_locked','High Quality previews are still available. Free Standard unlocks when High Quality credits are used, or during a verified outage. Purchased Standard credits remain selectable separately.',409);
     if(balance.resetActive){
       const ticket=await reserveExtraCredit(env,wallet.id,'standard',now);
       if(ticket)return ticket;
