@@ -1,0 +1,71 @@
+name: Recast guarded Cloudflare deployment
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - '.github/workflows/recast-cloudflare-deploy.yml'
+      - 'scripts/deploy-readonly-smoke.cjs'
+  push:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - 'public/**'
+      - 'wrangler.jsonc'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/recast-cloudflare-deploy.yml'
+permissions:
+  contents: read
+concurrency:
+  group: recast-production-worker-deployment
+  cancel-in-progress: false
+
+jobs:
+  test-and-bundle:
+    name: Offline tests and Worker dry-run
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      CI: 'true'
+      WRANGLER_SEND_METRICS: 'false'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - run: npm test
+      - run: npx --no-install wrangler deploy --dry-run --outdir /tmp/recast-verified-bundle
+
+  deploy:
+    name: Deploy approved main to Cloudflare
+    needs: test-and-bundle
+    if: ${{ github.event_name != 'pull_request' && vars.CLOUDFLARE_DEPLOY_READY == 'true' }}
+    runs-on: ubuntu-latest
+    environment: production
+    timeout-minutes: 10
+    env:
+      CI: 'true'
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      WRANGLER_SEND_METRICS: 'false'
+    steps:
+      - name: Check deployment credentials without showing values
+        run: |
+          test -n "$CLOUDFLARE_API_TOKEN" || { echo "::error::Missing CLOUDFLARE_API_TOKEN GitHub secret"; exit 1; }
+          test -n "$CLOUDFLARE_ACCOUNT_ID" || { echo "::error::Missing CLOUDFLARE_ACCOUNT_ID GitHub secret"; exit 1; }
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Deploy existing Worker and assets without changing saved secrets
+        run: npx --no-install wrangler deploy
+      - name: Read-only production check (no AI render or order)
+        run: node scripts/deploy-readonly-smoke.cjs
