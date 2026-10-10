@@ -29,7 +29,7 @@ test('fal-shaped JPEG fixture: screened twice, 1 queue POST, private R2, waterma
  assert.equal(result.status,200,JSON.stringify(data).slice(0,500));assert.equal(data.providerUsed,'fal');assert.equal(data.watermarked,true);
  assert.equal(data.image,'data:image/jpeg;base64,'+MARKED.toString('base64'));
  const meta=await(await env.ARTWORK.get('requests/'+data.requestId+'/request.json')).json();
- assert.equal(meta.providerUsed,'fal');assert.equal(meta.promptVersion,'fal-identity-world-v1');
+ assert.equal(meta.providerUsed,'fal');assert.equal(meta.promptVersion,'fal-adventure-scenes-v2');
  assert.equal(meta.safety.inputScreening.status,'passed');assert.equal(meta.safety.outputScreening.status,'passed');
  const original=await env.ARTWORK.get('requests/'+data.requestId+'/preview.b64');assert.equal(await original.text(),OUTPUT.toString('base64'));
  const balanced=await(await router.fetch(cookieReq(cookie),env,{})).json();assert.equal(balanced.remaining,2);
