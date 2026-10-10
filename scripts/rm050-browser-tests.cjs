@@ -62,7 +62,7 @@ const policy={highDaily:3,standardDaily:5,purchaseBonus:3,websiteCalls:70,social
      assert.ok(part.width>0&&part.height<35,'Timer typography must be a readable single line');
    }
    assert.equal(await page.locator('#quality-fallback').isHidden(),true);
-   assert.equal((await page.locator('#render-credits').textContent()).includes('Standard:'),false);
+   assert.match(await page.locator('#render-credits').textContent(),/Standard: 5 of 5 daily previews left \(0 used\)/,'Show Standard allowance before it unlocks');
    await page.locator('.product-design-controls').waitFor({state:'attached'});assert.equal(await page.locator('.product-design-controls').count(),1);
    assert.equal(await page.locator('[data-design-layout]').isHidden(),true);
    await page.locator('.product-design-controls summary').click();assert.equal(await page.locator('[data-design-layout]').isVisible(),true);
@@ -78,11 +78,22 @@ const policy={highDaily:3,standardDaily:5,purchaseBonus:3,websiteCalls:70,social
    assert.equal(await page.locator('#render-credits').evaluate(node=>getComputedStyle(node).whiteSpace),'pre-line','Separate credit balances should be readable on mobile');
    await page.locator('#choose-standard').click();assert.equal(await page.locator('input[name="qualityMode"][value="quick"]').isChecked(),true);
    await page.screenshot({path:path.join(out,`${engine.name()}-${width}-customer.png`)});
+   // Real owner case: both free allowances used; show a reset notice rather
+   // than presenting a Standard CTA that cannot be clicked.
+   Object.assign(state,{standardRemaining:0});
+   await page.reload({waitUntil:'networkidle'});
+   await page.locator('[data-create-step="0"] [data-go-step="1"]').click();
+   await page.locator('#photos').setInputFiles(path.join(root,'assets/jack-russell-source-v18.webp'));
+   await page.locator('[data-create-step="1"] [data-go-step="2"]').click();
+   assert.equal(await page.locator('#choose-standard').isHidden(),true,'Spent Standard should never look actionable');
+   assert.equal(await page.locator('#standard-limit-status').isVisible(),true,'Show a conspicuous Standard reset notice');
+   assert.match(await page.locator('#standard-limit-status').textContent(),/Standard used up — 0 of 5 left/);
+   assert.match(await page.locator('#render-credits').textContent(),/Standard: 0 of 5 daily previews left \\(5 used\\)/);
    Object.assign(state,{remaining:3,bonus:3});await page.evaluate(()=>window.dispatchEvent(new Event('focus')));await page.waitForTimeout(500);
    assert.equal(await page.locator('input[name="qualityMode"][value="high"]').isChecked(),true);assert.equal(await page.locator('#quality-fallback').isHidden(),true);
    // HQ providers are genuinely unavailable, but Standard's separate Cloudflare
    // model is not known to be down: explicit warning and explicit customer opt-in.
-   Object.assign(state,{hqOutage:true,quickDown:false,remaining:3,free:3,bonus:0});
+   Object.assign(state,{hqOutage:true,quickDown:false,remaining:3,free:3,bonus:0,standardRemaining:4});
    // A quality change refreshes the readiness API immediately, without
    // resetting the three-step creation wizard (a reload hides this panel).
    await page.locator('input[name="qualityMode"][value="high"]').dispatchEvent('change');
