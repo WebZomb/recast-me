@@ -48,6 +48,7 @@
         <button data-tab="recovery">Recover artwork</button>
         <button data-tab="errors">Generation Errors</button>
         <button data-tab="limits">Limits &amp; usage</button>
+        <button data-tab="credits">Credits &amp; Gifts</button>
         <button data-tab="alerts">Alerts</button><button data-tab="system">System</button>
       </nav>
 
@@ -79,6 +80,20 @@
         <div id="generation-errors-list" class="card-list"></div>
       </section>
 
+      <section class="tab-panel" data-panel="credits">
+        <div class="panel-heading"><div><div class="eyebrow">CUSTOMER REWARDS</div><h2>Credits &amp; Gifts</h2><p>Give an existing customer a complimentary refill or render pack, run promotions, and review codes. Paid Shopify gift codes become active only after verified payment.</p></div><button id="credit-codes-refresh" type="button">Refresh codes</button></div>
+        <form id="credit-issue-form" class="glass settings-form">
+          <h3>Generate a private redemption code</h3><p>Only give codes to intended recipients. Codes can be redeemed once. HQ and Standard packs do not expire by default. A daily refill starts its 24-hour clock when redeemed.</p>
+          <label>Credit package<select name="packId">
+            <option value="reset">24-hour refill · 3 HQ + 5 Standard</option>
+            <option value="hq10">10 High Quality</option><option value="hq20">20 High Quality</option><option value="hq50">50 High Quality</option>
+            <option value="std10">10 Standard</option><option value="std20">20 Standard</option><option value="std50">50 Standard</option>
+          </select></label>
+          <label>Optional promo code expiration in days (1–365)<input type="number" name="expiresDays" min="1" max="365" step="1" placeholder="Never expires if blank"></label>
+          <button type="submit">Generate unique code</button><p id="credit-admin-status" role="status" data-private-setting></p><div id="issued-code" data-private-setting></div>
+        </form>
+        <div class="glass op-card"><h3>Recent redemptions</h3><p class="muted">Full codes are shown once at creation. The history lists shortened references, redemption and revocation status.</p><div id="credit-code-history" data-private-setting></div></div>
+      </section>
       <section class="tab-panel" data-panel="limits" id="owner-settings">
         <div class="panel-heading"><div><div class="eyebrow">OWNER CONTROLS</div><h2>Limits &amp; usage</h2><p>Adjust allowances without a code update. Changes affect new requests; existing paid credits and confirmed orders stay intact.</p></div><button type="button" id="reload-owner-settings">Reload settings</button></div>
         <p id="owner-policy-status" role="status" data-private-setting></p>
@@ -161,6 +176,6 @@
       <div id="toast" class="toast hidden"></div>
     </section>
   </main>
-  <script src="/admin.js?v=rm075-rm0691" type="module"></script>
+  <script src="/admin.js?v=rm1101" type="module"></script>
 </body>
 </html>
