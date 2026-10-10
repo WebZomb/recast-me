@@ -75,6 +75,29 @@ export function initOwnerTraffic(api){
    if(!loaded){setText('traffic-visitors','—');setText('traffic-sessions','—')}
   }
  }
+ const excludeButton=$('traffic-exclude-browser');
+ function updateExcludeLabel(){
+  if(!excludeButton)return;
+  try{
+   excludeButton.textContent=localStorage.getItem('recast_analytics_opt_out')==='1'
+    ?'Include this browser in analytics':'Exclude this browser from analytics';
+  }catch{excludeButton.textContent='Browser privacy controls unavailable'}
+ }
+ excludeButton?.addEventListener('click',()=>{
+  try{
+   if(localStorage.getItem('recast_analytics_opt_out')==='1'){
+     localStorage.removeItem('recast_analytics_opt_out');
+     setText('traffic-exclude-status','Future site visits from this browser can now be counted.');
+   }else{
+     localStorage.setItem('recast_analytics_opt_out','1');
+     localStorage.removeItem('recast_analytics_visitor_v1');
+     sessionStorage.removeItem('recast_analytics_session_v1');
+     setText('traffic-exclude-status','Future visits from this browser will not be counted. Your credits and saved artwork are unchanged.');
+   }
+   updateExcludeLabel();
+  }catch{setText('traffic-exclude-status','Browser storage is disabled; use your browser privacy controls instead.')}
+ });
+ updateExcludeLabel();
  root.querySelectorAll('[data-traffic-days]').forEach(button=>{
   button.addEventListener('click',()=>{
    range=Number(button.dataset.trafficDays);
