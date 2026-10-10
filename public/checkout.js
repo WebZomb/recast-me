@@ -436,6 +436,7 @@ async function generateRealMockup({req,sku,card,button}){
         card.dataset.mockupSignature=signature;card.dataset.mockupId=mockupId;
         productReviewState.set(card,{sku,design,mockupId,views:views.slice(0,3),signature});
         card.classList.add("real-mockup-ready");
+        window.recastTrack?.("product_preview");
         state.busy=false;
         button.disabled=true;button.textContent="Preview ready ✓";
         const buy=card.querySelector(".recast-buy");
@@ -584,7 +585,8 @@ async function loadCheckout(){
         const res=await fetch(checkoutEndpoint("/api/checkout-link",req),{method:"POST",headers:{"x-recast-request":"1","content-type":"application/json"},body:JSON.stringify({requestId:req.requestId,accessToken:req.accessToken,sku})});
         const result=await res.json().catch(()=>({}));
         if(!res.ok||!result.ok||!result.checkoutUrl)throw new Error(result.error||"Checkout link could not be created.");
-        location.href=result.checkoutUrl;
+        window.recastTrack?.('checkout_clicked');
+     location.href=result.checkoutUrl;
       }catch(error){
         button.disabled=false;button.textContent=previous;
         errorCopy.textContent=error.message||"Checkout is temporarily unavailable. Please try again.";errorCopy.hidden=false;
