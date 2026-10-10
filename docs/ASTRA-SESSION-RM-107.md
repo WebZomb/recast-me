@@ -13,3 +13,13 @@ The existing longer identity rules still follow immediately after the adventure 
 
 ## Release/rollback
 Prior commit `749b6838eb78fdc7b588dce8948e0378b927854c` is the rollback point for Standard prompt text. Revert this small PR if the new prompt causes a theme to fall back to the original yard. The GitHub→Cloudflare auto-deployment pipeline is active for approved main source changes, with tests, dry-run and read-only health checks; no extra PC connection needed. Do not submit billable trial renders automatically. Ask owner to compare Holiday Magic and Rock Star with the same reference after release, judging (1) face/head fidelity and (2) scene/outfit compliance separately. Save CI and Worker deployment receipts here after release; this document alone is NOT evidence of a successful real image render.
+
+## Verified automated production release
+
+PR #25 merged from `recast/standard-identity-first-scenes-20261010` as GitHub main commit **`8856b4eaff0734aeeaab5c35c7d0e3f210d7386c`**. Both branch-level validation workflows passed (Recast security and customer-policy), then automatic GitHub→Cloudflare production run **`38024173157`** succeeded end to end.
+
+- Offline/GitHub Node tests: **415 passed, 0 failed**. Wrangler dry-run and CommonJS smoke syntax check passed.
+- Automated Cloudflare deployment succeeded: Worker `recast-me`, version **`20f4e766-3c30-42af-8356-47e5de7292f4`**. The current deployment's read-only smoke returned readiness HTTP200 with `localReady=true`, `highReady=true`, `standardReady=true`; unauthenticated owner endpoint HTTP401. No paid image request or supplier order was made.
+- Only the server-side Standard prompt and its diagnostic prompt version changed, plus automated tests and this documentation. The existing 48 distinct scene guides, fal HQ prompt, credits, model settings, content safety, commerce and watermarking remain as before.
+- Real-world facial similarity after this prompt adjustment **has not been independently visually accepted yet**. User should compare a new Standard Holiday Magic and/or Rock Star render against the same original reference and judge facial identity separately from background/outfit transformation. If the prompt still changes muzzle/ear geometry, further work may require a more identity-preserving image editor or selective masking, which is not yet implemented. Do not claim pixel-perfect consistency.
+- For rollback, revert commit `8856b4e...` via an approved GitHub change, or use Cloudflare Workers version history to restore the preceding successful version after verifying the current deployment. To avoid automatic redeployment of the undesired code, revert main or temporarily turn GitHub repository variable `CLOUDFLARE_DEPLOY_READY` to false before manual Worker rollback.
