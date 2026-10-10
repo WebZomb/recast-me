@@ -825,6 +825,8 @@ form.addEventListener('submit',async e=>{
 
     button.textContent=qualityMode==='quick'?'Creating Standard Preview…':'Creating High-Quality Preview…';
     advanceGenerationUI('rendering');
+    // Anonymous funnel event only; never send photos, text, artwork IDs or model tokens.
+    window.recastTrack?.('render_started');
     // Do not locally abort an in-flight image generation request. A browser timer
     // cannot cancel Workers AI and can create an orphaned paid render whose result
     // is discarded. Let the provider/Worker return the authoritative outcome.
@@ -854,6 +856,7 @@ form.addEventListener('submit',async e=>{
     clearPreviewError();
     document.querySelector('#preview-emergency-error')?.remove();
     hasSuccessfulPreview=true;
+    window.recastTrack?.('render_succeeded');
     lastSuccessfulImage=data.image;
     previewCache.set(data.requestId,Promise.resolve(data.image));
     const successVersion={
@@ -876,6 +879,7 @@ form.addEventListener('submit',async e=>{
     if(orderLink){orderLink.href=`/order.html?requestId=${encodeURIComponent(data.requestId)}&token=${encodeURIComponent(data.accessToken)}`;orderLink.classList.remove('hidden')}
     stopGenerationUI(true);
   }catch(err){
+    window.recastTrack?.('render_failed');
     stopGenerationUI(false);
     const publicMessage=err.publicMessage||friendlyGenerationError(null,err);
     let diagnosticId=err.diagnosticId||'';
