@@ -31,7 +31,7 @@ test('ALL 48 customer-visible adventures have a unique detailed server-and-clien
  assert.ok(ui.includes("import {ADVENTURE_GUIDES} from './adventure-guides.js?v=1'"));
  assert.ok(ui.includes('entry[2]=guide.teaser'));
  assert.ok(site.includes('id="selected-world-description"'));
- assert.ok(site.includes('/app.js?v=273'));
+ assert.ok(site.includes('/app.js?v=274'));
  assert.ok(site.includes('/adventure-description-v1.css?v=1'));
 });
 
