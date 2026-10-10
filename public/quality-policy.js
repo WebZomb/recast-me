@@ -22,7 +22,7 @@ export function fallbackState(snapshot,credits,mode='high'){
       :`High Quality is temporarily unavailable and your Standard previews are used up. ${standardReset?'Standard refreshes '+standardReset+'.':'Check the Standard reset time above.'} You can wait for High Quality to recover.`;
   }
   if(show)message+=' Credits do not change an order already confirmed for printing or bypass site availability limits.';
-  return {show,exhausted,outage,standardExhausted,standardReady,message,returnToHigh:mode==='quick'&&!exhausted&&!outage};
+  return {show,exhausted,outage,standardExhausted,standardReady,message,returnToHigh:mode==='quick'&&!exhausted&&!outage&&!boughtStandard};
 }
 // The customer balance is read-only; the server still controls allowances and access.
 export function creditSummary(credits,showStandard=false){
