@@ -37,7 +37,7 @@ export async function extraCreditBalance(env,walletId,now=Date.now()){
 export async function newCreditCode(env,{packId,source='owner',orderId=null,lineId=null,exactCode=null,expiresAt=null}){
   const p=packFor(packId),code=exactCode||formatCode();validCode(code);
   const id=await hash(code),record={id,last4:code.slice(-4),packId,source,orderId,lineId,issuedAt:new Date().toISOString(),expiresAt,redeemedWallet:null,redeemedAt:null,revokedAt:null};
-  const existing=await change(env,codeKey(id),record,old=>{
+  const existing=await change(env,codeKey(id),null,old=>{
     if(old?.id){if(source==='shopify'&&old.source==='shopify'&&old.orderId===orderId&&old.lineId===lineId&&old.packId===packId)return undefined;throw fault('code_conflict','This redemption code is already assigned.',409)}
     return record;
   });
