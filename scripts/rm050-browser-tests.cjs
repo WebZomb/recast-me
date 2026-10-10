@@ -88,7 +88,7 @@ const policy={highDaily:3,standardDaily:5,purchaseBonus:3,websiteCalls:70,social
    assert.equal(await page.locator('#choose-standard').isHidden(),true,'Spent Standard should never look actionable');
    assert.equal(await page.locator('#standard-limit-status').isVisible(),true,'Show a conspicuous Standard reset notice');
    assert.match(await page.locator('#standard-limit-status').textContent(),/Standard used up — 0 of 5 left/);
-   assert.match(await page.locator('#render-credits').textContent(),/Standard: 0 of 5 daily previews left \\(5 used\\)/);
+   assert.match(await page.locator('#render-credits').textContent(),/Standard: 0 of 5 daily previews left \(5 used\)/);
    Object.assign(state,{remaining:3,bonus:3});await page.evaluate(()=>window.dispatchEvent(new Event('focus')));await page.waitForTimeout(500);
    assert.equal(await page.locator('input[name="qualityMode"][value="high"]').isChecked(),true);assert.equal(await page.locator('#quality-fallback').isHidden(),true);
    // HQ providers are genuinely unavailable, but Standard's separate Cloudflare
