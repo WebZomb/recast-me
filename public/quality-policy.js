@@ -13,7 +13,7 @@ export function fallbackState(snapshot,credits,mode='high'){
   let message=exhausted
     ?'High Quality is used up.'+(reset?' Resets '+reset+'.':' Come back when it resets.')+(standardTotal>0?' You can try Standard (lower detail).':'')
     :outage
-      ?'High Quality is temporarily unavailable. You can wait or try Standard (lower detail).'
+      ?'High Quality is unavailable. Standard uses a different Cloudflare model: weaker likeness, and it may also fail. You can wait or try it.'
       :boughtStandard
         ?'Your Standard credits are ready. Images may have less detail than High Quality.'
         :'';
