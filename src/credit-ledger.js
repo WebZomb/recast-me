@@ -87,7 +87,7 @@ export async function revokeCreditCode(env,id,reason='owner',now=Date.now()){
   }
   return {id,revoked:true,redeemed:Boolean(record.redeemedWallet)};
 }
-export async function reserveExtraCredit(env,walletId,type,now=Date.now()){
+export async function reserveExtraCredit(env,walletId,type,now=Date.now(),{purchasedOnly=false}={}){
   validWallet(walletId);
   if(!['high','standard'].includes(type))throw fault('credits_type','Unknown preview type.',400);
   const key=walletKey(walletId),ticket=randomToken();let selected=null;
@@ -95,7 +95,7 @@ export async function reserveExtraCredit(env,walletId,type,now=Date.now()){
     const r=activeReset(v,now),usedKey=type==='high'?'highUsed':'standardUsed',allowance=type==='high'?3:5;
     // The refill is a fresh *personal* daily period. It doesn't reset the
     // shared-network free budget for any other user on the same Wi-Fi.
-    if(r&&r[usedKey]<allowance){
+    if(!purchasedOnly&&r&&r[usedKey]<allowance){
       r[usedKey]++;r.active||={};r.active[ticket]=type;
       selected={key,ticket,source:'reset',codeId:r.sourceCodeId,type};return v;
     }
