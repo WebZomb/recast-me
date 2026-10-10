@@ -1,7 +1,7 @@
 import {ADVENTURE_GUIDES} from './adventure-guides.js?v=1';
 import {mergeHistory,privateRecastLink,readRecastLink} from './recast-history.js';
 import {initCreationWizard} from './creation-wizard.js?v=262';
-import {fallbackState,creditSummary,recoveryUnverified} from './quality-policy.js?v=263';
+import {fallbackState,creditSummary,recoveryUnverified} from './quality-policy.js?v=264';
 import {protectedPreviewFile} from './preview-export.js';
 let creditInfo=null;
 async function refreshCredits(initialize=false){
@@ -377,6 +377,10 @@ function readinessMessage(mode=selectedQuality()){
 function currentFallback(){return fallbackState(readinessSnapshot,creditInfo,selectedQuality())}
 function updateFallback(){
   const state=currentFallback(),box=document.querySelector('#quality-fallback');
+  // Keep Standard usage visible during both normal HQ exhaustion and the
+  // separately authorized HQ-outage fallback; never change credit eligibility.
+  const balance=document.querySelector('#render-credits');
+  if(balance&&creditInfo?.enabled)balance.textContent=creditSummary(creditInfo,state.show);
   if(box)box.hidden=!state.show;
   const reason=document.querySelector('#quality-fallback-reason');if(reason)reason.textContent=state.message;
   const standard=document.querySelector('#choose-standard');if(standard){standard.hidden=selectedQuality()==='quick';standard.disabled=!state.standardReady;}

@@ -14,11 +14,26 @@ export function fallbackState(snapshot,credits,mode='high'){
   if(show)message+=' Credits do not change an order already confirmed for printing or bypass site availability limits.';
   return {show,exhausted,outage,standardReady,message,returnToHigh:mode==='quick'&&!exhausted&&!outage};
 }
-export function creditSummary(credits){
+// The customer balance is read-only; the server still controls allowances and access.
+export function creditSummary(credits,showStandard=false){
   if(!credits?.enabled)return '';
-  const daily=Number(credits.free||0),bonus=Number(credits.bonus||0);
-  const reset=credits.resetAt&&Number.isFinite(Date.parse(credits.resetAt))?new Date(credits.resetAt).toLocaleString([], {month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}):null;
-  return `High Quality: ${daily} of ${credits.freeAllowance??3} daily previews left${bonus?` + ${bonus} purchase credits`:''}.${reset?' Refreshes '+reset+'.':''}${credits.remaining<=0?` Standard: ${credits.standardRemaining??0} left.`:''}`;
+  if(credits.initialized===false)return 'Preparing your preview allowances…';
+  const count=(value,fallback)=>Number.isFinite(Number(value))?Math.max(0,Math.floor(Number(value))):fallback;
+  const reset=value=>value&&Number.isFinite(Date.parse(value))?new Date(value).toLocaleString([], {month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}):null;
+  const highAllowance=count(credits.freeAllowance,3);
+  const free=Math.min(highAllowance,count(credits.free,0));
+  const bonus=count(credits.bonus,0);
+  const highReset=reset(credits.resetAt);
+  const lines=[`High Quality: ${free} of ${highAllowance} daily previews left (${highAllowance-free} used)${bonus?` + ${bonus} purchase credits`:''}.${highReset?' Refreshes '+highReset+'.':''}`];
+  // Only announce Standard when HQ is depleted or an approved HQ-outage fallback
+  // has been offered. Displaying a balance never unlocks the Standard engine.
+  if(showStandard||Number(credits.remaining)<=0){
+    const standardAllowance=count(credits.standardAllowance,5);
+    const standardLeft=Math.min(standardAllowance,count(credits.standardRemaining,standardAllowance));
+    const standardReset=reset(credits.standardResetAt);
+    lines.push(`Standard: ${standardLeft} of ${standardAllowance} daily previews left (${standardAllowance-standardLeft} used).${standardReset?' Refreshes '+standardReset+'.':''}${Number(credits.remaining)>0?' Offered only while High Quality is unavailable.':''}`);
+  }
+  return lines.join('\n');
 }
 
 // A cooldown permits a deliberate retry; it is not a successful health probe.
