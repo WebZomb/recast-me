@@ -1,5 +1,5 @@
 import test from 'node:test';import assert from 'node:assert/strict';
-import {fallbackState,creditSummary} from '../public/quality-policy.js';
+import {fallbackState,creditSummary,creditHeadline} from '../public/quality-policy.js';
 const ready={local:{ready:true},modes:{high:{ready:true},quick:{ready:true}}};
 test('HQ hides Standard while daily or purchased High Quality remains',()=>{
  for(const remaining of [1,3,6])assert.equal(fallbackState(ready,{enabled:true,remaining,standardRemaining:5}).show,false);
@@ -7,7 +7,7 @@ test('HQ hides Standard while daily or purchased High Quality remains',()=>{
 });
 test('exhaustion reveals explicit lower-quality warning, reset and three-credit next-Recast offer',()=>{
  const result=fallbackState(ready,{enabled:true,remaining:0,standardRemaining:5,purchaseBonus:3,resetAt:'2026-10-05T12:00:00Z'});
- assert.equal(result.standardReady,true);assert.match(result.message,/3 bonus High Quality/);assert.match(result.message,/refreshes/);assert.match(result.message,/weaker likeness/);assert.match(result.message,/next Recast/);assert.match(result.message,/do not change an order/);
+ assert.equal(result.standardReady,true);assert.match(result.message,/High Quality is used up/);assert.match(result.message,/Resets/);assert.match(result.message,/lower detail/);assert.ok(result.message.length<160,'A simple choice should not be a book');
 });
 test('outages and unknown credit state do not expose Standard',()=>{
  const busy={...ready,modes:{high:{ready:false,reason:'capacity'},quick:{ready:true}}};
@@ -18,7 +18,7 @@ test('outages and unknown credit state do not expose Standard',()=>{
 test('exhausted Standard and local outage never advertise an available render',()=>{
  assert.equal(fallbackState(null,{enabled:true,remaining:0,standardRemaining:5}).standardReady,false);
  assert.equal(fallbackState({...ready,local:{ready:false}},{enabled:true,remaining:0,standardRemaining:5}).standardReady,false);
- const noStandard=fallbackState(ready,{enabled:true,remaining:0,standardRemaining:0,standardAllowance:5});assert.equal(noStandard.standardReady,false);assert.equal(noStandard.standardExhausted,true);assert.match(noStandard.message,/Both your free High Quality and Standard preview allowances are used up/);
+ const noStandard=fallbackState(ready,{enabled:true,remaining:0,standardRemaining:0,standardAllowance:5});assert.equal(noStandard.standardReady,false);assert.equal(noStandard.standardExhausted,true);assert.match(noStandard.message,/All free previews are used up/);
 });
 test('HQ and Standard balances show explicit daily allowance, used counts, and distinct refresh times',()=>{
  assert.equal(creditSummary({enabled:false}), '');
@@ -52,20 +52,20 @@ test('Spent Standard has an unmistakable separate reset; no unusable Standard in
  assert.equal(result.show,true);
  assert.equal(result.standardReady,false);
  assert.equal(result.standardExhausted,true);
- assert.match(result.message,/Both your free High Quality and Standard preview allowances are used up/);
- assert.match(result.message,/High Quality refreshes/);
- assert.match(result.message,/Standard refreshes/);
+ assert.match(result.message,/All free previews are used up/);
+ assert.match(result.message,/High Quality resets/);
+ assert.match(creditSummary(credits),/Standard: .*Refreshes/,'Exact Standard reset remains one tap away');
  assert.doesNotMatch(result.message,/You can try Standard/);
  const outage=fallbackState({...ready,standardOutageAvailable:true},{...credits,remaining:1});
  assert.equal(outage.standardExhausted,true);
- assert.match(outage.message,/High Quality is temporarily unavailable and your Standard previews are used up/);
+ assert.match(outage.message,/High Quality is unavailable, and Standard is used up/);
 });
 
 test('purchased Standard unlocks its own mode while High Quality is still available',()=>{
  const credits={enabled:true,remaining:3,free:3,freeAllowance:3,bonus:0,standardRemaining:5,standardAllowance:5,purchasedStandard:20,standardEffectiveRemaining:25};
  const result=fallbackState(ready,credits,'quick');
  assert.equal(result.show,true);assert.equal(result.standardReady,true);assert.equal(result.returnToHigh,false);
- assert.match(result.message,/purchased Standard credits/);
+ assert.match(result.message,/Your Standard credits are ready/);
  const counter=creditSummary(credits);
  assert.match(counter,/20 purchased Standard/);
 });
@@ -73,4 +73,23 @@ test('purchased HQ and merchandise bonuses have distinct read-only balance label
  const credits={enabled:true,remaining:26,free:3,freeAllowance:3,bonus:3,purchasedHigh:20,standardAllowance:5,standardRemaining:5};
  assert.match(creditSummary(credits),/3 merchandise bonus/);
  assert.match(creditSummary(credits),/20 purchased HQ/);
+});
+
+test('Compact credit summary is clear, while exact reset times remain behind details',()=>{
+ const credits={enabled:true,initialized:true,remaining:5,free:2,freeAllowance:3,bonus:3,standardAllowance:5,standardRemaining:4,standardResetAt:'2026-10-11T12:00:00Z',resetAt:'2026-10-10T12:00:00Z'};
+ assert.equal(creditHeadline(credits),'High Quality: 5 left  ·  Standard: 4 left');
+ assert.match(creditSummary(credits),/High Quality: 2 of 3 daily previews left/);
+ assert.match(creditSummary(credits),/Standard: 4 of 5 daily previews left/);
+ assert.match(creditSummary(credits),/Refreshes/);
+ assert.equal(creditHeadline({...credits,remaining:0,standardRemaining:0}),'High Quality: 0 left  ·  Standard: 0 left');
+ assert.equal(creditHeadline({...credits,remaining:25,purchasedStandard:20,standardEffectiveRemaining:24}),'High Quality: 25 left  ·  Standard: 24 left');
+});
+test('Unavailable or fully used engines never expose unusable Standard button',()=>{
+ const credits={enabled:true,remaining:0,standardRemaining:0,resetAt:'2026-10-10T16:00:00Z',standardResetAt:'2026-10-11T16:00:00Z'};
+ const state=fallbackState(ready,credits);
+ assert.equal(state.standardReady,false);
+ assert.equal(state.standardExhausted,true);
+ assert.ok(state.message.length<160);
+ assert.doesNotMatch(state.message,/You can try Standard/);
+ assert.match(creditSummary({...credits,initialized:true,free:0,freeAllowance:3,standardAllowance:5}),/Standard: 0 of 5/);
 });
