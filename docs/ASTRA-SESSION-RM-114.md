@@ -1,0 +1,25 @@
+# RM114 — Recast website visitor & traffic analytics dashboard (2026-10-10)
+
+## User request
+User asked for live website visitor, source, and conversion statistics, ideally inside the existing Recast admin. No extra service, account, platform, or subscription. Existing admin only tracks AI/production operations, not human visitor sessions. Connected Shopify Analytics showed 33 Shopify *storefront* sessions from Oct 3–10, 2026 including possible owner tests; these are NOT the number of visits to RecastMeAi.com. Cloudflare infrastructure requests likewise are not real human visitors.
+
+Baseline GitHub main 8f3a52772d9935bdb88c880c0e05f8923d60d137. Review branch recast/rm114-first-party-traffic-admin-20261010.
+
+## Changes
+- src/traffic-analytics.js: adds owner-only GET /api/admin/traffic?days=1|7|30 using existing ADMIN_TOKEN and private Cloudflare R2. Public first-party POST /api/analytics/event checks origin and event whitelist and size; stores aggregate approximate visitor/session HyperLogLog counts plus bounded page/traffic source/UTM campaign/device/coarse-country/adventure/funnel category totals. Eight R2 daily shards, CAS-safe writes. No customer IP, raw user-agent string, full referrer/URL, photos, private artwork IDs, order data, email, or browser/session identifiers are retained in analytics records. Browser DNT/GPC and common bots filtered.
+- public/analytics.js: small no-vendor first-party script on public home, credits, order, support, and privacy pages. Stores a random browser ID for up to 30 days in browser localStorage and a 30-minute session ID in sessionStorage to deduplicate, then folds identifiers server-side into anonymized aggregate sketches. Honors DNT/GPC and explicit browser opt-out. Only sends coarse page category, source, sanitized campaign/adventure slug and an allowlisted event name. Excludes admin and local/test hosts. No Google Analytics account, tracking pixel, or external SDK.
+- public/app.js counts attempted preview, completed protected preview and client-side error (not billable inference). public/checkout.js tracks completed product preview and checkout link clicks (not paid orders). public/credits.js tracks credit checkout link click and redeemed code event, never codes or customer metadata.
+- public/admin.html, admin-traffic.js, admin.js, admin.css: new Traffic & Analytics owner tab with today/7d/30d range, six KPI cards, daily pageview bars, most common referrers, pages, device categories, countries, UTM campaigns, popular adventures and creator-to-checkout funnel. Adds at-a-glance unique browser estimate to admin header. Direct links distinguish *separate* Shopify sales/sessions from Cloudflare infrastructure statistics. Rendering uses textContent rather than untrusted HTML. Responsive to mobile.
+- public/privacy.html: discloses the optional analytics and adds a working local browser analytics opt-out control. Browser data/opt-out do not affect credit, purchases or artwork.
+- wrangler.jsonc sets SITE_ANALYTICS_ENABLED=true; does not change provider limits, checkout, customer credits, fulfillment, or social automation.
+- tests/traffic-analytics.test.mjs: first-party visitor and session estimates across daily shards, DNT/GPC/bot exclusions, input validation, no private data storage, admin authorization, origin security, router integration, page disclosure and stat instrumentation.
+
+## Accurate reporting and limitations
+- Browser visitors are APPROXIMATE distinct devices/browsers, not people. Multiple devices, privacy-blocked browsers, bot detection, sessions, and analytics opt-outs affect count. Pageviews and checkout clicks are events, not orders/revenue.
+- No website visitor history can be reconstructed before first-party tracking is deployed. Days use UTC boundaries. Shopify storefront analytics already exist but are not combined into these unique visitor counts. Verify paid orders and revenue through Shopify Analytics.
+- Privacy compliance for regions requiring affirmative opt-in should be reviewed before broad marketing. The current implementation honors DNT/GPC and browser opt-out and holds only aggregate sketches; do not claim legal certification.
+- This costs no new recurring subscription but adds some Cloudflare Worker/R2 requests and operations; evaluate R2 usage as traffic grows. Limit category dimensions and day/shard event counts.
+- No live AI render, Shopify charge, refund, Printful job, or email outreach is authorized or performed by analytics testing.
+
+## Release checklist
+Record exact CI status, Node tests, browser workflow, dry-run and guarded Cloudflare deployment. Check live public analytics script and private-admin 401; do not claim paid funnel acceptance or backfilled website visitor data. If regressions occur, disable SITE_ANALYTICS_ENABLED via GitHub config/deploy; optionally remove script tags. Do not delete customer credits, order data or private artwork for analytics rollback.
