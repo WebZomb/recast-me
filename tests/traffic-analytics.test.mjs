@@ -82,7 +82,7 @@ test('Approximate uniques merge across days without counting the same browser tw
  const d=await analyticsSummary(e,7);
  assert.equal(d.totals.visitors,1);
  assert.equal(d.totals.sessions,1);
- assert.equal(d.totals.pageViews,2,'each day's actual page views are still additive');
+ assert.equal(d.totals.pageViews,2,"each day has additive page views");
 });
 test('Do Not Track, GPC and recognizable bots never create analytics records',async()=>{
  const e=env();
