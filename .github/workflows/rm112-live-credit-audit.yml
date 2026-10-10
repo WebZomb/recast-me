@@ -1,0 +1,39 @@
+name: Recast live Credits & Gifts audit (no charges)
+on:
+  pull_request:
+    paths:
+      - 'scripts/rm112-live-credit-audit.cjs'
+      - '.github/workflows/rm112-live-credit-audit.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/rm112-live-credit-audit.cjs'
+      - '.github/workflows/rm112-live-credit-audit.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  production-credit-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout exact GitHub source
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Prepare isolated browser test tools
+        run: |
+          mkdir -p /tmp/recast-browser
+          cd /tmp/recast-browser
+          npm init -y >/dev/null
+          npm install --ignore-scripts --no-audit --no-fund playwright
+          npx playwright install --with-deps chromium webkit >/tmp/credits-browser-install.txt 2>&1
+      - name: Navigate live Recast credit page, anonymous security, and Shopify checkout entry without payment
+        run: NODE_PATH=/tmp/recast-browser/node_modules node scripts/rm112-live-credit-audit.cjs
+      - name: Save browser screenshots and full verification report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rm112-live-credits-site-evidence
+          path: audit-results/credits/
+          retention-days: 7
