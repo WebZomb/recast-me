@@ -92,6 +92,8 @@ const policy={highDaily:3,standardDaily:5,purchaseBonus:3,websiteCalls:70,social
    await page.locator('[data-create-step="1"] [data-go-step="2"]').click();
    assert.equal(await page.locator('#all-worlds-group').isHidden(),true);
    assert.equal(await page.locator('#surprise-world').isVisible(),true,'Surprise me is a clear alternative');
+   await page.locator('#surprise-world').click();
+   assert.match(await page.locator('#adventure-selection-status').textContent(),/Selected: /,'Surprise mode always shows the chosen adventure');
    await page.locator('#more-adventures').click();
    assert.equal(await page.locator('#all-worlds-group').isVisible(),true,'All 48 adventures remain reachable on demand');
    assert.equal(await page.locator('#more-adventures').getAttribute('aria-expanded'),'true');
