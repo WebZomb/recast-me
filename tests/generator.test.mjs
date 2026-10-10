@@ -233,7 +233,7 @@ test('illustrated and realistic worlds preserve identity instructions in both qu
         assert.ok(prompt.indexOf('ALL-WORLD LIKENESS') < prompt.indexOf('SELECTED WORLD:'));
       }else{
         // Klein gets the scene FIRST so a shorter prompt actually changes the world.
-        assert.ok(prompt.startsWith('MAKE ONE NEW '));
+        assert.ok(prompt.startsWith('EDIT THE UPLOADED PHOTO(S)'));
         assert.ok(prompt.indexOf('REPLACE THE WHOLE ORIGINAL BACKGROUND') < prompt.indexOf('ALL-WORLD LIKENESS'));
         assert.ok(prompt.length<3500,'Standard must not re-use the long HQ prompt');
       }
