@@ -12,6 +12,7 @@ const report={test:'RM112 live site check WITHOUT any charge/order/render',at:ne
  'The real $2.99 Shopify payment, Shopify order custom attributes, credit fulfillment and refund reversal cannot be confirmed without a completed payment.',
  'Owner-only checkout button cannot be accessed in this audit without an owner token; no token is read or requested.'
 ]};
+let liveTestAllowed=null,shopifyProductAccessible=null;
 const T=15000;
 function record(name,ok,details={}){report.checks.push({name,ok,...details});if(!ok)report.failures.push(name+(details.reason?': '+details.reason:''))}
 async function get(url){return fetch(url,{redirect:'follow',cache:'no-store',signal:AbortSignal.timeout(20000),headers:{'user-agent':'RecastMe/1.0 public launch audit'}})}
@@ -26,17 +27,25 @@ async function preflight(){
   if(result.status!=='fulfilled'){record('GET '+['credits page','credit JS','credit styles','credit catalog','Shopify unlisted product'][i],false,{reason:String(result.reason).slice(0,240)});continue;}
   const response=result.value;
   const text=await response.text();
-  record('GET '+['credits page','credit JS','credit styles','credit catalog','Shopify unlisted product'][i],response.ok,{status:response.status,location:response.url,bodyBytes:text.length,reason:response.ok?'':'HTTP '+response.status});
+  // Product will intentionally be DRAFT (404) once the site smoke is finished.
+  // During transition, the old owner-test flag may still be deployed but the
+  // product is already closed. Do not mark that intentional shutdown a failure.
+  const valid=i===4?(response.ok||response.status===404):response.ok;
+  record('GET '+['credits page','credit JS','credit styles','credit catalog','Shopify reset product or safe draft'][i],valid,{status:response.status,location:response.url,bodyBytes:text.length,reason:valid?'':'HTTP '+response.status});
   if(i===0)record('Credit page has redemption and order status',text.includes('id="redeem-credit-form"')&&text.includes('id="credit-purchase-list"'));
   if(i===1)record('Only owner test checkout UI present',text.includes("testReady&&p.id==='reset'&&mode==='self'")&&text.includes('OWNER TEST · Pay $2.99'));
   if(i===3&&response.ok){
    try{
     const j=JSON.parse(text),packs=Object.fromEntries((j.packs||[]).map(p=>[p.id,p]));
-    record('Public credit pack sale remains OFF',j.enabled===true&&j.salesEnabled===false&&j.ownerTestEnabled===true,{enabled:j.enabled,salesEnabled:j.salesEnabled,ownerTestEnabled:j.ownerTestEnabled});
+    liveTestAllowed=j.ownerTestEnabled===true;
+    record('Public credit pack sale remains OFF',j.enabled===true&&j.salesEnabled===false&&typeof j.ownerTestEnabled==='boolean',{enabled:j.enabled,salesEnabled:j.salesEnabled,ownerTestEnabled:j.ownerTestEnabled});
     record('Seven correctly priced credit packs',Object.keys(packs).length===7&&packs.reset?.priceCents===299&&packs.hq10?.priceCents===499&&packs.hq20?.priceCents===899&&packs.hq50?.priceCents===1999&&packs.std10?.priceCents===299&&packs.std20?.priceCents===549&&packs.std50?.priceCents===1199,{packages:Object.keys(packs).length});
    }catch(e){record('Credit catalog parses',false,{reason:e.message})}
   }
-  if(i===4&&response.ok){
+  if(i===4){
+   shopifyProductAccessible=response.ok;
+   if(!response.ok){record('Shopify owner test reset safely disabled (draft)',response.status===404,{status:response.status});continue;}
+   if(liveTestAllowed===false)record('Shopify reset not publicly buyable while owner test is off',false,{reason:'Direct variant remains published though Recast test flag is off'});
    try{const p=JSON.parse(text);record('Shopify reset product is 299 cents and available',p.variants?.some(v=>Number(v.price)===299&&v.available!==false),{variantIds:p.variants?.map(v=>v.id),available:p.available,title:p.title});}
    catch(e){record('Shopify reset product parses',false,{reason:e.message})}
   }
@@ -85,6 +94,7 @@ async function browse(engine,width,height){
  finally{await browser.close()}
 }
 async function storefrontCheckoutEntry(){
+ if(!liveTestAllowed||!shopifyProductAccessible){report.checkoutEntry={skipped:true,reason:'Shopify test closed or product is draft; no checkout attempted.'};return;}
  // Open a real Shopify cart permalink with a SYNTHETIC claim.
  // Do NOT submit customer/payment details, approve a charge or place any order.
  const b=await chromium.launch(),context=await b.newContext({viewport:{width:1280,height:900}});
