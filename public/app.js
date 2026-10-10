@@ -190,6 +190,8 @@ function updateWorldFields(){
     ? 'Create your own adventure by describing the place, clothing, mood and lighting.'
     : (ADVENTURE_GUIDES[styleSelect.value]?.teaser||'A new original scene with clothing and background tailored to this adventure.');
   document.querySelectorAll('.style-card').forEach(card=>card.classList.toggle('selected',card.dataset.style===styleSelect.value));
+  const adventureStatus=document.querySelector('#adventure-selection-status');
+  if(adventureStatus)adventureStatus.textContent=isCustom?'Selected: Your own adventure':'Selected: '+(STYLES.find(s=>s[0]===styleSelect.value)?.[1]||'Adventure');
   document.dispatchEvent(new Event('recast-style-change'));
 }
 updateWorldFields();
