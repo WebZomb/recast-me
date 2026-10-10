@@ -142,6 +142,8 @@ test('Privacy disclosure, opt-out, source categories and UI funnel instrumentati
  assert.match(publicFile('credits.html'),/analytics\.js\?v=1/);
  assert.match(publicFile('admin.html'),/data-panel="traffic"/);
  assert.match(publicFile('admin.js'),/initOwnerTraffic/);
+ assert.match(publicFile('admin.html'),/id="traffic-exclude-browser"/);
+ assert.match(publicFile('admin-traffic.js'),/recast_analytics_opt_out/);
  assert.match(publicFile('app.js'),/recastTrack\?\.\('render_succeeded'\)/);
  assert.match(publicFile('checkout.js'),/recastTrack\?\.\('checkout_clicked'\)/);
 });
