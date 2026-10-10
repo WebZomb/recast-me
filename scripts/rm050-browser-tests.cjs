@@ -113,6 +113,11 @@ const policy={highDaily:3,standardDaily:5,purchaseBonus:3,websiteCalls:70,social
    Object.assign(state,{hqOutage:false,quickDown:false,remaining:3,free:3,bonus:3});
    await page.goto('http://recast.test/admin.html',{waitUntil:'networkidle'});
    await page.locator('#admin-token').fill('fixture-not-a-real-secret');await page.locator('#admin-login button').click();await page.waitForTimeout(300);
+   // The ninth tab should remain visible via horizontally scrollable navigation,
+   // without expanding the whole 320px mobile document.
+   const trafficTab=page.locator('[data-tab="traffic"]');
+   await trafficTab.scrollIntoViewIfNeeded();await trafficTab.click();
+   assert.equal(await page.locator('[data-panel="traffic"]').isVisible(),true);
    await page.locator('[data-tab="limits"]').click();assert.equal(await page.locator('[name="purchaseBonus"]').inputValue(),'3');
    await page.locator('[name="highDaily"]').fill('2');
    const saveOwner=page.locator('#owner-settings-form [type="submit"]');
