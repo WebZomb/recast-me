@@ -1,7 +1,7 @@
 import {ADVENTURE_GUIDES} from './adventure-guides.js?v=1';
 import {mergeHistory,privateRecastLink,readRecastLink} from './recast-history.js';
-import {initCreationWizard} from './creation-wizard.js?v=262';
-import {fallbackState,creditSummary,recoveryUnverified} from './quality-policy.js?v=266';
+import {initCreationWizard} from './creation-wizard.js?v=263';
+import {fallbackState,creditSummary,creditHeadline,recoveryUnverified} from './quality-policy.js?v=267';
 import {protectedPreviewFile} from './preview-export.js';
 let creditInfo=null;
 async function refreshCredits(initialize=false){
@@ -10,10 +10,14 @@ async function refreshCredits(initialize=false){
     const r=await fetch('/api/render-credits',{method:initialize?'POST':'GET',headers:{'x-recast-request':'1'}}),d=await r.json();
     if(!r.ok)throw new Error(d.userMessage||d.error||'Could not check your previews.');
     creditInfo=d;
-    if(display){display.hidden=!d.enabled;display.textContent=d.enabled?creditSummary(d):'';}
+    if(display){display.hidden=!d.enabled;display.textContent=d.enabled?creditHeadline(d):'';}
+    const more=document.querySelector('#render-credits-more');if(more)more.hidden=!d.enabled;
+    const detail=document.querySelector('#render-credits-details');if(detail)detail.textContent=d.enabled?creditSummary(d):'';
     applyReadiness();
     return d;
-  }catch(e){if(display){display.hidden=false;display.textContent=e.message}throw e}
+  }catch(e){if(display){display.hidden=false;display.textContent=e.message}
+    const more=document.querySelector('#render-credits-more');if(more)more.hidden=true;
+    throw e}
 }
 refreshCredits(true).catch(()=>{});
 fetch('/api/credit-packs/catalog',{cache:'no-store'}).then(r=>r.json()).then(data=>{const link=document.querySelector('#credit-gifts-link');if(link)link.hidden=!data.enabled}).catch(()=>{});
@@ -186,6 +190,8 @@ function updateWorldFields(){
     ? 'Create your own adventure by describing the place, clothing, mood and lighting.'
     : (ADVENTURE_GUIDES[styleSelect.value]?.teaser||'A new original scene with clothing and background tailored to this adventure.');
   document.querySelectorAll('.style-card').forEach(card=>card.classList.toggle('selected',card.dataset.style===styleSelect.value));
+  const adventureStatus=document.querySelector('#adventure-selection-status');
+  if(adventureStatus)adventureStatus.textContent=isCustom?'Selected: Your own adventure':'Selected: '+(STYLES.find(s=>s[0]===styleSelect.value)?.[1]||'Adventure');
   document.dispatchEvent(new Event('recast-style-change'));
 }
 updateWorldFields();
@@ -288,11 +294,11 @@ function updateQualityUI(){
   const mode=selectedQuality();
   document.querySelectorAll('[data-quality-card]').forEach(card=>card.classList.toggle('selected',card.dataset.qualityCard===mode));
   const button=document.querySelector('#generate-button');
-  if(button&&!generationInFlight)button.textContent=mode==='quick'?'Create Standard Preview':'Create High-Quality Preview';
+  if(button&&!generationInFlight)button.textContent=mode==='quick'?'Try Standard Preview':'Create My Picture';
   const copy=document.querySelector('#model-copy');
   if(copy)copy.textContent=mode==='quick'
-    ? 'Standard Preview · detail and likeness may be lower than High Quality'
-    : 'High-Quality Preview · best likeness, prompt accuracy, and detail';
+    ? 'Standard · Lower detail'
+    : 'High Quality · Best detail';
 }
 document.querySelectorAll('input[name="qualityMode"]').forEach(input=>input.addEventListener('change',()=>{updateQualityUI();applyReadiness();refreshRenderAvailability();}));
 
@@ -381,7 +387,9 @@ function updateFallback(){
   // Keep Standard usage visible during both normal HQ exhaustion and the
   // separately authorized HQ-outage fallback; never change credit eligibility.
   const balance=document.querySelector('#render-credits');
-  if(balance&&creditInfo?.enabled)balance.textContent=creditSummary(creditInfo,state.show);
+  if(balance&&creditInfo?.enabled)balance.textContent=creditHeadline(creditInfo);
+  const detail=document.querySelector('#render-credits-details');
+  if(detail&&creditInfo?.enabled)detail.textContent=creditSummary(creditInfo,state.show);
   if(box)box.hidden=!state.show;
   const reason=document.querySelector('#quality-fallback-reason');if(reason)reason.textContent=state.message;
   const standard=document.querySelector('#choose-standard');
@@ -400,7 +408,7 @@ function updateFallback(){
       const reset=stamp&&Number.isFinite(Date.parse(stamp))
         ?new Date(stamp).toLocaleString([], {month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})
         :null;
-      standardStatus.textContent=`Standard used up — 0 of ${count} left.${reset?' Resets '+reset+'.':' Check the reset time above.'}`;
+      standardStatus.textContent=`Standard: 0 of ${count} left.${reset?' Resets '+reset+'.':' Check reset times above.'}`;
     }
   }
   const high=document.querySelector('#choose-high');if(high)high.hidden=selectedQuality()!=='quick';
@@ -420,10 +428,10 @@ function applyReadiness(){
   const mode=selectedQuality(),health=readinessFor(mode),button=document.querySelector('#generate-button'),notice=document.querySelector('#render-availability');
   const fallback=updateFallback();
   const ready=Boolean(readinessSnapshot?.local?.ready&&health?.ready&&(mode==='quick'?fallback.standardReady:!fallback.exhausted));
-  if(button&&!generationInFlight){button.disabled=!ready;button.textContent=ready?(mode==='quick'?'Create Standard Preview':'Create High-Quality Preview'):fallback.exhausted&&mode==='high'?'High Quality allowance used':'Checking availability…';}
-  const copy=document.querySelector('#model-copy');if(copy)copy.textContent=readinessMessage(mode);
+  if(button&&!generationInFlight){button.disabled=!ready;button.textContent=ready?(mode==='quick'?'Try Standard Preview':'Create My Picture'):fallback.exhausted&&mode==='high'?'High Quality used up':'Checking availability…';}
+  const copy=document.querySelector('#model-copy');if(copy)copy.textContent=fallback.exhausted&&mode==='high'?'High Quality · No credits left':mode==='quick'&&fallback.standardExhausted?'Standard · No credits left':readinessMessage(mode);
   const dot=document.querySelector('.quality-dot');if(dot)dot.dataset.state=ready&&!recoveryUnverified(health)?'ready':readinessSnapshot?.local?.ready?'waiting':'error';
-  if(notice){notice.hidden=ready&&!recoveryUnverified(health);notice.textContent=ready&&!recoveryUnverified(health)?'':fallback.exhausted&&mode==='high'?'High Quality allowance used. See your options below.':readinessMessage(mode)+' Your photo and settings stay here.';}
+  if(notice){notice.hidden=ready&&!recoveryUnverified(health);notice.textContent=ready&&!recoveryUnverified(health)?'':fallback.exhausted&&mode==='high'?'High Quality is used up. Check the reset below.':readinessMessage(mode)+' Your photo stays here.';}
   return ready;
 }
 async function refreshRenderAvailability(){
@@ -1104,7 +1112,7 @@ document.querySelector('#original-photo-form').addEventListener('submit',async e
     if(!response.ok||!data.ok||!data.persisted||data.watermarked!==true)throw new Error(data.userMessage||'Your photo could not be saved. Please try again.');
     const version={requestId:data.requestId,accessToken:data.accessToken,styleName:'Original photo',styleId:'original',subjectType:'photo',qualityMode:'original',createdAt:data.createdAt};
     previewCache.set(data.requestId,Promise.resolve(data.image));addRecentVersion(version);await activateRecentVersion(version);
-    status.textContent='Photo saved. Choose a product below—no AI render was used.';
+    status.textContent='Photo ready! Pick a product below.';
   }catch(e){status.textContent=e.message;}finally{generationInFlight=false;button.disabled=false;originalTurnstileToken='';if(window.turnstile&&originalTurnstileWidgetId!==null)window.turnstile.reset(originalTurnstileWidgetId);}
 });
 

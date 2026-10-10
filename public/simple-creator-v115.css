@@ -1,0 +1,81 @@
+/* RM115 · Simple, accessible creation flow. Keep all existing protection. */
+.create-choice-heading{font-size:clamp(20px,4.5vw,26px);line-height:1.25;margin:0 0 15px;color:#fff;font-weight:850;letter-spacing:-.025em}
+.create-method-chooser{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px;margin:0 0 22px}
+.create-method{display:flex;align-items:center;text-align:left;min-width:0;gap:12px;border:2px solid rgba(121,119,163,.55);border-radius:18px;background:linear-gradient(145deg,#161529,#0e1422);color:#fcfaff;cursor:pointer;min-height:100px;padding:14px 13px;font:inherit;transition:border-color .15s,background .15s,box-shadow .15s}
+.create-method:hover,.create-method:focus-visible{border-color:#95eaf7;outline-offset:4px}
+.create-method.is-selected{border-color:#86dcfa;background:linear-gradient(130deg,rgba(108,59,206,.32),rgba(28,158,203,.18));box-shadow:0 0 0 1px #75dcf544,inset 0 0 20px #3d4b7f20}
+.create-method-original{border-color:#64cde5a8;background:linear-gradient(125deg,rgba(21,86,110,.31),rgba(49,34,87,.25))}
+.create-method-original.is-selected{border-color:#9cfde4;background:linear-gradient(135deg,rgba(33,136,124,.38),rgba(47,38,105,.34))}
+.method-icon{font-size:clamp(29px,5vw,39px);flex:none;line-height:1}
+.method-text{display:grid;gap:4px;min-width:0;flex:1}
+.method-text strong{font-size:clamp(16px,2.8vw,19px);line-height:1.25;font-weight:850}
+.method-text small{font-size:13px;line-height:1.3;color:#c5e0e6}
+.method-indicator{flex:none;display:grid;place-items:center;width:25px;height:25px;border:1px solid #92f9d7;border-radius:100%;background:#176b60;color:#fff;font-weight:900;visibility:hidden}
+.create-method.is-selected .method-indicator{visibility:visible}
+.create-card.is-original-mode .create-main-path,
+.create-card.is-original-mode #recast-form{display:none!important}
+.original-path-slot[hidden],#all-worlds-group[hidden],#render-credits-more[hidden]{display:none!important}
+.original-path-slot{margin:0 0 14px}
+.original-path-slot #original-photo-option{display:block!important;border:2px solid #76edd9!important;border-radius:20px!important;background:linear-gradient(130deg,#132e35,#16162c)!important;padding:22px!important;margin:0!important}
+.original-path-slot #original-photo-option>summary{display:none!important}
+.original-path-slot #original-photo-option>p{font-size:16px;line-height:1.55;color:#e8fafa;margin:0 0 17px!important}
+.original-path-slot #original-photo-form{margin:0!important;padding:0!important;display:grid;gap:20px!important}
+.original-path-slot #original-photo-form>label{font-size:16px;line-height:1.5;font-weight:750;color:#fafaff;display:block}
+.original-path-slot #original-photo{display:block;margin-top:12px;width:100%;min-height:64px;box-sizing:border-box;padding:15px 12px;border-radius:14px;border:2px dashed #92efe0;background:#101b2a;color:#f5fbff;font-size:16px;cursor:pointer}
+.original-path-slot #original-photo::file-selector-button{border:0;border-radius:10px;background:#56d3ec;color:#081027;font-weight:850;padding:11px 13px;font:inherit;margin:0 11px 0 0}
+.original-path-slot #original-photo-form>label.original-consent-label{display:flex;gap:12px;align-items:flex-start;font-weight:500;font-size:15px}
+.original-path-slot #original-consent{width:24px!important;height:24px;accent-color:#37dbcd;margin-top:1px;flex:none}
+.original-path-slot #original-photo-form .button{min-height:58px!important;font-size:17px!important}
+.original-path-slot #original-status{font-size:15px;line-height:1.5;color:#d3fff3;margin:0}
+.alternate-paths{grid-template-columns:1fr!important}
+.alternate-divider{margin-top:16px!important}
+.create-main-path{padding:10px 0 12px!important}
+.create-main-path span{font-size:12px!important;letter-spacing:.12em}
+.create-main-path strong{font-size:13px!important}
+#recast-form .creative-step>p{font-size:15px;line-height:1.5}
+#recast-form .photo-tip{font-size:14px;line-height:1.45;margin:7px 0 13px}
+#recast-form .wizard-actions .button{min-height:52px;font-size:16px}
+#recast-form .creation-progress{margin-bottom:18px}
+#recast-form .creation-progress button{min-height:48px;font-weight:750}
+#adventure-choices{margin-bottom:12px}
+.adventure-extra-actions{display:flex;flex-wrap:wrap;gap:10px;margin:8px 0 18px}
+.adventure-extra-actions .button{min-height:49px;flex:1;min-width:135px;padding:11px;font-size:15px}
+.all-worlds-group{padding:15px;margin:5px 0 17px;border:1px solid #4a4265;border-radius:14px;background:#100f21}
+.all-worlds-group label{display:grid;gap:8px;font-size:15px}
+.all-worlds-group select{font-size:17px;min-height:52px}
+.all-worlds-group .selected-world-description{font-size:14px;line-height:1.4;padding:10px!important;margin:2px 0!important}
+#personal-details{margin:15px 0!important;padding:12px 15px!important}
+#personal-details summary{min-height:30px;font-size:15px}
+#recast-form .consent{margin:14px 0 10px;gap:12px;font-size:15px;line-height:1.55}
+#recast-form .consent input[type=checkbox]{width:24px!important;height:24px!important;flex:none;accent-color:#48d7e9}
+.create-privacy-details{padding:0 0 8px;margin:0 0 7px;color:#c2c2da;font-size:13px;line-height:1.4}
+.create-privacy-details summary{cursor:pointer;font-size:13px;color:#9adfec;text-decoration:underline;text-underline-offset:2px}
+.create-privacy-details p{font-size:13px;margin:9px 0}
+#render-credits.credit-quick-count{white-space:normal!important;line-height:1.5!important;padding:12px 14px!important;font-size:16px!important;font-weight:800!important;letter-spacing:.015em;background:#13162b!important;border-color:#4c6383!important;border-radius:14px!important;margin:10px 0 7px}
+.credit-extra{margin:0 0 9px;font-size:14px;color:#cacbe0}
+.credit-extra summary{min-height:38px;display:flex;align-items:center;cursor:pointer;color:#97eaff;text-decoration:underline;text-underline-offset:2px;font-size:14px}
+.credit-extra p{white-space:pre-line;line-height:1.55;color:#d0ccdf;font-size:13px;margin:0 0 12px}
+#quality-fallback{padding:14px!important;margin:12px 0!important;line-height:1.48!important;border-radius:14px!important}
+#quality-fallback-reason{font-size:16px!important;line-height:1.55!important;margin:0 0 9px!important;color:#f8f6ff}
+#quality-fallback .standard-limit-status{font-size:15px;line-height:1.4;margin:8px 0!important}
+#quality-fallback .standard-allowance-note{margin:8px 0;color:#bdbbd4;font-size:13px}
+#quality-fallback .standard-allowance-note summary{color:#9cddf1;cursor:pointer;font-size:14px}
+#quality-fallback .standard-allowance-note p{margin:8px 0}
+#quality-fallback .button{min-height:48px;margin:7px 6px 7px 0!important;padding:11px 15px;font-size:15px}
+#quality-fallback #credit-purchase-link{font-size:14px;margin-top:5px!important}
+#credit-gifts-link{font-size:14px;line-height:1.35;margin:7px 0!important}
+#generate-button{min-height:60px!important;font-size:18px!important;font-weight:850!important}
+#recast-form .quality-line{font-size:12px;line-height:1.4;margin-top:7px}
+@media(max-width:650px){
+  .create-method-chooser{grid-template-columns:1fr;gap:10px}
+  .create-method{min-height:80px;padding:13px 14px}
+  .method-text strong{font-size:18px}
+  .method-text small{font-size:14px}
+  .original-path-slot #original-photo-option{padding:17px!important}
+  #recast-form .wizard-actions{gap:10px}
+  #recast-form .wizard-actions .button{font-size:15px}
+  #recast-form .consent{font-size:15px}
+}
+@media(prefers-reduced-motion:reduce){.create-method{transition:none}}
+
+.adventure-choice-status{margin:6px 0 15px;font-size:15px;font-weight:800;color:#b5f3fd;line-height:1.4;padding:7px 11px;background:rgba(36,75,90,.24);border-left:3px solid #60d5e8;border-radius:3px}

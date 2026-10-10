@@ -17,7 +17,7 @@ export function initCreationWizard({styles,photos,subject,style,updateWorld,hasB
     const options=roles();
     $('#photo-step-error').textContent='';
     $('#family-count-label').hidden=subject.value!=='family';
-    $('#photo-guidance').textContent=subject.value==='pet'?'Use a bright, close photo with the whole face and ears visible. For a front-facing portrait, add a front-facing photo; a second angle can help preserve markings.':subject.value==='person'?'Add a clear photo of your face.':subject.value==='car'?'Add a clear photo showing your car.':'Add one clear photo per subject, or use a photo together. Label each photo below. Another angle of the same subject should use the same label.';
+    $('#photo-guidance').textContent=subject.value==='pet'?'Choose a clear photo of your pet’s face and ears.':subject.value==='person'?'Choose a clear photo of your face.':subject.value==='car'?'Choose a clear photo showing your car.':'Add a photo of everyone together, or one for each person. Label the photos below.';
     [...photos.files].forEach((file,index)=>{
       const tile=$('#photo-thumbnails').children[index];if(!tile)return;
       tile.querySelector('.reference-label')?.remove();
@@ -60,12 +60,20 @@ export function initCreationWizard({styles,photos,subject,style,updateWorld,hasB
       const title=document.createElement('strong');title.textContent=name;b.append(img,title);
       b.addEventListener('click',()=>{style.value=id;updateWorld();});$('#adventure-choices').append(b);
     });
-    $('#more-adventures').textContent='Browse all worlds ↓';
+    const all=$('#all-worlds-group');
+    $('#more-adventures').textContent=all.hidden?'See all adventures ↓':'Hide extra adventures ↑';
   }
-  $('#more-adventures').addEventListener('click',()=>{
-    style.scrollIntoView({behavior:'smooth',block:'center'});
-    style.focus({preventScroll:true});
+  const allWorlds=$('#all-worlds-group'),moreWorlds=$('#more-adventures');
+  function setAllWorldsOpen(open){
+    allWorlds.hidden=!open;
+    moreWorlds.setAttribute('aria-expanded',String(open));
+    moreWorlds.textContent=open?'Hide extra adventures ↑':'See all adventures ↓';
+  }
+  moreWorlds.addEventListener('click',()=>{
+    setAllWorldsOpen(allWorlds.hidden);
+    if(!allWorlds.hidden)style.focus({preventScroll:true});
   });
+  setAllWorldsOpen(style.value==='custom'||!['royal','fantasy','space','game'].includes(style.value));
   subject.addEventListener('change',refreshPhotos);$('#family-count').addEventListener('change',refreshPhotos);
   document.addEventListener('recast-photos-change',refreshPhotos);document.addEventListener('recast-style-change',refreshAdventures);
   document.querySelectorAll('[data-go-step]').forEach(b=>b.addEventListener('click',()=>go(Number(b.dataset.goStep))));

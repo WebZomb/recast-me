@@ -3,27 +3,29 @@ export function fallbackState(snapshot,credits,mode='high'){
   const known=Boolean(credits?.enabled&&Number.isFinite(credits.remaining));
   const exhausted=known&&credits.remaining<=0;
   const date=value=>value&&Number.isFinite(Date.parse(value))?new Date(value).toLocaleString([], {month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}):null;
-  const reset=date(credits?.resetAt),bonus=credits?.purchaseBonus??3;
+  const reset=date(credits?.resetAt);
   const outage=Boolean(known&&!exhausted&&snapshot?.standardOutageAvailable===true);
   const boughtStandard=Boolean(known&&Number(credits.purchasedStandard||0)>0);
-  const show=exhausted||outage||boughtStandard; // Paying for Standard unlocks that purchased balance only.
-  let message=boughtStandard&&!exhausted&&!outage
-    ?'You have purchased Standard credits. Standard may have lower detail or likeness than High Quality; choose it when you want to use those credits.'
-    :outage
-    ?'High Quality is temporarily unavailable on the approved rendering routes. You can choose Standard, which uses a different Cloudflare model, but it may also fail if Cloudflare is having problems. Standard may have less detail or a weaker likeness. This is optional: you can wait for High Quality. A successful Standard preview uses only a Standard credit and keeps your High Quality credits.'
-    :exhausted?`You’ve used your High Quality previews for now. You can try Standard, but it may have less detail or a weaker likeness. Not happy with it? ${reset?'High Quality refreshes '+reset+'.':'Come back after your daily reset.'} Or buy an item with a design you already love to get ${bonus} bonus High Quality previews for your next Recast.`:'';
+  const show=exhausted||outage||boughtStandard;
   const standardTotal=Number(credits?.standardEffectiveRemaining??credits?.standardRemaining??0);
   const standardExhausted=Boolean(show&&standardTotal<=0);
   const standardReady=Boolean(show&&!standardExhausted&&snapshot?.local?.ready&&snapshot?.modes?.quick?.ready&&standardTotal>0);
+  let message=exhausted
+    ?'High Quality is used up.'+(reset?' Resets '+reset+'.':' Come back when it resets.')+(standardTotal>0?' You can try Standard (lower detail).':'')
+    :outage
+      ?'High Quality is unavailable. Standard uses a different Cloudflare model: weaker likeness, and it may also fail. You can wait or try it.'
+      :boughtStandard
+        ?'Your Standard credits are ready. Images may have less detail than High Quality.'
+        :'';
   if(standardExhausted){
-    const standardReset=date(credits.standardResetAt);
     message=exhausted
-      ?`Both your free High Quality and Standard preview allowances are used up. ${reset?'High Quality refreshes '+reset+'.':'High Quality refreshes after its daily window.'} ${standardReset?'Standard refreshes '+standardReset+'.':'Standard refreshes after its separate daily window.'} You can still choose a product with a saved Recast. A purchase of an item you already love grants ${bonus} bonus High Quality previews for your next Recast.`
-      :`High Quality is temporarily unavailable and your Standard previews are used up. ${standardReset?'Standard refreshes '+standardReset+'.':'Check the Standard reset time above.'} You can wait for High Quality to recover.`;
+      ?'All free previews are used up.'+(reset?' High Quality resets '+reset+'.':'')+' Come back later or use a saved picture.'
+      :'High Quality is unavailable, and Standard is used up. Try again later.';
   }
-  if(show)message+=' Credits do not change an order already confirmed for printing or bypass site availability limits.';
-  return {show,exhausted,outage,standardExhausted,standardReady,message,returnToHigh:mode==='quick'&&!exhausted&&!outage&&!boughtStandard};
+  return {show,exhausted,outage,standardExhausted,standardReady,message,
+    returnToHigh:mode==='quick'&&!exhausted&&!outage&&!boughtStandard};
 }
+
 // The customer balance is read-only; the server still controls allowances and access.
 export function creditSummary(credits,showStandard=false){
   if(!credits?.enabled)return '';
@@ -45,6 +47,17 @@ export function creditSummary(credits,showStandard=false){
     lines.push(`Standard: ${standardLeft} of ${standardAllowance} daily previews left (${standardAllowance-standardLeft} used)${purchasedStandard?` + ${purchasedStandard} purchased Standard`:''}.${standardReset?' Refreshes '+standardReset+'.':''}${standardLock}`);
   }
   return lines.join('\n');
+}
+
+// The primary screen only needs remaining credits. Exact reset and purchase
+// entitlements remain available in the optional details drawer via creditSummary.
+export function creditHeadline(credits){
+  if(!credits?.enabled)return '';
+  if(credits.initialized===false)return 'Checking your previews…';
+  const safe=value=>Number.isFinite(Number(value))?Math.max(0,Math.floor(Number(value))):0;
+  const high=Number.isFinite(Number(credits.remaining))?safe(credits.remaining):safe(credits.free)+safe(credits.bonus)+safe(credits.purchasedHigh);
+  const standard=safe(credits.standardEffectiveRemaining??credits.standardRemaining);
+  return 'High Quality: '+high+' left  ·  Standard: '+standard+' left';
 }
 
 // A cooldown permits a deliberate retry; it is not a successful health probe.
