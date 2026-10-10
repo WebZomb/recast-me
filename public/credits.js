@@ -48,6 +48,11 @@ async function checkPurchases(){
    if(p.issuedCode){
     card.append(el('code','code-text',p.issuedCode));
     const btn=el('button','minor-button','Copy gift code');btn.type='button';btn.addEventListener('click',async()=>{try{await navigator.clipboard.writeText(p.issuedCode);btn.textContent='Copied!'}catch{btn.textContent='Select and copy the code above'}});card.append(btn);
+    const linkButton=el('button','minor-button','Copy gift link');linkButton.type='button';linkButton.addEventListener('click',async()=>{
+      const link=new URL('/credits.html',location.origin);link.searchParams.set('code',p.issuedCode);
+      try{await navigator.clipboard.writeText(link.href);linkButton.textContent='Gift link copied!'}
+      catch{linkButton.textContent='Copy the code above and share it privately.'}
+    });card.append(linkButton);
    }
   }catch(e){card.replaceChildren();card.append(el('p','warn',e.message))}
  }
