@@ -18,7 +18,7 @@ function record(name,ok,details={}){report.checks.push({name,ok,...details});if(
 async function get(url){return fetch(url,{redirect:'follow',cache:'no-store',signal:AbortSignal.timeout(20000),headers:{'user-agent':'RecastMe/1.0 public launch audit'}})}
 async function preflight(){
  const results=await Promise.allSettled([
-  get(base+'/credits.html'),get(base+'/credits.js?v=2'),
+  get(base+'/credits.html'),get(base+'/credits.js?v=3'),
   get(base+'/credits.css?v=1'),get(base+'/api/credit-packs/catalog'),
   get(shop+'/products/'+product+'.js')
  ]);
