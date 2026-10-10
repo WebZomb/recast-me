@@ -39,7 +39,7 @@ const input=async request=>{
 };
 const codePattern=/^RC-(?:[A-HJ-NP-Z2-9]{5}-){3}[A-HJ-NP-Z2-9]{5}$/;
 function privatePack(p,id){return {id,title:p.title,type:p.type,high:p.high,standard:p.standard,priceCents:p.priceCents}};
-export function creditCatalog(env){return {ok:true,enabled:active(env),salesEnabled:sales(env),packs:Object.entries(CREDIT_PACKS).map(([id,p])=>privatePack(p,id))}}
+export function creditCatalog(env){return {ok:true,enabled:active(env),salesEnabled:sales(env),ownerTestEnabled:ownerTestEnabled(env),packs:Object.entries(CREDIT_PACKS).map(([id,p])=>privatePack(p,id))}}
 export async function creditPackRoutes(request,env){
   const p=new URL(request.url).pathname;
   if(!p.startsWith('/api/credit-packs')&&!p.startsWith('/api/admin/credit-codes'))return null;
