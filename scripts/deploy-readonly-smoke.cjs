@@ -9,6 +9,7 @@ async function open(path){
  }
  throw error;
 }
+async function main(){
 let errors=0;
 for(const [name,path,status] of checks){
  try{
@@ -21,3 +22,9 @@ for(const [name,path,status] of checks){
  }catch(e){errors++;console.error(JSON.stringify({name,error:String(e.message).slice(0,140)}))}
 }
 if(errors){console.error('Read-only production smoke failed:',errors);process.exitCode=1}else console.log('Read-only production smoke passed; no paid operations were performed.');
+
+}
+main().catch(error=>{
+ console.error('Read-only production smoke terminated:',String(error?.message||error).slice(0,150));
+ process.exitCode=1;
+});
