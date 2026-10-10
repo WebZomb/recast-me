@@ -20,7 +20,7 @@ const local=iso=>iso&&Number.isFinite(Date.parse(iso))?new Date(iso).toLocaleStr
 async function loadPacks(){
  const catalog=await api('/api/credit-packs/catalog');
  const testReady=!catalog.salesEnabled&&catalog.ownerTestEnabled&&Boolean(ownerToken());
- status.textContent=catalog.salesEnabled?'Payments are handled securely by our existing Shopify checkout.':testReady?'OWNER TEST ACTIVE: only the $2.99 refill can be purchased here. This charges real money; confirm the price in Shopify before paying. All other packs remain unavailable.':catalog.enabled?'Redemption codes are available. Paid packs are being checked before launch. Owner: sign into the admin dashboard in this same tab to test a $2.99 refill.':'Paid packs and redemption codes are being prepared. No purchase is available yet.';
+ status.textContent=catalog.salesEnabled?'Payments are handled securely by our existing Shopify checkout.':testReady?'OWNER TEST ACTIVE: only the $2.99 refill can be purchased here. This charges real money; confirm the price in Shopify before paying. All other packs remain unavailable.':catalog.enabled?'Credit purchases are paused pending final payment-delivery checks. Gift and support redemption codes remain available.':'Paid packs and redemption codes are being prepared. No purchase is available yet.';
  packs.replaceChildren();
  for(const p of catalog.packs||[]){
   const card=el('article','pack'+(p.id==='reset'?' featured':'')),heading=el('h3','',p.title),price=el('div','price',money(p.priceCents));
