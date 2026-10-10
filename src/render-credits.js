@@ -87,7 +87,7 @@ export async function reserveCustomerRender(env,now=Date.now()){
     // Purchased Standard can be selected regardless of remaining HQ credits;
     // free Standard stays locked until the free HQ and merchandise bonus run out.
     if(balance.purchasedStandard>0){
-      const ticket=await reserveExtraCredit(env,wallet.id,'standard',now);
+      const ticket=await reserveExtraCredit(env,wallet.id,'standard',now,{purchasedOnly:balance.free+balance.bonus>0});
       if(ticket)return ticket;
     }
     if(balance.free+balance.bonus>0&&env.RECAST_STANDARD_OUTAGE_APPROVED!=='true')throw fault('standard_locked','High Quality starter previews are available. Free Standard unlocks when starter and merchandise bonus previews are used, or during a verified outage.',409);
