@@ -136,7 +136,18 @@ const policy={highDaily:3,standardDaily:5,purchaseBonus:3,websiteCalls:70,social
    await page.screenshot({path:path.join(out,`${engine.name()}-${width}-admin.png`)});
    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1),false,'admin overflow');assert.deepEqual(errors,[]);
    await page.goto('http://recast.test/model-lab.html',{waitUntil:'networkidle'});
-   await page.locator('#use-demo-dog').click();
+   // WebKit's stability heuristic can time out on a moving button despite
+   // it being an actual pointer target. Assert hit-testing and click the
+   // visible button with a real pointer event, as in the admin flow above.
+   const demoButton=page.locator('#use-demo-dog');
+   await demoButton.evaluate(node=>node.scrollIntoView({block:'center',behavior:'instant'}));
+   const demoTarget=await demoButton.evaluate(node=>{
+     const r=node.getBoundingClientRect(),x=r.left+r.width/2,y=r.top+r.height/2;
+     const hit=document.elementFromPoint(x,y);
+     return {x,y,visible:r.width>0&&r.height>0,receivesPointer:Boolean(hit&&(hit===node||node.contains(hit)))};
+   });
+   assert.ok(demoTarget.visible&&demoTarget.receivesPointer,'Demo dog button must be a visible mobile pointer target');
+   await page.mouse.click(demoTarget.x,demoTarget.y);
    // The button loads a public WebP asynchronously; clicking ends before fetch.
    // Wait for the actual completion message before asserting selected controls.
    await page.waitForFunction(()=>document.querySelector('#status')?.textContent?.includes('Demo dog loaded'),null,{timeout:15000});
