@@ -6,10 +6,29 @@ import {CREDIT_PACKS,PACK_FOR_SKU,newCreditCode,redeemCreditCode,revokeCreditCod
 const intentKey=id=>'commerce/credits/intents/'+id+'.json';
 const active=env=>env.CREDIT_PACKS_ENABLED==='true';
 const sales=env=>active(env)&&env.CREDIT_SALES_ENABLED==='true';
+// Private, rate-bounded $2.99 checkout acceptance. All customer sales remain off.
+const ownerTestEnabled=env=>active(env)&&env.CREDIT_TEST_CHECKOUT_ENABLED==='true';
+const authorizedOwner=(request,env)=>{
+  const auth=request.headers.get('authorization')||'';
+  const token=auth.match(/^Bearer\s+(.+)$/i)?.[1]||request.headers.get('x-recast-admin');
+  return Boolean(env.ADMIN_TOKEN&&equal(token,env.ADMIN_TOKEN));
+};
+function isOwnerTest(request,env,packId,mode){
+  return !sales(env)&&ownerTestEnabled(env)&&authorizedOwner(request,env)&&packId==='reset'&&mode==='self';
+}
+async function reserveOwnerTestCheckout(env,walletId){
+  const today=new Date().toISOString().slice(0,10);
+  const key='commerce/credits/owner-test-checkout/'+today+'.json';
+  return change(env,key,{count:0,walletId:null},v=>{
+    if(v.walletId&&v.walletId!==walletId)throw fault('test_wallet_locked','The owner test has already started in another browser today.',409);
+    if(!Number.isSafeInteger(v.count)||v.count>=3)throw fault('test_checkout_limit','The three supervised test checkout attempts have been used. Do not make another payment until the existing order is reviewed.',429);
+    return {...v,count:v.count+1,walletId};
+  });
+}
 const owner=(request,env)=>{
   const auth=request.headers.get('authorization')||'';
   const token=auth.match(/^Bearer\s+(.+)$/i)?.[1]||request.headers.get('x-recast-admin');
-  if(!env.ADMIN_TOKEN||!equal(token,env.ADMIN_TOKEN))throw fault('admin_required','Admin authorization required.',401);
+  if(!authorizedOwner(request,env))throw fault('admin_required','Admin authorization required.',401);
 };
 const fromPack=id=>{const p=CREDIT_PACKS[id];if(!p)throw fault('pack_invalid','Choose a valid preview package.',400);return p};
 const shopHost=env=>{const value=String(env.SHOPIFY_SHOP||'').replace(/\.myshopify\.com$/,'');if(!/^[a-z0-9-]{3,60}$/.test(value))throw fault('shop_unavailable','Credit checkout is temporarily unavailable.',503);return value+'.myshopify.com'};
@@ -20,7 +39,7 @@ const input=async request=>{
 };
 const codePattern=/^RC-(?:[A-HJ-NP-Z2-9]{5}-){3}[A-HJ-NP-Z2-9]{5}$/;
 function privatePack(p,id){return {id,title:p.title,type:p.type,high:p.high,standard:p.standard,priceCents:p.priceCents}};
-export function creditCatalog(env){return {ok:true,enabled:active(env),salesEnabled:sales(env),packs:Object.entries(CREDIT_PACKS).map(([id,p])=>privatePack(p,id))}}
+export function creditCatalog(env){return {ok:true,enabled:active(env),salesEnabled:sales(env),ownerTestEnabled:ownerTestEnabled(env),packs:Object.entries(CREDIT_PACKS).map(([id,p])=>privatePack(p,id))}}
 export async function creditPackRoutes(request,env){
   const p=new URL(request.url).pathname;
   if(!p.startsWith('/api/credit-packs')&&!p.startsWith('/api/admin/credit-codes'))return null;
@@ -36,19 +55,23 @@ export async function creditPackRoutes(request,env){
     }
     if(p==='/api/credit-packs/checkout'&&request.method==='POST'){
       sameOrigin(request);
-      if(!sales(env))throw fault('credit_checkout_disabled','Credit purchases are not available yet. No payment was taken.',503);
-      const wallet=await walletFor(request,env);if(!wallet||!creditsEnabled(env))throw fault('wallet_missing','Open Recast Me in this browser to prepare your credits first.',401);
       const body=await input(request),packId=String(body.packId||''),pack=fromPack(packId);
       const mode=body.mode;if(!['self','gift'].includes(mode))throw fault('checkout_mode','Choose for yourself or as a gift.',400);
+      const ownerTest=isOwnerTest(request,env,packId,mode);
+      if(!sales(env)&&!ownerTest)throw fault('credit_checkout_disabled','Credit purchases are not available yet. The controlled $2.99 test is owner-only. No payment was taken.',503);
+      const wallet=await walletFor(request,env);if(!wallet||!creditsEnabled(env))throw fault('wallet_missing','Open Recast Me in this browser to prepare your credits first.',401);
+      if(ownerTest)await reserveOwnerTestCheckout(env,wallet.id);
       const claimToken=randomToken(),id=await hash(claimToken),createdAt=new Date().toISOString();
       const code=await freshGiftCode(); // Secret stays private until Shopify actually confirms payment.
       const record={id,packId,sku:pack.sku,variantId:pack.variantId,mode,walletId:wallet.id,issuedCode:code,
-        createdAt,expiresAt:Date.now()+2*86400000,boundOrderId:null,boundLineId:null,paidAt:null,revokedAt:null};
+        createdAt,expiresAt:Date.now()+2*86400000,boundOrderId:null,boundLineId:null,paidAt:null,revokedAt:null,ownerTest};
       await change(env,intentKey(id),null,old=>{if(old)throw fault('checkout_busy','Checkout request already exists.',409);return record});
       const url=new URL('https://'+shopHost(env)+'/cart/'+pack.variantId+':1');
-      url.searchParams.set('attributes[_Recast Credit Claim]',claimToken);
+      // Shopify's documented cart permalink attribute persists as Order.customAttributes.
+      // Avoid underscore-prefixed/private keys during the real payment acceptance test.
+      url.searchParams.set('attributes[Recast Credit Claim]',claimToken);
       url.searchParams.set('ref','recast-me-credits');
-      return privateJson({ok:true,claimToken,checkoutUrl:url.href,pack:privatePack(pack,packId),mode,notice:'Checkout through your existing Shopify store. Credits issue only after verified payment.'});
+      return privateJson({ok:true,claimToken,checkoutUrl:url.href,pack:privatePack(pack,packId),mode,ownerTest,notice:ownerTest?'Owner-controlled $2.99 real Shopify checkout. Your card may be charged. Review the amount before submitting payment.':'Checkout through your existing Shopify store. Credits issue only after verified payment.'});
     }
     if(p==='/api/credit-packs/purchase'&&request.method==='POST'){
       sameOrigin(request);
@@ -100,7 +123,7 @@ export async function reconcilePaidCreditOrder(env,order){
   if(!lines.length)return {handled:false};
   // A hard stop for ambiguous, partial, multi-line or tampered purchases.
   if(lines.length!==1||lines[0].quantity!==1||order.lineItems?.pageInfo?.hasNextPage)throw fault('credit_order_review','Credit order needs owner review before issuing codes.',409);
-  const line=lines[0],p=PACK_FOR_SKU[line.sku],token=orderAttr(order,'_Recast Credit Claim');
+  const line=lines[0],p=PACK_FOR_SKU[line.sku],token=orderAttr(order,'Recast Credit Claim')||orderAttr(order,'_Recast Credit Claim');
   if(!/^[a-f0-9]{64}$/.test(token))throw fault('credit_claim_missing','Paid credit order is missing its original checkout claim. Contact support for manual recovery.',409);
   const id=await hash(token),key=intentKey(id),intent=await read(env,key);
   if(!intent||intent.sku!==p.sku||intent.packId!==p.id||intent.variantId!==p.variantId||String(line.variant?.id||'').split('/').pop()!==p.variantId)

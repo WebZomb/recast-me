@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
 import {Bucket} from './security-helpers.mjs';
 import {creditRoute,walletFor,creditBalance,reserveCustomerRender,settleCustomerRender} from '../src/render-credits.js';
 import {newCreditCode,redeemCreditCode,revokeCreditCode,extraCreditBalance,CREDIT_PACKS,PACK_FOR_SKU} from '../src/credit-ledger.js';
@@ -21,7 +22,7 @@ const ownerReq=(p,method='GET',body=null,headers={})=>req(p,method,body,{authori
 const issuedOrder=(packId,claimToken,{financialStatus='PAID',lineId='gid://shopify/LineItem/101',orderId='gid://shopify/Order/1001',quantity=1,variantId=null}={})=>{
  const pack=CREDIT_PACKS[packId];
  return {id:orderId,name:'#1001',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),displayFinancialStatus:financialStatus,
- cancelledAt:null,test:false,customAttributes:[{key:'_Recast Credit Claim',value:claimToken}],lineItems:{pageInfo:{hasNextPage:false},
+ cancelledAt:null,test:false,customAttributes:[{key:'Recast Credit Claim',value:claimToken}],lineItems:{pageInfo:{hasNextPage:false},
  nodes:[{id:lineId,sku:pack.sku,quantity,name:pack.title,variant:{id:'gid://shopify/ProductVariant/'+(variantId||pack.variantId)},customAttributes:[]}]},tags:[]};
 };
 test('all seven planned packages and exact Shopify SKUs/prices are read-only catalog data',()=>{
@@ -93,7 +94,7 @@ test('paid Shopify checkout creates no free code and credits appear only after v
  const checkout=await creditPackRoutes(req('/api/credit-packs/checkout','POST',{packId:'hq10',mode:'self'},{cookie:a.cookie}),env);
  assert.equal(checkout.status,200);
  const info=await checkout.json();assert.match(info.checkoutUrl,/example-recast-store\.myshopify\.com\/cart\/67762890277108:1/);
- assert.equal(new URL(info.checkoutUrl).searchParams.get('attributes[_Recast Credit Claim]'),info.claimToken);
+ assert.equal(new URL(info.checkoutUrl).searchParams.get('attributes[Recast Credit Claim]'),info.claimToken);
  const before=await (await creditPackRoutes(req('/api/credit-packs/purchase','POST',{claimToken:info.claimToken},{cookie:a.cookie}),env)).json();
  assert.equal(before.status,'awaiting_payment');assert.equal(before.issuedCode,null);
  const wrongBrowser=await creditPackRoutes(req('/api/credit-packs/purchase','POST',{claimToken:info.claimToken},{cookie:b.cookie}),env);assert.equal(wrongBrowser.status,404);
@@ -160,4 +161,47 @@ test('free Standard stays HQ-first while purchased HQ remains, but purchased Sta
  const ticket=await reserveCustomerRender({...env,RECAST_CREDIT_WALLET:a.wallet,RECAST_RENDER_MODE:'quick'});
  assert.equal(ticket.source,'grant');await settleCustomerRender(env,ticket,true);
  assert.equal((await creditBalance(env,a.wallet)).purchasedStandard,9);
+});
+
+test('owner-only real $2.99 test is restricted to an authenticated same-browser wallet',async()=>{
+ const env=envFor();env.CREDIT_SALES_ENABLED='false';env.CREDIT_TEST_CHECKOUT_ENABLED='true';
+ const {cookie,wallet}=await makeWallet(env);
+ const privateRequest=(packId='reset',mode='self',authorization='Bearer test-only-secret')=>
+  req('/api/credit-packs/checkout','POST',{packId,mode},{authorization,cookie});
+ const unauth=await creditPackRoutes(privateRequest('reset','self','Bearer wrong'),env);
+ assert.equal(unauth.status,503);
+ assert.equal((await unauth.json()).code,'credit_checkout_disabled');
+ const gift=await creditPackRoutes(privateRequest('reset','gift'),env);assert.equal(gift.status,503);
+ const hq=await creditPackRoutes(privateRequest('hq10','self'),env);assert.equal(hq.status,503);
+ const noWallet=await creditPackRoutes(req('/api/credit-packs/checkout','POST',{packId:'reset',mode:'self'},{authorization:'Bearer test-only-secret'}),env);
+ assert.equal(noWallet.status,401);
+ const catalogue=await (await creditPackRoutes(req('/api/credit-packs/catalog'),env)).json();
+ assert.equal(catalogue.salesEnabled,false);
+ assert.equal(catalogue.ownerTestEnabled,true);
+ for(let i=0;i<3;i++){
+  const response=await creditPackRoutes(privateRequest(),env);
+  assert.equal(response.status,200);
+  const data=await response.json();assert.equal(data.ownerTest,true);
+  assert.equal(data.pack.priceCents,299);assert.equal(data.pack.id,'reset');
+  assert.equal(new URL(data.checkoutUrl).searchParams.get('attributes[Recast Credit Claim]'),data.claimToken);
+ }
+ const tooMany=await creditPackRoutes(privateRequest(),env);
+ assert.equal(tooMany.status,429);
+ assert.equal((await tooMany.json()).code,'test_checkout_limit');
+ assert.equal((await creditBalance(env,wallet)).free,3,'opening a checkout must not grant or spend any credit');
+ assert.equal((await env.ARTWORK.list({prefix:'commerce/credits/codes/'})).objects.length,0,'no paid codes before Shopify verification');
+});
+test('owner-only site checkout cannot be triggered by a forged self-purchase flag without admin login',async()=>{
+ const env=envFor();env.CREDIT_SALES_ENABLED='false';env.CREDIT_TEST_CHECKOUT_ENABLED='true';
+ const {cookie}=await makeWallet(env);
+ const r=await creditPackRoutes(req('/api/credit-packs/checkout','POST',{packId:'reset',mode:'self',ownerTest:true},{cookie}),env);
+ assert.equal(r.status,503);
+ const r2=await creditPackRoutes(req('/api/credit-packs/checkout','POST',{packId:'reset',mode:'self'},{cookie,authorization:'Bearer test-only-secret',origin:'https://evil.test'}),env);
+ assert.equal(r2.status,403);
+});
+test('only owner test card is shown when public credit sales are gated',()=>{
+ const content=readFileSync(new URL('../public/credits.js',import.meta.url),'utf8');
+ assert.match(content,/testReady&&p\.id==='reset'&&mode==='self'/);
+ assert.match(content,/OWNER TEST · Pay \$2\.99/);
+ assert.match(content,/owner:allowTest/);
 });

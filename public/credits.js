@@ -1,10 +1,11 @@
 const byId=id=>document.getElementById(id);
 const packs=byId('credit-pack-grid'),balance=byId('my-credit-balance'),status=byId('sales-status');
 const historyKey='recast_credit_purchase_claims_v1';
+const ownerToken=()=>{try{return sessionStorage.getItem('recast_admin_token')||''}catch{return ''}};
 const titleMap={reset:'Daily reset · 3 HQ + 5 Standard',hq10:'10 High Quality',hq20:'20 High Quality',hq50:'50 High Quality',std10:'10 Standard',std20:'20 Standard',std50:'50 Standard'};
 const money=n=>'$'+(Number(n)/100).toFixed(2);
-async function api(path,{method='GET',body}={}){
- const r=await fetch(path,{method,headers:{'x-recast-request':'1',...(body?{'content-type':'application/json'}:{})},...(body?{body:JSON.stringify(body)}:{})});
+async function api(path,{method='GET',body,owner=false}={}){
+ const r=await fetch(path,{method,headers:{'x-recast-request':'1',...(body?{'content-type':'application/json'}:{}),...(owner&&ownerToken()?{authorization:'Bearer '+ownerToken()}:{})},...(body?{body:JSON.stringify(body)}:{})});
  const result=await r.json().catch(()=>({}));if(!r.ok||result.ok===false)throw Error(result.error||'Credits are temporarily unavailable.');return result;
 }
 function recorded(){try{const value=JSON.parse(localStorage.getItem(historyKey)||'[]');return Array.isArray(value)?value.filter(x=>/^[a-f0-9]{64}$/.test(x)).slice(0,15):[]}catch{return []}}
@@ -18,16 +19,19 @@ async function refreshBalance(){
 const local=iso=>iso&&Number.isFinite(Date.parse(iso))?new Date(iso).toLocaleString():'unavailable';
 async function loadPacks(){
  const catalog=await api('/api/credit-packs/catalog');
- status.textContent=catalog.salesEnabled?'Payments are handled securely by our existing Shopify checkout.':catalog.enabled?'Redemption codes are available. Paid packs are being checked before launch.':'Paid packs and redemption codes are being prepared. No purchase is available yet.';
+ const testReady=!catalog.salesEnabled&&catalog.ownerTestEnabled&&Boolean(ownerToken());
+ status.textContent=catalog.salesEnabled?'Payments are handled securely by our existing Shopify checkout.':testReady?'OWNER TEST ACTIVE: only the $2.99 refill can be purchased here. This charges real money; confirm the price in Shopify before paying. All other packs remain unavailable.':catalog.enabled?'Redemption codes are available. Paid packs are being checked before launch. Owner: sign into the admin dashboard in this same tab to test a $2.99 refill.':'Paid packs and redemption codes are being prepared. No purchase is available yet.';
  packs.replaceChildren();
  for(const p of catalog.packs||[]){
   const card=el('article','pack'+(p.id==='reset'?' featured':'')),heading=el('h3','',p.title),price=el('div','price',money(p.priceCents));
   const desc=el('p','',p.type==='reset'?'3 High Quality and 5 Standard, available for 24 hours after redemption. A new reset replaces your existing reset.':p.type==='high'?'High Quality credits never expire.': 'Standard credits never expire. Lower-detail previews.');
   const actions=el('div','pack-actions');
   for(const [mode,label] of [['self','Buy for myself'],['gift','Send as a gift']]){
-   const button=el('button','buy-button',catalog.salesEnabled?label:'Coming soon');button.type='button';button.disabled=!catalog.salesEnabled;
+   const allowTest=Boolean(testReady&&p.id==='reset'&&mode==='self');
+   const button=el('button','buy-button',catalog.salesEnabled?label:allowTest?'OWNER TEST · Pay $2.99':'Coming soon');
+   button.type='button';button.disabled=!(catalog.salesEnabled||allowTest);
    button.addEventListener('click',async()=>{button.disabled=true;status.textContent='Preparing your Shopify checkout…';try{
-    const v=await api('/api/credit-packs/checkout',{method:'POST',body:{packId:p.id,mode}});
+    const v=await api('/api/credit-packs/checkout',{method:'POST',body:{packId:p.id,mode},owner:allowTest});
     saveClaim(v.claimToken);location.assign(v.checkoutUrl);
    }catch(e){status.textContent=e.message;button.disabled=false}});
    actions.append(button);
