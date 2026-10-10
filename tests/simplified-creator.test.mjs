@@ -36,6 +36,8 @@ test('Choose an adventure offers four favorites and progressively reveals the fu
  assert.match(page,/id="all-worlds-group" class="all-worlds-group" hidden/);
  assert.match(page,/id="more-adventures" aria-expanded="false" aria-controls="all-worlds-group"/);
  assert.match(page,/id="surprise-world"/);
+ assert.match(page,/id="adventure-selection-status"/);
+ assert.match(source('app.js'),/Selected: Your own adventure/);
  assert.match(wiz,/setAllWorldsOpen/);
  assert.match(wiz,/allWorlds\.hidden=!open/);
  assert.match(wiz,/style\.value==='custom'/);
