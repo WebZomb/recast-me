@@ -115,10 +115,20 @@ const policy={highDaily:3,standardDaily:5,purchaseBonus:3,websiteCalls:70,social
    await page.locator('#admin-token').fill('fixture-not-a-real-secret');await page.locator('#admin-login button').click();await page.waitForTimeout(300);
    // The ninth tab should remain visible via horizontally scrollable navigation,
    // without expanding the whole 320px mobile document.
-   const trafficTab=page.locator('[data-tab="traffic"]');
-   await trafficTab.scrollIntoViewIfNeeded();await trafficTab.click();
+   async function tapAdminTab(value){
+     const tab=page.locator('[data-tab="'+value+'"]');
+     await tab.evaluate(node=>node.scrollIntoView({block:'nearest',inline:'center',behavior:'instant'}));
+     const target=await tab.evaluate(node=>{
+       const rect=node.getBoundingClientRect(),x=rect.left+rect.width/2,y=rect.top+rect.height/2;
+       const hit=document.elementFromPoint(x,y);
+       return {x,y,hit:Boolean(hit&&(hit===node||node.contains(hit)))};
+     });
+     assert.ok(target.hit,'Admin '+value+' tab must receive a real mobile pointer click');
+     await page.mouse.click(target.x,target.y);
+   }
+   await tapAdminTab('traffic');
    assert.equal(await page.locator('[data-panel="traffic"]').isVisible(),true);
-   await page.locator('[data-tab="limits"]').click();assert.equal(await page.locator('[name="purchaseBonus"]').inputValue(),'3');
+   await tapAdminTab('limits');assert.equal(await page.locator('[name="purchaseBonus"]').inputValue(),'3');
    await page.locator('[name="highDaily"]').fill('2');
    const saveOwner=page.locator('#owner-settings-form [type="submit"]');
    // WebKit intermittently never considers this button "stable" after a long
