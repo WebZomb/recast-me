@@ -126,7 +126,7 @@ const policy={highDaily:3,standardDaily:5,purchaseBonus:3,websiteCalls:70,social
    await page.locator('input[name="qualityMode"][value="high"]').dispatchEvent('change');
    await page.waitForFunction(()=>!document.querySelector('#quality-fallback').hidden);
    assert.equal(await page.locator('#quality-fallback').isVisible(),true);
-   assert.match(await page.locator('#quality-fallback-reason').textContent(),/High Quality is temporarily unavailable/);
+   assert.match(await page.locator('#quality-fallback-reason').textContent(),/High Quality is unavailable/);
    assert.match(await page.locator('#render-credits').textContent(),/Standard: 4 left/,'Approved outage also displays Standard credits');
    await page.locator('#choose-standard').click();
    assert.equal(await page.locator('input[name="qualityMode"][value="quick"]').isChecked(),true);
