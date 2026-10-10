@@ -44,6 +44,24 @@ const policy={highDaily:3,standardDaily:5,purchaseBonus:3,websiteCalls:70,social
   const page=await context.newPage();page.on('pageerror',e=>errors.push(e.message));page.setDefaultTimeout(12000);
   try{
    await page.goto('http://recast.test/',{waitUntil:'networkidle'});
+   // A customer unfamiliar with AI must see both paths immediately, not a
+   // buried "no AI" accordion after all the adventure and consent controls.
+   const aiChoice=page.locator('#choose-create-ai'),originalChoice=page.locator('#choose-original-photo');
+   assert.equal(await aiChoice.isVisible(),true,'AI creation is a large first choice');
+   assert.equal(await originalChoice.isVisible(),true,'Original-photo option is equally visible up front');
+   assert.equal(await originalChoice.getAttribute('aria-pressed'),'false');
+   await originalChoice.click();
+   assert.equal(await originalChoice.getAttribute('aria-pressed'),'true');
+   assert.equal(await page.locator('#recast-form').isHidden(),true,'Hide unrelated AI controls when original is chosen');
+   assert.equal(await page.locator('#original-photo-form').isVisible(),true,'Original upload and consent become immediate');
+   assert.equal(await page.locator('#original-photo').count(),1,'Reuse the existing private upload; never duplicate it');
+   assert.equal(await page.locator('#original-consent').count(),1,'One original-photo consent');
+   assert.match(await page.locator('#original-photo-form button[type="submit"]').textContent(),/Continue with My Photo/);
+   await aiChoice.click();
+   assert.equal(await originalChoice.getAttribute('aria-pressed'),'false');
+   assert.equal(await page.locator('#original-photo-form').isHidden(),true);
+   assert.equal(await page.locator('#recast-form').isVisible(),true,'Returning to AI preserves the wizard');
+   assert.equal(await page.locator('#all-worlds-group').isHidden(),true,'Advanced worlds are optional by default');
    assert.equal(await page.locator('#render-time-hint').count(),0,'Only the waiting screen contains the time estimate');
    const timerStyles=await page.evaluate(()=>{
     const loader=document.querySelector('#loading');
@@ -72,6 +90,13 @@ const policy={highDaily:3,standardDaily:5,purchaseBonus:3,websiteCalls:70,social
    await page.locator('[data-create-step="0"] [data-go-step="1"]').click();
    await page.locator('#photos').setInputFiles(path.join(root,'assets/jack-russell-source-v18.webp'));
    await page.locator('[data-create-step="1"] [data-go-step="2"]').click();
+   assert.equal(await page.locator('#all-worlds-group').isHidden(),true);
+   assert.equal(await page.locator('#surprise-world').isVisible(),true,'Surprise me is a clear alternative');
+   await page.locator('#more-adventures').click();
+   assert.equal(await page.locator('#all-worlds-group').isVisible(),true,'All 48 adventures remain reachable on demand');
+   assert.equal(await page.locator('#more-adventures').getAttribute('aria-expanded'),'true');
+   await page.locator('#more-adventures').click();
+   assert.equal(await page.locator('#all-worlds-group').isHidden(),true,'A long list can be closed again');
    assert.equal(await page.locator('#quality-fallback').isVisible(),true);
    assert.match(await page.locator('#quality-fallback-reason').textContent(),/High Quality is used up/);
    assert.match(await page.locator('#render-credits').textContent(),/Standard: 4 left/,'Show Standard remaining while eligible');
