@@ -12,9 +12,10 @@ export function fallbackState(snapshot,credits,mode='high'){
   const standardExhausted=Boolean(show&&Number.isFinite(credits?.standardRemaining)&&credits.standardRemaining<=0);
   const standardReady=Boolean(show&&!standardExhausted&&snapshot?.local?.ready&&snapshot?.modes?.quick?.ready&&credits.standardRemaining>0);
   if(standardExhausted){
-    const total=Math.max(0,Number(credits.standardAllowance??5));
     const standardReset=date(credits.standardResetAt);
-    message+=` Standard previews are used up (0 of ${total} left).${standardReset?' Standard refreshes '+standardReset+'.':' Check the separate Standard reset time above.'} The Standard option cannot be selected until more credits are available.`;
+    message=exhausted
+      ?`Both your free High Quality and Standard preview allowances are used up. ${reset?'High Quality refreshes '+reset+'.':'High Quality refreshes after its daily window.'} ${standardReset?'Standard refreshes '+standardReset+'.':'Standard refreshes after its separate daily window.'} You can still choose a product with a saved Recast. A purchase of an item you already love grants ${bonus} bonus High Quality previews for your next Recast.`
+      :`High Quality is temporarily unavailable and your Standard previews are used up. ${standardReset?'Standard refreshes '+standardReset+'.':'Check the Standard reset time above.'} You can wait for High Quality to recover.`;
   }
   if(show)message+=' Credits do not change an order already confirmed for printing or bypass site availability limits.';
   return {show,exhausted,outage,standardExhausted,standardReady,message,returnToHigh:mode==='quick'&&!exhausted&&!outage};
