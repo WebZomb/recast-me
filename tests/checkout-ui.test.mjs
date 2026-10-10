@@ -25,7 +25,7 @@ function markPreviewReady(ui){
 }
 test('homepage polish keeps alternates separate and preview utilities collapsed',()=>{
   const html=readFileSync(new URL('../public/index.html',import.meta.url),'utf8');
-  const aiPos=html.indexOf('CREATE WITH AI'),formPos=html.indexOf('<form id="recast-form">'),orPos=html.indexOf('class="alternate-divider"'),savedPos=html.indexOf('Continue a saved Recast');
+  const aiPos=html.indexOf('CREATE WITH AI'),formPos=html.indexOf('<form id="recast-form">'),orPos=html.indexOf('class="alternate-divider"'),savedPos=html.indexOf('Open a saved picture');
   assert.ok(aiPos>=0&&formPos>aiPos&&orPos>formPos&&savedPos>orPos);
   assert.match(html,/class="hero-demo hero-showcase hero-live-stage"/);
   assert.match(html,/recast-neon-mug-cutout-v48\.png/);
