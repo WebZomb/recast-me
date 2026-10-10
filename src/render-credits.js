@@ -1,4 +1,5 @@
 import {change,read,hash,randomToken,fault,sameOrigin,privateJson} from './commerce-store.js';
+import {extraCreditBalance,reserveExtraCredit,settleExtraCredit} from './credit-ledger.js';
 const WINDOW_MS=86400000;
 const windowState=(v,now)=>!v?.resetAt||now>=v.resetAt?{used:0,active:{},resetAt:now+WINDOW_MS}:v;
 const standardKey=id=>`commerce/standard/${id}.json`;
@@ -42,9 +43,17 @@ export async function creditBalance(env,wallet,now=Date.now()){
   const trial=await read(env,trialKey(wallet.network));
   const daily=windowState(trial,now);
   const standard=windowState(await read(env,standardKey(wallet.network)),now);
-  const free=Math.max(0,highLimit(env)-Number(daily.used||0));
+  const extra=await extraCreditBalance(env,wallet.id,now);
+  // The purchased 24-hour refill replaces this browser's current FREE window,
+  // without resetting the shared-network budget for other people on the Wi-Fi.
+  const free=extra.resetWindow?extra.resetWindow.high:Math.max(0,highLimit(env)-Number(daily.used||0));
+  const standardRemaining=extra.resetWindow?extra.resetWindow.standard:Math.max(0,standardLimit(env)-standard.used);
   const bonus=Object.values(current?.orders||{}).reduce((n,o)=>n+(o.revoked?0:Math.max(0,granted(o)-o.used)),0);
-  return {free,bonus,remaining:free+bonus,standardRemaining:Math.max(0,standardLimit(env)-standard.used),resetAt:new Date(daily.resetAt).toISOString(),standardResetAt:new Date(standard.resetAt).toISOString()};
+  return {free,bonus,purchasedHigh:extra.purchasedHigh,purchasedStandard:extra.purchasedStandard,
+    remaining:free+bonus+extra.purchasedHigh,standardRemaining,standardEffectiveRemaining:standardRemaining+extra.purchasedStandard,
+    resetActive:Boolean(extra.resetWindow),
+    resetAt:extra.resetWindow?.resetAt||new Date(daily.resetAt).toISOString(),
+    standardResetAt:extra.resetWindow?.resetAt||new Date(standard.resetAt).toISOString()};
 }
 export async function creditRoute(request,env){
   if(new URL(request.url).pathname!=='/api/render-credits')return null;
@@ -75,7 +84,18 @@ export async function reserveCustomerRender(env,now=Date.now()){
   const ticket=randomToken();
   if(env.RECAST_RENDER_MODE==='quick'){
     const balance=await creditBalance(env,wallet,now);
-    if(balance.remaining>0&&env.RECAST_STANDARD_OUTAGE_APPROVED!=='true')throw fault('standard_locked','High Quality previews are available. Use High Quality first. Standard is only available early during a confirmed provider outage with your explicit choice.',409);
+    // Purchased Standard can be selected regardless of remaining HQ credits;
+    // free Standard stays locked until the free HQ and merchandise bonus run out.
+    if(balance.purchasedStandard>0){
+      const ticket=await reserveExtraCredit(env,wallet.id,'standard',now);
+      if(ticket)return ticket;
+    }
+    if(balance.free+balance.bonus>0&&env.RECAST_STANDARD_OUTAGE_APPROVED!=='true')throw fault('standard_locked','High Quality starter previews are available. Free Standard unlocks when starter and merchandise bonus previews are used, or during a verified outage.',409);
+    if(balance.resetActive){
+      const ticket=await reserveExtraCredit(env,wallet.id,'standard',now);
+      if(ticket)return ticket;
+      throw fault('standard_credits_used','Your 24-hour Standard refill is used. Wait for its reset or redeem more credits.',429);
+    }
     const key=standardKey(wallet.network);
     await change(env,key,{used:0},previous=>{
       const v=windowState(previous,now);
@@ -85,6 +105,13 @@ export async function reserveCustomerRender(env,now=Date.now()){
     });
     return {key,ticket};
   }
+  // A purchased reset provides an independent 24-hour personal High Quality
+  // allowance. Never consume the old shared-network free window during it.
+  const balance=await creditBalance(env,wallet,now);
+  if(balance.resetActive){
+    const ticket=await reserveExtraCredit(env,wallet.id,'high',now);
+    if(ticket)return ticket;
+  }else{
   // Reserve while running; restore customer credit if a protected preview fails.
   // Provider spending reservations are never refunded automatically.
   try{
@@ -95,19 +122,33 @@ export async function reserveCustomerRender(env,now=Date.now()){
       v.used++;v.active ||= {};v.active[ticket]=true;return v;
     });return {key:trialKey(wallet.network),ticket};
   }catch(e){if(e.code!=='trial_exhausted')throw e}
+  }
+  // Keep the existing three-per-merch-order bonus; do not erase older grants.
+  if(balance.bonus<=0&&balance.purchasedHigh>0){
+    const ticket=await reserveExtraCredit(env,wallet.id,'high',now);
+    if(ticket)return ticket;
+  }
   let orderKey;
-  await change(env,walletKey(wallet.id),null,v=>{
+  try{await change(env,walletKey(wallet.id),null,v=>{
     if(!v)throw fault('credits_required','Please reload to prepare your previews.',401);
     if(Object.values(v.orders||{}).some(o=>!Number.isSafeInteger(o.used)||o.used<0||o.used>granted(o)))throw fault('credits_storage','The purchase credit balance needs review.',503);
     orderKey=Object.keys(v.orders||{}).find(k=>!v.orders[k].revoked&&v.orders[k].used<granted(v.orders[k]));
     const order=v.orders?.[orderKey];
     if(!order)throw fault('render_credits_used',`Your High Quality allowance is used. An eligible paid order adds ${purchaseAmount(env)} bonus High Quality previews for future creations, or wait for your 24-hour reset.`,429);
     order.used++;order.active ||= {};order.active[ticket]=true;return v;
-  });
-  return {key:walletKey(wallet.id),orderKey,ticket};
+  });return {key:walletKey(wallet.id),orderKey,ticket};
+  }catch(error){
+    // Purchased High Quality is available independently of old merch bonuses,
+    // even if a stored order has no remaining credit.
+    if(error.code==='render_credits_used'&&balance.purchasedHigh>0){
+      const extra=await reserveExtraCredit(env,wallet.id,'high',now);if(extra)return extra;
+    }
+    throw error;
+  }
 }
 export async function settleCustomerRender(env,reservation,success){
   if(!reservation)return;
+  if(reservation.source)return settleExtraCredit(env,reservation,success);
   await change(env,reservation.key,null,v=>{
     const balance=reservation.orderKey?v?.orders?.[reservation.orderKey]:v;
     if(!balance?.active?.[reservation.ticket])return undefined;
