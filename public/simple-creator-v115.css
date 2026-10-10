@@ -77,3 +77,5 @@
   #recast-form .consent{font-size:15px}
 }
 @media(prefers-reduced-motion:reduce){.create-method{transition:none}}
+
+.adventure-choice-status{margin:6px 0 15px;font-size:15px;font-weight:800;color:#b5f3fd;line-height:1.4;padding:7px 11px;background:rgba(36,75,90,.24);border-left:3px solid #60d5e8;border-radius:3px}
