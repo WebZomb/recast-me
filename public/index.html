@@ -12,7 +12,7 @@
   <link rel="stylesheet" href="/merch-v07.css?v=134" />
   <link rel="stylesheet" href="/site-v10.css?v=233" />
   <link rel="stylesheet" href="/launch-v49.css?v=249" />
-  <link rel="stylesheet" href="/launch-v50.css?v=253" />
+  <link rel="stylesheet" href="/launch-v50.css?v=254" />
   <link rel="stylesheet" href="/brand-orbit-v1.css?v=1">
   <link rel="stylesheet" href="/hero-target-v51.css?v=5">
   <link rel="stylesheet" href="/product-polish-v53.css?v=5">
@@ -193,14 +193,15 @@
             <div class="consent"><input id="consent" type="checkbox" required><label for="consent">I have permission to use these photos. Family-friendly content only. I agree to send my selected photos and descriptions to the image service chosen for my preview (fal.ai or Cloudflare Workers AI) to create my Recast. <a href="/privacy.html" target="_blank" rel="noopener">Photo privacy &amp; AI policy</a>.</label></div>
             <input type="radio" name="qualityMode" value="high" checked hidden>
             <input type="radio" name="qualityMode" value="quick" hidden>
+            <p id="render-credits" role="status" aria-live="polite" hidden></p>
             <aside id="quality-fallback" hidden aria-live="polite">
               <p id="quality-fallback-reason"></p>
+              <p id="standard-limit-status" class="standard-limit-status" role="status" hidden></p>
               <p class="standard-allowance-note">Only use a preview you love for your purchase. Failed previews restore their credit.</p>
               <button type="button" class="button ghost" id="choose-standard">Use Standard instead</button>
               <button type="button" class="button ghost" id="choose-high" hidden>Back to High Quality</button>
               <a id="credit-purchase-link" href="#shop" hidden>Choose an item from a saved Recast →</a>
             </aside>
-            <p id="render-credits" role="status" aria-live="polite" hidden></p>
             <p id="return-to-order" hidden><a class="button ghost" href="/order.html">Return to my order and choose its design →</a></p>
             <div id="turnstile-container" class="turnstile-container hidden"></div>
             
@@ -323,7 +324,7 @@
     <div class="footer-links"><a href="/privacy.html">Privacy &amp; photo help</a><a href="/support.html">Orders &amp; support</a></div>
     <span>© 2026 Recast Me</span>
   </footer>
-  <script src="/app.js?v=271" type="module"></script>
+  <script src="/app.js?v=272" type="module"></script>
   <script src="/checkout.js?v=2614" type="module"></script>
 </body>
 </html>

@@ -9,10 +9,16 @@ export function fallbackState(snapshot,credits,mode='high'){
   let message=outage
     ?'High Quality is temporarily unavailable on the approved rendering routes. You can choose Standard, which uses a different Cloudflare model, but it may also fail if Cloudflare is having problems. Standard may have less detail or a weaker likeness. This is optional: you can wait for High Quality. A successful Standard preview uses only a Standard credit and keeps your High Quality credits.'
     :exhausted?`You’ve used your High Quality previews for now. You can try Standard, but it may have less detail or a weaker likeness. Not happy with it? ${reset?'High Quality refreshes '+reset+'.':'Come back after your daily reset.'} Or buy an item with a design you already love to get ${bonus} bonus High Quality previews for your next Recast.`:'';
-  const standardReady=Boolean(show&&snapshot?.local?.ready&&snapshot?.modes?.quick?.ready&&credits.standardRemaining>0);
-  if(show&&credits.standardRemaining<=0)message+=` Your Standard previews are also used.${date(credits.standardResetAt)?' They refresh '+date(credits.standardResetAt)+'.':''}`;
+  const standardExhausted=Boolean(show&&Number.isFinite(credits?.standardRemaining)&&credits.standardRemaining<=0);
+  const standardReady=Boolean(show&&!standardExhausted&&snapshot?.local?.ready&&snapshot?.modes?.quick?.ready&&credits.standardRemaining>0);
+  if(standardExhausted){
+    const standardReset=date(credits.standardResetAt);
+    message=exhausted
+      ?`Both your free High Quality and Standard preview allowances are used up. ${reset?'High Quality refreshes '+reset+'.':'High Quality refreshes after its daily window.'} ${standardReset?'Standard refreshes '+standardReset+'.':'Standard refreshes after its separate daily window.'} You can still choose a product with a saved Recast. A purchase of an item you already love grants ${bonus} bonus High Quality previews for your next Recast.`
+      :`High Quality is temporarily unavailable and your Standard previews are used up. ${standardReset?'Standard refreshes '+standardReset+'.':'Check the Standard reset time above.'} You can wait for High Quality to recover.`;
+  }
   if(show)message+=' Credits do not change an order already confirmed for printing or bypass site availability limits.';
-  return {show,exhausted,outage,standardReady,message,returnToHigh:mode==='quick'&&!exhausted&&!outage};
+  return {show,exhausted,outage,standardExhausted,standardReady,message,returnToHigh:mode==='quick'&&!exhausted&&!outage};
 }
 // The customer balance is read-only; the server still controls allowances and access.
 export function creditSummary(credits,showStandard=false){
@@ -25,13 +31,14 @@ export function creditSummary(credits,showStandard=false){
   const bonus=count(credits.bonus,0);
   const highReset=reset(credits.resetAt);
   const lines=[`High Quality: ${free} of ${highAllowance} daily previews left (${highAllowance-free} used)${bonus?` + ${bonus} purchase credits`:''}.${highReset?' Refreshes '+highReset+'.':''}`];
-  // Only announce Standard when HQ is depleted or an approved HQ-outage fallback
-  // has been offered. Displaying a balance never unlocks the Standard engine.
-  if(showStandard||Number(credits.remaining)<=0){
+  // Always display both balances, including Standard while locked; visibility
+  // never unlocks the server-side Standard engine or changes existing credits.
+  {
     const standardAllowance=count(credits.standardAllowance,5);
     const standardLeft=Math.min(standardAllowance,count(credits.standardRemaining,standardAllowance));
     const standardReset=reset(credits.standardResetAt);
-    lines.push(`Standard: ${standardLeft} of ${standardAllowance} daily previews left (${standardAllowance-standardLeft} used).${standardReset?' Refreshes '+standardReset+'.':''}${Number(credits.remaining)>0?' Offered only while High Quality is unavailable.':''}`);
+    const standardLock=Number(credits.remaining)>0 ? (showStandard?' Offered while High Quality is unavailable.':' Available after High Quality is used (or during an approved High Quality outage).') : '';
+    lines.push(`Standard: ${standardLeft} of ${standardAllowance} daily previews left (${standardAllowance-standardLeft} used).${standardReset?' Refreshes '+standardReset+'.':''}${standardLock}`);
   }
   return lines.join('\n');
 }
