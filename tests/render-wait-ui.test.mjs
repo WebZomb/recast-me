@@ -27,7 +27,7 @@ test('Customer render timing and consent are accurate and clearly presented',()=
  assert.match(html,/id="generation-clock"/);
  assert.match(html,/fal\.ai or Cloudflare Workers AI/);
  assert.match(html,/render-wait-v1\.css\?v=2/);
- assert.match(html,/app\.js\?v=269/);
+ assert.match(html,/app\.js\?v=270/);
  assert.match(html,/aria-label="An animation indicating the render is still in progress, not a percentage"/);
  assert.match(html,/id="generation-elapsed" class="render-elapsed" role="timer"/);
  const css=read('public/render-wait-v1.css');
