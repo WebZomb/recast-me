@@ -73,7 +73,7 @@ test('Render overlay stages are timed, honest, visible, and stop cleanly',()=>{
  assert.equal(node('#generation-clock').textContent,'0:22 elapsed');
  assert.equal(node('#generation-status').textContent,'Making your Recast…');
  now=53000;api.tickGenerationUI();
- assert.match(node('#generation-detail').textContent,/will not automatically start a second paid render/);
+ assert.equal(node('#generation-detail').textContent,'This is taking longer than usual. Your preview may still finish—please keep this page open.');
  now=93000;api.tickGenerationUI();
  assert.match(node('#generation-status').textContent,/taking longer/);
  api.advanceGenerationUI('finishing');

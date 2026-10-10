@@ -306,7 +306,7 @@ function tickGenerationUI(){
     description=generationMode==='quick'?'Your Standard preview is still being created. Please keep this page open.':'High-quality previews usually take about 30–40 seconds. Please keep this page open.';
   }else if(seconds<90){
     title='Still working on your Recast…';
-    description='This is taking longer than usual, but the render may still finish. We will not automatically start a second paid render.';
+    description='This is taking longer than usual. Your preview may still finish—please keep this page open.';
   }else{
     title='Your render is taking longer…';
     description='Please keep this page open. We will display the result or provide a support reference if the request cannot finish.';
