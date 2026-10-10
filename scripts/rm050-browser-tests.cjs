@@ -62,7 +62,7 @@ const policy={highDaily:3,standardDaily:5,purchaseBonus:3,websiteCalls:70,social
      assert.ok(part.width>0&&part.height<35,'Timer typography must be a readable single line');
    }
    assert.equal(await page.locator('#quality-fallback').isHidden(),true);
-   assert.match(await page.locator('#render-credits').textContent(),/Standard: 5 of 5 daily previews left \(0 used\)/,'Show Standard allowance before it unlocks');
+   assert.match(await page.locator('#render-credits').textContent(),/Standard: 5 left/,'Keep both balances readable at a glance');
    await page.locator('.product-design-controls').waitFor({state:'attached'});assert.equal(await page.locator('.product-design-controls').count(),1);
    assert.equal(await page.locator('[data-design-layout]').isHidden(),true);
    await page.locator('.product-design-controls summary').click();assert.equal(await page.locator('[data-design-layout]').isVisible(),true);
@@ -73,9 +73,9 @@ const policy={highDaily:3,standardDaily:5,purchaseBonus:3,websiteCalls:70,social
    await page.locator('#photos').setInputFiles(path.join(root,'assets/jack-russell-source-v18.webp'));
    await page.locator('[data-create-step="1"] [data-go-step="2"]').click();
    assert.equal(await page.locator('#quality-fallback').isVisible(),true);
-   assert.match(await page.locator('#quality-fallback-reason').textContent(),/3 bonus High Quality/);
-   assert.match(await page.locator('#render-credits').textContent(),/Standard: 4 of 5 daily previews left \(1 used\)/,'Show Standard allowance and used count while eligible');
-   assert.equal(await page.locator('#render-credits').evaluate(node=>getComputedStyle(node).whiteSpace),'pre-line','Separate credit balances should be readable on mobile');
+   assert.match(await page.locator('#quality-fallback-reason').textContent(),/High Quality is used up/);
+   assert.match(await page.locator('#render-credits').textContent(),/Standard: 4 left/,'Show Standard remaining while eligible');
+   assert.match(await page.locator('#render-credits-details').textContent(),/Standard: 4 of 5 daily previews left \(1 used\)/,'Exact counts and resets remain available under details');
    await page.locator('#choose-standard').click();assert.equal(await page.locator('input[name="qualityMode"][value="quick"]').isChecked(),true);
    await page.screenshot({path:path.join(out,`${engine.name()}-${width}-customer.png`)});
    // Real owner case: both free allowances used; show a reset notice rather
@@ -87,8 +87,8 @@ const policy={highDaily:3,standardDaily:5,purchaseBonus:3,websiteCalls:70,social
    await page.locator('[data-create-step="1"] [data-go-step="2"]').click();
    assert.equal(await page.locator('#choose-standard').isHidden(),true,'Spent Standard should never look actionable');
    assert.equal(await page.locator('#standard-limit-status').isVisible(),true,'Show a conspicuous Standard reset notice');
-   assert.match(await page.locator('#standard-limit-status').textContent(),/Standard used up — 0 of 5 left/);
-   assert.match(await page.locator('#render-credits').textContent(),/Standard: 0 of 5 daily previews left \(5 used\)/);
+   assert.match(await page.locator('#standard-limit-status').textContent(),/Standard: 0 of 5 left/);
+   assert.match(await page.locator('#render-credits').textContent(),/Standard: 0 left/);
    Object.assign(state,{remaining:3,bonus:3,standardRemaining:4});await page.evaluate(()=>window.dispatchEvent(new Event('focus')));await page.waitForTimeout(500);
    assert.equal(await page.locator('input[name="qualityMode"][value="high"]').isChecked(),true);assert.equal(await page.locator('#quality-fallback').isHidden(),true);
    // HQ providers are genuinely unavailable, but Standard's separate Cloudflare
@@ -99,8 +99,8 @@ const policy={highDaily:3,standardDaily:5,purchaseBonus:3,websiteCalls:70,social
    await page.locator('input[name="qualityMode"][value="high"]').dispatchEvent('change');
    await page.waitForFunction(()=>!document.querySelector('#quality-fallback').hidden);
    assert.equal(await page.locator('#quality-fallback').isVisible(),true);
-   assert.match(await page.locator('#quality-fallback-reason').textContent(),/different Cloudflare model/);
-   assert.match(await page.locator('#render-credits').textContent(),/Standard: 4 of 5 daily previews left \(1 used\)/,'Approved outage also displays Standard credits');
+   assert.match(await page.locator('#quality-fallback-reason').textContent(),/High Quality is temporarily unavailable/);
+   assert.match(await page.locator('#render-credits').textContent(),/Standard: 4 left/,'Approved outage also displays Standard credits');
    await page.locator('#choose-standard').click();
    assert.equal(await page.locator('input[name="qualityMode"][value="quick"]').isChecked(),true);
    assert.equal(await page.locator('#generate-button').isEnabled(),true);
