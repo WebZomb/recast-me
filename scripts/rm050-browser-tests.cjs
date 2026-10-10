@@ -134,7 +134,18 @@ const policy={highDaily:3,standardDaily:5,purchaseBonus:3,websiteCalls:70,social
    page.on('dialog',d=>d.accept());await page.locator('[name="budgetCents"]').fill('6.00');await saveByPointer();
    assert.equal(state.saved.at(-1).confirm,'INCREASE_LIMITS');
    await page.screenshot({path:path.join(out,`${engine.name()}-${width}-admin.png`)});
-   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1),false,'admin overflow');assert.deepEqual(errors,[]);
+   const adminOverflow=await page.evaluate(()=>{
+    const width=innerWidth,scrollWidth=document.documentElement.scrollWidth;
+    const offenders=[...document.querySelectorAll('body *')].filter(el=>{
+      const computed=getComputedStyle(el),r=el.getBoundingClientRect();
+      if(computed.display==='none'||computed.position==='fixed'||computed.visibility==='hidden')return false;
+      return r.width>0&&r.right>width+2;
+    }).slice(0,14).map(el=>{
+      const r=el.getBoundingClientRect();return {selector:el.id?'#'+el.id:(el.tagName.toLowerCase()+'.'+String(el.className).slice(0,50)),left:Math.round(r.left),right:Math.round(r.right),width:Math.round(r.width)};
+    });
+    return {width,scrollWidth,offenders};
+   });
+   assert.ok(adminOverflow.scrollWidth<=adminOverflow.width+1,'admin overflow '+JSON.stringify(adminOverflow));assert.deepEqual(errors,[]);
    await page.goto('http://recast.test/model-lab.html',{waitUntil:'networkidle'});
    // WebKit's stability heuristic can time out on a moving button despite
    // it being an actual pointer target. Assert hit-testing and click the
