@@ -113,11 +113,11 @@ const policy={highDaily:3,standardDaily:5,purchaseBonus:3,websiteCalls:70,social
    Object.assign(state,{hqOutage:false,quickDown:false,remaining:3,free:3,bonus:3});
    await page.goto('http://recast.test/admin.html',{waitUntil:'networkidle'});
    await page.locator('#admin-token').fill('fixture-not-a-real-secret');await page.locator('#admin-login button').click();await page.waitForTimeout(300);
-   // The ninth tab should remain visible via horizontally scrollable navigation,
-   // without expanding the whole 320px mobile document.
+   // With nine admin sections, all mobile tabs must remain real tappable targets,
+   // without widening the 320px screen or hiding Analytics offscreen.
    async function tapAdminTab(value){
      const tab=page.locator('[data-tab="'+value+'"]');
-     await tab.evaluate(node=>node.scrollIntoView({block:'nearest',inline:'center',behavior:'instant'}));
+     await tab.evaluate(node=>node.scrollIntoView({block:'center',inline:'nearest',behavior:'instant'}));
      const target=await tab.evaluate(node=>{
        const rect=node.getBoundingClientRect(),x=rect.left+rect.width/2,y=rect.top+rect.height/2;
        const hit=document.elementFromPoint(x,y);
