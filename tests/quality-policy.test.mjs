@@ -25,9 +25,9 @@ test('HQ and Standard balances show explicit daily allowance, used counts, and d
  assert.equal(creditSummary({enabled:true,initialized:false}),'Preparing your preview allowances…');
  const credits={enabled:true,initialized:true,free:2,freeAllowance:3,bonus:3,remaining:5,standardAllowance:5,standardRemaining:4,resetAt:'2026-10-10T16:00:00Z',standardResetAt:'2026-10-11T16:00:00Z'};
  const locked=creditSummary(credits);
- assert.match(locked,/High Quality: 2 of 3 daily previews left \(1 used\) \+ 3 purchase credits/);
+ assert.match(locked,/High Quality: 2 of 3 daily previews left \(1 used\) \+ 3 merchandise bonus/);
  assert.match(locked,/Standard: 4 of 5 daily previews left \(1 used\)/);
- assert.match(locked,/Available after High Quality is used/,'Standard balance can be visible while its render button is locked');
+ assert.match(locked,/Free Standard unlocks after High Quality is used/,'Standard balance can be visible while its render button is locked');
  const unlocked=creditSummary({...credits,free:0,bonus:0,remaining:0});
  assert.match(unlocked,/High Quality: 0 of 3 daily previews left \(3 used\)/);
  assert.match(unlocked,/\nStandard: 4 of 5 daily previews left \(1 used\)/);
@@ -40,7 +40,7 @@ test('confirmed HQ outage shows Standard count without consuming remaining HQ pr
  assert.match(shown,/Standard: 1 of 7 daily previews left \(6 used\)/);
  assert.match(shown,/Offered while High Quality is unavailable/);
  assert.match(creditSummary(credits),/Standard: 1 of 7 daily previews left \(6 used\)/,'Show both counts without unlocking Standard');
- assert.match(creditSummary(credits),/Available after High Quality is used/);
+ assert.match(creditSummary(credits),/Free Standard unlocks after High Quality is used/);
  const empty=creditSummary({...credits,free:0,remaining:0,standardRemaining:0});
  assert.match(empty,/Standard: 0 of 7 daily previews left \(7 used\)/);
  assert.doesNotMatch(empty,/Offered while High Quality is unavailable/);
@@ -59,4 +59,18 @@ test('Spent Standard has an unmistakable separate reset; no unusable Standard in
  const outage=fallbackState({...ready,standardOutageAvailable:true},{...credits,remaining:1});
  assert.equal(outage.standardExhausted,true);
  assert.match(outage.message,/High Quality is temporarily unavailable and your Standard previews are used up/);
+});
+
+test('purchased Standard unlocks its own mode while High Quality is still available',()=>{
+ const credits={enabled:true,remaining:3,free:3,freeAllowance:3,bonus:0,standardRemaining:5,standardAllowance:5,purchasedStandard:20,standardEffectiveRemaining:25};
+ const result=fallbackState(ready,credits,'quick');
+ assert.equal(result.show,true);assert.equal(result.standardReady,true);assert.equal(result.returnToHigh,false);
+ assert.match(result.message,/purchased Standard credits/);
+ const counter=creditSummary(credits);
+ assert.match(counter,/20 purchased Standard/);
+});
+test('purchased HQ and merchandise bonuses have distinct read-only balance labels',()=>{
+ const credits={enabled:true,remaining:26,free:3,freeAllowance:3,bonus:3,purchasedHigh:20,standardAllowance:5,standardRemaining:5};
+ assert.match(creditSummary(credits),/3 merchandise bonus/);
+ assert.match(creditSummary(credits),/20 purchased HQ/);
 });
