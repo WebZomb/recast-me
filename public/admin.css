@@ -21,3 +21,6 @@
 
 /* Let the mobile admin tabs scroll internally without widening the page. */
 .admin-tabs{width:100%;max-width:100%;min-width:0;box-sizing:border-box;overflow-x:auto;overflow-y:hidden;contain:layout paint}.admin-tabs button{flex:0 0 auto}
+
+/* Narrow browsers: the tab rail scrolls on its own, not with the entire page. */
+@media(max-width:700px){.admin-shell{overflow-x:clip}.admin-tabs{contain:none;overflow-x:auto;overflow-y:hidden}}
