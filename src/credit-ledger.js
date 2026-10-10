@@ -69,7 +69,11 @@ export async function redeemCreditCode(env,codeInput,walletId,now=Date.now()){
     v.redemptions[id]={packId:current.packId,redeemedAt:new Date(now).toISOString()};
     return v;
   });
-  return {ok:true,packId:current.packId,title:p.title,alreadyRedeemed:Boolean(current.redeemedWallet),id};
+  // Payment refunds can race the two-key code/wallet transition. Reconcile a
+  // revocation again after applying a grant so a late redeem never survives it.
+  const latest=await read(env,key);
+  if(latest?.revokedAt){await revokeCreditCode(env,id,'race_with_revocation',now);throw fault('credit_code_revoked','This code was revoked. Contact support.',409)}
+  return {ok:true,packId:current.packId,title:p.title,alreadyRedeemed:Boolean(current.redeemedAt&&current.redeemedWallet),id};
 }
 export async function revokeCreditCode(env,id,reason='owner',now=Date.now()){
   if(!/^[a-f0-9]{64}$/.test(String(id||'')))throw fault('code_invalid','Invalid code reference.',400);
@@ -92,6 +96,8 @@ export async function reserveExtraCredit(env,walletId,type,now=Date.now(),{purch
   if(!['high','standard'].includes(type))throw fault('credits_type','Unknown preview type.',400);
   const key=walletKey(walletId),ticket=randomToken();let selected=null;
   await change(env,key,empty(),v=>{
+    // A failed CAS attempt must not leave a stale reservation ticket behind.
+    selected=null;
     const r=activeReset(v,now),usedKey=type==='high'?'highUsed':'standardUsed',allowance=type==='high'?3:5;
     // The refill is a fresh *personal* daily period. It doesn't reset the
     // shared-network free budget for any other user on the same Wi-Fi.
