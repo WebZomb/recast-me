@@ -21,6 +21,7 @@
     "IMAGE_MODEL_SOCIAL": "@cf/black-forest-labs/flux-2-klein-4b",
     "RENDER_CREDITS_ENABLED": "true",
     "CREDIT_PACKS_ENABLED": "true",
+    "SITE_ANALYTICS_ENABLED": "true",
     "CREDIT_SALES_ENABLED": "false",
     "CREDIT_TEST_CHECKOUT_ENABLED": "false",
     "RENDER_CREDITS_STORAGE_SALT": "true",
