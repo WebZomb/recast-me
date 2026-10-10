@@ -1,3 +1,4 @@
+import {ADVENTURE_GUIDES} from './adventure-guides.js?v=1';
 import {mergeHistory,privateRecastLink,readRecastLink} from './recast-history.js';
 import {initCreationWizard} from './creation-wizard.js?v=262';
 import {fallbackState,creditSummary,recoveryUnverified} from './quality-policy.js?v=263';
@@ -69,6 +70,11 @@ const STYLES = [
 ["giant-world","Giant World","Playful cinematic scale illusion with the subject towering over an original miniature city.","/assets/world-comic-v18.webp","Giant world portrait","Funny & Wild"],
 ["food-world","Food Fantasy","Whimsical original world built from colorful food, candy or dessert-inspired scenery.","/assets/world-comic-v18.webp","Food fantasy portrait","Funny & Wild"]
 ];
+for(const entry of STYLES){
+  const guide=ADVENTURE_GUIDES[entry[0]];
+  if(guide)entry[2]=guide.teaser; // Same world brief that reaches both AI engines.
+}
+
 
 const PRODUCT_CATALOG = [
   {name:"Poster",price:"from $29.99",asset:"poster",image:"https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-lifestyle-poster-rm059.png?v=1791422885&width=1000",badge:"MOST POPULAR",pitch:"The easiest way to turn your Recast into wall art.",tier:"featured"},
@@ -174,6 +180,10 @@ function updateWorldFields(){
   input.disabled=false;
   input.required=isCustom;
   if(!isCustom)input.value=STYLES.find(s=>s[0]===styleSelect.value)?.[2]||'';
+  const description=document.querySelector('#selected-world-description');
+  if(description)description.textContent=isCustom
+    ? 'Create your own adventure by describing the place, clothing, mood and lighting.'
+    : (ADVENTURE_GUIDES[styleSelect.value]?.teaser||'A new original scene with clothing and background tailored to this adventure.');
   document.querySelectorAll('.style-card').forEach(card=>card.classList.toggle('selected',card.dataset.style===styleSelect.value));
   document.dispatchEvent(new Event('recast-style-change'));
 }

@@ -1,5 +1,6 @@
 import {moderateContent,screenText,CONTENT_MESSAGE} from './content-safety.js';
 import {makeFalCompactPrompt} from './fal-prompt.js';
+import {makeStandardAdventurePrompt} from './standard-adventure-prompt.js';
 import {referenceDirections} from './reference-labels.js';
 import { assertRenderReady, readinessSnapshot, recordRenderHealth } from './render-health.js';
 const PROMPT_VERSION = "identity-all-worlds-v5";
@@ -295,8 +296,8 @@ async function generateHighQuality({env,model,styleId,subjectType,notes,customWo
   }
 }
 
-async function generateQuick({env,model,styleId,subjectType,notes,customWorld,inputFiles,hasBranch}){
-  const main=makePrompt(styleId,subjectType,notes,inputFiles.length,customWorld,hasBranch);
+async function generateQuick({env,model,styleId,subjectType,notes,referenceGuide='',customWorld,inputFiles,hasBranch}){
+  const main=makeStandardAdventurePrompt({styleId,subjectType,notes,referenceGuide,inputCount:inputFiles.length,customWorld,hasBranch});
   const guidance=Math.max(1,Math.min(10,Number(env.IMAGE_QUICK_GUIDANCE||5)));
   const steps=Math.max(8,Math.min(30,Number(env.IMAGE_QUICK_STEPS||12)));
   const settings={width:768,height:960,guidance,steps:model.includes('flux-2-klein')?null:steps};
@@ -421,7 +422,7 @@ export async function highQualityTransform(request,env,{trustedSocialJob=false}=
     const quickModel=String(env.IMAGE_MODEL_QUICK||DEFAULT_QUICK);
     stage="ai-generation";
     const generated=qualityMode==="quick"
-      ? await generateQuick({env,model:quickModel,styleId,subjectType,notes:[referenceGuide,notes].filter(Boolean).join(" "),customWorld,inputFiles,hasBranch:Boolean(parentRequestId)})
+      ? await generateQuick({env,model:quickModel,styleId,subjectType,notes,referenceGuide,customWorld,inputFiles,hasBranch:Boolean(parentRequestId)})
       : await generateHighQuality({env,model:highQualityModel,styleId,subjectType,notes:[referenceGuide,notes].filter(Boolean).join(" "),customWorld,inputFiles,hasBranch:Boolean(parentRequestId)});
     const image=normalizeBase64(generated.image);
     if(!image||image.length<100)throw Object.assign(new Error("malformed"),{reason:"provider"});
@@ -432,10 +433,10 @@ export async function highQualityTransform(request,env,{trustedSocialJob=false}=
     const requestId=`RC-${Date.now().toString(36).toUpperCase()}-${randomHex(3).toUpperCase()}`;
     const accessToken=randomHex(32);
     safety.outputScreening=await moderateContent(env,{images:[new File([Uint8Array.from(atob(image),c=>c.charCodeAt(0))],"output",{type:previewMime})]});
-    const stored=await store(env,{requestId,accessToken,styleId,subjectType,notes,customWorld,parentRequestId,source,sourceTweet,qualityMode,inputs:inputFiles,image,previewMime,safety,modelUsed:generated.modelUsed,providerUsed:generated.providerUsed,promptVersion:generated.providerUsed==='fal'?'fal-identity-world-v1':PROMPT_VERSION,attemptKind:generated.attemptKind});
+    const stored=await store(env,{requestId,accessToken,styleId,subjectType,notes,customWorld,parentRequestId,source,sourceTweet,qualityMode,inputs:inputFiles,image,previewMime,safety,modelUsed:generated.modelUsed,providerUsed:generated.providerUsed,promptVersion:generated.providerUsed==='fal'?'fal-adventure-scenes-v2':qualityMode==='quick'?'standard-adventure-scenes-v1':PROMPT_VERSION,attemptKind:generated.attemptKind});
 
     await writeAttemptReceipt(env,clientAttemptId,{status:"success",completedAt:new Date().toISOString(),durationMs:Date.now()-attemptStartedAt,requestId,qualityMode,modelUsed:generated.modelUsed,providerUsed:generated.providerUsed,providerRequestId:generated.providerRequestId,attemptKind:generated.attemptKind,persisted:stored.persisted});
-    return json({ok:true,requestId,accessToken,style:STYLES[styleId]?.name||"Custom World",image:`data:${previewMime};base64,${image}`,persisted:stored.persisted,storageError:stored.storageError,qualityMode,qualityLabel:qualityMode==="quick"?"Standard Preview":"High-Quality Preview",modelUsed:generated.modelUsed,providerUsed:generated.providerUsed,usedSafeRetry:generated.usedSafeRetry,usedFastFallback:false,promptVersion:generated.providerUsed==='fal'?'fal-identity-world-v1':PROMPT_VERSION,clientAttemptId});
+    return json({ok:true,requestId,accessToken,style:STYLES[styleId]?.name||"Custom World",image:`data:${previewMime};base64,${image}`,persisted:stored.persisted,storageError:stored.storageError,qualityMode,qualityLabel:qualityMode==="quick"?"Standard Preview":"High-Quality Preview",modelUsed:generated.modelUsed,providerUsed:generated.providerUsed,usedSafeRetry:generated.usedSafeRetry,usedFastFallback:false,promptVersion:generated.providerUsed==='fal'?'fal-adventure-scenes-v2':qualityMode==='quick'?'standard-adventure-scenes-v1':PROMPT_VERSION,clientAttemptId});
   }catch(error){
     const reason=error?.reason||"provider";
     if(['capacity','quota','timeout','unavailable'].includes(reason))await recordRenderHealth(env,env.RECAST_RENDER_SCOPE==='social'?'social':qualityMode,'failed',reason);
