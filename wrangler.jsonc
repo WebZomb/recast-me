@@ -20,6 +20,8 @@
     "IMAGE_MODEL_QUICK": "@cf/black-forest-labs/flux-2-klein-9b",
     "IMAGE_MODEL_SOCIAL": "@cf/black-forest-labs/flux-2-klein-4b",
     "RENDER_CREDITS_ENABLED": "true",
+    "CREDIT_PACKS_ENABLED": "true",
+    "CREDIT_SALES_ENABLED": "false",
     "RENDER_CREDITS_STORAGE_SALT": "true",
     "HQ_FREE_ALLOWANCE": "3",
     "STANDARD_FREE_ALLOWANCE": "5",
