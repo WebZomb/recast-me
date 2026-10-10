@@ -1,7 +1,7 @@
 import {ADVENTURE_GUIDES} from './adventure-guides.js?v=1';
 import {mergeHistory,privateRecastLink,readRecastLink} from './recast-history.js';
 import {initCreationWizard} from './creation-wizard.js?v=262';
-import {fallbackState,creditSummary,recoveryUnverified} from './quality-policy.js?v=264';
+import {fallbackState,creditSummary,recoveryUnverified} from './quality-policy.js?v=265';
 import {protectedPreviewFile} from './preview-export.js';
 let creditInfo=null;
 async function refreshCredits(initialize=false){
@@ -383,7 +383,25 @@ function updateFallback(){
   if(balance&&creditInfo?.enabled)balance.textContent=creditSummary(creditInfo,state.show);
   if(box)box.hidden=!state.show;
   const reason=document.querySelector('#quality-fallback-reason');if(reason)reason.textContent=state.message;
-  const standard=document.querySelector('#choose-standard');if(standard){standard.hidden=selectedQuality()==='quick';standard.disabled=!state.standardReady;}
+  const standard=document.querySelector('#choose-standard');
+  if(standard){
+    // A disabled-looking "Use Standard" CTA is confusing when the allowance
+    // is zero. Replace it with a clear status and reset time.
+    standard.hidden=selectedQuality()==='quick'||state.standardExhausted;
+    standard.disabled=!state.standardReady;
+  }
+  const standardStatus=document.querySelector('#standard-limit-status');
+  if(standardStatus){
+    standardStatus.hidden=!state.standardExhausted;
+    if(state.standardExhausted){
+      const count=Number(creditInfo?.standardAllowance??5);
+      const stamp=creditInfo?.standardResetAt;
+      const reset=stamp&&Number.isFinite(Date.parse(stamp))
+        ?new Date(stamp).toLocaleString([], {month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})
+        :null;
+      standardStatus.textContent=`Standard used up — 0 of ${count} left.${reset?' Resets '+reset+'.':' Check the reset time above.'}`;
+    }
+  }
   const high=document.querySelector('#choose-high');if(high)high.hidden=selectedQuality()!=='quick';
   const purchase=document.querySelector('#credit-purchase-link');if(purchase)purchase.hidden=!state.exhausted;
   return state;
