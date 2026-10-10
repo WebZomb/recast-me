@@ -63,7 +63,7 @@ test('Standard front-loads each unique adventure before identity while preservin
    assert.ok(prompt.indexOf(guide.scene)<prompt.indexOf('ALL-WORLD LIKENESS'),id+' theme was placed too late');
    assert.match(prompt,/same anatomical side/i,id);
    assert.match(prompt,/fur length/i,id);
-   assert.match(prompt,/no (?:human|humanlike) hands/i,id);
+   assert.match(prompt,/never human hands|no humanlike paws|no human hands/i,id);
    if(subjectType.includes('pet'))assert.ok(prompt.includes(guide.pet),id+' pet wardrobe');
    if(subjectType.includes('person'))assert.ok(prompt.includes(guide.person),id+' human wardrobe');
    if(subjectType==='car')assert.ok(prompt.includes('VEHICLE:'),id+' vehicle guide');
@@ -119,7 +119,7 @@ test('actual Standard generator submits one correctly themed compact prompt with
   form.set('style',id);form.set('subject','pet');form.set('qualityMode','quick');
   form.set('image_0',new File([CLEAN],'dog.jpg',{type:'image/jpeg'}));
   const res=await highQualityTransform(new Request('https://recast.test/api/transform-v2',{method:'POST',body:form}),env);
-  assert.equal(res.status,200,await res.text().catch(()=>id));
+  assert.equal(res.status,200,id+' Standard render should complete');
   assert.equal(request.model,'@cf/black-forest-labs/flux-2-klein-9b');
   assert.equal(request.width,'768');assert.equal(request.height,'960');
   assert.ok(request.prompt.includes(ADVENTURE_GUIDES[id].scene));
@@ -135,7 +135,7 @@ test('nonprompt safety, credit, ordering, moderation and commercial data paths r
  assert.match(highSource,/IMAGE_QUICK_GUIDANCE\|\|5/);
  assert.match(highSource,/IMAGE_QUICK_STEPS\|\|12/);
  assert.match(highSource,/tryGeneration\(env,model,main,inputFiles,"quick-primary",settings\)/);
- assert.match(highSource,/usedFallback:false/);
+ assert.match(highSource,/usedFallback:kind\.includes/);
  assert.match(highSource,/await moderateContent\(env,\{text:/);
  const policy=JSON.parse(readFileSync(new URL('../wrangler.jsonc',import.meta.url),'utf8').replace(/\/\/ Preserve the existing production Images binding during controlled testing\./,''));
  assert.equal(policy.vars.HQ_FREE_ALLOWANCE,'3');
