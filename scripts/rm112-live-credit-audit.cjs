@@ -97,9 +97,11 @@ async function storefrontCheckoutEntry(){
  try{
   const response=await page.goto(url.href,{waitUntil:'domcontentloaded',timeout:45000});
   await page.waitForTimeout(3000);
-  const title=await page.title(),body=(await page.locator('body').innerText({timeout:10000}).catch(()=>'' )).slice(0,2500);
-  const markers={reset:/Recast Me|Daily Reset|3 HQ|5 Standard/i.test(body),price:/2[.,]99/.test(body),password:/password|store coming soon/i.test(title+' '+body)};
-  report.checkoutEntry={initial:shop+'/cart/<reset-variant>:1',responseStatus:response?.status(),finalUrl:page.url().split('?')[0],title,markers,bodySample:body.slice(0,750),jsErrors:errors};
+  const title=await page.title(),body=await page.locator('body').innerText({timeout:10000}).catch(()=>'');
+  // The checkout's country dropdown contains hundreds of entries before the
+  // order summary, so do not truncate before looking for the price/product.
+  const markers={reset:/Recast Me|Daily Reset|3 HQ|5 Standard/i.test(body),price:/\$?2[.,]99/.test(body),password:/store password|store coming soon/i.test(title+' '+body)};
+  report.checkoutEntry={initial:shop+'/cart/<reset-variant>:1',responseStatus:response?.status(),finalUrl:page.url().split('?')[0],title,markers,bodyLength:body.length,productContext:(body.match(/.{0,90}(?:Recast Me|Daily Reset|\$?2[.,]99).{0,90}/im)||[])[0]||'',bodySample:body.slice(0,750),jsErrors:errors};
   await page.screenshot({path:path.join(out,'shopify-reset-checkout-entry.png'),fullPage:false}).catch(()=>{});
   record('Real Shopify cart/checkout entry for $2.99 reset loads',Boolean(response?.ok()&&markers.reset&&!markers.password),{status:response?.status(),title,finalUrl:page.url().split('?')[0],markers});
  }catch(e){
