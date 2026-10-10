@@ -24,3 +24,7 @@
 
 /* Narrow browsers: the tab rail scrolls on its own, not with the entire page. */
 @media(max-width:700px){.admin-shell{overflow-x:clip}.admin-tabs{contain:none;overflow-x:auto;overflow-y:hidden}}
+
+/* With nine owner tabs, a two-column mobile grid is easier to discover and
+   tap than hiding important sections in a long horizontal scroller. */
+@media(max-width:700px){.admin-tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;overflow:visible;contain:none;padding:7px}.admin-tabs button{width:100%;max-width:100%;min-width:0;min-height:46px;white-space:normal;line-height:1.25;font-size:13px;overflow-wrap:anywhere}}
