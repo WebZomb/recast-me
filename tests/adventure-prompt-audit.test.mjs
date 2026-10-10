@@ -56,7 +56,7 @@ test('Standard front-loads each unique adventure before identity while preservin
   for(const subjectType of ['pet','person','car','person and pet']){
    const guide=ADVENTURE_GUIDES[id];
    const prompt=makeStandardAdventurePrompt({styleId:id,subjectType,notes:'Keep the exact real subject.',inputCount:1});
-   assert.ok(prompt.startsWith('MAKE ONE NEW '),id);
+   assert.ok(prompt.startsWith('EDIT THE UPLOADED PHOTO(S)'),id);
    assert.ok(prompt.includes('REPLACE THE WHOLE ORIGINAL BACKGROUND'),id);
    assert.ok(prompt.includes(guide.scene),id);
    assert.ok(prompt.includes(guide.look),id);
@@ -69,8 +69,8 @@ test('Standard front-loads each unique adventure before identity while preservin
    if(subjectType==='car')assert.ok(prompt.includes('VEHICLE:'),id+' vehicle guide');
    assert.ok(prompt.length<3200,id+' Standard prompt is too long: '+prompt.length);
    const illustrated=adventureMode(id)==='illustration';
-   if(illustrated)assert.match(prompt,/MAKE ONE NEW ORIGINAL ILLUSTRATION/,id);
-   else assert.match(prompt,/MAKE ONE NEW PHOTOREALISTIC IMAGE/,id);
+   if(illustrated)assert.match(prompt,/one ORIGINAL ILLUSTRATION/,id);
+   else assert.match(prompt,/one PHOTOREALISTIC ADVENTURE PORTRAIT/,id);
   }
  }
 });
@@ -127,7 +127,7 @@ test('actual Standard generator submits one correctly themed compact prompt with
   assert.ok(request.prompt.length<3200);
   assert.deepEqual(request.options,{rejectIfBusy:true});
   const json=await res.clone().json();
-  assert.equal(json.promptVersion,'standard-adventure-scenes-v1');
+  assert.equal(json.promptVersion,'standard-identity-scenes-v2');
  }
 });
 
@@ -143,4 +143,39 @@ test('nonprompt safety, credit, ordering, moderation and commercial data paths r
  assert.equal(policy.vars.RECAST_HQ_PROVIDER,'fal');
  assert.equal(policy.vars.ORDER_SYNC_ENABLED,'true');
  assert.equal(policy.vars.AUTO_PRINT_PREAPPROVED_ENABLED,'true');
+});
+
+test('Standard identity is anchored BEFORE the dramatic new world across all 48 themes and subject types',()=>{
+ for(const id of ids){
+   const scene=ADVENTURE_GUIDES[id].scene;
+   for(const subjectType of ['pet','person','car','person and pet']){
+     const prompt=makeStandardAdventurePrompt({styleId:id,subjectType,notes:'Match the exact real face and head angle.',inputCount:1});
+     const identityPos=prompt.indexOf('IDENTITY FIRST:');
+     const scenePos=prompt.indexOf(scene);
+     const allWorldPos=prompt.indexOf('ALL-WORLD LIKENESS:');
+     assert.ok(identityPos>=0&&identityPos<scenePos,id+' '+subjectType+' identity must precede scene');
+     assert.ok(scenePos>=0&&scenePos<allWorldPos,id+' '+subjectType+' keep adventure early');
+     assert.match(prompt,/REPLACE THE WHOLE ORIGINAL BACKGROUND/,id);
+     assert.ok(prompt.length<2600,id+' Standard prompt stays compact');
+     if(subjectType==='pet'){
+       for(const detail of ['eye shape','ear length and tilt','muzzle width','coat-patch placement','head direction'])
+         assert.ok(prompt.includes(detail),id+' lost identity detail '+detail);
+       assert.match(prompt,/Do not redesign the skull, switch breed, enlarge the ears, or substitute a lookalike/);
+       assert.match(prompt,/Fit adventure clothes around the neck\/body without covering recognizable face, eyes or ears/);
+     }
+     if(subjectType==='person and pet')
+       assert.match(prompt,/Keep EACH person’s actual face and EACH pet’s actual head/);
+     if(subjectType==='person')
+       assert.match(prompt,/real facial geometry, eyes, nose, mouth, hairline/);
+     if(subjectType==='car')
+       assert.match(prompt,/recognizable body silhouette, grille, lights, wheels/);
+   }
+ }
+ const holiday=makeStandardAdventurePrompt({styleId:'christmas',subjectType:'pet',inputCount:1});
+ const rock=makeStandardAdventurePrompt({styleId:'rockstar',subjectType:'pet',inputCount:1});
+ assert.match(holiday,/snowy Christmas-market/);
+ assert.match(holiday,/knitted holiday scarf/);
+ assert.match(rock,/FULL LIVE ROCK CONCERT STAGE/);
+ assert.match(rock,/rocker jacket/);
+ assert.doesNotMatch(rock,/MAKE ONE NEW PHOTOREALISTIC IMAGE/);
 });
