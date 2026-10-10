@@ -32,7 +32,7 @@ async function loadPacks(){
    button.type='button';button.disabled=!(catalog.salesEnabled||allowTest);
    button.addEventListener('click',async()=>{button.disabled=true;status.textContent='Preparing your Shopify checkout…';try{
     const v=await api('/api/credit-packs/checkout',{method:'POST',body:{packId:p.id,mode},owner:allowTest});
-    saveClaim(v.claimToken);location.assign(v.checkoutUrl);
+    saveClaim(v.claimToken);window.recastTrack?.('credit_checkout');location.assign(v.checkoutUrl);
    }catch(e){status.textContent=e.message;button.disabled=false}});
    actions.append(button);
   }
@@ -68,7 +68,7 @@ byId('redeem-credit-form').addEventListener('submit',async event=>{
  event.preventDefault();const notice=byId('redeem-credit-status'),button=event.currentTarget.querySelector('button');
  button.disabled=true;notice.textContent='Checking your code…';
  try{const v=await api('/api/credit-packs/redeem',{method:'POST',body:{code:byId('redeem-credit-code').value}});
- notice.textContent='Success! '+(titleMap[v.packId]||v.title)+' added to this browser’s credit wallet.';byId('redeem-credit-code').value='';await refreshBalance();
+ window.recastTrack?.('credit_redeemed');notice.textContent='Success! '+(titleMap[v.packId]||v.title)+' added to this browser’s credit wallet.';byId('redeem-credit-code').value='';await refreshBalance();
  }catch(e){notice.textContent=e.message}finally{button.disabled=false}
 });
 const params=new URLSearchParams(location.search);if(params.has('code'))byId('redeem-credit-code').value=params.get('code').slice(0,35);

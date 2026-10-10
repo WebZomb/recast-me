@@ -113,7 +113,22 @@ const policy={highDaily:3,standardDaily:5,purchaseBonus:3,websiteCalls:70,social
    Object.assign(state,{hqOutage:false,quickDown:false,remaining:3,free:3,bonus:3});
    await page.goto('http://recast.test/admin.html',{waitUntil:'networkidle'});
    await page.locator('#admin-token').fill('fixture-not-a-real-secret');await page.locator('#admin-login button').click();await page.waitForTimeout(300);
-   await page.locator('[data-tab="limits"]').click();assert.equal(await page.locator('[name="purchaseBonus"]').inputValue(),'3');
+   // With nine admin sections, all mobile tabs must remain real tappable targets,
+   // without widening the 320px screen or hiding Analytics offscreen.
+   async function tapAdminTab(value){
+     const tab=page.locator('[data-tab="'+value+'"]');
+     await tab.evaluate(node=>node.scrollIntoView({block:'center',inline:'nearest',behavior:'instant'}));
+     const target=await tab.evaluate(node=>{
+       const rect=node.getBoundingClientRect(),x=rect.left+rect.width/2,y=rect.top+rect.height/2;
+       const hit=document.elementFromPoint(x,y);
+       return {x,y,hit:Boolean(hit&&(hit===node||node.contains(hit)))};
+     });
+     assert.ok(target.hit,'Admin '+value+' tab must receive a real mobile pointer click');
+     await page.mouse.click(target.x,target.y);
+   }
+   await tapAdminTab('traffic');
+   assert.equal(await page.locator('[data-panel="traffic"]').isVisible(),true);
+   await tapAdminTab('limits');assert.equal(await page.locator('[name="purchaseBonus"]').inputValue(),'3');
    await page.locator('[name="highDaily"]').fill('2');
    const saveOwner=page.locator('#owner-settings-form [type="submit"]');
    // WebKit intermittently never considers this button "stable" after a long
@@ -134,7 +149,18 @@ const policy={highDaily:3,standardDaily:5,purchaseBonus:3,websiteCalls:70,social
    page.on('dialog',d=>d.accept());await page.locator('[name="budgetCents"]').fill('6.00');await saveByPointer();
    assert.equal(state.saved.at(-1).confirm,'INCREASE_LIMITS');
    await page.screenshot({path:path.join(out,`${engine.name()}-${width}-admin.png`)});
-   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1),false,'admin overflow');assert.deepEqual(errors,[]);
+   const adminOverflow=await page.evaluate(()=>{
+    const width=innerWidth,scrollWidth=document.documentElement.scrollWidth;
+    const offenders=[...document.querySelectorAll('body *')].filter(el=>{
+      const computed=getComputedStyle(el),r=el.getBoundingClientRect();
+      if(computed.display==='none'||computed.position==='fixed'||computed.visibility==='hidden')return false;
+      return r.width>0&&r.right>width+2;
+    }).slice(0,14).map(el=>{
+      const r=el.getBoundingClientRect();return {selector:el.id?'#'+el.id:(el.tagName.toLowerCase()+'.'+String(el.className).slice(0,50)),left:Math.round(r.left),right:Math.round(r.right),width:Math.round(r.width)};
+    });
+    return {width,scrollWidth,offenders};
+   });
+   assert.ok(adminOverflow.scrollWidth<=adminOverflow.width+1,'admin overflow '+JSON.stringify(adminOverflow));assert.deepEqual(errors,[]);
    await page.goto('http://recast.test/model-lab.html',{waitUntil:'networkidle'});
    // WebKit's stability heuristic can time out on a moving button despite
    // it being an actual pointer target. Assert hit-testing and click the

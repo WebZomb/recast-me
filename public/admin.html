@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#060611">
   <meta name="robots" content="noindex,nofollow">
   <title>Recast Me — Control Center</title>
-  <link rel="stylesheet" href="/admin.css?v=2661">
+  <link rel="stylesheet" href="/admin.css?v=2665">
 </head>
 <body>
   <div class="aurora aurora-a"></div><div class="aurora aurora-b"></div>
@@ -39,6 +39,7 @@
         <article class="glass stat"><span>X requests</span><strong id="stat-x">—</strong><small id="stat-x-connection">Bot disabled until connected</small></article>
         <article class="glass stat"><span>Production</span><strong id="stat-printful">—</strong><small>Printful connection</small></article>
         <article class="glass stat"><span>Generation errors</span><strong id="stat-generation">—</strong><small id="stat-generation-recent">— in the last 24h</small></article>
+        <article class="glass stat"><span>Website visitors</span><strong id="stat-visitors">—</strong><small id="stat-visitors-note">Estimated browsers · last 7 days</small></article>
       </div>
 
       <nav class="admin-tabs" aria-label="Control center sections">
@@ -49,6 +50,7 @@
         <button data-tab="errors">Generation Errors</button>
         <button data-tab="limits">Limits &amp; usage</button>
         <button data-tab="credits">Credits &amp; Gifts</button>
+        <button data-tab="traffic">Traffic &amp; Analytics</button>
         <button data-tab="alerts">Alerts</button><button data-tab="system">System</button>
       </nav>
 
@@ -80,6 +82,50 @@
         <div id="generation-errors-list" class="card-list"></div>
       </section>
 
+      <section class="tab-panel" data-panel="traffic">
+        <div class="panel-heading"><div><div class="eyebrow">GROWTH &amp; MARKETING</div><h2>Traffic &amp; Analytics</h2>
+        <p>Know how visitors discover Recast Me, what adventures they choose, and where they stop before ordering. Website traffic is not the same as Shopify store traffic; purchases are only verified in Shopify.</p></div><button id="traffic-reload" type="button">Refresh</button></div>
+        <div class="glass traffic-panel">
+          <h3>Shopify checkout branding</h3>
+          <p class="muted">At the last verification, Shopify checkout displayed <strong>My Store</strong> instead of the Recast Me brand. Shopify requires a merchant to update the store name inside Shopify Admin; the API cannot rename it. Set the display name to <strong>Recast Me Ai</strong> so customers recognize the business when paying. This is separate from the Recast website name.</p>
+          <a href="https://admin.shopify.com/store/b2wnfu-7g/settings/general" target="_blank" rel="noopener noreferrer" class="traffic-settings-link">Open Shopify General settings to rename My Store →</a>
+          <p class="muted">After saving, confirm the checkout shows Recast Me Ai before starting advertisements. Other checkout branding options are under Shopify Settings → Checkout.</p>
+        </div>
+        <div class="traffic-range" role="group" aria-label="Traffic reporting period">
+          <button type="button" data-traffic-days="1" aria-pressed="false">Today</button>
+          <button type="button" class="active" data-traffic-days="7" aria-pressed="true">7 days</button>
+          <button type="button" data-traffic-days="30" aria-pressed="false">30 days</button>
+        </div>
+        <div class="glass traffic-panel"><h3>Keep your own tests out of visitor totals</h3><p class="muted">On any phone or browser you use to test Recast, exclude that browser from future site analytics. This applies only to that browser and cannot undo visits already counted.</p><button id="traffic-exclude-browser" type="button" class="secondary">Exclude this browser from analytics</button><p id="traffic-exclude-status" role="status" class="muted"></p></div>
+        <p id="traffic-fetch-status" role="status" class="muted">Choose Traffic &amp; Analytics to load your website stats.</p><p id="traffic-last-updated" class="muted" data-traffic-secret></p>
+        <div class="traffic-kpi-grid">
+          <article class="glass stat"><span>Unique visitors (estimated)</span><strong id="traffic-visitors" data-traffic-secret>—</strong><small>Distinct browsers, not people</small></article>
+          <article class="glass stat"><span>Visits / sessions</span><strong id="traffic-sessions" data-traffic-secret>—</strong><small>30-minute session window</small></article>
+          <article class="glass stat"><span>Page views</span><strong id="traffic-pageviews" data-traffic-secret>—</strong><small>Tracked Recast pages</small></article>
+          <article class="glass stat"><span>Started creating</span><strong id="traffic-create-starts" data-traffic-secret>—</strong><small>Opened creator workflow</small></article>
+          <article class="glass stat"><span>Preview successes</span><strong id="traffic-successful-renders" data-traffic-secret>—</strong><small>Protected image completed</small></article>
+          <article class="glass stat"><span>Checkout clicks</span><strong id="traffic-checkouts" data-traffic-secret>—</strong><small>Not confirmed purchases</small></article>
+        </div>
+        <div class="glass traffic-panel"><h3>Daily page views</h3><p class="muted">New first-party analytics begin when this feature launches. Before that, historical website visitor data is not available here.</p><div id="traffic-timeline" class="traffic-timeline" aria-label="Website page views by UTC day"></div></div>
+        <div class="traffic-columns">
+          <article class="glass traffic-panel"><h3>How visitors found us</h3><p class="muted">Referral / UTM sources for new sessions.</p><div id="traffic-sources" data-traffic-secret></div></article>
+          <article class="glass traffic-panel"><h3>Most viewed pages</h3><p class="muted">Only page categories, never private order links.</p><div id="traffic-pages" data-traffic-secret></div></article>
+          <article class="glass traffic-panel"><h3>Devices</h3><p class="muted">Mobile, desktop and tablet session entries.</p><div id="traffic-devices" data-traffic-secret></div></article>
+          <article class="glass traffic-panel"><h3>Country (approximate)</h3><p class="muted">Cloudflare country code only. No visitor IP retained.</p><div id="traffic-countries" data-traffic-secret></div></article>
+          <article class="glass traffic-panel"><h3>Marketing campaigns</h3><p class="muted">Use links with <code>?utm_source=instagram&amp;utm_campaign=halloween</code> to compare campaigns.</p><div id="traffic-campaigns" data-traffic-secret></div></article>
+          <article class="glass traffic-panel"><h3>Popular adventures</h3><p class="muted">Preset names only; no photos or private descriptions.</p><div id="traffic-adventures" data-traffic-secret></div></article>
+        </div>
+        <div class="glass traffic-panel">
+          <h3>Creator → Purchase journey</h3><p>These are anonymous actions, not a distinct-customer conversion rate. Product-previews and checkout clicks are useful early signals, but only Shopify can confirm payments.</p>
+          <pre id="traffic-funnel-text" data-traffic-secret class="traffic-funnel">—</pre>
+        </div>
+        <div class="glass traffic-panel">
+          <h3>Sales, orders &amp; infrastructure</h3>
+          <p>Shopify has separate session, checkout, sales and conversion reports for its hosted storefront. Cloudflare measures requests and platform traffic, including assets and bots. Those totals must not be added to Recast's first-party unique visitor estimates.</p>
+          <div class="traffic-links"><a href="https://admin.shopify.com/store/b2wnfu-7g/analytics" target="_blank" rel="noopener noreferrer">Open Shopify sales &amp; sessions →</a><a href="https://dash.cloudflare.com/" target="_blank" rel="noopener noreferrer">Open Cloudflare website statistics →</a></div>
+          <p class="muted">This dashboard uses anonymous browser/session estimates, respects DNT and Global Privacy Control, ignores common bots, and stores only aggregate counts in your existing private Cloudflare R2 storage. No Google Analytics account, ad pixels or paid analytics subscription required. Site counters use UTC days.</p>
+        </div>
+      </section>
       <section class="tab-panel" data-panel="credits">
         <div class="panel-heading"><div><div class="eyebrow">CUSTOMER REWARDS</div><h2>Credits &amp; Gifts</h2><p>Give an existing customer a complimentary refill or render pack, run promotions, and review codes. Paid Shopify gift codes become active only after verified payment.</p></div><button id="credit-codes-refresh" type="button">Refresh codes</button></div>
         <div class="glass op-card" style="margin-bottom:20px"><h3>$2.99 checkout test paused</h3><p>The live website, payment form, package pricing and customer access controls have been inspected without submitting payment. The test product is returned to draft so nobody can pay while actual paid-order credit delivery remains unverified. Support redemption codes are still available.</p><a class="button secondary" href="/credits.html" style="display:inline-flex;padding:12px;border:1px solid #5b5486;border-radius:12px;color:#b8f5ff">View Credits &amp; Gifts →</a><p id="credit-test-owner-status" role="status">For a later supervised paid checkout, the shop product and owner-only test gate must first be reopened.</p></div>
@@ -177,6 +223,6 @@
       <div id="toast" class="toast hidden"></div>
     </section>
   </main>
-  <script src="/admin.js?v=rm111" type="module"></script>
+  <script src="/admin.js?v=rm115" type="module"></script>
 </body>
 </html>
