@@ -146,3 +146,18 @@ test('an owner can revoke an unused promo code and remove remaining purchased cr
  await revokeCreditCode(env,code.id);
  await assert.rejects(redeemCreditCode(env,code.code,a.wallet.id),e=>e.code==='credit_code_revoked');
 });
+
+test('free Standard stays HQ-first while purchased HQ remains, but purchased Standard is selectable',async()=>{
+ const env=envFor(),a=await makeWallet(env);
+ const hq=await newCreditCode(env,{packId:'hq10'});await redeemCreditCode(env,hq.code,a.wallet.id);
+ for(let i=0;i<3;i++){
+  const ticket=await reserveCustomerRender({...env,RECAST_CREDIT_WALLET:a.wallet});
+  await settleCustomerRender(env,ticket,true);
+ }
+ assert.equal((await creditBalance(env,a.wallet)).purchasedHigh,10);
+ await assert.rejects(reserveCustomerRender({...env,RECAST_CREDIT_WALLET:a.wallet,RECAST_RENDER_MODE:'quick'}),e=>e.code==='standard_locked');
+ const std=await newCreditCode(env,{packId:'std10'});await redeemCreditCode(env,std.code,a.wallet.id);
+ const ticket=await reserveCustomerRender({...env,RECAST_CREDIT_WALLET:a.wallet,RECAST_RENDER_MODE:'quick'});
+ assert.equal(ticket.source,'grant');await settleCustomerRender(env,ticket,true);
+ assert.equal((await creditBalance(env,a.wallet)).purchasedStandard,9);
+});
