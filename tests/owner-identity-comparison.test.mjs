@@ -7,7 +7,7 @@ const JOB='01a11f14-bd12-7083-aa72-2e494db231a0';
 const DETAIL=Buffer.concat([CLEAN,Buffer.from('original-detail-preserved')]);
 function env(extra={}){return {ARTWORK:new Bucket(),IMAGES:imageMock(),ADMIN_TOKEN:'fake-admin',CONTENT_MODERATION_ENABLED:'true',MODERATION_OPENAI_API_KEY:'offline',AI:{run:async()=>{throw Error('Unexpected Cloudflare inference')}},FAL_API_KEY:'MOCK-FAL-KEY-NOT-A-REAL-CREDENTIAL',FAL_OWNER_TEST_ENABLED:'true',RECAST_HQ_PROVIDER:'fal',FAL_PROVIDER_ENABLED:'true',FAL_PROVIDER_VERIFIED:'true',IMAGE_MODEL_HIGH_QUALITY:'@cf/black-forest-labs/flux-2-dev',IMAGE_HIGH_QUALITY_STEPS:'18',IMAGE_HIGH_QUALITY_GUIDANCE:'5',RENDER_CREDITS_ENABLED:'false',AI_DAILY_CALL_LIMIT:'70',AI_DAILY_BUDGET_CENTS:'500',AI_CALL_RESERVE_CENTS:'7',...extra}}
 function req({choice='nano-banana',admin=true,path='/api/admin/model-test',host='fal'}={}){
- const f=new FormData();f.set('ownerProvider',host);f.set('style','custom');f.set('subject','pet');f.set('notes','A royal blue cape');f.set('customWorld','Sunlit palace courtyard');f.set('qualityMode','high');f.set('image_0',new File([CLEAN],'small.jpg',{type:'image/jpeg'}));f.set('hq_image_0',new File([DETAIL],'detail.jpg',{type:'image/jpeg'}));
+ const f=new FormData();f.set('ownerProvider',host);f.set('style','custom');f.set('subject','auto');f.set('notes','A royal blue cape');f.set('customWorld','Sunlit palace courtyard');f.set('qualityMode','high');f.set('image_0',new File([CLEAN],'small.jpg',{type:'image/jpeg'}));f.set('hq_image_0',new File([DETAIL],'detail.jpg',{type:'image/jpeg'}));
  // Forged public fields must never activate an owner experiment.
  f.set('RECAST_OWNER_IDENTITY_MODEL',choice);f.set('ownerModel',choice);
  return new Request('https://recast.test'+path+'?model='+choice,{method:'POST',headers:admin?{authorization:'Bearer fake-admin'}:{},body:f});
@@ -32,7 +32,7 @@ for(const choice of ['dev-edit','nano-banana'])test(choice+': one detailed priva
  if(choice==='nano-banana'){assert.equal(sent.limit_generations,true);assert.equal(sent.safety_tolerance,'4');assert.equal(sent.aspect_ratio,'4:5');assert.equal(sent.num_images,1);assert.equal(sent.sync_mode,true);assert.equal(sent.guidance_scale,undefined)}else{assert.equal(sent.guidance_scale,2.5);assert.equal(sent.num_inference_steps,28)}
  assert.equal(calls.filter(c=>c.url.endsWith('/moderations')).length,2);
  assert.equal(await e.ARTWORK.get('system/providers/hq-fal.json'),null);
- const meta=await(await e.ARTWORK.get('requests/'+d.requestId+'/request.json')).json();assert.equal(meta.modelUsed,d.modelUsed);assert.equal(meta.promptVersion,d.promptVersion);assert.equal(meta.safety.outputScreening.status,'passed');
+ const meta=await(await e.ARTWORK.get('requests/'+d.requestId+'/request.json')).json();assert.equal(meta.subjectType,'auto');assert.equal(meta.modelUsed,d.modelUsed);assert.equal(meta.promptVersion,d.promptVersion);assert.equal(meta.safety.outputScreening.status,'passed');
  const original=await e.ARTWORK.get('requests/'+d.requestId+'/input-0.jpg');assert.deepEqual(Buffer.from(await original.arrayBuffer()),DETAIL);
 });
 test('owner experiments fail before paid calls without authentication, activation, screening, supported choice or fal host',async t=>{

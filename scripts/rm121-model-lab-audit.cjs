@@ -17,12 +17,14 @@ const server=http.createServer(async(req,res)=>{
  const browser=await engine.launch();try{
  const page=await browser.newPage({viewport:{width,height:852}}),errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.goto(base+'/model-lab.html');
+ assert.equal(await page.locator('#subject').count(),0);
+ assert.ok(!/\b(pet|dog|puppy|person)\b/i.test(await page.locator('#direction').inputValue()),'Default direction does not tell the model the subject type');
  const b64=await page.evaluate(()=>{const c=document.createElement('canvas');c.width=1200;c.height=1600;c.getContext('2d').fillRect(0,0,1200,1600);return c.toDataURL('image/png').split(',')[1]});
  await page.locator('#reference').setInputFiles({name:'synthetic.png',mimeType:'image/png',buffer:Buffer.from(b64,'base64')});await page.locator('#token').fill('mock-owner-token');
  let expectedResults=0;
  for(const choice of ['nano-banana','dev-edit','dev','klein9']){
   await page.locator('#engine').selectOption(choice);await page.locator('#run').click();await page.waitForFunction(count=>document.querySelectorAll('#results article').length===count,++expectedResults);
-  assert.match(submitted.url,new RegExp('model='+choice+'$'));assert.equal(submitted.authorization,'Bearer mock-owner-token');
+  assert.match(submitted.url,new RegExp('model='+choice+'$'));assert.equal(submitted.authorization,'Bearer mock-owner-token');assert.equal(submitted.form.get('subject'),'auto');
   const quick=choice==='klein9';assert.equal(submitted.form.get('ownerProvider'),quick?'cloudflare':'fal');assert.equal(submitted.form.get('qualityMode'),quick?'quick':'high');
   const dimensions=async file=>page.evaluate(async encoded=>{const blob=await(await fetch('data:image/jpeg;base64,'+encoded)).blob();const image=await createImageBitmap(blob);return [image.width,image.height]},Buffer.from(await file.arrayBuffer()).toString('base64'));
   assert.deepEqual(await dimensions(submitted.form.get('image_0')),[375,500]);
