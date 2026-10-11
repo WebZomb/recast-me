@@ -85,3 +85,13 @@ test('Customer-facing JavaScript modules parse cleanly before visual browser tes
     file+' must parse; duplicate const declarations can blank the whole site');
  }
 });
+
+test('Read-only production audit tests the two-step photo-first journey and auto subject',()=>{
+ const audit=readFileSync(new URL('../scripts/launch-audit.cjs',import.meta.url),'utf8');
+ assert.doesNotMatch(audit,/data-create-step="0"/,'Audit must not expect removed Who step');
+ assert.match(audit,/data-create-step="1"/);
+ assert.match(audit,/data-create-step="1".*data-go-step="2"/);
+ assert.match(audit,/\.inputValue\(\)==='auto'/);
+ assert.match(audit,/groupHelpClosed/);
+ assert.match(audit,/emptyPhotoBlocked/);
+});

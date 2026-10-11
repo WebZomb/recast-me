@@ -53,18 +53,22 @@ const pause=ms=>new Promise(resolve=>setTimeout(resolve,ms));
       const shopReached=await page.evaluate(()=>{const b=document.querySelector('#shop').getBoundingClientRect();return b.top<innerHeight&&b.bottom>0});
       await page.screenshot({path:out+'/'+name+'-shop.png'});
       await page.locator('.site-header .nav-cta').click();await pause(300);
-      const firstStep=await page.locator('[data-create-step="0"]').isVisible();
-      await page.locator('[data-create-step="0"] [data-go-step="1"]').click();
-      const photoStep=await page.locator('[data-create-step="1"]').isVisible();
+      // RM117: Photos is step one; Who is no longer a required customer step.
+      const firstStep=await page.locator('[data-create-step="1"]').isVisible()
+        &&await page.locator('.creation-progress button').count()===2;
+      const photoStep=await page.locator('#photos').isVisible();
+      const autoSubject=await page.locator('#subject').inputValue()==='auto';
+      const groupHelpClosed=await page.locator('#photo-subject-details').evaluate(node=>!node.open);
+      // A visitor who forgot the photo must stay on Photos, not spend a render.
       await page.locator('[data-create-step="1"] [data-go-step="2"]').click();
       const emptyPhotoBlocked=await page.locator('[data-create-step="1"]').isVisible();
       await page.screenshot({path:out+'/'+name+'-create.png'});
-      report.browsers.push({name,http:response.status(),metrics,shopReached,firstStep,photoStep,emptyPhotoBlocked,errors,challengeFrameErrors,failed,blocked});
+      report.browsers.push({name,http:response.status(),metrics,shopReached,firstStep,photoStep,autoSubject,groupHelpClosed,emptyPhotoBlocked,errors,challengeFrameErrors,failed,blocked});
       if(metrics.build!==expectedBuild)report.failures.push(name+': wrong production build');
       if(metrics.scrollWidth>width+1)report.failures.push(name+': horizontal page overflow');
       if(metrics.products!==18)report.failures.push(name+': missing product cards');
       if(metrics.badAnchors.length||metrics.duplicateIds.length||metrics.brokenImages.length)report.failures.push(name+': broken content structure or images');
-      if(!shopReached||!firstStep||!photoStep||!emptyPhotoBlocked||errors.length)report.failures.push(name+': browsing/wizard failure');
+      if(!shopReached||!firstStep||!photoStep||!autoSubject||!groupHelpClosed||!emptyPhotoBlocked||errors.length)report.failures.push(name+': browsing/wizard failure');
       if(metrics.product.x<0||metrics.product.x+metrics.product.width>width+1)report.failures.push(name+': hero product exceeds viewport');
     }catch(e){report.browsers.push({name,error:e.message,errors,challengeFrameErrors,failed,blocked});report.failures.push(name+': '+e.message);}
     await browser.close();
