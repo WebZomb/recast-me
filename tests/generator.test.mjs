@@ -80,6 +80,56 @@ test('refining a saved version includes original pet image and the previous rend
   assert.equal(calls.length,2);
 });
 
+test('repeated refinements keep one original and only the latest previous artwork',async()=>{
+  const references=[];
+  const env=envFor(async(_model,{multipart})=>{
+    const form=await new Response(multipart.body,{headers:{'content-type':multipart.contentType}}).formData();
+    references.push([...form.keys()].filter(k=>k.startsWith('input_image_')).length);
+    return {image};
+  });
+  env.IMAGES.info=async()=>({width:375,height:500});
+  let result=await (await highQualityTransform(submission(),env)).json();
+  for(let i=0;i<4;i++){
+    result=await (await highQualityTransform(submission({photo:null,branch:result}),env)).json();
+    assert.equal(result.persisted,true);
+    const saved=JSON.parse(String(env.ARTWORK.objects.get(`requests/${result.requestId}/request.json`)));
+    assert.equal(saved.originalInputCount,1);
+    assert.equal(saved.inputCount,2);
+    assert.deepEqual(env.ARTWORK.objects.get(`requests/${result.requestId}/input-0.jpg`),Buffer.from(await original.arrayBuffer()));
+  }
+  assert.deepEqual(references,[1,2,2,2,2]);
+});
+
+test('saved HQ originals are resized for Standard without degrading the stored identity anchor',async()=>{
+  const captured=[];
+  const env=envFor(async(_model,{multipart})=>{
+    const form=await new Response(multipart.body,{headers:{'content-type':multipart.contentType}}).formData();
+    captured.push(Buffer.from(await form.get('input_image_0').arrayBuffer()));
+    return {image};
+  });
+  const first=await (await highQualityTransform(submission(),env)).json();
+  const second=await (await highQualityTransform(submission({photo:null,branch:first,quality:'quick'}),env)).json();
+  assert.equal(second.persisted,true);
+  assert.ok(env.IMAGES.operations.some(([op,options])=>op==='transform'&&options.width===500&&options.height===500&&options.fit==='scale-down'));
+  assert.notDeepEqual(captured[1],captured[0],'model receives the prepared copy');
+  assert.deepEqual(env.ARTWORK.objects.get(`requests/${second.requestId}/input-0.jpg`),captured[0],'future HQ still has the detailed original');
+});
+
+test('missing saved originals or failed resize stop refinement before any model call',async()=>{
+  let calls=0;
+  const env=envFor(async()=>{calls++;return {image}});
+  const first=await (await highQualityTransform(submission(),env)).json();
+  env.IMAGES=imageMock({fail:true});
+  const failed=await highQualityTransform(submission({photo:null,branch:first,quality:'quick'}),env);
+  assert.equal(failed.status,503);
+  assert.equal((await failed.json()).error,'reference_preparation_failed');
+  env.ARTWORK.objects.delete(`requests/${first.requestId}/input-0.jpg`);
+  const missing=await highQualityTransform(submission({photo:null,branch:first}),env);
+  assert.equal(missing.status,400);
+  assert.equal((await missing.json()).error,'missing_original_reference');
+  assert.equal(calls,1);
+});
+
 test('standard mode reports provider capacity without changing away from FLUX.2 dev',async()=>{
   const models=[];
   const env=envFor(async model=>{models.push(model);throw new Error('3040 out of capacity')});
