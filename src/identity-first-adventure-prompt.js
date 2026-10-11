@@ -18,7 +18,7 @@ export function compactIdentity(subjectType='person'){
  const pet='Same actual pet: keep exact eyes, nose, muzzle, ear shape/angle, head view, expression, coat colors and marking positions. Retain natural anatomy and appearance; do not invent masculine/feminine traits.';
  const person='Same actual person or people: preserve EACH face, eyes, nose, mouth, jaw, hairline, skin tone, natural age and expression. No generic beauty face or invented gender changes.';
  const vehicle='Same real vehicle: keep its silhouette, grille, lights, wheels, trim, color and proportions.';
- if(role.auto)return 'IDENTITY FIRST: Recognize the real subjects directly from the uploaded photo, without guessing gender or adding anyone. For a pet, preserve its exact face, eyes, muzzle, ears, coat markings and natural body. For a person, preserve the actual eyes, nose, mouth, hairline, skin tone, age and expression. For a vehicle, preserve its shape, color and identifying details.';
+ if(role.auto)return 'IDENTITY FIRST: The ONLY main subjects are those actually photographed; do not invent a new person, pet, vehicle or companion. Keep the same recognizable eyes, nose/muzzle, ears, face shape, natural age, expression, fur markings or other unique features. A cropped hand or arm holding a pet is not a request to create a whole person. Use the uploaded photo as the identity anchor.';
  const parts=[role.pet&&pet,role.person&&person,role.vehicle&&vehicle].filter(Boolean);
  return 'IDENTITY FIRST: '+(parts.join(' ')||'Keep the exact real subject, its unique features, colors and proportions.');
 }
@@ -31,7 +31,7 @@ export function makeIdentityFirstAdventurePrompt({
  if(!setting)throw Object.assign(new Error('Choose an adventure or describe your own world.'),{reason:'input'});
  const role=roles(subjectType);
  const costume=guide?[
-  role.auto?'Use only the wardrobe that matches the actual photo: for pets '+guide.pet+'; for people '+guide.person+'; for cars keep original shape with scene lighting. Do not invent new subjects.':'',
+  role.auto?'OUTFIT ALTERNATIVES for existing subjects ONLY: if the photographed subject is an animal, '+guide.pet+'; if a person, '+guide.person+'. Pick only the option fitting a real primary subject already in the photo, not a new character.':'',
   role.pet?'Pet outfit: '+guide.pet+'.':'',
   role.person?'People outfit: '+guide.person+'.':'',
   role.vehicle?'Vehicle: same recognizable body, scene-appropriate lighting and reflections.':'',
@@ -45,7 +45,7 @@ export function makeIdentityFirstAdventurePrompt({
   compactIdentity(subjectType),
   'WORLD: '+setting+'. '+costume,
   guide?.look?'FINISH: '+guide.look+'.':'',
-  'CHANGE ONLY outfit, background, props and scene lighting; for illustration, change drawing style, NOT facial identity. Keep faces visible and original head angles. REPLACE THE ORIGINAL BACKGROUND and match light and shadow; no obvious cutout.',
+  'CHANGE ONLY outfit, background, props and scene lighting; for illustration, change drawing style, NOT facial identity. Keep faces visible at their original head angles. The original subject must be the clear, close foreground focus, not a tiny sidekick to an invented hero. REPLACE THE ORIGINAL BACKGROUND and match light and shadow; no obvious cutout.',
   role.pet||role.auto?'Real pets keep animal bodies and paws, never human hands or human torsos.':'',
   refs,
   referenceGuide?'PHOTO ROLES: '+clean(referenceGuide,520)+'.':'',
