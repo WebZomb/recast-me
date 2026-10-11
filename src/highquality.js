@@ -364,15 +364,32 @@ export async function highQualityTransform(request,env,{trustedSocialJob=false}=
     if(safety.status==="rejected")return json({error:"not_supported",userMessage:CONTENT_MESSAGE,reason:"policy"},422);
     if(safety.status==="review")return json({reviewRequired:true,userMessage:"This request needs a quick human review before generation.",reason:"review"},202);
 
-    const inputFiles=[];
+    let inputFiles=[];
+    const detailedFiles=[];
     for(let i=0;i<4;i++){
       const file=incoming.get(`image_${i}`);
+      const detail=incoming.get(`hq_image_${i}`);
+      if(detail!==null){
+        // Only HQ requests can contain the optional full-detail version.
+        // Never accept extra/unpaired files to circumvent the four-input cap.
+        if(qualityMode!=='high'||!(file instanceof File)||!file.size||!(detail instanceof File)||!detail.size)
+          return json({error:"bad_detail_upload",userMessage:"Your photos could not be prepared. Please select them again.",reason:"input"},400);
+        if(!ACCEPTED_REFERENCE_TYPES.has(detail.type)||detail.size>2_000_000)
+          return json({error:"bad_detail_upload",userMessage:"One prepared photo is too large or unsupported. Please select another.",reason:"input"},400);
+      }
       if(file instanceof File&&file.size>0){
         if(!ACCEPTED_REFERENCE_TYPES.has(file.type))return json({error:"bad_upload",userMessage:"Use a JPEG, PNG, or WebP photo.",reason:"input"},400);
         if(file.size>2_000_000)return json({error:"large_upload",userMessage:"One prepared reference image is too large. Please choose a smaller photo.",reason:"input"},400);
-        inputFiles.push(file)
+        inputFiles.push(file);
+        if(detail)detailedFiles.push(detail);
       }
     }
+    if(detailedFiles.length&&detailedFiles.length!==inputFiles.length)
+      return json({error:"incomplete_detail_upload",userMessage:"One photo could not finish preparing. Please select your photos again.",reason:"input"},400);
+    // Provider was chosen upstream BEFORE this method; no new paid model call.
+    // Cloudflare input images MUST remain <512px; only fal receives 1024px.
+    if(qualityMode==='high'&&env.RECAST_HQ_SELECTED_PROVIDER==='fal'&&detailedFiles.length)
+      inputFiles=detailedFiles;
     let referenceGuide='';
     try{referenceGuide=referenceDirections(incoming.get('referenceLabels'),inputFiles.length,subjectType==='family'?incoming.get('subjectCount'):'');}
     catch(e){return json({error:'bad_reference_labels',userMessage:e.message,reason:'input'},400);}
