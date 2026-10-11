@@ -49,7 +49,7 @@ export function initCreationWizard({styles,photos,subject,style,updateWorld,hasB
   $('#photo-step-error').textContent='Choose a photo to continue.';
   return false;
  }
- function go(to){
+ function go(to,{scroll=true}={}){
   const next=to===2?2:1;
   step=next===2&&!validatePhotos()?1:next;
   document.querySelectorAll('[data-create-step]').forEach(p=>p.hidden=Number(p.dataset.createStep)!==step);
@@ -57,7 +57,7 @@ export function initCreationWizard({styles,photos,subject,style,updateWorld,hasB
    if(Number(b.dataset.goStep)===step)b.setAttribute('aria-current','step');
    else b.removeAttribute('aria-current');
   });
-  $('.creation-progress').scrollIntoView({behavior:'auto',block:'start'});
+  if(scroll)$('.creation-progress').scrollIntoView({behavior:'auto',block:'start'});
  }
  for(const value of ['auto','pet','person','person and pet','couple','family','car','custom']){
   const button=document.createElement('button');button.type='button';button.dataset.subjectChoice=value;button.textContent=names[value];
@@ -100,7 +100,7 @@ export function initCreationWizard({styles,photos,subject,style,updateWorld,hasB
   if(event.target.closest('[data-create-step="2"]'))go(2);
  },true);
  refreshPhotos();refreshAdventures();
- go(1);
+ go(1,{scroll:false});
  return {go,
   // Only send labels the customer explicitly supplied for ALL photos.
   // Otherwise let the editing model identify the photo contents; no extra step.
