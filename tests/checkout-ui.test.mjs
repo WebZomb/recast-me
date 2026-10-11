@@ -79,7 +79,7 @@ test('selected artwork beats stale storage and final review is required before p
   const ui=setup(async()=>catalog());
   await ui.select();assert.equal(new URL(ui.calls[0][0]).searchParams.get('requestId'),'new');
   assert.match(ui.grid.innerHTML,/Shop Mug/);assert.doesNotMatch(ui.grid.innerHTML,/href="#start"/);
-  assert.match(source,/This is the design that will be printed/);
+  assert.match(source,/Check your design/);assert.match(source,/The watermark won't print/);
   assert.match(source,/Confirm design & checkout/);
   assert.match(source,/confirmDesign:true/);
 });
