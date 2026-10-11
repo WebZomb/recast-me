@@ -47,3 +47,8 @@ Rollback: revert the eventual RM121 source merge through guarded deployment. Pub
 - Browser test initially waited on stale prior-result status; fixed to wait for incremented result count, and UI now immediately shows photo preparation status.
 - WebKit binary downloaded but host lacks shared libraries; system dependency installation failed due container setgroups permissions. No escalation/workaround of controls attempted. Full WebKit test remains required in existing GitHub runner, which installs its own dependencies.
 - `src/provider-jobs.js` now labels Nano jobs accurately in the owner ledger (previously every row was hardcoded FLUX.2 dev).
+
+### First CI result and correction
+PR #41 initial head `975936848402ccab606d5a3c084259036fcdb58c`: security workflow 38154453216 PASS; customer workflow 38154453129 existing customer WebKit/Chromium checks PASS but new lab audit FAILED. WebKit's Playwright intercepted multipart body omitted uploaded file bytes, so test-side image decoding saw an empty buffer. Changed the local-only mock endpoint to collect the actual HTTP multipart upload before asserting dimensions, avoiding intercepted-body serialization. This also exercises the real browser multipart upload. No production rendering change; not merged while CI was failing.
+
+Additional mask research: https://fal.ai/models/fal-ai/flux-pro/v1/fill/api explicitly supports input image and matching mask; https://fal.ai/models/fal-ai/flux-pro/v1/fill lists $0.05 per MP rounded up (1024x1280 would be $0.10 before segmentation/other overhead). Mask/composite is therefore a separate higher-cost route to investigate if the low-cost photo-edit tests fail, not a free identity lock on the existing FLUX.2 endpoint. No Fill call or integration made.
