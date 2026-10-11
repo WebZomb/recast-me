@@ -13,3 +13,10 @@ Changed: public/model-lab.html, public/model-lab.js, scripts/rm050-browser-tests
 Zero paid calls, purchases or subscriptions. Owner will run comparisons on their phone; Desktop Commander is not needed for owner-operated tests. Do not ask for credentials in chat. Three initial Royal comparisons remain about $0.111 generation cost (~12 cents rounded), only one per deliberate click. Stop on a pending/error response. The larger nine-image pilot is not yet performed.
 
 Rollback: revert the eventual RM122 merge to restore the previous owner lab selector; no data migration/deletion. A commit/build success is not production deployment or demonstrated image quality.
+
+## Verified release
+- PR #42 head `1d47f79abb5457992b4d30155f5da1b4e6c9cba1`, fetched and compared with the local tested tree (identical). Security CI `38156054468` PASS; customer CI `38156054370` PASS, including full 468-test suite and WebKit/Chromium owner comparisons with automatic subject handling.
+- Squash main `c23295db9580004a0120dcc4a98a0fa6df02b602`. Deployment event was delayed briefly after merge; initial live checks still showed the old selector. No bypass/retrigger/configuration changes were needed.
+- Guarded deployment `38156341295` SUCCESS; native Cloudflare check `114520089566` also SUCCESS for the same source (version `456029ee-1c0f-4a3a-bf83-14fc2c94939c`). Final direct live `/api/health` returned version `f27281c8-f196-4ca7-9c49-2e7ce8b6fd02`; the two existing deployment integrations remain active.
+- Public audit `38156341294` SUCCESS across all steps. Direct live HTML and v282 JS HTTP200, both contain automatic handling and neutral Royal defaults, neither contains the removed subject control; HTML references v282.
+- Ready for owner phone testing. No paid generation performed by assistant; face likeness and actual automatic interpretation remain unverified until the owner sends real results. Rollback implementation by reverting `c23295d` through guarded deployment; preserve all private artwork.
