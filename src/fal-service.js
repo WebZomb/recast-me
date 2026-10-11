@@ -52,7 +52,7 @@ export async function runFalEdit(env,model,originalRequest){
  const queueRoot=candidate?.queueRoot||(publicNano?'fal-ai/nano-banana':undefined);
  const prepared=await prepareFalInput(model,originalRequest);
  if(candidate&&protectedChoice(env.RECAST_OWNER_IDENTITY_MODEL)){
-  try{return await runProtectedFaceEdit(env,prepared,candidate)}catch(error){if(error.reason==='pending')throw error;throw Object.assign(Error(error.message),{reason:'protected_edit',cause:error})}
+  try{return await runProtectedFaceEdit(env,prepared,candidate)}catch(error){if(error.reason==='pending')throw error;throw Object.assign(Error(error.message),{reason:'protected_edit',providerDispatches:error.providerDispatches,cause:error})}
  }
  const nano=endpoint==='fal-ai/nano-banana/edit';
  if(nano&&(env.CONTENT_MODERATION_ENABLED!=='true'||!env.MODERATION_OPENAI_API_KEY))throw Object.assign(new Error('Candidate requires existing image safety screening.'),{reason:'configuration'});

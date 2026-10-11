@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import sharp from 'sharp';
 import {decode,encode} from 'fast-png';
-import {runProtectedFaceEdit,restoreProtectedPixels,combineHeadMasks,checkedPng} from '../src/protected-face-edit.js';
+import {runProtectedFaceEdit,restoreProtectedPixels,combineHeadMasks,checkedPng,normalize,protectedCostNotice} from '../src/protected-face-edit.js';
 import {OWNER_IDENTITY_MODELS} from '../src/owner-identity-comparison.js';
 import {Bucket,MARKED} from './security-helpers.mjs';
 import {moderationVerdict} from './safety-fixtures.mjs';
@@ -14,7 +14,7 @@ const mask=image([0,0,0,255]);for(let y=70;y<170;y++)for(let x=100;x<190;x++)mas
 const data=p=>'data:image/png;base64,'+Buffer.from(encode(p)).toString('base64');
 function images(){return {async info(stream){const m=await sharp(Buffer.from(await new Response(stream).arrayBuffer())).metadata();return {width:m.width,height:m.height}},input(stream){let options={},draws=0;return {transform(v){options=v;return this},draw(){draws++;return this},async output(out){
  const input=Buffer.from(await new Response(stream).arrayBuffer());
- let engine=sharp(input).rotate();if(options.width||options.height)engine=engine.resize({width:options.width,height:options.height,fit:options.fit==='scale-down'?'inside':options.fit||'contain',background:options.background||'#000000',withoutEnlargement:options.fit==='scale-down'});
+ let engine=sharp(input).rotate();if(options.width||options.height)engine=engine.resize({width:options.width,height:options.height,fit:['scale-down','contain'].includes(options.fit)?'inside':options.fit==='pad'?'contain':options.fit||'inside',background:options.background||'#000000',withoutEnlargement:options.fit==='scale-down'});
  const bytes=draws?MARKED:out.format==='image/png'?await engine.png({palette:false}).toBuffer():await engine.jpeg().toBuffer();
  return {response:()=>new Response(bytes,{headers:{'content-type':out.format}})};
  }}}}}
@@ -88,4 +88,17 @@ test('owner auth, screening, shared call/budget limits gate BOTH provider stages
 test('indexed PNG masks normalize correctly without treating palette indexes as brightness',async()=>{
  const png=await sharp(Buffer.from(encode(mask))).png({palette:true,colors:2}).toBuffer();
  const decoded=checkedPng(png);assert.deepEqual([...decoded.data.slice((100*W+130)*4,(100*W+130)*4+4)],[255,255,255,255]);assert.deepEqual([...decoded.data.slice(0,4)],[0,0,0,255]);
+});
+
+test('3:4 original uses aspect-preserving padding to exact model canvas dimensions',async()=>{
+ const source=await sharp({create:{width:768,height:1024,channels:3,background:'#aa6633'}}).png().toBuffer();
+ const result=await normalize(env(),source,704,960);
+ assert.equal(result.pixels.width,704);assert.equal(result.pixels.height,960);
+ assert.deepEqual([...result.pixels.data.slice(0,4)],[0,0,0,255]);
+ assert.deepEqual([...result.pixels.data.slice((400*704+352)*4,(400*704+352)*4+4)],[170,102,51,255]);
+});
+test('preparation failure reports zero dispatched provider requests',async t=>{
+ const e=env(),calls=network(t);e.IMAGES.input=()=>({transform(){return this},output:async()=>{throw Error('Image preparation failed')}});
+ await assert.rejects(runProtectedFaceEdit(e,prepared,OWNER_IDENTITY_MODELS['qwen-protected']),error=>error.providerDispatches===0);
+ assert.equal(calls.length,0);assert.match(protectedCostNotice(0),/No mask or scene request was sent/);assert.match(protectedCostNotice(1),/no scene render was sent/);assert.match(protectedCostNotice(2),/may be billable/);
 });
