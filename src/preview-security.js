@@ -305,6 +305,19 @@ export function secureApplication(application) {
             if(!await standardOutageEligible(env))throw error('standard_outage_not_available','High Quality availability changed. Refresh the preview options before trying Standard.',409);
             env={...env,RECAST_STANDARD_OUTAGE_APPROVED:'true'};
           }
+          if(path==='/api/admin/model-test'){
+            requireOwner(request,env);
+            const choice=url.searchParams.get('model');
+            if(!['dev','dev-edit','nano-banana','klein9','klein4'].includes(choice))throw error('invalid_model','Choose a supported test model.',400);
+            const experimental=['dev-edit','nano-banana'].includes(choice);
+            env={...env,RECAST_RENDER_MODE:choice.startsWith('klein')?'quick':'high'};
+            if(experimental){
+              if(form.get('ownerProvider')!=='fal'||env.FAL_OWNER_TEST_ENABLED!=='true')throw error('owner_fal_not_enabled','This comparison requires the activated owner fal test.',503);
+              if(env.CONTENT_MODERATION_ENABLED!=='true'||!env.MODERATION_OPENAI_API_KEY)throw error('screening_required','Comparison requires existing input and output safety screening.',503);
+              if(form.get('style')!=='custom'||form.get('branchRequestId'))throw error('comparison_input','Use a fresh photo and custom direction for this comparison.',400);
+              env={...env,RECAST_OWNER_IDENTITY_MODEL:choice};
+            }
+          }
           if(path==='/api/admin/model-test' && form.get('ownerProvider')==='cloudflare'){
             requireOwner(request,env);
             // Explicit owner comparison tests the requested host, not whatever
@@ -320,7 +333,7 @@ export function secureApplication(application) {
           }
           if(env.RECAST_RENDER_MODE==='high' && ['fal','auto'].includes(String(env.RECAST_HQ_PROVIDER||'cloudflare'))){
             const selected=await selectHighQualityProvider(env,form);
-            const estimated=selected.host==='fal'?selected.prices.falUsd:selected.prices.cloudflareUsd;
+            const estimated=env.RECAST_OWNER_IDENTITY_MODEL==='nano-banana'?0.039:selected.host==='fal'?selected.prices.falUsd:selected.prices.cloudflareUsd;
             const reserve=Math.max(Number(env.AI_CALL_RESERVE_CENTS||7),Math.ceil(estimated*100)+1);
             env=wrapImageProvider({...env,RECAST_PROVIDER_ATTEMPT_ID:fingerprint||crypto.randomUUID(),AI_CALL_RESERVE_CENTS:String(reserve)},selected);
           }

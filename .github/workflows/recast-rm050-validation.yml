@@ -6,6 +6,7 @@ on:
       - 'public/**'
       - 'tests/**'
       - 'scripts/rm050-browser-tests.cjs'
+      - 'scripts/rm121-model-lab-audit.cjs'
       - '.github/workflows/recast-rm050-validation.yml'
   workflow_dispatch:
 permissions:
@@ -32,6 +33,8 @@ jobs:
           npx playwright install --with-deps chromium webkit >/tmp/browser-install.log 2>&1
       - name: Mocked customer and owner browser checks
         run: NODE_PATH=/tmp/recast-browser/node_modules node scripts/rm050-browser-tests.cjs
+      - name: Mocked identity Model Lab mobile checks
+        run: NODE_PATH=/tmp/recast-browser/node_modules node scripts/rm121-model-lab-audit.cjs
       - name: Retain regression evidence
         uses: actions/upload-artifact@v4
         if: always()

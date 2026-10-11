@@ -53,9 +53,12 @@ export const FAL_PILOT_HEADERS=Object.freeze({
 export function decodeFalInlineResult(data,input){
   if(!Array.isArray(data?.has_nsfw_concepts)||data.has_nsfw_concepts.length!==1||typeof data.has_nsfw_concepts[0]!=='boolean')throw fail('Missing provider safety result.');
   if(data.has_nsfw_concepts[0])throw fail('Image declined by provider moderation.','moderation');
+  return decodeFalInlineImage(data,input.image_size);
+}
+export function decodeFalInlineImage(data,size={}){
   if(!Array.isArray(data.images)||data.images.length!==1)throw fail('Expected exactly one generated image.');
   const output=data.images[0];
-  if((output.width!==undefined&&output.width!==input.image_size.width)||(output.height!==undefined&&output.height!==input.image_size.height))throw fail('Provider returned unexpected dimensions.');
+  if((size.width!==undefined&&output.width!==undefined&&output.width!==size.width)||(size.height!==undefined&&output.height!==undefined&&output.height!==size.height))throw fail('Provider returned unexpected dimensions.');
   const uri=output.url;
   if(typeof uri!=='string'||uri.length>16_100_000)throw fail('Invalid generated image.');
   const match=uri.match(/^data:(image\/(?:jpeg|png|webp));base64,([A-Za-z0-9+/]+={0,2})$/);

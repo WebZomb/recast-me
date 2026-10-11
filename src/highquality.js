@@ -1,3 +1,4 @@
+import {ownerIdentityModel,ownerIdentityPrompt,OWNER_IDENTITY_PROMPT_VERSION} from './owner-identity-comparison.js';
 import {moderateContent,screenText,CONTENT_MESSAGE} from './content-safety.js';
 import {makeFalCompactPrompt} from './fal-prompt.js';
 import {makeStandardAdventurePrompt} from './standard-adventure-prompt.js';
@@ -252,7 +253,7 @@ async function runModel(form,env,model){
   // deliberate later action create the next attempt.
   const result=await env.AI.run(model,{multipart:{body:serialized.body,contentType:serialized.headers.get("content-type")}}, {rejectIfBusy:true});
   if(!result?.image)throw new Error("Image model returned no image.");
-  return {image:result.image,providerUsed:result.providerUsed||'cloudflare',providerRequestId:result.providerRequestId||null}
+  return {image:result.image,modelUsed:result.modelUsed||model,providerUsed:result.providerUsed||'cloudflare',providerRequestId:result.providerRequestId||null}
 }
 
 async function tryGeneration(env,model,prompt,inputFiles,kind,settings){
@@ -265,7 +266,7 @@ async function tryGeneration(env,model,prompt,inputFiles,kind,settings){
     image:output.image,
     providerUsed:output.providerUsed,
     providerRequestId:output.providerRequestId,
-    modelUsed:model,
+    modelUsed:output.modelUsed,
     attemptKind:kind,
     usedSafeRetry:kind.includes("safe"),
     usedFallback:kind.includes("fallback")
@@ -275,10 +276,11 @@ async function tryGeneration(env,model,prompt,inputFiles,kind,settings){
 async function generateHighQuality({env,model,styleId,subjectType,notes,customWorld,inputFiles,hasBranch}){
   // Both fal HQ and Cloudflare HQ fallback receive the SAME concise
   // identity-first prompt as Standard. Model settings and call count are fixed.
-  const main=makeFalCompactPrompt({styleId,subjectType,style:STYLES[styleId],
+  const candidate=ownerIdentityModel(env);
+  const main=candidate?ownerIdentityPrompt({notes:safeNotes(notes),customWorld:safeNotes(customWorld)}):makeFalCompactPrompt({styleId,subjectType,style:STYLES[styleId],
     notes:safeNotes(notes),customWorld:safeNotes(customWorld),inputCount:inputFiles.length,hasBranch});
-  const steps=Math.max(8,Math.min(30,Number(env.IMAGE_HIGH_QUALITY_STEPS||18)));
-  const guidance=Math.max(1,Math.min(10,Number(env.IMAGE_HIGH_QUALITY_GUIDANCE||5)));
+  const steps=Math.max(8,Math.min(30,Number(candidate?28:env.IMAGE_HIGH_QUALITY_STEPS||18)));
+  const guidance=Math.max(1,Math.min(10,Number(candidate?2.5:env.IMAGE_HIGH_QUALITY_GUIDANCE||5)));
   const settings={width:1024,height:1280,guidance,steps};
 
   try{
@@ -458,18 +460,18 @@ export async function highQualityTransform(request,env,{trustedSocialJob=false}=
     if(!image||image.length<100)throw Object.assign(new Error("malformed"),{reason:"provider"});
     const previewMime=imageMime(image);
 
-    await recordRenderHealth(env,env.RECAST_RENDER_SCOPE==='social'?'social':qualityMode,'success');
+    if(!ownerIdentityModel(env))await recordRenderHealth(env,env.RECAST_RENDER_SCOPE==='social'?'social':qualityMode,'success');
     stage="storage";
     const requestId=`RC-${Date.now().toString(36).toUpperCase()}-${randomHex(3).toUpperCase()}`;
     const accessToken=randomHex(32);
     safety.outputScreening=await moderateContent(env,{images:[new File([Uint8Array.from(atob(image),c=>c.charCodeAt(0))],"output",{type:previewMime})]});
-    const stored=await store(env,{requestId,accessToken,styleId,subjectType,notes,customWorld,parentRequestId,source,sourceTweet,qualityMode,inputs:storedInputs,originalInputCount,image,previewMime,safety,modelUsed:generated.modelUsed,providerUsed:generated.providerUsed,promptVersion:PROMPT_VERSION,attemptKind:generated.attemptKind});
+    const stored=await store(env,{requestId,accessToken,styleId,subjectType,notes,customWorld,parentRequestId,source,sourceTweet,qualityMode,inputs:storedInputs,originalInputCount,image,previewMime,safety,modelUsed:generated.modelUsed,providerUsed:generated.providerUsed,promptVersion:ownerIdentityModel(env)?OWNER_IDENTITY_PROMPT_VERSION:PROMPT_VERSION,attemptKind:generated.attemptKind});
 
     await writeAttemptReceipt(env,clientAttemptId,{status:"success",completedAt:new Date().toISOString(),durationMs:Date.now()-attemptStartedAt,requestId,qualityMode,modelUsed:generated.modelUsed,providerUsed:generated.providerUsed,providerRequestId:generated.providerRequestId,attemptKind:generated.attemptKind,persisted:stored.persisted});
-    return json({ok:true,requestId,accessToken,style:STYLES[styleId]?.name||"Custom World",image:`data:${previewMime};base64,${image}`,persisted:stored.persisted,storageError:stored.storageError,qualityMode,qualityLabel:qualityMode==="quick"?"Standard Preview":"High-Quality Preview",modelUsed:generated.modelUsed,providerUsed:generated.providerUsed,usedSafeRetry:generated.usedSafeRetry,usedFastFallback:false,promptVersion:PROMPT_VERSION,clientAttemptId});
+    return json({ok:true,requestId,accessToken,style:STYLES[styleId]?.name||"Custom World",image:`data:${previewMime};base64,${image}`,persisted:stored.persisted,storageError:stored.storageError,qualityMode,qualityLabel:qualityMode==="quick"?"Standard Preview":"High-Quality Preview",modelUsed:generated.modelUsed,providerUsed:generated.providerUsed,usedSafeRetry:generated.usedSafeRetry,usedFastFallback:false,promptVersion:ownerIdentityModel(env)?OWNER_IDENTITY_PROMPT_VERSION:PROMPT_VERSION,clientAttemptId});
   }catch(error){
     const reason=error?.reason||"provider";
-    if(['capacity','quota','timeout','unavailable'].includes(reason))await recordRenderHealth(env,env.RECAST_RENDER_SCOPE==='social'?'social':qualityMode,'failed',reason);
+    if(!ownerIdentityModel(env)&&['capacity','quota','timeout','unavailable'].includes(reason))await recordRenderHealth(env,env.RECAST_RENDER_SCOPE==='social'?'social':qualityMode,'failed',reason);
     const internal=error?.cause||error;
     const diagnosticId=await writeGenerationDiagnostic(env,{stage,reason,qualityMode,providerCode:providerCode(internal),providerMessage:String(internal?.message||internal||"").slice(0,500),highQuality:String(env.IMAGE_MODEL_HIGH_QUALITY||DEFAULT_HIGH_QUALITY),quick:String(env.IMAGE_MODEL_QUICK||DEFAULT_QUICK)});
     await writeAttemptReceipt(env,clientAttemptId,{status:"failed",failedAt:new Date().toISOString(),durationMs:Date.now()-attemptStartedAt,stage,reason,providerCode:providerCode(internal),diagnosticId,qualityMode});
