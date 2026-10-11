@@ -11,3 +11,9 @@ Files: public/adventure-guides.js, public/app.js, public/creation-wizard.js, pub
 Rollback: revert RM125 source merge through guarded deployment, preserving private artwork and order snapshots.
 
 Local browser test first FAILED: existing wizard Enter shortcut intercepted summary activation and advanced to Style, hiding face selection. Fixed by allowing native summary keyboard behavior; rerun below. Failure was not deployed.
+
+## Final release receipt
+
+Local Chromium 320/1440 browser rerun PASS, including Enter-to-open single disclosure, face selection, fresh uploads and both purchase paths. PR #45 head `f2127d5568101dcdc01ca2d217da623bb75d4cf5` matched local staged tree; security CI `38161641943` PASS, policy CI `38161641941` PASS (477 Node tests, bundle, WebKit/Chromium and Model Lab). Squash main `d78aba880874b614d03367eda724addcf2727211`, tree `4d3dac59d25984c00c77a214fa0ee2812f19f0ab`. Guarded deployment `38161860020` and public launch audit `38161860042` both PASS, including product examples and isolated social commerce.
+
+Direct live root, app v285, wizard v285, guides v2, CSS v3 all HTTP200 and byte-identical to source. Health Worker `20f07af5-4179-40f2-a5ef-3c0dcd2fa2b2` at `2026-10-11T17:59:10.829333Z`; model status `fal-ai/nano-banana/edit`, prompt `nano-identity-adventures-v2`. Ready for owner visual test; no assistant render, purchase or fulfillment initiated. Likeness improvement remains unverified until actual output comparison.
