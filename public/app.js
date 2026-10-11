@@ -1,6 +1,6 @@
 import {ADVENTURE_GUIDES} from './adventure-guides.js?v=1';
 import {mergeHistory,privateRecastLink,readRecastLink} from './recast-history.js';
-import {initCreationWizard} from './creation-wizard.js?v=264';
+import {initCreationWizard} from './creation-wizard.js?v=265';
 import {fallbackState,creditSummary,creditHeadline,recoveryUnverified} from './quality-policy.js?v=267';
 import {protectedPreviewFile} from './preview-export.js';
 let creditInfo=null;
@@ -177,7 +177,7 @@ if (params.get('request')) {
 }
 if (params.get('style') && (STYLES.some(x=>x[0]===params.get('style')) || params.get('style')==='custom')) styleSelect.value=params.get('style');
 if(params.get('source')==='x'&&styleSelect.value==='custom')document.querySelector('#custom-world').value=params.get('request')||'';
-function updateWorldFields(){
+function updateWorldFields(showSelection=false){
   const isCustom=styleSelect.value==='custom';
   const field=document.querySelector('#custom-world-field');
   const input=document.querySelector('#custom-world');
@@ -191,7 +191,10 @@ function updateWorldFields(){
     : (ADVENTURE_GUIDES[styleSelect.value]?.teaser||'A new original scene with clothing and background tailored to this adventure.');
   document.querySelectorAll('.style-card').forEach(card=>card.classList.toggle('selected',card.dataset.style===styleSelect.value));
   const adventureStatus=document.querySelector('#adventure-selection-status');
-  if(adventureStatus)adventureStatus.textContent=isCustom?'Selected: Your own adventure':'Selected: '+(STYLES.find(s=>s[0]===styleSelect.value)?.[1]||'Adventure');
+  if(adventureStatus){
+    adventureStatus.textContent=isCustom?'Selected: Your own adventure':'Selected: '+(STYLES.find(s=>s[0]===styleSelect.value)?.[1]||'Adventure');
+    adventureStatus.hidden=!showSelection&&['royal','fantasy','space','game'].includes(styleSelect.value);
+  }
   document.dispatchEvent(new Event('recast-style-change'));
 }
 updateWorldFields();
@@ -206,7 +209,7 @@ let selectedPhotoFiles=[];
 function showSelectedPhotos(message=''){
   photoURLs.forEach(url=>URL.revokeObjectURL(url));photoURLs=[];
   const selected=[...photos.files];selectedPhotoFiles=selected;
-  document.querySelector('#file-summary').textContent=message||(selected.length?`${selected.length} of 4 photos ready`:'No photos selected');
+  document.querySelector('#file-summary').textContent=message||(selected.length?`${selected.length} photo${selected.length===1?'':'s'} ready`:'No photos selected');
   const root=document.querySelector('#photo-thumbnails');root.replaceChildren();
   selected.forEach((file,index)=>{
     const tile=document.createElement('div');tile.className='photo-thumbnail';
@@ -225,7 +228,7 @@ photos.addEventListener('change',()=>{
   showSelectedPhotos(original.length>4?'Using the first 4 photos. Remove or replace any below.':'');
 });
 document.querySelector('#surprise-world').addEventListener('click',()=>{
-  const choices=STYLES.filter(s=>s[0]!==styleSelect.value);const pick=choices[Math.floor(Math.random()*choices.length)];styleSelect.value=pick[0];updateWorldFields();
+  const choices=STYLES.filter(s=>s[0]!==styleSelect.value);const pick=choices[Math.floor(Math.random()*choices.length)];styleSelect.value=pick[0];updateWorldFields(true);
   document.querySelector('#world-choice-feedback').textContent=`Let’s try ${pick[1]}! Your subject description stays the same.`;
 });
 
@@ -233,7 +236,7 @@ document.querySelectorAll('[data-idea-subject]').forEach(card=>{
   card.addEventListener('click',()=>{
     const subject=document.querySelector('#subject');
     if(subject){subject.value=card.dataset.ideaSubject||'person';subject.dispatchEvent(new Event('change'));}
-    wizard.go(0);
+    wizard.go(1);
     const note=document.querySelector('#notes');
     if(note)note.value=card.dataset.ideaNote||'';
     document.querySelector('#start')?.scrollIntoView({behavior:'smooth',block:'start'});
@@ -394,25 +397,24 @@ function updateFallback(){
   const reason=document.querySelector('#quality-fallback-reason');if(reason)reason.textContent=state.message;
   const standard=document.querySelector('#choose-standard');
   if(standard){
-    // A disabled-looking "Use Standard" CTA is confusing when the allowance
-    // is zero. Replace it with a clear status and reset time.
     standard.hidden=selectedQuality()==='quick'||state.standardExhausted;
     standard.disabled=!state.standardReady;
   }
+  // Avoid showing the same "0 Standard" balance in two separate cards.
   const standardStatus=document.querySelector('#standard-limit-status');
-  if(standardStatus){
-    standardStatus.hidden=!state.standardExhausted;
-    if(state.standardExhausted){
-      const count=Number(creditInfo?.standardAllowance??5);
-      const stamp=creditInfo?.standardResetAt;
-      const reset=stamp&&Number.isFinite(Date.parse(stamp))
-        ?new Date(stamp).toLocaleString([], {month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})
-        :null;
-      standardStatus.textContent=`Standard: 0 of ${count} left.${reset?' Resets '+reset+'.':' Check reset times above.'}`;
-    }
-  }
-  const high=document.querySelector('#choose-high');if(high)high.hidden=selectedQuality()!=='quick';
-  const purchase=document.querySelector('#credit-purchase-link');if(purchase)purchase.hidden=!state.exhausted;
+  if(standardStatus)standardStatus.hidden=true;
+  const high=document.querySelector('#choose-high');
+  if(high)high.hidden=selectedQuality()!=='quick'||Number(creditInfo?.remaining||0)<=0;
+  const saved=document.querySelector('#credit-purchase-link');
+  if(saved)saved.hidden=!state.exhausted||readRecentVersions().length===0;
+  const reason=document.querySelector('#quality-fallback-reason');
+  if(reason&&state.show)reason.textContent=state.standardExhausted
+    ?'No previews left. Check reset times above.'
+    :state.exhausted
+      ?'High Quality is used up. Standard may have less detail and likeness.'
+      :state.outage
+        ?'High Quality is unavailable. Standard may have less detail and likeness.'
+        :'Your purchased Standard credits are ready.';
   return state;
 }
 for(const [id,mode] of [['choose-standard','quick'],['choose-high','high']])document.querySelector('#'+id)?.addEventListener('click',()=>{
@@ -428,10 +430,21 @@ function applyReadiness(){
   const mode=selectedQuality(),health=readinessFor(mode),button=document.querySelector('#generate-button'),notice=document.querySelector('#render-availability');
   const fallback=updateFallback();
   const ready=Boolean(readinessSnapshot?.local?.ready&&health?.ready&&(mode==='quick'?fallback.standardReady:!fallback.exhausted));
-  if(button&&!generationInFlight){button.disabled=!ready;button.textContent=ready?(mode==='quick'?'Try Standard':'Make My Picture'):fallback.exhausted&&mode==='high'?'High Quality used up':'Checking availability…';}
+  if(button&&!generationInFlight){
+    // One main action at a time. Hide disabled HQ while Standard is offered.
+    button.hidden=mode==='high'&&fallback.show&&(fallback.exhausted||fallback.outage);
+    button.disabled=!ready;
+    button.textContent=ready?'Make My Picture':'Checking availability…';
+  }
+  const qualityLine=document.querySelector('.quality-line');
+  if(qualityLine)qualityLine.hidden=fallback.show;
   const copy=document.querySelector('#model-copy');if(copy)copy.textContent=fallback.exhausted&&mode==='high'?'High Quality · No credits left':mode==='quick'&&fallback.standardExhausted?'Standard · No credits left':readinessMessage(mode);
   const dot=document.querySelector('.quality-dot');if(dot)dot.dataset.state=ready&&!recoveryUnverified(health)?'ready':readinessSnapshot?.local?.ready?'waiting':'error';
-  if(notice){notice.hidden=ready&&!recoveryUnverified(health);notice.textContent=ready&&!recoveryUnverified(health)?'':fallback.exhausted&&mode==='high'?'High Quality is used up. Check the reset below.':readinessMessage(mode)+' Your photo stays here.';}
+  if(notice){
+    const show=!fallback.show&&(!ready||recoveryUnverified(health));
+    notice.hidden=!show;
+    notice.textContent=show?readinessMessage(mode):'';
+  }
   return ready;
 }
 async function refreshRenderAvailability(){
@@ -639,7 +652,7 @@ function setBranchReference(version){
     notes:version.notes||'',
     qualityMode:version.qualityMode||'high'
   };
-  wizard.go(0);
+  wizard.go(1);
   const subject=document.querySelector('#subject');
   if(subject&&[...subject.options].some(o=>o.value===branchReference.subjectType))subject.value=branchReference.subjectType;
   if([...[styleSelect.options]].some(o=>o.value===branchReference.styleId))styleSelect.value=branchReference.styleId;
@@ -805,7 +818,8 @@ form.addEventListener('submit',async e=>{
     fd.append('subject',submittedSubject);
     fd.append('customWorld',customWorld);
     fd.append('notes',document.querySelector('#notes').value);
-    fd.append('referenceLabels',JSON.stringify(wizard.references()));
+    const referenceLabels=wizard.references();
+    if(referenceLabels?.length)fd.append('referenceLabels',JSON.stringify(referenceLabels));
     if(document.querySelector('#subject').value==='family')fd.append('subjectCount',document.querySelector('#family-count').value);
     if(branchReference){
       fd.append('branchRequestId',branchReference.requestId);
