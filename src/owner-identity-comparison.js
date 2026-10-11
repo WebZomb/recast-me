@@ -1,3 +1,4 @@
+import {customerIdentityPrompt} from './customer-identity.js';
 // Explicit authenticated Model Lab experiments only; never a public model selector.
 export const OWNER_IDENTITY_MODELS=Object.freeze({
  'qwen-protected':Object.freeze({endpoint:'fal-ai/qwen-image-edit/inpaint',queueRoot:'fal-ai/qwen-image-edit',label:'Qwen · protected head'}),
@@ -21,4 +22,14 @@ export function ownerIdentityPrompt({notes='',customWorld=''}={}){
   'New background: '+String(customWorld).trim().slice(0,800)+'.',
   'Keep the original pose and a close view of the face. Match surrounding light and shadows naturally. No additional subjects, text or logos.'
  ].join(' ');
+}
+
+// Preserve the earlier recipe as an explicit control, not a moving target.
+export function ownerPromptVersion(env){
+ return env.RECAST_OWNER_IDENTITY_RECIPE==='concise'?'owner-identity-concise-v2':OWNER_IDENTITY_PROMPT_VERSION;
+}
+export function ownerComparisonPrompt(env,options){
+ return env.RECAST_OWNER_IDENTITY_RECIPE==='concise'
+  ?customerIdentityPrompt({styleId:'custom',subjectType:'auto',...options})
+  :ownerIdentityPrompt(options);
 }
