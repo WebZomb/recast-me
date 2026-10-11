@@ -18,7 +18,7 @@ export function compactIdentity(subjectType='person'){
  const pet='Same actual pet: keep exact eyes, nose, muzzle, ear shape/angle, head view, expression, coat colors and marking positions. Keep its actual age and proportions (a puppy stays a puppy), not an adult breed-template face. Retain natural anatomy and appearance; do not invent masculine/feminine traits.';
  const person='Same actual person or people: preserve EACH face, eyes, nose, mouth, jaw, hairline, skin tone, natural age and expression. No generic beauty face or invented gender changes.';
  const vehicle='Same real vehicle: keep its silhouette, grille, lights, wheels, trim, color and proportions.';
- if(role.auto)return 'IDENTITY FIRST: The ONLY main subjects are those actually photographed; do not invent a new person, pet, vehicle or companion. Keep the same recognizable eyes, nose/muzzle, ears, face shape, natural age, expression, fur markings or other unique features. A puppy stays a puppy; do not lengthen its muzzle or mature its face. A cropped hand or arm holding a pet is not a request to create a whole person. Use the uploaded photo as the identity anchor.';
+ if(role.auto)return 'IDENTITY FIRST: The ONLY main subjects are those actually photographed; do not invent a new person, pet, vehicle or companion. Keep the same recognizable eyes, nose/muzzle, ears, face shape, natural age, expression, fur markings or other unique features. A puppy stays a puppy; do not lengthen its muzzle or mature its face. Include people and animals only when their face is visible in the originals. Never invent a face for a cropped torso, arm or hand; keep faceless supporting figures out of the portrait. Use the uploaded photo as the identity anchor.';
  const parts=[role.pet&&pet,role.person&&person,role.vehicle&&vehicle].filter(Boolean);
  return 'IDENTITY FIRST: '+(parts.join(' ')||'Keep the exact real subject, its unique features, colors and proportions.');
 }
@@ -31,7 +31,7 @@ export function makeIdentityFirstAdventurePrompt({
  if(!setting)throw Object.assign(new Error('Choose an adventure or describe your own world.'),{reason:'input'});
  const role=roles(subjectType);
  const costume=guide?[
-  role.auto?'OUTFIT ALTERNATIVES for existing subjects ONLY: if the photographed subject is an animal, '+guide.pet+'; if a person, '+guide.person+'. Pick only the option fitting a real primary subject already in the photo, not a new character.':'',
+  role.auto?'OUTFIT ALTERNATIVES for existing subjects ONLY: if the included subject is an animal, '+guide.pet+'; if an included person with a visible reference face, '+guide.person+'. Pick only the option fitting a real primary subject already in the photo, not a new character.':'',
   role.pet?'Pet outfit: '+guide.pet+'.':'',
   role.person?'People outfit: '+guide.person+'.':'',
   role.vehicle?'Vehicle: same recognizable body, scene-appropriate lighting and reflections.':'',

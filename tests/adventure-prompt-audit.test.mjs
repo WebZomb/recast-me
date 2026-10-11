@@ -52,7 +52,7 @@ test('HQ fal, Cloudflare HQ backup and Standard use identical compact face-first
     assert.ok(standard.includes(ADVENTURE_GUIDES[id].person),id+' auto person attire');
     assert.match(standard,/ONLY main subjects are those actually photographed/);
     assert.match(standard,/do not invent a new person, pet, vehicle or companion/);
-    assert.match(standard,/A cropped hand or arm holding a pet is not a request to create a whole person/);
+    assert.match(standard,/Never invent a face for a cropped torso, arm or hand/);
     assert.match(standard,/OUTFIT ALTERNATIVES for existing subjects ONLY/);
    }
   }
