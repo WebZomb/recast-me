@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
+import {execFileSync} from 'node:child_process';
 import {fallbackState,creditHeadline,creditSummary} from '../public/quality-policy.js';
 const source=name=>readFileSync(new URL('../public/'+name,import.meta.url),'utf8');
 const page=source('index.html'),ux=source('simple-creator-v115.js'),style=source('simple-creator-v115.css');
@@ -76,4 +77,11 @@ test('Small main balance with full resets on request, no hidden allowance change
  assert.equal(exhausted.standardExhausted,true);
  assert.equal(exhausted.standardReady,false);
  assert.ok(exhausted.message.length<155,'No long paragraphs on the main screen');
+});
+
+test('Customer-facing JavaScript modules parse cleanly before visual browser testing',()=>{
+ for(const file of ['app.js','creation-wizard.js','simple-creator-v115.js','analytics.js']){
+  assert.doesNotThrow(()=>execFileSync(process.execPath,['--check',new URL('../public/'+file,import.meta.url).pathname],{stdio:'pipe'}),
+    file+' must parse; duplicate const declarations can blank the whole site');
+ }
 });
