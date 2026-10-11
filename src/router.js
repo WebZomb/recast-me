@@ -22,10 +22,10 @@ const application = {
     if(url.pathname === '/api/admin/model-test' && request.method === 'POST'){
       try{
         requireAdmin(request,env);
-        const models={dev:'@cf/black-forest-labs/flux-2-dev',klein9:'@cf/black-forest-labs/flux-2-klein-9b',klein4:'@cf/black-forest-labs/flux-2-klein-4b'};
+        const models={'dev-edit':'@cf/black-forest-labs/flux-2-dev','nano-banana':'@cf/black-forest-labs/flux-2-dev',dev:'@cf/black-forest-labs/flux-2-dev',klein9:'@cf/black-forest-labs/flux-2-klein-9b',klein4:'@cf/black-forest-labs/flux-2-klein-4b'};
         const choice=url.searchParams.get('model');
         if(!Object.hasOwn(models,choice))return Response.json({error:'Choose a supported test model.'},{status:400});
-        const form=await request.formData();form.set('qualityMode',choice==='dev'?'high':'quick');form.set('source','owner-model-test');
+        const form=await request.formData();form.set('qualityMode',choice.startsWith('klein')?'quick':'high');form.set('source','owner-model-test');
         const testRequest=new Request(request.url,{method:'POST',body:form});
         return highQualityTransform(testRequest,{...env,IMAGE_MODEL_HIGH_QUALITY:models.dev,IMAGE_MODEL_QUICK:models[choice]}, {trustedSocialJob:true});
       }catch(error){return Response.json({error:error.message},{status:error.status||500});}

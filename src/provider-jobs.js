@@ -17,7 +17,7 @@ export async function providerJobIndex(env,search=new URLSearchParams()){
   if(!record||typeof record!=='object')continue;
   const status=ALLOWED_STATUS.has(record.status)?record.status:'needs_review';
   items.push({attemptId:entry.key.slice(KEY_PREFIX.length,-5),
-   status,model:'FLUX.2 dev',provider:'fal',requestId:safe(record.requestId),createdAt:safe(record.startedAt),
+   status,model:record.model==='fal-ai/nano-banana/edit'?'Nano Banana (original)':'FLUX.2 dev',provider:'fal',requestId:safe(record.requestId),createdAt:safe(record.startedAt),
    updatedAt:safe(record.updatedAt),completedAt:safe(record.completedAt),imageCount:Number.isSafeInteger(record.imageCount)?record.imageCount:null,
    lastError:safe(record.error),bytes:Number.isSafeInteger(record.bytes)?record.bytes:null});
  }
