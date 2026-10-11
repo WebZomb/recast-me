@@ -1,4 +1,4 @@
-import {protectedChoice,PROTECTED_FACE_VERSION} from './protected-face-edit.js';
+import {protectedChoice,PROTECTED_FACE_VERSION,protectedCostNotice} from './protected-face-edit.js';
 import {customerNano,customerIdentityPrompt,CUSTOMER_IDENTITY_VERSION} from './customer-identity.js';
 import {ownerIdentityModel,ownerIdentityPrompt,OWNER_IDENTITY_PROMPT_VERSION} from './owner-identity-comparison.js';
 import {moderateContent,screenText,CONTENT_MESSAGE} from './content-safety.js';
@@ -477,7 +477,7 @@ export async function highQualityTransform(request,env,{trustedSocialJob=false}=
     const internal=error?.cause||error;
     const diagnosticId=await writeGenerationDiagnostic(env,{stage,reason,qualityMode,providerCode:providerCode(internal),providerMessage:String(internal?.message||internal||"").slice(0,500),highQuality:String(env.IMAGE_MODEL_HIGH_QUALITY||DEFAULT_HIGH_QUALITY),quick:String(env.IMAGE_MODEL_QUICK||DEFAULT_QUICK)});
     await writeAttemptReceipt(env,clientAttemptId,{status:"failed",failedAt:new Date().toISOString(),durationMs:Date.now()-attemptStartedAt,stage,reason,providerCode:providerCode(internal),diagnosticId,qualityMode});
-    if(reason==="protected_edit")return json({error:"protected_edit_stopped",reason,retryable:false,diagnosticId,qualityMode,userMessage:"Owner comparison stopped: "+error.message+" Submitted mask or scene requests may still be billable. No automatic retry was made."},422);
+    if(reason==="protected_edit"||(reason==="pending"&&protectedChoice(env.RECAST_OWNER_IDENTITY_MODEL)))return json({error:"protected_edit_stopped",reason,retryable:false,diagnosticId,qualityMode,userMessage:"Owner comparison stopped: "+error.message+" "+protectedCostNotice(error.providerDispatches)+" No automatic retry was made."},422);
     if(reason==="quota")return json({error:"shared_ai_capacity_used",code:3036,reason:"quota",retryable:false,diagnosticId,qualityMode,userMessage:"Recast Me has reached its shared AI capacity for today. This is a site-wide limit, not your personal render count. Your photo is safe, and nothing was charged."},429);
     if(reason==="content_policy"||reason==="content_screening_unavailable")return json({error:reason,reason,retryable:reason!=="content_policy",userMessage:error.message},error.status||503);
     if(reason==="moderation")return json({error:"generation_declined",code:3030,reason:"moderation",retryable:false,diagnosticId,qualityMode,userMessage:"This photo or request was declined by the image safety check. Choose a different, family-friendly photo or idea. Nothing was charged."},422);

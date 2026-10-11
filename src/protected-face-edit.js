@@ -23,8 +23,8 @@ export function checkedPng(bytes){
  }
  return {width:w,height:h,data};
 }
-async function normalize(env,bytes,width,height){
- const result=await env.IMAGES.input(new Blob([bytes]).stream()).transform({width,height,fit:'contain',background:'#000000'}).output({format:'image/png'});
+export async function normalize(env,bytes,width,height){
+ const result=await env.IMAGES.input(new Blob([bytes]).stream()).transform({width,height,fit:'pad',background:'#000000'}).output({format:'image/png'});
  const response=result.response();if(!response.ok)throw fail('Could not prepare the protected photo.');
  const png=new Uint8Array(await response.arrayBuffer()),pixels=checkedPng(png);
  if(pixels.width!==width||pixels.height!==height)throw fail('Image processor changed the test dimensions.');
@@ -58,7 +58,7 @@ export function restoreProtectedPixels(original,generated,keep){
  }
  return {width,height,channels:4,depth:8,data};
 }
-async function job(env,endpoint,root,input,suffix){
+async function job(env,endpoint,root,input,suffix,progress){
  const credential=String(env.FAL_API_KEY||'').trim();
  if(credential.length<21||/\s|[\x00-\x1f\x7f]/.test(credential))throw fail('Invalid provider configuration.');
  const id=String(env.RECAST_PROVIDER_ATTEMPT_ID||crypto.randomUUID()).replace(/[^a-zA-Z0-9._-]/g,'').slice(0,85)+'-'+suffix;
@@ -69,6 +69,7 @@ async function job(env,endpoint,root,input,suffix){
  if(!claim)throw fail('This comparison already has a provider claim. Do not repeat a pending test.');
  const headers={...FAL_PILOT_HEADERS,Authorization:'Key '+credential};let acknowledged=false,finished=false;
  try{
+  progress.dispatched++;
   const response=await fetch('https://queue.fal.run/'+endpoint,{method:'POST',headers,body:JSON.stringify(input),signal:AbortSignal.timeout(30000)});
   if(!response.ok)throw fail('Provider rejected the '+suffix+' request ('+response.status+').');
   const submission=await response.json(),requestId=submission.request_id;
@@ -96,7 +97,7 @@ async function job(env,endpoint,root,input,suffix){
   throw Object.assign(Error('Comparison stopped. Check owner provider jobs before repeating; a submitted request may still be billable.'),{reason:'pending',cause:error});
  }
 }
-export async function runProtectedFaceEdit(env,prepared,candidate){
+async function protectedFaceEdit(env,prepared,candidate,progress){
  if(env.RECAST_OWNER_PILOT_REQUEST!=='true'||!protectedChoice(env.RECAST_OWNER_IDENTITY_MODEL))throw fail('Protected editing requires the owner lab.');
  if(env.CONTENT_MODERATION_ENABLED!=='true'||!env.MODERATION_OPENAI_API_KEY)throw fail('Protected editing requires input and output screening.');
  if(prepared.image_urls.length!==1)throw fail('Use one original photograph for the protected-head comparison.');
@@ -109,7 +110,7 @@ export async function runProtectedFaceEdit(env,prepared,candidate){
  const original=await normalize(env,raw,width,height);
  const segmentation=await job(env,'fal-ai/sam-3/image','fal-ai/sam-3',{
   image_url:uri(original.png),prompt:'head',apply_mask:false,return_multiple_masks:true,max_masks:8,include_scores:true,include_boxes:true,output_format:'png',sync_mode:true
- },'mask');
+ },'mask',progress);
  if(!Array.isArray(segmentation.masks)||!segmentation.masks.length||segmentation.masks.length>=8)throw fail('Automatic head detection needs review; no scene render was submitted.');
  const masks=[];
  for(let i=0;i<segmentation.masks.length;i++){
@@ -126,11 +127,19 @@ export async function runProtectedFaceEdit(env,prepared,candidate){
  const maskUrl=uri(encode({width,height,channels:4,depth:8,data:editMask}));
  const prompt=prepared.prompt+' Edit only the white mask. Retain the position and size of each protected head. Remove faceless supporting people, their clothing and hands. Build the requested scene and outfit around the existing heads. Match the original face lighting. No new heads or faces.';
  const input={prompt,image_url:uri(original.png),mask_url:maskUrl,num_images:1,output_format:'png',sync_mode:true,...(env.RECAST_OWNER_IDENTITY_MODEL==='qwen-protected'?{image_size:{width,height},num_inference_steps:30,guidance_scale:4,strength:.93,enable_safety_checker:true}:{safety_tolerance:'2',enhance_prompt:false})};
- const result=await job(env,candidate.endpoint,candidate.queueRoot,input,'scene');
+ const result=await job(env,candidate.endpoint,candidate.queueRoot,input,'scene',progress);
  const rendered=decodeFalInlineResult(result,{image_size:{width,height}}),renderBytes=bytesOf(rendered.image);
  const dimensions=await env.IMAGES.info(new Blob([renderBytes]).stream());
  if(dimensions.width!==width||dimensions.height!==height)throw fail('Scene dimensions changed; original faces cannot be safely restored.');
  const generated=await normalize(env,renderBytes,width,height);
  const final=restoreProtectedPixels(original.pixels,generated.pixels,keep);
  return {image:b64(encode(final)),providerUsed:'fal',modelUsed:candidate.endpoint};
+}
+
+export async function runProtectedFaceEdit(env,prepared,candidate){
+ const progress={dispatched:0};
+ try{return await protectedFaceEdit(env,prepared,candidate,progress)}catch(error){error.providerDispatches=progress.dispatched;throw error;}
+}
+export function protectedCostNotice(dispatched){
+ return dispatched===0?'No mask or scene request was sent.':dispatched===1?'Only the mask request was sent (about $0.005); no scene render was sent.':'Mask and scene requests were sent and may be billable.';
 }
