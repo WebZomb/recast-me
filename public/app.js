@@ -271,7 +271,7 @@ async function resizeFile(file,max=500){
   return new Promise((resolve,reject)=>canvas.toBlob(
     blob=>blob?resolve(new File([blob],(file.name||'reference').replace(/\.[^.]+$/,'.jpg'),{type:'image/jpeg'})):reject(new Error('Could not prepare image.')),
     'image/jpeg',.88
-  ));
+  )).finally(()=>{canvas.width=0;canvas.height=0;});
 }
 
 async function renderWatermark(dataUrl){
@@ -573,7 +573,13 @@ let lastSuccessfulImage=null;
 let lastAttemptQuality='high';
 const RECENT_VERSIONS_KEY='recast_recent_versions_v12';
 let branchReference=null;
+let recentPreviewObserver=null;
 const previewCache=new Map();
+function cachePreview(requestId,value){
+  previewCache.delete(requestId);
+  previewCache.set(requestId,value);
+  while(previewCache.size>4)previewCache.delete(previewCache.keys().next().value);
+}
 function escapeHtml(value){return String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 
 function readRecentVersions(){
@@ -615,8 +621,8 @@ async function fetchStoredPreview(version){
   if(!response.ok||!data.ok||data.watermarked!==true||!data.image)throw new Error(data.error||'This saved version is unavailable.');
   return data.image;
   })();
-  previewCache.set(version.requestId,pending);
-  try{return await pending}catch(error){previewCache.delete(version.requestId);throw error}
+  cachePreview(version.requestId,pending);
+  try{return await pending}catch(error){if(previewCache.get(version.requestId)===pending)previewCache.delete(version.requestId);throw error}
 }
 async function activateRecentVersion(version,{scroll=true}={}){
   const image=await fetchStoredPreview(version);
@@ -684,6 +690,7 @@ async function renderRecentVersions(){
   const shell=document.querySelector('#recent-versions-shell');
   const grid=document.querySelector('#recent-versions-grid');
   if(!shell||!grid)return;
+  recentPreviewObserver?.disconnect();
   const rows=readRecentVersions();
   shell.classList.toggle('hidden',rows.length===0);
   if(!rows.length){grid.innerHTML='';return}
@@ -691,7 +698,7 @@ async function renderRecentVersions(){
   try{active=JSON.parse(localStorage.getItem('recast_last_request')||'null')?.requestId}catch{}
   grid.innerHTML=rows.map((v,i)=>`
     <article class="recent-version-card ${v.requestId===active?'active':''}" data-version-index="${i}">
-      <div class="recent-version-image"><div class="recent-version-loading">Loading…</div><img alt="${escapeHtml(v.styleName||'Saved Recast')}"></div>
+      <div class="recent-version-image"><div class="recent-version-loading">Loading…</div><img loading="lazy" decoding="async" alt="${escapeHtml(v.styleName||'Saved Recast')}"></div>
       <div class="recent-version-copy">
         <span>VERSION ${rows.length-i}</span>
         <strong>${escapeHtml(v.styleName||'Custom Recast')}</strong>
@@ -703,8 +710,8 @@ async function renderRecentVersions(){
       </div>
     </article>`).join('');
 
-  rows.forEach(async(v,i)=>{
-    const card=grid.querySelector(`[data-version-index="${i}"]`);
+  async function loadRecentCard(card){
+    const v=rows[Number(card.dataset.versionIndex)];
     try{
       const image=await fetchStoredPreview(v);
       const img=card?.querySelector('img');
@@ -713,7 +720,19 @@ async function renderRecentVersions(){
       const loading=card?.querySelector('.recent-version-loading');
       if(loading)loading.textContent='Unavailable';
     }
-  });
+  }
+  if('IntersectionObserver' in window){
+    const observer=new IntersectionObserver(entries=>{
+      for(const entry of entries)if(entry.isIntersecting){
+        observer.unobserve(entry.target);
+        if(entry.target.isConnected)loadRecentCard(entry.target);
+      }
+    },{rootMargin:'200px'});
+    recentPreviewObserver=observer;
+    grid.querySelectorAll('[data-version-index]').forEach(card=>observer.observe(card));
+  }else{
+    for(const card of grid.querySelectorAll('[data-version-index]'))await loadRecentCard(card);
+  }
 }
 
 
@@ -891,7 +910,7 @@ form.addEventListener('submit',async e=>{
     hasSuccessfulPreview=true;
     window.recastTrack?.('render_succeeded');
     lastSuccessfulImage=data.image;
-    previewCache.set(data.requestId,Promise.resolve(data.image));
+    cachePreview(data.requestId,Promise.resolve(data.image));
     const successVersion={
       requestId:data.requestId,
       accessToken:data.accessToken,
@@ -1136,7 +1155,7 @@ document.querySelector('#original-photo-form').addEventListener('submit',async e
     const response=await fetch('/api/original-photo',{method:'POST',headers:{'x-recast-request':'1'},body:fd}),data=await response.json();
     if(!response.ok||!data.ok||!data.persisted||data.watermarked!==true)throw new Error(data.userMessage||'Your photo could not be saved. Please try again.');
     const version={requestId:data.requestId,accessToken:data.accessToken,styleName:'Original photo',styleId:'original',subjectType:'photo',qualityMode:'original',createdAt:data.createdAt};
-    previewCache.set(data.requestId,Promise.resolve(data.image));addRecentVersion(version);await activateRecentVersion(version);
+    cachePreview(data.requestId,Promise.resolve(data.image));addRecentVersion(version);await activateRecentVersion(version);
     status.textContent='Photo ready! Pick a product below.';
   }catch(e){status.textContent=e.message;}finally{generationInFlight=false;button.disabled=false;originalTurnstileToken='';if(window.turnstile&&originalTurnstileWidgetId!==null)window.turnstile.reset(originalTurnstileWidgetId);}
 });
