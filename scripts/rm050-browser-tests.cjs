@@ -78,6 +78,17 @@ const policy={highDaily:3,standardDaily:5,purchaseBonus:3,websiteCalls:70,social
    await page.locator('[data-subject-choice="auto"]').click();
    assert.equal(await page.locator('.reference-label').count(),0,'Manual choice can be undone without losing photos');
    assert.equal(await page.locator('#photos').evaluate(x=>x.files.length),2);
+   // A second picker selection must REPLACE the old photos, not silently
+   // turn a new dog portrait into a dog + stale person/car multi-subject render.
+   await page.locator('#photos').setInputFiles(path.join(root,'assets/jack-russell-source-v18.webp'));
+   assert.equal(await page.locator('#photos').evaluate(x=>x.files.length),1,'New upload must replace previously selected photos');
+   assert.equal(await page.locator('.photo-thumbnail').count(),1,'Only the new photo can appear in the preview');
+   // Deliberately selected multi-photo references still work in one operation.
+   await page.locator('#photos').setInputFiles([
+    path.join(root,'assets/jack-russell-source-v18.webp'),
+    path.join(root,'assets/dog-original-v17.webp')
+   ]);
+   assert.equal(await page.locator('#photos').evaluate(x=>x.files.length),2,'Explicit two-photo selection still works');
 
    assert.equal(await page.locator('#all-worlds-group').isHidden(),true,'Advanced worlds are optional by default');
    assert.equal(await page.locator('#render-time-hint').count(),0,'Only the waiting screen contains the time estimate');

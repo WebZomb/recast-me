@@ -50,9 +50,10 @@ test('HQ fal, Cloudflare HQ backup and Standard use identical compact face-first
    if(subjectType==='auto'){
     assert.ok(standard.includes(ADVENTURE_GUIDES[id].pet),id+' auto pet attire');
     assert.ok(standard.includes(ADVENTURE_GUIDES[id].person),id+' auto person attire');
-    assert.match(standard,/Recognize the real subjects directly from the uploaded photo/);
-    assert.match(standard,/do not invent new subjects|Do not invent new subjects/);
-    assert.match(standard,/without guessing gender/);
+    assert.match(standard,/ONLY main subjects are those actually photographed/);
+    assert.match(standard,/do not invent a new person, pet, vehicle or companion/);
+    assert.match(standard,/A cropped hand or arm holding a pet is not a request to create a whole person/);
+    assert.match(standard,/OUTFIT ALTERNATIVES for existing subjects ONLY/);
    }
   }
  }
@@ -167,10 +168,10 @@ test('Automatic photo mode needs no manual subject or paid classification pass',
   const data=await result.json();
   assert.equal(data.promptVersion,'identity-first-48-worlds-v1');
   assert.equal(calls.length,1,'Use the same model edit, no extra subject-classifier request');
-  assert.match(calls[0].prompt,/For a pet, preserve its exact face/);
-  assert.match(calls[0].prompt,/For a person, preserve the actual eyes/);
+  assert.match(calls[0].prompt,/ONLY main subjects are those actually photographed/);
+  assert.match(calls[0].prompt,/same recognizable eyes, nose\/muzzle, ears, face shape/);
   assert.match(calls[0].prompt,/prehistoric/);
-  assert.match(calls[0].prompt,/Do not invent new subjects/);
+  assert.match(calls[0].prompt,/do not invent a new person, pet, vehicle or companion/);
   assert.ok(calls[0].prompt.length<2200);
  }
 });

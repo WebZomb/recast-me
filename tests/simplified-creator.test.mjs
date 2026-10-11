@@ -61,9 +61,18 @@ test('Photo and AI permissions are explicit but not a book',()=>{
  assert.match(page,/data-go-step="2">2 · Style/);
  assert.match(source('creation-wizard.js'),/let step=1/);
  assert.match(source('creation-wizard.js'),/Never label a random uploaded photo/);
- assert.match(readFileSync(new URL('../src/identity-first-adventure-prompt.js',import.meta.url),'utf8'),/Recognize the real subjects directly from the uploaded photo/);
+ assert.match(readFileSync(new URL('../src/identity-first-adventure-prompt.js',import.meta.url),'utf8'),/ONLY main subjects are those actually photographed/);
  assert.match(page,/type="radio" name="qualityMode" value="high" checked hidden/);
 });
+test('Choosing another photo replaces old uploads instead of secretly merging subjects',()=>{
+ const app=source('app.js');
+ assert.match(page,/id="photos" type="file" accept="image\/\*" multiple/);
+ assert.match(app,/photos\.addEventListener\('change',\(\)=>\{/);
+ assert.match(app,/const picked=\[\.\.\.photos\.files\]/);
+ assert.doesNotMatch(app,/selectedPhotoFiles|const original=\[\.\.\.selectedPhotoFiles\]/);
+ assert.match(app,/picked\.slice\(0,4\)/);
+});
+
 test('Small main balance with full resets on request, no hidden allowance changes',()=>{
  assert.match(page,/id="render-credits-more"/);
  assert.match(page,/id="render-credits-details"/);
