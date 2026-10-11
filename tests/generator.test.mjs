@@ -71,7 +71,7 @@ test('refining a saved version includes original pet image and the previous rend
   const second=await (await highQualityTransform(submission({photo:null,branch:first,world:'A snowy floating island'}),env)).json();
   assert.equal(second.persisted,true);
   assert.equal(calls[1].refs.length,2);
-  assert.match(calls[1].prompt,/last reference image is the previous successful Recast/i);
+  assert.match(calls[1].prompt,/last image is a previous Recast for continuity/i);
   const saved=JSON.parse(String(env.ARTWORK.objects.get(`requests/${second.requestId}/request.json`)));
   assert.equal(saved.parentRequestId,first.requestId);
   assert.equal(saved.inputCount,2);
