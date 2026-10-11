@@ -22,7 +22,7 @@ const application = {
     if(url.pathname === '/api/admin/model-test' && request.method === 'POST'){
       try{
         requireAdmin(request,env);
-        const models={'dev-edit':'@cf/black-forest-labs/flux-2-dev','nano-banana':'@cf/black-forest-labs/flux-2-dev',dev:'@cf/black-forest-labs/flux-2-dev',klein9:'@cf/black-forest-labs/flux-2-klein-9b',klein4:'@cf/black-forest-labs/flux-2-klein-4b'};
+        const models={'qwen-protected':'@cf/black-forest-labs/flux-2-dev','fill-protected':'@cf/black-forest-labs/flux-2-dev','dev-edit':'@cf/black-forest-labs/flux-2-dev','nano-banana':'@cf/black-forest-labs/flux-2-dev',dev:'@cf/black-forest-labs/flux-2-dev',klein9:'@cf/black-forest-labs/flux-2-klein-9b',klein4:'@cf/black-forest-labs/flux-2-klein-4b'};
         const choice=url.searchParams.get('model');
         if(!Object.hasOwn(models,choice))return Response.json({error:'Choose a supported test model.'},{status:400});
         const form=await request.formData();form.set('qualityMode',choice.startsWith('klein')?'quick':'high');form.set('source','owner-model-test');

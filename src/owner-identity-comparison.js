@@ -1,5 +1,7 @@
 // Explicit authenticated Model Lab experiments only; never a public model selector.
 export const OWNER_IDENTITY_MODELS=Object.freeze({
+ 'qwen-protected':Object.freeze({endpoint:'fal-ai/qwen-image-edit/inpaint',queueRoot:'fal-ai/qwen-image-edit',label:'Qwen · protected head'}),
+ 'fill-protected':Object.freeze({endpoint:'fal-ai/flux-pro/v1/fill',queueRoot:'fal-ai/flux-pro',label:'FLUX Fill · protected head'}),
  'dev-edit':Object.freeze({endpoint:'fal-ai/flux-2/edit',queueRoot:'fal-ai/flux-2',label:'FLUX.2 dev · edit recipe'}),
  'nano-banana':Object.freeze({endpoint:'fal-ai/nano-banana/edit',queueRoot:'fal-ai/nano-banana',label:'Nano Banana · original'})
 });

@@ -1,3 +1,4 @@
+import {protectedChoice,runProtectedFaceEdit} from './protected-face-edit.js';
 import {prepareFalInput,decodeFalInlineResult,decodeFalInlineImage,FAL_PILOT_HEADERS,FAL_ENDPOINT} from './fal-format.js';
 import {customerNano} from './customer-identity.js';
 import {ownerIdentityModel} from './owner-identity-comparison.js';
@@ -50,6 +51,9 @@ export async function runFalEdit(env,model,originalRequest){
  const endpoint=candidate?.endpoint||(publicNano?'fal-ai/nano-banana/edit':FAL_ENDPOINT);
  const queueRoot=candidate?.queueRoot||(publicNano?'fal-ai/nano-banana':undefined);
  const prepared=await prepareFalInput(model,originalRequest);
+ if(candidate&&protectedChoice(env.RECAST_OWNER_IDENTITY_MODEL)){
+  try{return await runProtectedFaceEdit(env,prepared,candidate)}catch(error){if(error.reason==='pending')throw error;throw Object.assign(Error(error.message),{reason:'protected_edit',cause:error})}
+ }
  const nano=endpoint==='fal-ai/nano-banana/edit';
  if(nano&&(env.CONTENT_MODERATION_ENABLED!=='true'||!env.MODERATION_OPENAI_API_KEY))throw Object.assign(new Error('Candidate requires existing image safety screening.'),{reason:'configuration'});
  const input=nano?{prompt:prepared.prompt,image_urls:prepared.image_urls,num_images:1,aspect_ratio:'4:5',output_format:'jpeg',safety_tolerance:'4',sync_mode:true,limit_generations:true}:prepared;

@@ -10,5 +10,8 @@
   },
   "devDependencies": {
     "wrangler": "^4.38.0"
+  },
+  "dependencies": {
+    "fast-png": "6.2.0"
   }
 }

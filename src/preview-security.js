@@ -308,8 +308,8 @@ export function secureApplication(application) {
           if(path==='/api/admin/model-test'){
             requireOwner(request,env);
             const choice=url.searchParams.get('model');
-            if(!['dev','dev-edit','nano-banana','klein9','klein4'].includes(choice))throw error('invalid_model','Choose a supported test model.',400);
-            const experimental=['dev-edit','nano-banana'].includes(choice);
+            if(!['dev','dev-edit','nano-banana','qwen-protected','fill-protected','klein9','klein4'].includes(choice))throw error('invalid_model','Choose a supported test model.',400);
+            const experimental=['dev-edit','nano-banana','qwen-protected','fill-protected'].includes(choice);
             env={...env,RECAST_RENDER_MODE:choice.startsWith('klein')?'quick':'high'};
             if(experimental){
               if(form.get('ownerProvider')!=='fal'||env.FAL_OWNER_TEST_ENABLED!=='true')throw error('owner_fal_not_enabled','This comparison requires the activated owner fal test.',503);
@@ -333,7 +333,7 @@ export function secureApplication(application) {
           }
           if(env.RECAST_RENDER_MODE==='high' && ['fal','auto'].includes(String(env.RECAST_HQ_PROVIDER||'cloudflare'))){
             const selected=await selectHighQualityProvider(env,form);
-            const estimated=(env.RECAST_OWNER_IDENTITY_MODEL==='nano-banana'||(env.RECAST_OWNER_PILOT_REQUEST!=='true'&&env.FAL_CUSTOMER_MODEL==='nano-banana'&&selected.host==='fal'))?0.039:selected.host==='fal'?selected.prices.falUsd:selected.prices.cloudflareUsd;
+            const estimated=['qwen-protected','fill-protected'].includes(env.RECAST_OWNER_IDENTITY_MODEL)?0.065:(env.RECAST_OWNER_IDENTITY_MODEL==='nano-banana'||(env.RECAST_OWNER_PILOT_REQUEST!=='true'&&env.FAL_CUSTOMER_MODEL==='nano-banana'&&selected.host==='fal'))?0.039:selected.host==='fal'?selected.prices.falUsd:selected.prices.cloudflareUsd;
             const reserve=Math.max(Number(env.AI_CALL_RESERVE_CENTS||7),Math.ceil(estimated*100)+1);
             env=wrapImageProvider({...env,RECAST_PROVIDER_ATTEMPT_ID:fingerprint||crypto.randomUUID(),AI_CALL_RESERVE_CENTS:String(reserve)},selected);
           }
