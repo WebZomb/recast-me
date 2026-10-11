@@ -80,6 +80,8 @@ test('selected artwork beats stale storage and final review is required before p
   await ui.select();assert.equal(new URL(ui.calls[0][0]).searchParams.get('requestId'),'new');
   assert.match(ui.grid.innerHTML,/Shop Mug/);assert.doesNotMatch(ui.grid.innerHTML,/href="#start"/);
   assert.match(source,/Check your design/);assert.match(source,/The watermark won't print/);
+  assert.match(source,/details class="final-review-note"><summary>Print &amp; gift details<\/summary>/);
+  assert.match(source,/Enter their name and shipping address at checkout/);
   assert.match(source,/Confirm design & checkout/);
   assert.match(source,/confirmDesign:true/);
 });
