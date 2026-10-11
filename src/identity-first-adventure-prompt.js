@@ -15,10 +15,10 @@ const roles=subject=>{
 };
 export function compactIdentity(subjectType='person'){
  const role=roles(subjectType);
- const pet='Same actual pet: keep exact eyes, nose, muzzle, ear shape/angle, head view, expression, coat colors and marking positions. Retain natural anatomy and appearance; do not invent masculine/feminine traits.';
+ const pet='Same actual pet: keep exact eyes, nose, muzzle, ear shape/angle, head view, expression, coat colors and marking positions. Keep its actual age and proportions (a puppy stays a puppy), not an adult breed-template face. Retain natural anatomy and appearance; do not invent masculine/feminine traits.';
  const person='Same actual person or people: preserve EACH face, eyes, nose, mouth, jaw, hairline, skin tone, natural age and expression. No generic beauty face or invented gender changes.';
  const vehicle='Same real vehicle: keep its silhouette, grille, lights, wheels, trim, color and proportions.';
- if(role.auto)return 'IDENTITY FIRST: The ONLY main subjects are those actually photographed; do not invent a new person, pet, vehicle or companion. Keep the same recognizable eyes, nose/muzzle, ears, face shape, natural age, expression, fur markings or other unique features. A cropped hand or arm holding a pet is not a request to create a whole person. Use the uploaded photo as the identity anchor.';
+ if(role.auto)return 'IDENTITY FIRST: The ONLY main subjects are those actually photographed; do not invent a new person, pet, vehicle or companion. Keep the same recognizable eyes, nose/muzzle, ears, face shape, natural age, expression, fur markings or other unique features. A puppy stays a puppy; do not lengthen its muzzle or mature its face. A cropped hand or arm holding a pet is not a request to create a whole person. Use the uploaded photo as the identity anchor.';
  const parts=[role.pet&&pet,role.person&&person,role.vehicle&&vehicle].filter(Boolean);
  return 'IDENTITY FIRST: '+(parts.join(' ')||'Keep the exact real subject, its unique features, colors and proportions.');
 }
@@ -46,7 +46,7 @@ export function makeIdentityFirstAdventurePrompt({
   'WORLD: '+setting+'. '+costume,
   guide?.look?'FINISH: '+guide.look+'.':'',
   'CHANGE ONLY outfit, background, props and scene lighting; for illustration, change drawing style, NOT facial identity. Keep faces visible and original head angles. The original subject must be the clear, close foreground focus, not a tiny sidekick to an invented hero. REPLACE THE ORIGINAL BACKGROUND and match light and shadow; no obvious cutout.',
-  role.pet||role.auto?'Real pets keep animal bodies and paws, never human hands or human torsos.':'',
+  role.pet||role.auto?'Real pets keep animal bodies and paws, never human hands or human torsos. Keep the actual animal body and leg proportions; no upright humanoid pose, human clothing sleeves or human-style boots.':'',
   refs,
   referenceGuide?'PHOTO ROLES: '+clean(referenceGuide,520)+'.':'',
   notes?'CUSTOMER DETAILS: '+clean(notes,1200)+'.':'',
