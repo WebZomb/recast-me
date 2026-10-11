@@ -88,7 +88,8 @@ test('Small main balance with full resets on request, no hidden allowance change
  const credit={enabled:true,initialized:true,free:3,remaining:3,bonus:0,freeAllowance:3,standardAllowance:5,standardRemaining:5,resetAt:'2026-10-11T17:00:00Z',standardResetAt:'2026-10-11T20:00:00Z'};
  assert.equal(creditHeadline(credit),'High Quality: 3 left  ·  Standard: 5 left');
  assert.match(creditSummary(credit),/Free Standard unlocks after High Quality is used/);
- assert.match(creditSummary(credit),/Oct 11/);
+ for(const value of [credit.resetAt,credit.standardResetAt])
+  assert.ok(creditSummary(credit).includes(new Date(value).toLocaleString([], {month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})));
  const exhausted=fallbackState({local:{ready:true},modes:{high:{ready:true},quick:{ready:true}}},{...credit,remaining:0,free:0,standardRemaining:0});
  assert.equal(exhausted.standardExhausted,true);
  assert.equal(exhausted.standardReady,false);

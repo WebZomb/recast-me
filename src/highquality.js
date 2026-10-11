@@ -2,6 +2,7 @@ import {moderateContent,screenText,CONTENT_MESSAGE} from './content-safety.js';
 import {makeFalCompactPrompt} from './fal-prompt.js';
 import {makeStandardAdventurePrompt} from './standard-adventure-prompt.js';
 import {referenceDirections} from './reference-labels.js';
+import {originalReferenceCount,prepareSavedReference} from './refinement-references.js';
 import { assertRenderReady, readinessSnapshot, recordRenderHealth } from './render-health.js';
 const PROMPT_VERSION = "identity-first-48-worlds-v1";
 const DEFAULT_HIGH_QUALITY = "@cf/black-forest-labs/flux-2-dev";
@@ -317,10 +318,10 @@ async function generateQuick({env,model,styleId,subjectType,notes,referenceGuide
   throw Object.assign(new Error("provider"),{reason:"provider",cause:firstError});
 }
 
-async function store(env,{requestId,accessToken,styleId,subjectType,notes,customWorld,parentRequestId,source,sourceTweet,qualityMode,inputs,image,previewMime,safety,modelUsed,attemptKind,providerUsed,promptVersion}){
+async function store(env,{requestId,accessToken,styleId,subjectType,notes,customWorld,parentRequestId,source,sourceTweet,qualityMode,inputs,originalInputCount,image,previewMime,safety,modelUsed,attemptKind,providerUsed,promptVersion}){
   if(!env.ARTWORK)return{persisted:false,storageError:"ARTWORK binding is missing."};
   const now=new Date().toISOString();
-  const metadata={creditWalletId:env.RECAST_CREDIT_WALLET?.id||null,requestId,accessToken,styleId,styleName:STYLES[styleId]?.name||"Custom World",subjectType,notes,customWorld,parentRequestId:parentRequestId||null,previewMime,source:source||"site",sourceTweet:sourceTweet||null,safety,status:"preview_ready",createdAt:now,updatedAt:now,inputCount:inputs.length,paid:false,fulfillment:"not_started",modelUsed,providerUsed:providerUsed||'cloudflare',attemptKind,qualityMode,promptVersion:promptVersion||PROMPT_VERSION};
+  const metadata={creditWalletId:env.RECAST_CREDIT_WALLET?.id||null,requestId,accessToken,styleId,styleName:STYLES[styleId]?.name||"Custom World",subjectType,notes,customWorld,parentRequestId:parentRequestId||null,previewMime,source:source||"site",sourceTweet:sourceTweet||null,safety,status:"preview_ready",createdAt:now,updatedAt:now,inputCount:inputs.length,originalInputCount,paid:false,fulfillment:"not_started",modelUsed,providerUsed:providerUsed||'cloudflare',attemptKind,qualityMode,promptVersion:promptVersion||PROMPT_VERSION};
   try{
     for(let i=0;i<inputs.length;i++)await env.ARTWORK.put(requestKey(requestId,`input-${i}.jpg`),await inputs[i].arrayBuffer());
     await env.ARTWORK.put(requestKey(requestId,"preview.b64"),image);
@@ -390,6 +391,9 @@ export async function highQualityTransform(request,env,{trustedSocialJob=false}=
     // Cloudflare input images MUST remain <512px; only fal receives 1024px.
     if(qualityMode==='high'&&env.RECAST_HQ_SELECTED_PROVIDER==='fal'&&detailedFiles.length)
       inputFiles=detailedFiles;
+    // Keep full-detail identity anchors separate from provider-sized copies.
+    let storedInputs=[...inputFiles];
+    let originalInputCount=inputFiles.length;
     let referenceGuide='';
     try{referenceGuide=referenceDirections(incoming.get('referenceLabels'),inputFiles.length,subjectType==='family'?incoming.get('subjectCount'):'');}
     catch(e){return json({error:'bad_reference_labels',userMessage:e.message,reason:'input'},400);}
@@ -406,11 +410,19 @@ export async function highQualityTransform(request,env,{trustedSocialJob=false}=
       if(!(branchPreview instanceof File)||!ACCEPTED_REFERENCE_TYPES.has(branchPreview.type)||branchPreview.size>2_000_000)return json({error:"missing_branch_preview",userMessage:"The previous Recast could not be prepared. Try selecting it again.",reason:"input"},400);
       if(inputFiles.length>3)return json({error:"too_many_references",userMessage:"For refinements, choose up to 3 original photos alongside the saved Recast.",reason:"input"},400);
       if(!inputFiles.length){
-        for(let i=0;i<Math.min(3,Number(saved.inputCount)||0);i++){
+        originalInputCount=originalReferenceCount(saved);
+        if(!originalInputCount)return json({error:"missing_original_reference",userMessage:"Add your original photo to refine this picture.",reason:"input"},400);
+        for(let i=0;i<originalInputCount;i++){
           const original=await env.ARTWORK.get(requestKey(branchRequestId,`input-${i}.jpg`));
-          if(original)inputFiles.push(new File([await original.arrayBuffer()],`original-${i}.jpg`,{type:"image/jpeg"}));
+          // Never silently replace a missing subject with a generated face.
+          if(!original)return json({error:"missing_original_reference",userMessage:"Add your original photo to refine this picture.",reason:"input"},400);
+          const file=new File([await original.arrayBuffer()],`original-${i}.jpg`,{type:"image/jpeg"});
+          storedInputs.push(file);
+          try{inputFiles.push(await prepareSavedReference(env,file,{qualityMode,provider:env.RECAST_HQ_SELECTED_PROVIDER}));}
+          catch{return json({error:"reference_preparation_failed",userMessage:"Your saved photo could not be prepared. Please try again or add the original photo.",reason:"input",retryable:true},503);}
         }
       }
+      storedInputs.push(branchPreview);
       inputFiles.push(branchPreview);
       parentRequestId=branchRequestId;
     }
@@ -451,7 +463,7 @@ export async function highQualityTransform(request,env,{trustedSocialJob=false}=
     const requestId=`RC-${Date.now().toString(36).toUpperCase()}-${randomHex(3).toUpperCase()}`;
     const accessToken=randomHex(32);
     safety.outputScreening=await moderateContent(env,{images:[new File([Uint8Array.from(atob(image),c=>c.charCodeAt(0))],"output",{type:previewMime})]});
-    const stored=await store(env,{requestId,accessToken,styleId,subjectType,notes,customWorld,parentRequestId,source,sourceTweet,qualityMode,inputs:inputFiles,image,previewMime,safety,modelUsed:generated.modelUsed,providerUsed:generated.providerUsed,promptVersion:PROMPT_VERSION,attemptKind:generated.attemptKind});
+    const stored=await store(env,{requestId,accessToken,styleId,subjectType,notes,customWorld,parentRequestId,source,sourceTweet,qualityMode,inputs:storedInputs,originalInputCount,image,previewMime,safety,modelUsed:generated.modelUsed,providerUsed:generated.providerUsed,promptVersion:PROMPT_VERSION,attemptKind:generated.attemptKind});
 
     await writeAttemptReceipt(env,clientAttemptId,{status:"success",completedAt:new Date().toISOString(),durationMs:Date.now()-attemptStartedAt,requestId,qualityMode,modelUsed:generated.modelUsed,providerUsed:generated.providerUsed,providerRequestId:generated.providerRequestId,attemptKind:generated.attemptKind,persisted:stored.persisted});
     return json({ok:true,requestId,accessToken,style:STYLES[styleId]?.name||"Custom World",image:`data:${previewMime};base64,${image}`,persisted:stored.persisted,storageError:stored.storageError,qualityMode,qualityLabel:qualityMode==="quick"?"Standard Preview":"High-Quality Preview",modelUsed:generated.modelUsed,providerUsed:generated.providerUsed,usedSafeRetry:generated.usedSafeRetry,usedFastFallback:false,promptVersion:PROMPT_VERSION,clientAttemptId});
