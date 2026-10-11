@@ -840,7 +840,13 @@ form.addEventListener('submit',async e=>{
 
     for(let i=0;i<files.length;i++){
       button.textContent=`Preparing photo ${i+1}…`;
+      // Cloudflare Standard and HQ backup accept at most 512x512 per
+      // reference. Keep the existing 500px version for those providers.
       fd.append(`image_${i}`,await resizeFile(files[i]));
+      // fal HQ accepts a higher-detail reference. A second, <=1MP version
+      // provides finer eyes/muzzle/face details without a second AI request.
+      // The Worker uses this ONLY if the already-selected HQ host is fal.
+      if(qualityMode==='high')fd.append(`hq_image_${i}`,await resizeFile(files[i],1024));
     }
     if(branchReference){
       button.textContent='Preparing saved version…';

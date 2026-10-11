@@ -136,6 +136,50 @@ test('Actual Standard and HQ Cloudflare model submissions receive the same short
  }
 });
 
+test('fal gets higher-detail source pixels, while Cloudflare and Standard keep small compatible input',async()=>{
+ const small=new File([CLEAN],'small.jpg',{type:'image/jpeg'});
+ const detail=new File([CLEAN,CLEAN],'detail.jpg',{type:'image/jpeg'});
+ for(const [mode,provider,expected] of [
+   ['high','fal',detail.size],['high','cloudflare',small.size],['quick','cloudflare',small.size]
+ ]){
+  const selected=[];
+  const env={ARTWORK:new Bucket(),IMAGES:imageMock(),
+   RECAST_HQ_SELECTED_PROVIDER:provider,
+   IMAGE_MODEL_HIGH_QUALITY:'@cf/black-forest-labs/flux-2-dev',
+   IMAGE_MODEL_QUICK:'@cf/black-forest-labs/flux-2-klein-9b',
+   AI:{async run(model,{multipart}){
+    const fields=await new Response(multipart.body,{headers:{'content-type':multipart.contentType}}).formData();
+    selected.push({model,file:fields.get('input_image_0'),imageCount:[...fields.keys()].filter(k=>k.startsWith('input_image_')).length});
+    return {image:CLEAN.toString('base64')};
+   }}};
+  const form=new FormData();form.set('style','dinosaur-adventure');form.set('subject','auto');form.set('qualityMode',mode);
+  form.set('image_0',small);
+  if(mode==='high')form.set('hq_image_0',detail);
+  const result=await highQualityTransform(new Request('https://recast.test/api/transform-v2',{method:'POST',body:form}),env);
+  assert.equal(result.status,200,mode+'/'+provider);
+  assert.equal(selected.length,1,'No extra billable inference');
+  assert.equal(selected[0].imageCount,1,'Only one input reference, not both resolutions');
+  assert.equal(selected[0].file.size,expected,mode+'/'+provider);
+ }
+});
+
+test('Incomplete or extra detail uploads fail before any AI inference',async()=>{
+ for(const invalid of ['partial','standard']){
+  let calls=0;
+  const env={ARTWORK:new Bucket(),IMAGES:imageMock(),
+   RECAST_HQ_SELECTED_PROVIDER:'fal',
+   AI:{async run(){calls++;return {image:CLEAN.toString('base64')}}}};
+  const form=new FormData();form.set('style','royal');form.set('subject','auto');
+  form.set('qualityMode',invalid==='standard'?'quick':'high');
+  form.set('image_0',new File([CLEAN],'one.jpg',{type:'image/jpeg'}));
+  if(invalid==='partial')form.set('image_1',new File([CLEAN],'two.jpg',{type:'image/jpeg'}));
+  form.set('hq_image_0',new File([CLEAN,CLEAN],'big.jpg',{type:'image/jpeg'}));
+  const result=await highQualityTransform(new Request('https://recast.test/api/transform-v2',{method:'POST',body:form}),env);
+  assert.equal(result.status,400,invalid);
+  assert.equal(calls,0,'Invalid high detail references never start inference');
+ }
+});
+
 test('Business safety, allowance and provider config stay untouched',()=>{
  assert.match(source,/IMAGE_QUICK_GUIDANCE\|\|5/);
  assert.match(source,/IMAGE_QUICK_STEPS\|\|12/);

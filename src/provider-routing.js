@@ -5,7 +5,7 @@ export const PROVIDER_HEALTH_PREFIX='system/providers/hq-';
 const bounded=(value,fallback)=>{const n=Number(value);return Number.isFinite(n)&&n>0?n:fallback};
 export function estimateHighQualityCosts({width=1024,height=1280,steps=18,photos=1}={}){
  const outTiles=Math.ceil(width/512)*Math.ceil(height/512);
- const inTiles=Math.max(1,photos); // Browser prepares <=500px reference photos.
+ const inTiles=Math.max(1,photos); // Cloudflare always gets <=500px inputs; fal receives optional <=1MP detailed references.
  const cloudflare=steps*(outTiles*.00041+inTiles*.00021);
  // Conservative whole-megapixel estimate; verify against invoices at scale.
  const falUsd=.012*(Math.ceil(width*height/1e6)+photos);

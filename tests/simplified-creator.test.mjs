@@ -73,6 +73,13 @@ test('Choosing another photo replaces old uploads instead of secretly merging su
  assert.match(app,/picked\.slice\(0,4\)/);
 });
 
+test('High Quality sends an optional one-megapixel identity reference without new customer steps',()=>{
+ const app=source('app.js');
+ assert.match(app,/fd\.append\(`image_\$\{i\}`,await resizeFile\(files\[i\]\)\)/);
+ assert.match(app,/if\(qualityMode==='high'\)fd\.append\(`hq_image_\$\{i\}`,await resizeFile\(files\[i\],1024\)\)/);
+ assert.match(page,/One clear photo works best/);
+});
+
 test('Small main balance with full resets on request, no hidden allowance changes',()=>{
  assert.match(page,/id="render-credits-more"/);
  assert.match(page,/id="render-credits-details"/);
