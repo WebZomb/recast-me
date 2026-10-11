@@ -19,14 +19,14 @@ $('#use-demo-dog').addEventListener('click',async e=>{
   const file=new File([blob],'recast-demo-jack-russell.webp',{type:'image/webp'});
   const transfer=new DataTransfer();transfer.items.add(file);
   $('#reference').files=transfer.files;
-  $('#subject').value='pet';$('#engine').value='dev';$('#host').value='fal';syncHost();showOriginal(file);
-  $('#direction').value='Turn this exact dog into a regal photographic portrait wearing an elegant embroidered royal blue cape and a small crown. Preserve the original eyes, face, nose, floppy ears, coat markings and natural dog proportions.';
-  $('#environment').value='A grand sunlit European palace courtyard, luxurious architecture, warm cinematic natural light, photorealistic professional photography.';
+  $('#engine').value='dev';$('#host').value='fal';syncHost();showOriginal(file);
+  $('#direction').value='Add a royal blue embroidered cape and a small crown. Preserve the original face, eyes, features, markings, age, expression, head angle and natural anatomy.';
+  $('#environment').value='A sunlit palace courtyard with warm natural light.';
   $('#status').textContent='Demo dog loaded. Choose Generate one comparison image to test the fal High Quality model.';
  }catch(error){$('#status').textContent=error.message}finally{button.disabled=false}
 });
 $('#lab').addEventListener('submit',async e=>{
- e.preventDefault();const model=$('#engine').value;const label=$('#engine').selectedOptions[0].textContent;const host=$('#host').value;const subject=$('#subject').value;const notes=$('#direction').value;const world=$('#environment').value;const file=$('#reference').files[0];const token=$('#token').value.trim();const started=Date.now();$('#run').disabled=true;$('#status').textContent='Preparing '+label+'…';
+ e.preventDefault();const model=$('#engine').value;const label=$('#engine').selectedOptions[0].textContent;const host=$('#host').value;const subject='auto';const notes=$('#direction').value;const world=$('#environment').value;const file=$('#reference').files[0];const token=$('#token').value.trim();const started=Date.now();$('#run').disabled=true;$('#status').textContent='Preparing '+label+'…';
  const timer=setInterval(()=>$('#status').textContent=`Rendering ${label} · ${Math.floor((Date.now()-started)/1000)} seconds elapsed`,1000);
  try{
   if(host==='fal'&&!falModels.has(model))throw Error('Choose Cloudflare for the Standard engines.');
