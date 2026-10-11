@@ -1,5 +1,5 @@
 import {ADVENTURE_GUIDES,adventureMode} from '../public/adventure-guides.js';
-export const CUSTOMER_IDENTITY_VERSION='nano-identity-adventures-v3';
+export const CUSTOMER_IDENTITY_VERSION='nano-identity-adventures-v4';
 export function customerNano(env){return env.FAL_CUSTOMER_MODEL==='nano-banana'&&env.RECAST_OWNER_PILOT_REQUEST!=='true'&&env.RECAST_HQ_SELECTED_PROVIDER==='fal';}
 export function customerIdentityPrompt({styleId,subjectType='auto',notes='',customWorld='',hasBranch=false}){
  const guide=ADVENTURE_GUIDES[styleId];
@@ -8,7 +8,7 @@ export function customerIdentityPrompt({styleId,subjectType='auto',notes='',cust
  const background=guide?.scene||String(customWorld).trim().slice(0,800);
  if(!background)throw Object.assign(Error('Choose a style or describe your world.'),{reason:'input'});
  return ['Edit the original photograph. Preserve each retained face, eyes, nose or muzzle, mouth, ears, markings, age, expression and head angle. Do not beautify or mature the face.',subject,
- 'Change outfit and background only. Preserve original pose, camera angle and close framing; do not zoom out or invent a standing pose. Animals retain natural anatomy and paws.',
+ 'Change outfits and background; remove only excluded figures completely, including their torsos, clothing, arms and hands. Preserve included subjects and their limbs. Reconstruct only newly exposed areas with natural anatomy, clothing or the chosen scene. Preserve original pose, camera angle and close framing; do not zoom out or invent a standing pose. Animals retain natural anatomy and paws.',
  'Outfit: '+outfit,'Background: '+background,
  guide?.look?'Finish: '+guide.look:'',guide&&adventureMode(styleId)==='illustration'?'Use the chosen illustration style while keeping distinctive facial proportions.':'',
  hasBranch?'Original photos define identity; the last image is previous artwork for continuity, not a new face.':'Use original photos as identity references; do not duplicate subjects.',
