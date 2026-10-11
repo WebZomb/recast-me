@@ -19,3 +19,12 @@ Mocked tests verify instructions/routing, not actual removal or likeness. No ass
 Owner confirms sticker AND mug orders were already performed. RM127's recommendation to place a sticker order must not be repeated as outstanding work without a specific unresolved failure; current supplier fulfillment status was not freshly checked. RM127 masked cleanup remains an unimplemented alternative, superseded for now by this authorized single-render experiment.
 
 Rollback: revert RM128 source changes to RM126 runtime (keeping cumulative docs); restore Nano recipe v3 if owner sees likeness regression. Release commit and live receipts to follow.
+
+## Final release receipt
+PR #47 head b03498cfe12d0db8084c7e63c88bfb33e90d1ade, squash main d2ba30884eb2354974cbeeb149d1dd62d14dcc56, source tree 8e6cb55834000896e2169bc5f09f0120110e09f6. Local staged tree byte-matched remote PR and merged main before syncing.
+
+Security CI 38166821547 and customer-policy CI 38166821555 PASS (479 tests, bundle, customer/owner WebKit/Chromium and Model Lab). Guarded deployment 38166991324 PASS, including production read-only check. Public audit 38166991342 PASS including production browser, product examples and isolated mock social commerce.
+
+Direct live model-status HTTP200 confirms nano-identity-adventures-v4 and unchanged fal-ai/nano-banana/edit HQ; health HTTP200 Worker f4d5af16-c341-4b3d-b7ff-53188f4eed6f timestamp 2026-10-11T19:12:30.052396Z. Ready for owner's same-photo Football HQ Automatic visual test. No assistant paid generations/orders. Removal quality and preserved likeness remain visually unverified for v4.
+
+Rollback runtime by reverting PR #47 source changes from d2ba30884eb2354974cbeeb149d1dd62d14dcc56, retaining documentation history.
