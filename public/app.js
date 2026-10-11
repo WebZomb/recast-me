@@ -205,10 +205,9 @@ document.querySelector('#custom-world').addEventListener('input',()=>{
 
 const photos = document.querySelector('#photos');
 let photoURLs=[];
-let selectedPhotoFiles=[];
 function showSelectedPhotos(message=''){
   photoURLs.forEach(url=>URL.revokeObjectURL(url));photoURLs=[];
-  const selected=[...photos.files];selectedPhotoFiles=selected;
+  const selected=[...photos.files];
   document.querySelector('#file-summary').textContent=message||(selected.length?`${selected.length} photo${selected.length===1?'':'s'} ready`:'No photos selected');
   const root=document.querySelector('#photo-thumbnails');root.replaceChildren();
   selected.forEach((file,index)=>{
@@ -222,10 +221,16 @@ function showSelectedPhotos(message=''){
 }
 const wizard=initCreationWizard({styles:STYLES,photos,subject:document.querySelector('#subject'),style:styleSelect,updateWorld:updateWorldFields,hasBranch:()=>Boolean(branchReference)});
 photos.addEventListener('change',()=>{
-  const original=[...selectedPhotoFiles];
-  for(const file of photos.files)if(!original.some(old=>old.name===file.name&&old.size===file.size&&old.lastModified===file.lastModified))original.push(file);
-  const transfer=new DataTransfer();original.slice(0,4).forEach(f=>transfer.items.add(f));photos.files=transfer.files;
-  showSelectedPhotos(original.length>4?'Using the first 4 photos. Remove or replace any below.':'');
+  // A new upload replaces the previous set. Previously we silently merged old
+  // subjects into new jobs (e.g. an earlier car/person alongside a new pet).
+  // Selecting multiple photos together still supports up to four references.
+  const picked=[...photos.files];
+  if(picked.length>4){
+    const transfer=new DataTransfer();
+    picked.slice(0,4).forEach(f=>transfer.items.add(f));
+    photos.files=transfer.files;
+  }
+  showSelectedPhotos(picked.length>4?'Using the first 4 photos.':'');
 });
 document.querySelector('#surprise-world').addEventListener('click',()=>{
   const choices=STYLES.filter(s=>s[0]!==styleSelect.value);const pick=choices[Math.floor(Math.random()*choices.length)];styleSelect.value=pick[0];updateWorldFields(true);
