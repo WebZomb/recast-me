@@ -76,7 +76,10 @@ const policy={highDaily:3,standardDaily:5,purchaseBonus:3,websiteCalls:70,social
    ]);
    assert.equal(await page.locator('.reference-label').count(),0,'Two photos are automatic by default');
    assert.match(await page.locator('#photo-include-summary').textContent(),/Automatic/);
-   await page.locator('#photo-subject-details > summary').click();
+   assert.equal(await page.locator('#change-photo-subject').count(),1,'One inclusion disclosure');
+   assert.equal(await page.getByText('Choose who to include (optional)',{exact:true}).count(),0);
+   await page.locator('#change-photo-subject').focus();
+   await page.keyboard.press('Enter');
    await page.locator('#select-photo-faces').click();
    await page.locator('.focus-surface').first().click({position:{x:40,y:40}});
    assert.equal(await page.locator('.face-marker').count(),1);

@@ -88,7 +88,7 @@ export const ADVENTURE_GUIDES = Object.freeze({
   },
   "football": {
     "scene": "on the turf of a floodlit American football stadium with goalposts and filled stands",
-    "pet": "a fitted unbranded sports jersey and simple team-color bandana, all four paws grounded",
+    "pet": "a fitted unbranded sports jersey and simple team-color bandana",
     "person": "an original jersey, football trousers and shoulder-pad silhouette without trademarks",
     "look": "photoreal night sports editorial, strong arena lights and green turf",
     "teaser": "An unbranded football uniform in a dramatic floodlit stadium."

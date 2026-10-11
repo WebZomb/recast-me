@@ -24,7 +24,8 @@ export function initCreationWizard({styles,photos,subject,style,updateWorld,hasB
   const selected=[...photos.files],choices=roles();
   focus.refresh();
   $('#photo-step-error').textContent='';
-  $('#photo-include-summary').hidden=!selected.length;
+  $('#photo-subject-details').hidden=!selected.length;
+  if(!selected.length)$('#photo-subject-details').open=false;
   $('#photo-include-label').textContent=names[kind()]||'Automatic';
   $('#family-count-label').hidden=kind()!=='family';
   // Never label a random uploaded photo "Your pet" based on the last screen.
@@ -92,13 +93,13 @@ export function initCreationWizard({styles,photos,subject,style,updateWorld,hasB
   if(!allWorlds.hidden)style.focus({preventScroll:true});
  });
  setAllWorldsOpen(style.value==='custom'||!['royal','fantasy','space','game'].includes(style.value));
- $('#change-photo-subject').addEventListener('click',()=>{const details=$('#photo-subject-details');details.open=!details.open;if(details.open)details.querySelector('[data-subject-choice]')?.focus();});
+ // The single native summary toggles the optional inclusion controls.
  subject.addEventListener('change',refreshPhotos);$('#family-count').addEventListener('change',refreshPhotos);
  document.addEventListener('recast-photos-change',refreshPhotos);
  document.addEventListener('recast-style-change',refreshAdventures);
  document.querySelectorAll('[data-go-step]').forEach(button=>button.addEventListener('click',()=>go(Number(button.dataset.goStep))));
  $('#recast-form').addEventListener('keydown',event=>{
-  if(event.key==='Enter'&&event.target.tagName!=='TEXTAREA'&&event.target.tagName!=='BUTTON'&&step===1){
+  if(event.key==='Enter'&&event.target.tagName!=='TEXTAREA'&&event.target.tagName!=='BUTTON'&&!event.target.closest('summary')&&step===1){
    event.preventDefault();go(2);
   }
  });
