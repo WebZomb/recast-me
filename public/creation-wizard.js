@@ -5,7 +5,7 @@ export function initCreationWizard({styles,photos,subject,style,updateWorld,hasB
  const $=selector=>document.querySelector(selector);
  const labels=new WeakMap();
  let step=1;
- const names={auto:'Let AI decide',pet:'My pet',person:'Just me','person and pet':'Me + my pet',couple:'Couple',family:'Family',car:'My car',custom:'Other'};
+ const names={auto:'Let AI decide',pet:'My pet',person:'Just me','person and pet':'Me + my pet',couple:'Couple',family:'Family',car:'My car',custom:'Other — describe it'};
  const kind=()=>subject.value||'auto';
  function roles(){
   const type=kind(),count=Number($('#family-count').value);
