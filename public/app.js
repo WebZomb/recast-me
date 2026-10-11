@@ -407,7 +407,6 @@ function updateFallback(){
   if(high)high.hidden=selectedQuality()!=='quick'||Number(creditInfo?.remaining||0)<=0;
   const saved=document.querySelector('#credit-purchase-link');
   if(saved)saved.hidden=!state.exhausted||readRecentVersions().length===0;
-  const reason=document.querySelector('#quality-fallback-reason');
   if(reason&&state.show)reason.textContent=state.standardExhausted
     ?'No previews left. Check reset times above.'
     :state.exhausted
