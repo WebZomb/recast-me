@@ -3,7 +3,7 @@ import {makeFalCompactPrompt} from './fal-prompt.js';
 import {makeStandardAdventurePrompt} from './standard-adventure-prompt.js';
 import {referenceDirections} from './reference-labels.js';
 import { assertRenderReady, readinessSnapshot, recordRenderHealth } from './render-health.js';
-const PROMPT_VERSION = "identity-all-worlds-v5";
+const PROMPT_VERSION = "identity-first-48-worlds-v1";
 const DEFAULT_HIGH_QUALITY = "@cf/black-forest-labs/flux-2-dev";
 const DEFAULT_QUICK = "@cf/black-forest-labs/flux-2-dev";
 
@@ -272,9 +272,10 @@ async function tryGeneration(env,model,prompt,inputFiles,kind,settings){
 }
 
 async function generateHighQuality({env,model,styleId,subjectType,notes,customWorld,inputFiles,hasBranch}){
-  const main=env.RECAST_HQ_SELECTED_PROVIDER==='fal'
-    ?makeFalCompactPrompt({styleId,subjectType,style:STYLES[styleId],notes:safeNotes(notes),customWorld:safeNotes(customWorld),inputCount:inputFiles.length,hasBranch})
-    :makePrompt(styleId,subjectType,notes,inputFiles.length,customWorld,hasBranch);
+  // Both fal HQ and Cloudflare HQ fallback receive the SAME concise
+  // identity-first prompt as Standard. Model settings and call count are fixed.
+  const main=makeFalCompactPrompt({styleId,subjectType,style:STYLES[styleId],
+    notes:safeNotes(notes),customWorld:safeNotes(customWorld),inputCount:inputFiles.length,hasBranch});
   const steps=Math.max(8,Math.min(30,Number(env.IMAGE_HIGH_QUALITY_STEPS||18)));
   const guidance=Math.max(1,Math.min(10,Number(env.IMAGE_HIGH_QUALITY_GUIDANCE||5)));
   const settings={width:1024,height:1280,guidance,steps};
@@ -433,10 +434,10 @@ export async function highQualityTransform(request,env,{trustedSocialJob=false}=
     const requestId=`RC-${Date.now().toString(36).toUpperCase()}-${randomHex(3).toUpperCase()}`;
     const accessToken=randomHex(32);
     safety.outputScreening=await moderateContent(env,{images:[new File([Uint8Array.from(atob(image),c=>c.charCodeAt(0))],"output",{type:previewMime})]});
-    const stored=await store(env,{requestId,accessToken,styleId,subjectType,notes,customWorld,parentRequestId,source,sourceTweet,qualityMode,inputs:inputFiles,image,previewMime,safety,modelUsed:generated.modelUsed,providerUsed:generated.providerUsed,promptVersion:generated.providerUsed==='fal'?'fal-adventure-scenes-v2':qualityMode==='quick'?'standard-identity-scenes-v2':PROMPT_VERSION,attemptKind:generated.attemptKind});
+    const stored=await store(env,{requestId,accessToken,styleId,subjectType,notes,customWorld,parentRequestId,source,sourceTweet,qualityMode,inputs:inputFiles,image,previewMime,safety,modelUsed:generated.modelUsed,providerUsed:generated.providerUsed,promptVersion:PROMPT_VERSION,attemptKind:generated.attemptKind});
 
     await writeAttemptReceipt(env,clientAttemptId,{status:"success",completedAt:new Date().toISOString(),durationMs:Date.now()-attemptStartedAt,requestId,qualityMode,modelUsed:generated.modelUsed,providerUsed:generated.providerUsed,providerRequestId:generated.providerRequestId,attemptKind:generated.attemptKind,persisted:stored.persisted});
-    return json({ok:true,requestId,accessToken,style:STYLES[styleId]?.name||"Custom World",image:`data:${previewMime};base64,${image}`,persisted:stored.persisted,storageError:stored.storageError,qualityMode,qualityLabel:qualityMode==="quick"?"Standard Preview":"High-Quality Preview",modelUsed:generated.modelUsed,providerUsed:generated.providerUsed,usedSafeRetry:generated.usedSafeRetry,usedFastFallback:false,promptVersion:generated.providerUsed==='fal'?'fal-adventure-scenes-v2':qualityMode==='quick'?'standard-identity-scenes-v2':PROMPT_VERSION,clientAttemptId});
+    return json({ok:true,requestId,accessToken,style:STYLES[styleId]?.name||"Custom World",image:`data:${previewMime};base64,${image}`,persisted:stored.persisted,storageError:stored.storageError,qualityMode,qualityLabel:qualityMode==="quick"?"Standard Preview":"High-Quality Preview",modelUsed:generated.modelUsed,providerUsed:generated.providerUsed,usedSafeRetry:generated.usedSafeRetry,usedFastFallback:false,promptVersion:PROMPT_VERSION,clientAttemptId});
   }catch(error){
     const reason=error?.reason||"provider";
     if(['capacity','quota','timeout','unavailable'].includes(reason))await recordRenderHealth(env,env.RECAST_RENDER_SCOPE==='social'?'social':qualityMode,'failed',reason);
