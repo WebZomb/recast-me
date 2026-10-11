@@ -28,7 +28,7 @@ test('All 48 advertised adventures have distinct detailed world and pet/person c
 
 test('HQ fal, Cloudflare HQ backup and Standard use identical compact face-first prompts in all 48 worlds',()=>{
  for(const id of ids){
-  for(const subjectType of ['pet','person','couple','family','person and pet','car']){
+  for(const subjectType of ['auto','pet','person','couple','family','person and pet','car']){
    const args={styleId:id,subjectType,inputCount:1,notes:'Keep real eyes and recognizable appearance.'};
    const standard=makeStandardAdventurePrompt(args);
    const high=makeFalCompactPrompt(args);
@@ -47,6 +47,13 @@ test('HQ fal, Cloudflare HQ backup and Standard use identical compact face-first
    if(subjectType.includes('pet'))assert.ok(standard.includes(ADVENTURE_GUIDES[id].pet),id+' pet costume');
    if(['person','couple','family','person and pet'].includes(subjectType))assert.ok(standard.includes(ADVENTURE_GUIDES[id].person),id+' person costume');
    if(subjectType==='car')assert.match(standard,/same real vehicle|Same real vehicle/i);
+   if(subjectType==='auto'){
+    assert.ok(standard.includes(ADVENTURE_GUIDES[id].pet),id+' auto pet attire');
+    assert.ok(standard.includes(ADVENTURE_GUIDES[id].person),id+' auto person attire');
+    assert.match(standard,/Recognize the real subjects directly from the uploaded photo/);
+    assert.match(standard,/do not invent new subjects|Do not invent new subjects/);
+    assert.match(standard,/without guessing gender/);
+   }
   }
  }
 });
@@ -139,4 +146,31 @@ test('Business safety, allowance and provider config stay untouched',()=>{
  assert.equal(conf.vars.RECAST_HQ_PROVIDER,'fal');
  assert.equal(conf.vars.ORDER_SYNC_ENABLED,'true');
  assert.equal(conf.vars.AUTO_PRINT_PREAPPROVED_ENABLED,'true');
+});
+
+test('Automatic photo mode needs no manual subject or paid classification pass',async()=>{
+ for(const qualityMode of ['high','quick']){
+  const calls=[],env={ARTWORK:new Bucket(),IMAGES:imageMock(),
+   RECAST_HQ_SELECTED_PROVIDER:'cloudflare',
+   IMAGE_MODEL_HIGH_QUALITY:'@cf/black-forest-labs/flux-2-dev',
+   IMAGE_MODEL_QUICK:'@cf/black-forest-labs/flux-2-klein-9b',
+   AI:{async run(model,{multipart}){
+    const body=await new Response(multipart.body,{headers:{'content-type':multipart.contentType}}).formData();
+    calls.push({model,prompt:String(body.get('prompt'))});
+    return {image:CLEAN.toString('base64')};
+   }}};
+  const form=new FormData();
+  form.set('style','dinosaur-adventure');form.set('subject','auto');form.set('qualityMode',qualityMode);
+  form.set('image_0',new File([CLEAN],'picture.jpg',{type:'image/jpeg'}));
+  const result=await highQualityTransform(new Request('https://recast.test/api/transform-v2',{method:'POST',body:form}),env);
+  assert.equal(result.status,200);
+  const data=await result.json();
+  assert.equal(data.promptVersion,'identity-first-48-worlds-v1');
+  assert.equal(calls.length,1,'Use the same model edit, no extra subject-classifier request');
+  assert.match(calls[0].prompt,/For a pet, preserve its exact face/);
+  assert.match(calls[0].prompt,/For a person, preserve the actual eyes/);
+  assert.match(calls[0].prompt,/prehistoric/);
+  assert.match(calls[0].prompt,/Do not invent new subjects/);
+  assert.ok(calls[0].prompt.length<2200);
+ }
 });

@@ -1,0 +1,58 @@
+/* RM117: Photo → Style, no obligatory subject question or duplicate warnings. */
+.create-main-path{display:none!important}
+#recast-form .creation-progress{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:4px 0 20px}
+#recast-form .creation-progress button{font-size:16px!important;font-weight:800;min-height:52px;padding:12px 8px}
+#recast-form .creation-progress button[aria-current="step"]{border-width:2px;border-color:#83e9f5;background:linear-gradient(135deg,#3c2963,#203955)}
+#recast-form [data-create-step="1"] .creative-step{margin:0;padding:18px 14px 12px}
+#recast-form [data-create-step="1"] .creative-step legend{font-size:clamp(23px,5vw,29px)}
+#recast-form [data-create-step="1"] .photo-tip{font-size:15px;line-height:1.4;margin:6px 0 14px}
+#recast-form [data-create-step="1"] .upload-zone{min-height:136px;cursor:pointer}
+#photo-thumbnails{margin:14px 0 2px}
+#photo-thumbnails .photo-thumbnail{padding:13px!important;border-radius:16px;gap:12px!important;display:grid;justify-items:center}
+#photo-thumbnails .photo-thumbnail img{display:block;max-width:100%;width:auto;height:auto;max-height:230px;object-fit:contain;border-radius:12px}
+#photo-thumbnails .photo-thumbnail .reference-label{justify-self:stretch;width:100%;padding:0 4px;font-size:14px}
+#photo-thumbnails .photo-thumbnail .reference-label select{min-height:49px;margin-top:8px}
+.photo-subject-details{margin:15px 0 5px;border:0;background:none;font-size:14px;line-height:1.45;color:#cbc8d8}
+.photo-subject-details>summary{cursor:pointer;color:#9de7f2;text-decoration:underline;text-underline-offset:3px;padding:8px 0}
+.photo-subject-details>p{font-size:14px;line-height:1.4;color:#cac8d9;margin:10px 0}
+.photo-subject-details .subject-choices{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:10px 0}
+.photo-subject-details .subject-choices button{min-height:50px;padding:12px 9px!important;font-size:14px}
+#family-count-label{margin:10px 0}
+#family-count-label select{font-size:16px;min-height:48px}
+#photo-step-error:empty{display:none}
+#recast-form [data-create-step="1"] .wizard-actions{margin:14px 0 4px}
+#recast-form [data-create-step="1"] .wizard-actions button{width:100%;min-height:58px;font-size:17px}
+#adventure-selection-status[hidden]{display:none!important}
+#recast-form [data-create-step="2"] fieldset.environment-step{margin-bottom:12px}
+#recast-form [data-create-step="2"] #adventure-choices{margin:8px 0 13px}
+#recast-form [data-create-step="2"] .adventure-extra-actions{gap:8px;margin:4px 0 9px}
+#recast-form [data-create-step="2"] .adventure-extra-actions .button{min-height:47px}
+#personal-details{margin:9px 0 15px!important;padding:10px 14px!important}
+#personal-details summary{font-size:14px}
+#render-credits.credit-quick-count{padding:11px 12px!important;font-size:15px!important;line-height:1.4!important;margin:13px 0 4px!important}
+#render-credits-more.credit-extra{margin:0 0 8px}
+#render-credits-more summary{min-height:36px;text-decoration:none;font-size:14px;color:#a7e7f4}
+#render-credits-more p{margin:5px 0 10px}
+#render-credits-more .credit-gifts-link{font-size:14px;margin:8px 0!important}
+#quality-fallback{padding:13px 15px!important;margin:10px 0 13px!important;border-color:#675184!important}
+#quality-fallback-reason{margin:0 0 10px!important;font-size:15px!important;line-height:1.45!important}
+#quality-fallback #choose-standard{width:100%;display:block;min-height:55px;font-weight:850;font-size:17px;margin:0 0 7px!important;border-radius:13px}
+#quality-fallback #choose-standard[hidden]{display:none!important}
+#quality-fallback #choose-high{font-size:14px;min-height:42px}
+#quality-fallback .standard-allowance-note{margin:4px 0 0!important;font-size:13px}
+#quality-fallback .standard-allowance-note summary{padding:7px 0;color:#abc6df}
+#quality-fallback #credit-purchase-link{margin:7px 0!important}
+#recast-form .consent{padding:4px 0;margin:10px 0 6px!important;align-items:flex-start;font-size:14px;line-height:1.45}
+#recast-form .consent label{font-size:14px!important;line-height:1.5}
+#recast-form .consent a{white-space:nowrap}
+#recast-form .create-privacy-details{margin:1px 0 8px}
+#recast-form .create-privacy-details summary{font-size:12px;text-decoration:none;color:#a7c1da}
+#recast-form .quality-line[hidden],#recast-form #generate-button[hidden]{display:none!important}
+#recast-form .back-to-photos{min-height:40px;padding:8px 13px;color:#afcadc;font-size:14px}
+#recast-form #generate-button{margin:6px 0 2px!important}
+@media(max-width:600px){
+  #recast-form [data-create-step="1"] .creative-step{padding:15px 11px 9px}
+  #recast-form .creation-progress button{min-height:48px;font-size:15px!important}
+  #photo-thumbnails .photo-thumbnail img{max-height:220px}
+  #recast-form [data-create-step="2"] .adventure-choices img{height:130px}
+}

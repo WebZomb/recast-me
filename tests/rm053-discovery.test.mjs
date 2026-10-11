@@ -7,10 +7,12 @@ const wizard=readFileSync(new URL('../public/creation-wizard.js',import.meta.url
 const hq=readFileSync(new URL('../src/highquality.js',import.meta.url),'utf8');
 const wrangler=readFileSync(new URL('../wrangler.jsonc',import.meta.url),'utf8');
 
-test('RM054 keeps the customer-facing subject step deliberately simple',()=>{
+test('Advanced photo guidance retains existing group categories without a mandatory Who step',()=>{
  for(const label of ['My pet','Just me','Me + my pet','Couple','Family','My car','Other — describe it']) assert.ok(html.includes(label),label);
  for(const excessive of ['Two or more pets','Horse</option>','Friends / group','Child / teen','Baby</option>','Family + pet','Motorcycle / bike','Home / special place','Memorial / tribute']) assert.equal(html.includes(excessive),false,excessive);
- assert.ok(wizard.includes("quickSubjects=['pet','person','person and pet','couple','family','car','custom']"));
+ assert.match(html,/id="photo-subject-details"/);
+ assert.doesNotMatch(html,/data-create-step="0"/);
+ assert.match(wizard,/for\(const value of \['auto','pet','person','person and pet','couple','family','car','custom'\]/);
  assert.equal(wizard.includes('Browse all subjects ↓'),false);
  assert.match(html,/data-launch-build="RM-056"/);
 });

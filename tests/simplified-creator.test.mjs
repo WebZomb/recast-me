@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
+import {execFileSync} from 'node:child_process';
 import {fallbackState,creditHeadline,creditSummary} from '../public/quality-policy.js';
 const source=name=>readFileSync(new URL('../public/'+name,import.meta.url),'utf8');
 const page=source('index.html'),ux=source('simple-creator-v115.js'),style=source('simple-creator-v115.css');
@@ -44,15 +45,23 @@ test('Choose an adventure offers four favorites and progressively reveals the fu
  assert.match(style,/#all-worlds-group\[hidden\]/);
 });
 test('Photo and AI permissions are explicit but not a book',()=>{
- assert.match(page,/I can use these photos/);
+ assert.match(page,/I have permission to use these photos/);
  assert.match(page,/send them to an AI image service/);
- assert.match(page,/Family-friendly photos only/);
+ assert.match(page,/Family-friendly only/);
  assert.match(page,/fal\.ai or Cloudflare Workers AI/);
  assert.match(page,/create-privacy-details/);
  assert.match(page,/details id="personal-details"/);
  assert.match(page,/Skip this unless you want something specific/);
- assert.match(page,/photo-tip">1–2 photos work best/);
+ assert.match(page,/One clear photo works best/);
  assert.match(page,/creation-progress/);
+ assert.match(page,/id="subject">\s*<option value="auto" selected>/);
+ assert.match(page,/id="photo-subject-details"/);
+ assert.doesNotMatch(page,/data-create-step="0"/,'No mandatory Who step');
+ assert.match(page,/data-go-step="1">1 · Photos/);
+ assert.match(page,/data-go-step="2">2 · Style/);
+ assert.match(source('creation-wizard.js'),/let step=1/);
+ assert.match(source('creation-wizard.js'),/Never label a random uploaded photo/);
+ assert.match(readFileSync(new URL('../src/identity-first-adventure-prompt.js',import.meta.url),'utf8'),/Recognize the real subjects directly from the uploaded photo/);
  assert.match(page,/type="radio" name="qualityMode" value="high" checked hidden/);
 });
 test('Small main balance with full resets on request, no hidden allowance changes',()=>{
@@ -68,4 +77,11 @@ test('Small main balance with full resets on request, no hidden allowance change
  assert.equal(exhausted.standardExhausted,true);
  assert.equal(exhausted.standardReady,false);
  assert.ok(exhausted.message.length<155,'No long paragraphs on the main screen');
+});
+
+test('Customer-facing JavaScript modules parse cleanly before visual browser testing',()=>{
+ for(const file of ['app.js','creation-wizard.js','simple-creator-v115.js','analytics.js']){
+  assert.doesNotThrow(()=>execFileSync(process.execPath,['--check',new URL('../public/'+file,import.meta.url).pathname],{stdio:'pipe'}),
+    file+' must parse; duplicate const declarations can blank the whole site');
+ }
 });

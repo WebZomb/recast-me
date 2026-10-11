@@ -20,6 +20,7 @@
   <link rel="stylesheet" href="/render-wait-v1.css?v=2">
   <link rel="stylesheet" href="/adventure-description-v1.css?v=1" />
   <link rel="stylesheet" href="/simple-creator-v115.css?v=1" />
+  <link rel="stylesheet" href="/simple-flow-v117.css?v=1" />
   <meta name="recast-brand-version" content="orbit-approved-v1">
   <link rel="icon" type="image/png" href="https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recastmeai-approved-orbit-icon-v1.png?v=1791313742&amp;width=64">
   <link rel="apple-touch-icon" href="https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recastmeai-approved-orbit-icon-v1.png?v=1791313742&amp;width=180">
@@ -153,44 +154,58 @@
           </div>
           <div id="original-path-slot" class="original-path-slot" hidden></div>
           <div class="create-main-path">
-            <span>CREATE WITH AI</span>
-            <strong>Three quick steps</strong>
+            <span>MAKE A PICTURE WITH AI</span>
+            <strong>Just two steps</strong>
           </div>
           <form id="recast-form">
-            <p id="render-availability" class="prefill-note" role="status" hidden></p>
-<nav class="creation-progress" aria-label="Creation steps"><button type="button" data-go-step="0">1 · Who</button><button type="button" data-go-step="1">2 · Photos</button><button type="button" data-go-step="2">3 · Style</button></nav>
-<div data-create-step="0">            <fieldset class="creative-step">
-              <legend><span>01</span> Who’s in your photo?</legend>
-              <div id="subject-choices" class="subject-choices"></div><label class="native-subject" hidden>Subject suggestions
-                <select name="subject" id="subject">
-                  <option value="pet" selected>My pet</option>
-                  <option value="person">Just me</option>
-                  <option value="person and pet">Me + my pet</option>
-                  <option value="couple">Couple</option>
-                  <option value="family">Family</option>
-                  <option value="car">My car</option>
-                  <option value="custom">Other — describe it</option>
-                </select>
-              </label>
-            </fieldset>
-<label id="family-count-label" hidden>How many people? <select id="family-count"><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option></select></label>
-<button type="button" class="button primary full" data-go-step="1">Next: Photos →</button></div>
-<div data-create-step="1" hidden><p id="photo-guidance" role="status"></p><p class="photo-tip">1–2 photos work best. You can add up to 4.</p>            <label class="upload-zone" for="photos">
-              <input id="photos" type="file" accept="image/*" multiple class="photo-input" />
-              <span class="upload-icon" aria-hidden="true">+</span>
-              <span class="upload-copy"><strong>Choose your photos</strong><small>Tap here to select from your phone.</small></span>
-              <span id="file-summary" class="file-summary" role="status">No photos selected</span>
-            </label>
-            <div id="photo-thumbnails" class="photo-thumbnails" aria-label="Selected photos"></div>
-<p id="photo-step-error" role="status"></p><div class="wizard-actions"><button type="button" class="button ghost" data-go-step="0">Back</button><button type="button" class="button primary" data-go-step="2">Next: Style →</button></div></div>
+            <nav class="creation-progress" aria-label="Creation steps">
+              <button type="button" data-go-step="1">1 · Photos</button>
+              <button type="button" data-go-step="2">2 · Style</button>
+            </nav>
+            <div data-create-step="1">
+              <fieldset class="creative-step">
+                <legend><span>01</span> Add your photos</legend>
+                <p class="photo-tip">One clear photo works best.</p>
+                <label class="upload-zone" for="photos">
+                  <input id="photos" type="file" accept="image/*" multiple class="photo-input" />
+                  <span class="upload-icon" aria-hidden="true">+</span>
+                  <span class="upload-copy"><strong>Choose Photos</strong><small>From your phone or computer.</small></span>
+                  <span id="file-summary" class="file-summary" role="status">No photo selected</span>
+                </label>
+                <div id="photo-thumbnails" class="photo-thumbnails" aria-label="Selected photos"></div>
+                <details id="photo-subject-details" class="photo-subject-details">
+                  <summary>Help with group photos (optional)</summary>
+                  <p>We'll recognize pets, people and cars from your photos. For complicated groups, you can tell us who to include.</p>
+                  <div id="subject-choices" class="subject-choices"></div>
+                  <label class="native-subject" hidden>Subject
+                    <select name="subject" id="subject">
+                      <option value="auto" selected>Recognize automatically</option>
+                      <option value="pet">My pet</option>
+                      <option value="person">Just me</option>
+                      <option value="person and pet">Me + my pet</option>
+                      <option value="couple">Couple</option>
+                      <option value="family">Family</option>
+                      <option value="car">My car</option>
+                      <option value="custom">Other — describe it</option>
+                    </select>
+                  </label>
+                  <label id="family-count-label" hidden>How many people?
+                    <select id="family-count"><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option></select>
+                  </label>
+                  <p id="photo-label-help" class="photo-label-help" hidden>Optional: label your photos to keep different people and pets separate.</p>
+                </details>
+              </fieldset>
+              <p id="photo-step-error" role="status"></p>
+              <div class="wizard-actions"><button type="button" class="button primary full" data-go-step="2">Next: Pick a Style →</button></div>
+            </div>
 <div data-create-step="2" hidden>            <fieldset class="creative-step environment-step">
-              <legend><span>03</span> Pick a Style</legend>
+              <legend><span>02</span> Pick a Style</legend>
               <div id="adventure-choices" class="adventure-choices"></div>
               <div class="adventure-extra-actions">
                 <button type="button" class="button ghost" id="more-adventures" aria-expanded="false" aria-controls="all-worlds-group">More Styles ↓</button>
                 <button type="button" id="surprise-world" class="button ghost">Surprise me ✦</button>
               </div>
-              <p id="adventure-selection-status" class="adventure-choice-status" role="status" aria-live="polite">Selected: Royal</p>
+              <p id="adventure-selection-status" class="adventure-choice-status" role="status" aria-live="polite" hidden>Selected: Royal</p>
               <div id="all-worlds-group" class="all-worlds-group" hidden>
                 <label>All styles
                   <select name="style" id="style" aria-label="All Recast worlds"></select>
@@ -210,28 +225,31 @@
 </details>
             <p id="prefill-note" class="prefill-note"></p>
             <div id="branch-note" class="branch-note hidden"></div>
-            <div class="consent"><input id="consent" type="checkbox" required><label for="consent">I can use these photos and agree to send them to an AI image service to create my picture. Family-friendly photos only. <a href="/privacy.html" target="_blank" rel="noopener">Photo privacy</a>.</label></div>
-            <details class="create-privacy-details"><summary>Which AI service uses my photos?</summary><p>Your photos and instructions go to fal.ai or Cloudflare Workers AI for this preview. Your original photo stays private. <a href="/privacy.html" target="_blank" rel="noopener">Read the full policy</a>.</p></details>
             <input type="radio" name="qualityMode" value="high" checked hidden>
             <input type="radio" name="qualityMode" value="quick" hidden>
             <p id="render-credits" class="credit-quick-count" role="status" aria-live="polite" hidden></p>
-            <details id="render-credits-more" class="credit-extra" hidden><summary>Credits &amp; reset times</summary><p id="render-credits-details"></p></details>
-            <p id="credit-gifts-link" class="credit-gifts-link" hidden><a href="/credits.html">Credits &amp; gift codes →</a></p>
+            <details id="render-credits-more" class="credit-extra" hidden><summary>Credits, resets &amp; gifts</summary>
+              <p id="render-credits-details"></p>
+              <p id="credit-gifts-link" class="credit-gifts-link" hidden><a href="/credits.html#redeem">Redeem a code →</a></p>
+            </details>
             <aside id="quality-fallback" hidden aria-live="polite">
               <p id="quality-fallback-reason"></p>
               <p id="standard-limit-status" class="standard-limit-status" role="status" hidden></p>
-              <details class="standard-allowance-note"><summary>About previews &amp; credits</summary><p>Standard may look less detailed. Failed previews return their credit. Buying an eligible product adds 3 more High Quality previews for your next picture. Credits don’t change confirmed orders or bypass site availability limits.</p></details>
-              <button type="button" class="button ghost" id="choose-standard">Use Standard instead</button>
+              <button type="button" class="button primary full" id="choose-standard">Use Standard (lower detail) →</button>
               <button type="button" class="button ghost" id="choose-high" hidden>Back to High Quality</button>
-              <a id="credit-purchase-link" href="#shop" hidden>Use a saved picture →</a>
+              <details class="standard-allowance-note"><summary>About Standard previews</summary><p>Standard uses a different model and can change facial details. Failed previews return their credit. Eligible product purchases grant 3 bonus High Quality credits. Credits don't change confirmed orders or override site availability limits.</p></details>
+              <a id="credit-purchase-link" href="#recent-versions-shell" hidden>See saved pictures →</a>
             </aside>
+            <p id="render-availability" class="prefill-note" role="status" hidden></p>
             <p id="return-to-order" hidden><a class="button ghost" href="/order.html">Return to my order and choose its design →</a></p>
+            <div class="consent"><input id="consent" type="checkbox" required><label for="consent">I have permission to use these photos and send them to an AI image service to create my picture. Family-friendly only. <a href="/privacy.html" target="_blank" rel="noopener">Privacy</a>.</label></div>
+            <details class="create-privacy-details"><summary>How are my photos used?</summary><p>Your photos and instructions go to fal.ai or Cloudflare Workers AI for this preview. Your original photo stays private. <a href="/privacy.html" target="_blank" rel="noopener">Read the full policy</a>.</p></details>
             <div id="turnstile-container" class="turnstile-container hidden"></div>
             
              <button type="submit" class="button primary full" id="generate-button">Make My Picture</button>
             <div id="recast-error" class="recast-error hidden" role="alert"></div>
             <div class="quality-line"><span class="quality-dot"></span><span id="model-copy">High Quality · Best detail</span></div>
-<button type="button" class="button ghost" data-go-step="1">Back to photos</button>
+<button type="button" class="button ghost back-to-photos" data-go-step="1">← Change Photo</button>
 </div>
           </form>
           <div class="alternate-divider" aria-hidden="true"><span>ALREADY MADE ONE?</span></div>
@@ -349,7 +367,7 @@
   </footer>
   <script src="/analytics.js?v=1" defer></script>
   <script src="/simple-creator-v115.js?v=1" defer></script>
-  <script src="/app.js?v=276" type="module"></script>
+  <script src="/app.js?v=277" type="module"></script>
   <script src="/checkout.js?v=2616" type="module"></script>
 </body>
 </html>
