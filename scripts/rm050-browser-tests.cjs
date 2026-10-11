@@ -65,6 +65,20 @@ const policy={highDaily:3,standardDaily:5,purchaseBonus:3,websiteCalls:70,social
    assert.equal(await page.locator('[data-create-step="1"]').isVisible(),true,'Upload comes first with no Who step');
    assert.equal(await page.locator('#subject').inputValue(),'auto','Image editor recognizes the photo content by default');
    assert.equal(await page.locator('#photo-subject-details').getAttribute('open'),null,'Advanced group options are collapsed');
+   // Customer should never have to identify their pet/person; only a complex
+   // group photo can opt into manual hints, then return to automatic mode.
+   await page.locator('#photos').setInputFiles([
+    path.join(root,'assets/jack-russell-source-v18.webp'),
+    path.join(root,'assets/dog-original-v17.webp')
+   ]);
+   assert.equal(await page.locator('.reference-label').count(),0,'Two photos are automatic by default');
+   await page.locator('#photo-subject-details summary').click();
+   await page.locator('[data-subject-choice="person and pet"]').click();
+   assert.equal(await page.locator('.reference-label').count(),2,'Optional labels only appear when group help is requested');
+   await page.locator('[data-subject-choice="auto"]').click();
+   assert.equal(await page.locator('.reference-label').count(),0,'Manual choice can be undone without losing photos');
+   assert.equal(await page.locator('#photos').evaluate(x=>x.files.length),2);
+
    assert.equal(await page.locator('#all-worlds-group').isHidden(),true,'Advanced worlds are optional by default');
    assert.equal(await page.locator('#render-time-hint').count(),0,'Only the waiting screen contains the time estimate');
    const timerStyles=await page.evaluate(()=>{
