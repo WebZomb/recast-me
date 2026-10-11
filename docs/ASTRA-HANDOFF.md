@@ -232,3 +232,5 @@ RM125 FINAL — PR #45 merged `d78aba880874b614d03367eda724addcf2727211`, 477 te
 
 
 RM126 (2026-10-11) — Owner new Football image preserves puppy likeness better but invents a man from the faceless supporting person and adds logos. Automatic prompt now restricts people/animal inclusion to visible original faces; no reconstructing faces from cropped torsos/hands. Nano v3 and Standard/shared auto rule aligned, explicit categories retained, no model/cost change. This is prompt guidance only; removal-related drift remains a risk. See [RM126 evidence and release](ASTRA-SESSION-RM-126.md).
+
+RM126 LIVE — PR #46 main `6fdb99df2c69b8bd81da01138edd22eeafd421e5`. 478 Node tests, security/policy mobile-browser CI and guarded deploy `38162674407` PASS. Public audit `38162674375` all steps and artifact upload PASS. Live Worker `0ab62517-c658-4121-86c8-ae3a28f7ed35`, Nano prompt v3 confirmed. Same engine/cost; visible-source-face-only Automatic is model guidance, not an enforced mask. Actual new image acceptance pending; zero assistant paid renders/orders.
