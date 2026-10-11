@@ -8,9 +8,9 @@ function setup(fetcher){
   const layout={value:'two-sided'},x={value:'center'},scale={value:'110'},spacing={value:'standard'},fill={value:'ambient'};
   const button={dataset:{product:'0'},textContent:'Shop Mug',disabled:false,parentElement:{querySelector:()=>error},addEventListener:(name,fn)=>button[name]=fn};
   const preview={disabled:false,textContent:'Preview'};
-  const card={dataset:{productTitle:'Custom Recast Mug',active:'true',digital:'false'},classList:{add(){},remove(){}},
+  const card={dataset:{productTitle:'Custom Recast Mug',active:'true',digital:'false'},classList:{add(){},remove(){},contains(){return false}},
     querySelector:s=>s==='.product-art img'?img:s==='.example-design-label'?caption:s==='.mockup-error'?error:s==='.product-preview-action'?preview:s==='.recast-buy'?button:s==='[data-design-layout]'?layout:s==='[data-design-x]'?x:s==='[data-design-scale]'?scale:s==='[data-design-spacing]'?spacing:s==='[data-design-fill]'?fill:null};
-  const grid={querySelectorAll:()=>[],innerHTML:'marketing',children:[],classList:{add(){},remove(){}},replaceChildren(){this.innerHTML='';this.children=[]},append(...items){this.children.push(...items)}};
+  const grid={querySelectorAll:()=>[],innerHTML:'marketing',children:[],classList:{add(){},remove(){},contains(){return false}},replaceChildren(){this.innerHTML='';this.children=[]},append(...items){this.children.push(...items)}};
   const document={querySelector:s=>s==='#product-grid'?grid:s==='#request-id'?{textContent:''}:s.startsWith('.recast-variant')?{value:'RECAST-MUG-15OZ'}:s.startsWith('[data-product-index')?card:null,querySelectorAll:s=>s==='.recast-buy'?[button]:[],addEventListener:(name,fn)=>listeners[name]=fn,createElement:()=>({children:[],setAttribute(){},addEventListener(name,fn){this[name]=fn},append(...x){this.children.push(...x)}})};
   const context={document,window:{},localStorage:{getItem:()=>JSON.stringify({requestId:'old',accessToken:'old-token'})},location:{origin:'https://recast.test'},URL,console:{warn(){}},setTimeout,setInterval,clearInterval,fetch:async(...args)=>{calls.push(args);return fetcher(...args)}};
   vm.runInNewContext(source,context);
@@ -103,7 +103,7 @@ test('stale product button cannot buy previous artwork after selection changed',
 test('mockup failure is visible in an inline alert on touch devices',async()=>{
  const app=setup(async()=>({ok:false,json:async()=>({error:'Printful is not connected.'})}));
  const alert={hidden:true,textContent:''};const button={textContent:'Preview',disabled:false};
- app.context.mockupArgs={req:{requestId:'saved',accessToken:'test'},sku:'RECAST-MUG-11OZ',card:{dataset:{productTitle:'Custom Recast Mug',active:'false',digital:'false'},classList:{add(){},remove(){}},querySelector:s=>s==='.product-art'?null:alert},button};
+ app.context.mockupArgs={req:{requestId:'saved',accessToken:'test'},sku:'RECAST-MUG-11OZ',card:{dataset:{productTitle:'Custom Recast Mug',active:'false',digital:'false'},classList:{add(){},remove(){},contains(){return false}},querySelector:s=>s==='.product-art'?null:alert},button};
  await vm.runInNewContext('generateRealMockup(mockupArgs)',app.context);
  assert.equal(alert.hidden,false);assert.match(alert.textContent,/couldn't build this product preview/i);assert.doesNotMatch(alert.textContent,/Worker:|Stage:/);assert.equal(button.disabled,false);
 });

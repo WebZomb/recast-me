@@ -50,3 +50,13 @@ for(const problem of ['fail','remote','badCallback','blockedOutput'])test('candi
 test('candidate respects the existing daily generation limit',async t=>{
  const e=env({AI_DAILY_CALL_LIMIT:'0'}),calls=mock(t);const r=await router.fetch(req(),e,{});assert.ok(r.status>=400);assert.equal(calls.filter(c=>c.url.includes('queue.fal.run')).length,0);
 });
+
+test('approved public Nano route keeps moderation, one paid request, originals, metadata and health tracking',async t=>{
+ const e=env({FAL_CUSTOMER_MODEL:'nano-banana'}),calls=mock(t);await e.ARTWORK.put('system/providers/hq-fal.json',JSON.stringify({status:'success'}));
+ const r=await router.fetch(req({admin:false,path:'/api/transform-v2'}),e,{}),d=await r.json();assert.equal(r.status,200,JSON.stringify(d));assert.equal(d.modelUsed,'fal-ai/nano-banana/edit');assert.equal(d.promptVersion,'nano-identity-adventures-v1');assert.equal(d.image,'data:image/jpeg;base64,'+MARKED.toString('base64'));
+ assert.equal(calls.filter(c=>c.url.includes('queue.fal.run')&&c.method==='POST').length,1);assert.equal(calls.filter(c=>c.url.endsWith('/moderations')).length,2);
+ assert.equal((await(await e.ARTWORK.get('system/providers/hq-fal.json')).json()).status,'success');const meta=await(await e.ARTWORK.get('requests/'+d.requestId+'/request.json')).json();assert.equal(meta.modelUsed,d.modelUsed);assert.equal(meta.promptVersion,d.promptVersion);
+});
+test('public Nano requires output screening before any paid submission',async t=>{
+ const e=env({FAL_CUSTOMER_MODEL:'nano-banana',CONTENT_MODERATION_ENABLED:'false'}),calls=mock(t);await e.ARTWORK.put('system/providers/hq-fal.json',JSON.stringify({status:'success'}));const r=await router.fetch(req({admin:false,path:'/api/transform-v2'}),e,{});assert.ok(r.status>=400);assert.equal(calls.filter(c=>c.url.includes('queue.fal.run')).length,0);
+});

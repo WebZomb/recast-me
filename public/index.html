@@ -16,11 +16,11 @@
   <link rel="stylesheet" href="/brand-orbit-v1.css?v=1">
   <link rel="stylesheet" href="/hero-target-v51.css?v=5">
   <link rel="stylesheet" href="/product-polish-v53.css?v=5">
-  <link rel="stylesheet" href="/product-studio-v52.css?v=1">
+  <link rel="stylesheet" href="/product-studio-v52.css?v=2">
   <link rel="stylesheet" href="/render-wait-v1.css?v=2">
   <link rel="stylesheet" href="/adventure-description-v1.css?v=1" />
   <link rel="stylesheet" href="/simple-creator-v115.css?v=1" />
-  <link rel="stylesheet" href="/simple-flow-v117.css?v=1" />
+  <link rel="stylesheet" href="/simple-flow-v117.css?v=2" />
   <meta name="recast-brand-version" content="orbit-approved-v1">
   <link rel="icon" type="image/png" href="https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recastmeai-approved-orbit-icon-v1.png?v=1791313742&amp;width=64">
   <link rel="apple-touch-icon" href="https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recastmeai-approved-orbit-icon-v1.png?v=1791313742&amp;width=180">
@@ -108,7 +108,7 @@
       <div class="section-heading compact-process-heading">
         <div class="eyebrow">HOW IT WORKS</div>
         <h2>Three steps. That’s it.</h2>
-        <p>Choose a photo, create the version you love, then see it on the product before you pay.</p>
+        <p>Choose a photo, create the version you love, then preview a product or go straight to checkout.</p>
       </div>
       <div class="process-ribbon" aria-label="Three-step Recast process">
         <article class="process-node">
@@ -123,7 +123,7 @@
         <div class="process-ribbon-arrow" aria-hidden="true">→</div>
         <article class="process-node">
           <div class="process-node-art product-node-art"><img src="https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-neon-mug-cutout-v48.png?v=1791266555" alt="" loading="lazy"></div>
-          <div class="process-node-copy"><span>03</span><h3>Preview & buy</h3><p>Confirm the product preview, then checkout. Done.</p></div>
+          <div class="process-node-copy"><span>03</span><h3>Preview & buy</h3><p>Preview your product or buy with recommended placement.</p></div>
         </article>
       </div>
     </section>
@@ -173,16 +173,19 @@
                   <span id="file-summary" class="file-summary" role="status">No photo selected</span>
                 </label>
                 <div id="photo-thumbnails" class="photo-thumbnails" aria-label="Selected photos"></div>
+                <p id="photo-include-summary" class="photo-include-summary" hidden>Include: <strong id="photo-include-label">Automatic</strong> <button type="button" id="change-photo-subject" class="button ghost">Change</button></p>
                 <details id="photo-subject-details" class="photo-subject-details">
-                  <summary>Help with group photos (optional)</summary>
-                  <p>We'll recognize pets, people and cars from your photos. For complicated groups, you can tell us who to include.</p>
-                  <div id="subject-choices" class="subject-choices"></div>
+                  <summary>Choose who to include (optional)</summary>
+                  <p>Automatic uses the main subjects in your photo. Change this if you want only certain people or pets included.</p>
+                  <button type="button" id="select-photo-faces" class="button ghost" hidden>Select specific faces (optional)</button>
+                  <div id="subject-choices" class="subject-choices"></div><details><summary>More choices</summary><div id="extra-subject-choices" class="subject-choices"></div></details>
                   <label class="native-subject" hidden>Subject
                     <select name="subject" id="subject">
                       <option value="auto" selected>Recognize automatically</option>
                       <option value="pet">My pet</option>
                       <option value="person">Just me</option>
                       <option value="person and pet">Me + my pet</option>
+                      <option value="group">Group of people</option>
                       <option value="couple">Couple</option>
                       <option value="family">Family</option>
                       <option value="car">My car</option>
@@ -367,7 +370,7 @@
   </footer>
   <script src="/analytics.js?v=1" defer></script>
   <script src="/simple-creator-v115.js?v=1" defer></script>
-  <script src="/app.js?v=278" type="module"></script>
-  <script src="/checkout.js?v=2616" type="module"></script>
+  <script src="/app.js?v=283" type="module"></script>
+  <script src="/checkout.js?v=283" type="module"></script>
 </body>
 </html>

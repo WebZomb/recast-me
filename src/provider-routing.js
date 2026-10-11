@@ -33,6 +33,7 @@ export async function selectHighQualityProvider(env,form){
  const enabled=env.FAL_PROVIDER_ENABLED==='true'&&typeof env.FAL_API_KEY==='string'&&env.FAL_API_KEY.length>20;
  const photos=[...form.keys()].filter(k=>/^image_[0-3]$/.test(k)&&form.get(k) instanceof File&&form.get(k).size>0).length||1;
  const prices=estimateHighQualityCosts({steps:bounded(env.IMAGE_HIGH_QUALITY_STEPS,18),photos});
+ if(env.FAL_CUSTOMER_MODEL==='nano-banana'&&env.RECAST_OWNER_PILOT_REQUEST!=='true')prices.falUsd=0.039;
  const strategy='fal-first-confirmed-availability';
  if(policy==='cloudflare')return {host:CF,prices,configured:true,policy,strategy:'legacy-cloudflare'};
  if(policy==='fal'){
@@ -53,7 +54,8 @@ export async function selectHighQualityProvider(env,form){
 }
 export async function providerStatus(env){
  const state=await providerHealth(env),costs=estimateHighQualityCosts({steps:bounded(env.IMAGE_HIGH_QUALITY_STEPS,18)});
- return {mode:String(env.RECAST_HQ_PROVIDER||'cloudflare'),falEnabled:env.FAL_PROVIDER_ENABLED==='true',falConfigured:!!env.FAL_API_KEY, falVerified:env.FAL_PROVIDER_VERIFIED==='true',cloudflareVerified:env.CF_PROVIDER_VERIFIED==='true',health:state,costs,costsAreEstimates:true,priority:['fal','cloudflare'],priorityRule:'prefer a verified healthy fal host; Cloudflare is the backup'};
+ if(env.FAL_CUSTOMER_MODEL==='nano-banana')costs.falUsd=0.039;
+ return {customerModel:env.FAL_CUSTOMER_MODEL==='nano-banana'?'Nano Banana original':'FLUX.2 dev',mode:String(env.RECAST_HQ_PROVIDER||'cloudflare'),falEnabled:env.FAL_PROVIDER_ENABLED==='true',falConfigured:!!env.FAL_API_KEY, falVerified:env.FAL_PROVIDER_VERIFIED==='true',cloudflareVerified:env.CF_PROVIDER_VERIFIED==='true',health:state,costs,costsAreEstimates:true,priority:['fal','cloudflare'],priorityRule:'prefer a verified healthy fal host; Cloudflare is the backup'};
 }
 export async function recordProviderResult(env,host,status,reason=null){
  if(!env.ARTWORK||![CF,FAL].includes(host))return;

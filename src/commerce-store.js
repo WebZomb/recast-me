@@ -33,6 +33,17 @@ export function recommendedProductDesign(map={}){
   if(['Poster','Framed Poster','Canvas','Magnet 3-Pack','Coaster 4-Pack'].includes(product))return {layout:'cover',fill:'full-bleed',x:'center',scale:100,spacing:'standard'};
   return {layout:'fit',fill:'ambient',x:'center',scale:100,spacing:'standard'};
 }
+// Current customer presets, explicitly versioned; fast checkout never accepts custom layout.
+export function recommendedCheckoutDesign(map={}){
+ const product=map.product||'Generic';
+ const base={version:6,...recommendedProductDesign(map)};
+ if(['Hoodie','T-Shirt'].includes(product))Object.assign(base,{layout:'fit',fill:'transparent',scale:100,finish:'soft'});
+ if(product==='Canvas')Object.assign(base,{layout:'fit',fill:'ambient',scale:90});
+ if(['Poster','Framed Poster','Canvas','Puzzle'].includes(product))base.orientation='portrait';
+ if(product==='Puzzle'||product==='Sticker')Object.assign(base,{layout:'cover',fill:'full-bleed'});
+ if(['Hardcover Journal','Phone Case'].includes(product))base.version=7;
+ return normalizeProductDesign(map,base);
+}
 export function normalizeProductDesign(map,raw={}){
   const product=String(map?.product||'Generic'),recommended=recommendedProductDesign(map);
   const rawVersion=Number(raw?.version||0);

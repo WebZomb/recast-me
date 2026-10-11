@@ -1,6 +1,6 @@
 import {ADVENTURE_GUIDES} from './adventure-guides.js?v=1';
 import {mergeHistory,privateRecastLink,readRecastLink} from './recast-history.js';
-import {initCreationWizard} from './creation-wizard.js?v=265';
+import {initCreationWizard} from './creation-wizard.js?v=283';
 import {fallbackState,creditSummary,creditHeadline,recoveryUnverified} from './quality-policy.js?v=267';
 import {protectedPreviewFile} from './preview-export.js';
 let creditInfo=null;
@@ -225,6 +225,7 @@ photos.addEventListener('change',()=>{
   // subjects into new jobs (e.g. an earlier car/person alongside a new pet).
   // Selecting multiple photos together still supports up to four references.
   const picked=[...photos.files];
+  document.querySelector('#subject').value='auto';
   if(picked.length>4){
     const transfer=new DataTransfer();
     picked.slice(0,4).forEach(f=>transfer.items.add(f));
@@ -821,7 +822,7 @@ form.addEventListener('submit',async e=>{
     const submittedSubject=inferSubject(document.querySelector('#subject').value,`${customWorld} ${document.querySelector('#notes').value}`);
     fd.append('subject',submittedSubject);
     fd.append('customWorld',customWorld);
-    fd.append('notes',document.querySelector('#notes').value);
+    fd.append('notes',[wizard.focusNotes(),document.querySelector('#notes').value].filter(Boolean).join(' ').slice(0,1200));
     const referenceLabels=wizard.references();
     if(referenceLabels?.length)fd.append('referenceLabels',JSON.stringify(referenceLabels));
     if(document.querySelector('#subject').value==='family')fd.append('subjectCount',document.querySelector('#family-count').value);
