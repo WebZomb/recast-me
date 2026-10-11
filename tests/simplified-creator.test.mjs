@@ -46,7 +46,7 @@ test('Choose an adventure offers four favorites and progressively reveals the fu
 test('Photo and AI permissions are explicit but not a book',()=>{
  assert.match(page,/I have permission to use these photos/);
  assert.match(page,/send them to an AI image service/);
- assert.match(page,/Family-friendly photos only/);
+ assert.match(page,/Family-friendly only/);
  assert.match(page,/fal\.ai or Cloudflare Workers AI/);
  assert.match(page,/create-privacy-details/);
  assert.match(page,/details id="personal-details"/);
