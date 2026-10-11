@@ -11,9 +11,9 @@ test('AI or original photo are two visible, touch-sized, clearly named first act
   assert.match(page,new RegExp('id="'+id+'"'));
   assert.equal(count(page,'id="'+id+'"'),1,'No duplicate controls for '+id);
  }
- assert.match(page,/Create a new picture/);
- assert.match(page,/Use my original photo/);
- assert.match(page,/No AI · Keep the photo as-is/);
+ assert.match(page,/Make a Picture/);
+ assert.match(page,/Use My Photo/);
+ assert.match(page,/No AI · Keep it original/);
  assert.match(style,/\.create-method\{[^}]*min-height:100px/);
  assert.match(style,/\.create-method-original[^}]*border-color/);
  assert.match(ux,/slot\.append\(original\)/,'Old validated original-photo form is moved, not replaced');
@@ -44,9 +44,9 @@ test('Choose an adventure offers four favorites and progressively reveals the fu
  assert.match(style,/#all-worlds-group\[hidden\]/);
 });
 test('Photo and AI permissions are explicit but not a book',()=>{
- assert.match(page,/I have permission to use these photos/);
- assert.match(page,/send them and my instructions to our AI service/);
- assert.match(page,/Family-friendly content only/);
+ assert.match(page,/I can use these photos/);
+ assert.match(page,/send them to an AI image service/);
+ assert.match(page,/Family-friendly photos only/);
  assert.match(page,/fal\.ai or Cloudflare Workers AI/);
  assert.match(page,/create-privacy-details/);
  assert.match(page,/details id="personal-details"/);

@@ -33,7 +33,7 @@ test('homepage polish keeps alternates separate and preview utilities collapsed'
   assert.match(html,/world-game-v18\.webp/);
   assert.match(html,/class="process-ribbon"/);
   assert.match(html,/class="preview-more"/);
-  assert.match(html,/Choose a product →/);
+  assert.match(html,/Put It on a Product →/);
   assert.match(html,/Pick another version/);
   assert.doesNotMatch(html,/Choose a product for your Recast →/);
 });
@@ -79,7 +79,7 @@ test('selected artwork beats stale storage and final review is required before p
   const ui=setup(async()=>catalog());
   await ui.select();assert.equal(new URL(ui.calls[0][0]).searchParams.get('requestId'),'new');
   assert.match(ui.grid.innerHTML,/Shop Mug/);assert.doesNotMatch(ui.grid.innerHTML,/href="#start"/);
-  assert.match(source,/This is the design that will be printed/);
+  assert.match(source,/Check your design/);assert.match(source,/The watermark won't print/);
   assert.match(source,/Confirm design & checkout/);
   assert.match(source,/confirmDesign:true/);
 });

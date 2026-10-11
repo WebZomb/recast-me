@@ -324,12 +324,13 @@ function openFinalReview({req,sku,card,button}){
   const modal=document.createElement("div");modal.className="recast-final-review";modal.setAttribute("role","dialog");modal.setAttribute("aria-modal","true");modal.setAttribute("aria-labelledby","recast-review-title");
   const views=state.views.slice(0,3);
   modal.innerHTML=`<div class="final-review-backdrop" data-final-close></div><section class="final-review-panel">
-    <div class="final-review-top"><div><span>FINAL CHECK</span><h2 id="recast-review-title">This is the design that will be printed.</h2><p>Check the image, product and placement. After you confirm, checkout is the last customer step.</p></div><button type="button" class="final-review-x" data-final-close aria-label="Close final review">×</button></div>
+    <div class="final-review-top"><div><span>FINAL CHECK</span><h2 id="recast-review-title">Check your design</h2><p>Does the picture look right? This is what we'll print.</p></div><button type="button" class="final-review-x" data-final-close aria-label="Close final review">×</button></div>
     <div class="final-review-angles">${views.map((v,i)=>`<figure><img src="${v.url}" alt="${v.label||viewLabel(v.title,i)}"><figcaption>${v.label||viewLabel(v.title,i)}</figcaption></figure>`).join("")}</div>
     <div class="final-review-summary"><div><small>PRODUCT</small><strong>${card.dataset.productTitle?.replace(/^Custom Recast /,"")||"Product"} · ${card.querySelector(".recast-variant option:checked")?.textContent||card.querySelector(".recast-variant")?.dataset?.variantLabel||card.querySelector(".recast-variant")?.value||sku}</strong></div><div><small>ARTWORK</small><strong>${req.requestId}</strong></div><div><small>PRINT SETTINGS</small><strong>${designSummary(card)}</strong></div></div>
-    <div class="final-review-note"><strong>Size &amp; finish:</strong> The preview is for your selected variant. Actual print placement and color can vary slightly with manufacturing; a screen is not a physical ruler.</div>
-    <div class="final-review-note"><strong>Looks right?</strong> The preview watermark is only for protection. Your clean private artwork is used for the print file.</div>
-    <div class="final-review-note"><strong>Sending a gift?</strong> Use your own email and billing details at checkout, and your recipient’s name and shipping address. Place separate orders for different addresses. Gift wrapping and gift messages are not currently offered.</div>
+    <p class="final-review-note"><strong>The watermark won't print.</strong> Your actual product uses the clean picture.</p>
+    <details class="final-review-note"><summary>Print &amp; gift details</summary>
+      <p>Screen colors and exact placement may vary a little. Sending this to someone else? Enter their name and shipping address at checkout. Use separate orders for different addresses. Gift wrapping and printed messages aren't offered yet.</p>
+    </details>
     <p class="final-review-error" role="alert" hidden></p>
     <div class="final-review-actions"><button type="button" class="button ghost" data-final-image>Change image</button><button type="button" class="button ghost" data-final-edit>Edit placement</button><button type="button" class="button primary" data-final-confirm>Confirm design & checkout</button></div>
   </section>`;

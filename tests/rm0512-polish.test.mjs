@@ -13,7 +13,7 @@ test('RM-051.2 exposes grouped broad worlds without franchise presets',()=>{
  for(const mark of ['Simpsons','Family Guy','South Park','NFL','NBA','Disney','Marvel']) assert.equal(app.includes(mark),false,mark);
  assert.equal(app.includes('STYLE_GROUP_ORDER'),true);
  assert.equal(index.includes('All Recast worlds'),true);
- assert.equal(wizard.includes('See all adventures'),true);
+ assert.equal(wizard.includes('More Styles'),true);
 });
 test('new public worlds are accepted by the generation backend',()=>{
  for(const id of ['animated-sitcom','anime','football','basketball','seventies','nineties','y2k','space-opera','wizard-academy']) assert.equal(hq.includes(id),true,id);

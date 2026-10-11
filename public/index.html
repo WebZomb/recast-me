@@ -46,7 +46,7 @@
       <a href="#how">How it works</a>
       <a href="#styles">Worlds</a>
       <a href="#shop">Products</a>
-      <a href="#start" class="nav-cta">Start a Recast <span aria-hidden="true">→</span></a>
+      <a href="#start" class="nav-cta">Make My Picture <span aria-hidden="true">→</span></a>
     </nav>
   </header>
   <noscript><p style="padding:20px;color:white;background:#151329">Please enable JavaScript to create your Recast, explore products, and preview your design before checkout.</p></noscript>
@@ -60,9 +60,9 @@
       <div class="hero-copy">
         <div class="eyebrow">YOUR PHOTO · YOUR WORLD · YOUR PRODUCT</div>
         <h1>Recast<br><span>your world.</span></h1>
-        <p class="hero-lede">Turn your pet, person, or favorite photo into a whole new world — then put it on something worth keeping.</p>
+        <p class="hero-lede">Turn your photo into a new adventure—and put it on a gift.</p>
         <div class="hero-actions">
-          <a class="button primary hero-primary-cta" href="#start">Start a Recast <span aria-hidden="true">→</span></a>
+          <a class="button primary hero-primary-cta" href="#start">Make My Picture <span aria-hidden="true">→</span></a>
           <a class="button ghost hero-secondary-cta" href="#shop">See products</a>
         </div>
         <div class="trust-row">
@@ -138,16 +138,16 @@
           </div>
         </div>
         <div class="create-card">
-          <h3 class="create-choice-heading" id="create-choice-heading">What would you like to do?</h3>
+          <h3 class="create-choice-heading" id="create-choice-heading">Choose how to start</h3>
           <div class="create-method-chooser" role="group" aria-labelledby="create-choice-heading">
             <button type="button" class="create-method is-selected" id="choose-create-ai" aria-pressed="true" aria-controls="recast-form">
               <span class="method-icon" aria-hidden="true">✨</span>
-              <span class="method-text"><strong>Create a new picture</strong><small>Change my photo with AI</small></span>
+              <span class="method-text"><strong>Make a Picture</strong><small>Change my photo with AI</small></span>
               <span class="method-indicator" aria-hidden="true">✓</span>
             </button>
             <button type="button" class="create-method create-method-original" id="choose-original-photo" aria-pressed="false" aria-controls="original-path-slot">
               <span class="method-icon" aria-hidden="true">📷</span>
-              <span class="method-text"><strong>Use my original photo</strong><small>No AI · Keep the photo as-is</small></span>
+              <span class="method-text"><strong>Use My Photo</strong><small>No AI · Keep it original</small></span>
               <span class="method-indicator" aria-hidden="true">✓</span>
             </button>
           </div>
@@ -158,7 +158,7 @@
           </div>
           <form id="recast-form">
             <p id="render-availability" class="prefill-note" role="status" hidden></p>
-<nav class="creation-progress" aria-label="Creation steps"><button type="button" data-go-step="0">1 · Who</button><button type="button" data-go-step="1">2 · Photos</button><button type="button" data-go-step="2">3 · Adventure</button></nav>
+<nav class="creation-progress" aria-label="Creation steps"><button type="button" data-go-step="0">1 · Who</button><button type="button" data-go-step="1">2 · Photos</button><button type="button" data-go-step="2">3 · Style</button></nav>
 <div data-create-step="0">            <fieldset class="creative-step">
               <legend><span>01</span> Who’s in your photo?</legend>
               <div id="subject-choices" class="subject-choices"></div><label class="native-subject" hidden>Subject suggestions
@@ -174,7 +174,7 @@
               </label>
             </fieldset>
 <label id="family-count-label" hidden>How many people? <select id="family-count"><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option></select></label>
-<button type="button" class="button primary full" data-go-step="1">Next: Choose photo →</button></div>
+<button type="button" class="button primary full" data-go-step="1">Next: Photos →</button></div>
 <div data-create-step="1" hidden><p id="photo-guidance" role="status"></p><p class="photo-tip">1–2 photos work best. You can add up to 4.</p>            <label class="upload-zone" for="photos">
               <input id="photos" type="file" accept="image/*" multiple class="photo-input" />
               <span class="upload-icon" aria-hidden="true">+</span>
@@ -182,17 +182,17 @@
               <span id="file-summary" class="file-summary" role="status">No photos selected</span>
             </label>
             <div id="photo-thumbnails" class="photo-thumbnails" aria-label="Selected photos"></div>
-<p id="photo-step-error" role="status"></p><div class="wizard-actions"><button type="button" class="button ghost" data-go-step="0">Back</button><button type="button" class="button primary" data-go-step="2">Next: Choose a look →</button></div></div>
+<p id="photo-step-error" role="status"></p><div class="wizard-actions"><button type="button" class="button ghost" data-go-step="0">Back</button><button type="button" class="button primary" data-go-step="2">Next: Style →</button></div></div>
 <div data-create-step="2" hidden>            <fieldset class="creative-step environment-step">
-              <legend><span>03</span> Choose a look</legend>
+              <legend><span>03</span> Pick a Style</legend>
               <div id="adventure-choices" class="adventure-choices"></div>
               <div class="adventure-extra-actions">
-                <button type="button" class="button ghost" id="more-adventures" aria-expanded="false" aria-controls="all-worlds-group">See all adventures ↓</button>
+                <button type="button" class="button ghost" id="more-adventures" aria-expanded="false" aria-controls="all-worlds-group">More Styles ↓</button>
                 <button type="button" id="surprise-world" class="button ghost">Surprise me ✦</button>
               </div>
               <p id="adventure-selection-status" class="adventure-choice-status" role="status" aria-live="polite">Selected: Royal</p>
               <div id="all-worlds-group" class="all-worlds-group" hidden>
-                <label>All adventures
+                <label>All styles
                   <select name="style" id="style" aria-label="All Recast worlds"></select>
                   <p id="selected-world-description" class="selected-world-description" role="status" aria-live="polite">A special look for your photo.</p>
                   <small id="world-choice-feedback" role="status"></small>
@@ -203,20 +203,20 @@
                 <small>Describe the place, mood, and lighting. Editing this makes it your custom setting.</small>
               </label>
             </fieldset>
-<details id="personal-details"><summary>Add special details (optional)</summary>              <label>Describe outfits or other details <span class="optional-label">OPTIONAL</span>
+<details id="personal-details"><summary>Extra details (optional)</summary>              <label>Describe outfits or other details <span class="optional-label">OPTIONAL</span>
                 <textarea name="notes" id="notes" maxlength="1200" placeholder="My dog in a little wizard costume. Or: me, my girlfriend, and our dog in matching space suits."></textarea>
                 <small>Skip this unless you want something specific.</small>
               </label>
 </details>
             <p id="prefill-note" class="prefill-note"></p>
             <div id="branch-note" class="branch-note hidden"></div>
-            <div class="consent"><input id="consent" type="checkbox" required><label for="consent">I have permission to use these photos. I agree to send them and my instructions to our AI service to make my picture. Family-friendly content only. <a href="/privacy.html" target="_blank" rel="noopener">Photo privacy</a>.</label></div>
+            <div class="consent"><input id="consent" type="checkbox" required><label for="consent">I can use these photos and agree to send them to an AI image service to create my picture. Family-friendly photos only. <a href="/privacy.html" target="_blank" rel="noopener">Photo privacy</a>.</label></div>
             <details class="create-privacy-details"><summary>Which AI service uses my photos?</summary><p>Your photos and instructions go to fal.ai or Cloudflare Workers AI for this preview. Your original photo stays private. <a href="/privacy.html" target="_blank" rel="noopener">Read the full policy</a>.</p></details>
             <input type="radio" name="qualityMode" value="high" checked hidden>
             <input type="radio" name="qualityMode" value="quick" hidden>
             <p id="render-credits" class="credit-quick-count" role="status" aria-live="polite" hidden></p>
-            <details id="render-credits-more" class="credit-extra" hidden><summary>Credit balance &amp; reset times</summary><p id="render-credits-details"></p></details>
-            <p id="credit-gifts-link" class="credit-gifts-link" hidden><a href="/credits.html">Have a code? See credits &amp; gifts →</a></p>
+            <details id="render-credits-more" class="credit-extra" hidden><summary>Credits &amp; reset times</summary><p id="render-credits-details"></p></details>
+            <p id="credit-gifts-link" class="credit-gifts-link" hidden><a href="/credits.html">Credits &amp; gift codes →</a></p>
             <aside id="quality-fallback" hidden aria-live="polite">
               <p id="quality-fallback-reason"></p>
               <p id="standard-limit-status" class="standard-limit-status" role="status" hidden></p>
@@ -228,7 +228,7 @@
             <p id="return-to-order" hidden><a class="button ghost" href="/order.html">Return to my order and choose its design →</a></p>
             <div id="turnstile-container" class="turnstile-container hidden"></div>
             
-             <button type="submit" class="button primary full" id="generate-button">Create My Picture</button>
+             <button type="submit" class="button primary full" id="generate-button">Make My Picture</button>
             <div id="recast-error" class="recast-error hidden" role="alert"></div>
             <div class="quality-line"><span class="quality-dot"></span><span id="model-copy">High Quality · Best detail</span></div>
 <button type="button" class="button ghost" data-go-step="1">Back to photos</button>
@@ -290,7 +290,7 @@
         </div>
         <div class="preview-info preview-info-simple">
           <div class="preview-protection"><strong>Preview only</strong><span>The watermark does not print.</span></div>
-          <a class="button primary preview-product-cta" href="#shop">Choose a product →</a>
+          <a class="button primary preview-product-cta" href="#shop">Put It on a Product →</a>
           <a class="button ghost preview-version-cta" href="#recent-versions-shell">Pick another version</a>
           <details class="preview-more">
             <summary>More options</summary>
@@ -323,7 +323,7 @@
         <div><div class="eyebrow">MAKE IT REAL</div><h2>Put your Recast on something real.</h2></div>
         <p>Preview the design on the product before you buy.</p>
       </div>
-      <p class="launch-shop-note">Browse every product below. Create a Recast to preview your own design.</p>
+      <p class="launch-shop-note">Choose a product to see your picture on it.</p>
       <div id="product-grid" class="catalog-preview merch-catalog-shell"></div>
     </section>
     <section class="section status-section debug-only hidden" id="debug-status">
@@ -349,7 +349,7 @@
   </footer>
   <script src="/analytics.js?v=1" defer></script>
   <script src="/simple-creator-v115.js?v=1" defer></script>
-  <script src="/app.js?v=275" type="module"></script>
-  <script src="/checkout.js?v=2615" type="module"></script>
+  <script src="/app.js?v=276" type="module"></script>
+  <script src="/checkout.js?v=2616" type="module"></script>
 </body>
 </html>

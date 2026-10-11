@@ -61,13 +61,13 @@ export function initCreationWizard({styles,photos,subject,style,updateWorld,hasB
       b.addEventListener('click',()=>{style.value=id;updateWorld();});$('#adventure-choices').append(b);
     });
     const all=$('#all-worlds-group');
-    $('#more-adventures').textContent=all.hidden?'See all adventures ↓':'Hide extra adventures ↑';
+    $('#more-adventures').textContent=all.hidden?'More Styles ↓':'Fewer Styles ↑';
   }
   const allWorlds=$('#all-worlds-group'),moreWorlds=$('#more-adventures');
   function setAllWorldsOpen(open){
     allWorlds.hidden=!open;
     moreWorlds.setAttribute('aria-expanded',String(open));
-    moreWorlds.textContent=open?'Hide extra adventures ↑':'See all adventures ↓';
+    moreWorlds.textContent=open?'Fewer Styles ↑':'More Styles ↓';
   }
   moreWorlds.addEventListener('click',()=>{
     setAllWorldsOpen(allWorlds.hidden);

@@ -71,7 +71,7 @@ test('refining a saved version includes original pet image and the previous rend
   const second=await (await highQualityTransform(submission({photo:null,branch:first,world:'A snowy floating island'}),env)).json();
   assert.equal(second.persisted,true);
   assert.equal(calls[1].refs.length,2);
-  assert.match(calls[1].prompt,/last reference image is the previous successful Recast/i);
+  assert.match(calls[1].prompt,/last image is a previous Recast for continuity/i);
   const saved=JSON.parse(String(env.ARTWORK.objects.get(`requests/${second.requestId}/request.json`)));
   assert.equal(saved.parentRequestId,first.requestId);
   assert.equal(saved.inputCount,2);
@@ -114,15 +114,15 @@ test('preset pet renders restyle the pet and ignore stale custom world text',asy
     return {image};
   });
   const result=await (await highQualityTransform(submission({style:'game',world:'A floating garden with glowing waterfalls',notes:''}),env)).json();
-  assert.match(prompt,/heroic pet harness/i);
-  assert.match(prompt,/PET IDENTITY IS NON-NEGOTIABLE/i);
-  assert.match(prompt,/exact head and muzzle shape/i);
-  assert.match(prompt,/Do not widen or shorten the muzzle/i);
-  assert.match(prompt,/never appear as an unchanged photo cutout/i);
+  assert.match(prompt,/fitted adventure vest/i);
+  assert.match(prompt,/IDENTITY FIRST:/);
+  assert.match(prompt,/exact eyes, nose, muzzle/i);
+  assert.match(prompt,/do not invent masculine\/feminine traits/i);
+  assert.match(prompt,/no obvious cutout/i);
   assert.doesNotMatch(prompt,/floating garden/i);
   const saved=JSON.parse(String(env.ARTWORK.objects.get(`requests/${result.requestId}/request.json`)));
   assert.equal(saved.customWorld,'');
-  assert.equal(saved.promptVersion,'identity-all-worlds-v5');
+  assert.equal(saved.promptVersion,'identity-first-48-worlds-v1');
 });
 
 test('provider-wide free allowance is reported as shared capacity, not a visitor limit',async()=>{
@@ -204,9 +204,9 @@ test('Royal references retain anatomy; provider moderation stops after one call'
   for(const prompt of prompts){
     assert.match(prompt,/Input image 0 \(photo 1\) shows person 1/);
     assert.match(prompt,/Input image 1 \(photo 2\) shows the same pet/);
-    assert.match(prompt,/Never give a pet human hands/);
-    assert.match(prompt,/photo.*same individual/);
-    assert.match(prompt,/natural age, hair and beard, body build/);
+    assert.match(prompt,/never human hands/);
+    assert.match(prompt,/Multiple reference photos clarify identity/);
+    assert.match(prompt,/hairline, skin tone, natural age and expression/);
     assert.doesNotMatch(prompt,/Preserve all 2 reference subjects/);
   }
 });
@@ -224,17 +224,17 @@ test('illustrated and realistic worlds preserve identity instructions in both qu
       const body=await base.formData();body.set('subject','family');
       const response=await highQualityTransform(new Request(base.url,{method:'POST',body}),env);
       assert.equal(response.status,200,`${quality}/${style}`);
-      assert.match(prompt,/ALL-WORLD LIKENESS/);
-      assert.match(prompt,/stock anime face/);
-      assert.match(prompt,/same anatomical side/);
-      assert.match(prompt,/reduce the exaggeration/);
-      assert.match(prompt,/relative light\/dark contrast/);
+      assert.match(prompt,/IDENTITY FIRST:/);
+      assert.match(prompt,/No generic beauty face/);
+      assert.match(prompt,/Keep faces visible and original head angles/);
+      assert.match(prompt,/change drawing style, NOT facial identity/);
+      assert.match(prompt,/CHANGE ONLY outfit, background, props and scene lighting/);
       if(quality==='high'){
-        assert.ok(prompt.indexOf('ALL-WORLD LIKENESS') < prompt.indexOf('SELECTED WORLD:'));
+        assert.ok(prompt.indexOf('IDENTITY FIRST:') < prompt.indexOf('WORLD:'));
       }else{
         // Klein gets the scene FIRST so a shorter prompt actually changes the world.
         assert.ok(prompt.startsWith('EDIT THE UPLOADED PHOTO(S)'));
-        assert.ok(prompt.indexOf('REPLACE THE WHOLE ORIGINAL BACKGROUND') < prompt.indexOf('ALL-WORLD LIKENESS'));
+        assert.ok(prompt.indexOf('IDENTITY FIRST:') < prompt.indexOf('WORLD:'));
         assert.ok(prompt.length<3500,'Standard must not re-use the long HQ prompt');
       }
     }
