@@ -22,3 +22,7 @@ Sources checked: https://ai.google.dev/gemini-api/docs/models/gemini-2.5-flash-i
 Deployment pending receipt. Rollback: revert this session's runtime/UI changes through normal guarded release while preserving research notes. No data migration or approved-artwork regeneration.
 
 PR #52 initial head d9fb84d25153c79e4f99b50e87513a74a5e30516: security 38177736615 passed; customer-policy 38177736644 failed because the older broad browser audit expected the demo button to select dev. New intended default is Nano/concise. Corrected the stale assertion in scripts/rm050-browser-tests.cjs and added recipe assertion; no runtime change made to bypass the gate. Hosted checks rerun on the corrected commit.
+
+## Release receipt
+
+PR #52 corrected head 27205c14f55774f6d0fb24a22fb982e3db3747a8, tree 4e625ab65a3259e956720063f65ff49843d22749. Security 38177935563 and customer-policy 38177935571 PASS including hosted mobile checks. Squash main 4dc83bf3f09c11dc3b0c37eea2d7b5f758cbd9ad. Guarded deployment 38178129636 PASS (499 tests, dry-run, deployment, read-only production smoke). Worker fdd4ddaf-7f3c-46ff-845e-167e5092fe7f. Live browser verified https://recastmeai.com/model-lab defaults to Nano and concise face-first, exposes FLUX dev and earlier control, and warns about the older protected experiments. No photo submitted and no paid calls. Public launch audit 38178129741 still running at this receipt. Actual revised-prompt quality awaits owner visual comparison; no claim of solved likeness/removal or validated backup.
