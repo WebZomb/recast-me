@@ -1,6 +1,6 @@
-import {ADVENTURE_GUIDES} from './adventure-guides.js?v=1';
+import {ADVENTURE_GUIDES} from './adventure-guides.js?v=2';
 import {mergeHistory,privateRecastLink,readRecastLink} from './recast-history.js';
-import {initCreationWizard} from './creation-wizard.js?v=283';
+import {initCreationWizard} from './creation-wizard.js?v=285';
 import {fallbackState,creditSummary,creditHeadline,recoveryUnverified} from './quality-policy.js?v=267';
 import {protectedPreviewFile} from './preview-export.js';
 let creditInfo=null;

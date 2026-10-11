@@ -61,3 +61,10 @@
 .photo-include-summary{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:12px 0;color:#dcd9f1}.photo-include-summary[hidden]{display:none}.photo-include-summary .button{margin-left:auto;min-height:44px;padding:8px 14px}.photo-subject-details .subject-choices{grid-template-columns:repeat(2,minmax(0,1fr))}
 
 .subject-focus-dialog{box-sizing:border-box;max-width:520px;width:calc(100% - 24px);max-height:90dvh;overflow:auto;background:#111223;color:#fff;border:1px solid #5e5288;border-radius:20px;padding:20px}.subject-focus-dialog::backdrop{background:#000b}.subject-focus-dialog h2{font-size:24px;line-height:1.15}.focus-photo{position:relative}.focus-photo img{display:block;width:100%;height:auto}.focus-surface{position:absolute;inset:0;width:100%;height:100%;border:0;background:transparent;cursor:crosshair}.focus-surface:focus-visible{outline:3px solid #68dcff;outline-offset:2px;background:radial-gradient(circle at var(--cursor-x,50%) var(--cursor-y,50%),transparent 10px,#68dcff 11px,transparent 14px)}.face-marker{position:absolute;transform:translate(-50%,-50%);border:2px solid #fff;border-radius:50%;background:#633ee0;color:white;min-width:36px;min-height:36px;padding:3px;box-shadow:0 0 0 3px #0006}.focus-key-help{font-size:12px;color:#b9b6cc}.subject-focus-dialog [data-focus-done]{position:sticky;bottom:0;width:100%}
+
+/* RM125: one native disclosure, no duplicate inclusion control. */
+.photo-subject-details[hidden]{display:none}
+.photo-subject-details>summary{display:flex;align-items:center;justify-content:space-between;gap:12px;text-decoration:none;color:#dcd9f1;list-style:none;min-height:44px}
+.photo-subject-details>summary::-webkit-details-marker{display:none}
+.include-change{border:1px solid #464252;border-radius:16px;padding:10px 16px;color:#fff}
+.photo-subject-details[open] .include-change{background:#282039}
