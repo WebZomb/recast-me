@@ -432,7 +432,7 @@ function applyReadiness(){
   const ready=Boolean(readinessSnapshot?.local?.ready&&health?.ready&&(mode==='quick'?fallback.standardReady:!fallback.exhausted));
   if(button&&!generationInFlight){
     // One main action at a time. Hide disabled HQ while Standard is offered.
-    button.hidden=mode==='high'&&fallback.show&&(fallback.exhausted||fallback.outage);
+    button.hidden=(mode==='high'&&fallback.show&&(fallback.exhausted||fallback.outage))||(mode==='quick'&&fallback.standardExhausted);
     button.disabled=!ready;
     button.textContent=ready?'Make My Picture':'Checking availability…';
   }
