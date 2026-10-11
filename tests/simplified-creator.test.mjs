@@ -44,15 +44,23 @@ test('Choose an adventure offers four favorites and progressively reveals the fu
  assert.match(style,/#all-worlds-group\[hidden\]/);
 });
 test('Photo and AI permissions are explicit but not a book',()=>{
- assert.match(page,/I can use these photos/);
+ assert.match(page,/I have permission to use these photos/);
  assert.match(page,/send them to an AI image service/);
  assert.match(page,/Family-friendly photos only/);
  assert.match(page,/fal\.ai or Cloudflare Workers AI/);
  assert.match(page,/create-privacy-details/);
  assert.match(page,/details id="personal-details"/);
  assert.match(page,/Skip this unless you want something specific/);
- assert.match(page,/photo-tip">1–2 photos work best/);
+ assert.match(page,/One clear photo works best/);
  assert.match(page,/creation-progress/);
+ assert.match(page,/id="subject">\s*<option value="auto" selected>/);
+ assert.match(page,/id="photo-subject-details"/);
+ assert.doesNotMatch(page,/data-create-step="0"/,'No mandatory Who step');
+ assert.match(page,/data-go-step="1">1 · Photos/);
+ assert.match(page,/data-go-step="2">2 · Style/);
+ assert.match(source('creation-wizard.js'),/let step=1/);
+ assert.match(source('creation-wizard.js'),/Never label a random uploaded photo/);
+ assert.match(source('identity-first-adventure-prompt.js'),/Recognize the real subjects directly from the uploaded photo/);
  assert.match(page,/type="radio" name="qualityMode" value="high" checked hidden/);
 });
 test('Small main balance with full resets on request, no hidden allowance changes',()=>{
