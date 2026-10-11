@@ -273,7 +273,8 @@ const policy={highDaily:3,standardDaily:5,purchaseBonus:3,websiteCalls:70,social
    // Wait for the actual completion message before asserting selected controls.
    await page.waitForFunction(()=>document.querySelector('#status')?.textContent?.includes('Demo dog loaded'),null,{timeout:15000});
    assert.equal(await page.locator('#host').inputValue(),'fal');
-   assert.equal(await page.locator('#engine').inputValue(),'dev');
+   assert.equal(await page.locator('#engine').inputValue(),'nano-banana');
+   assert.equal(await page.locator('#recipe').inputValue(),'concise');
    assert.equal(await page.locator('#subject').count(),0,'Model Lab uses automatic subject recognition');
    const demo=await page.locator('#reference').evaluate(input=>({count:input.files?.length,name:input.files?.[0]?.name,size:input.files?.[0]?.size}));
    assert.equal(demo.count,1);assert.match(demo.name,/jack-russell/i);assert.ok(demo.size>1000);
