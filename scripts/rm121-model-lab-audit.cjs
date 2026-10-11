@@ -22,8 +22,8 @@ const server=http.createServer(async(req,res)=>{
  const b64=await page.evaluate(()=>{const c=document.createElement('canvas');c.width=1200;c.height=1600;c.getContext('2d').fillRect(0,0,1200,1600);return c.toDataURL('image/png').split(',')[1]});
  await page.locator('#reference').setInputFiles({name:'synthetic.png',mimeType:'image/png',buffer:Buffer.from(b64,'base64')});await page.locator('#token').fill('mock-owner-token');
  let expectedResults=0;
- for(const choice of ['nano-banana','dev-edit','dev','klein9']){
-  await page.locator('#engine').selectOption(choice);await page.locator('#run').click();await page.waitForFunction(count=>document.querySelectorAll('#results article').length===count,++expectedResults);
+ for(const choice of ['qwen-protected','fill-protected','nano-banana','dev-edit','dev','klein9']){
+  await page.locator('#engine').selectOption(choice);await page.evaluate(()=>document.querySelector('#status').textContent='');await page.locator('#run').click();await page.waitForFunction(count=>document.querySelectorAll('#results article').length===Math.min(count,4)&&document.querySelector('#status').textContent.startsWith('Comparison ready'),++expectedResults);
   assert.match(submitted.url,new RegExp('model='+choice+'$'));assert.equal(submitted.authorization,'Bearer mock-owner-token');assert.equal(submitted.form.get('subject'),'auto');
   const quick=choice==='klein9';assert.equal(submitted.form.get('ownerProvider'),quick?'cloudflare':'fal');assert.equal(submitted.form.get('qualityMode'),quick?'quick':'high');
   const dimensions=async file=>page.evaluate(async encoded=>{const blob=await(await fetch('data:image/jpeg;base64,'+encoded)).blob();const image=await createImageBitmap(blob);return [image.width,image.height]},Buffer.from(await file.arrayBuffer()).toString('base64'));
@@ -32,7 +32,7 @@ const server=http.createServer(async(req,res)=>{
  }
  assert.equal(await page.locator('#original').isVisible(),true);assert.equal(await page.locator('#results article').count(),4);assert.deepEqual(errors,[]);
  assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'No mobile horizontal overflow');
- console.log(engine.name()+' '+width+'px: original preview, four choices, HQ1024/CF500, one local mock submission per click, no JS errors PASS');
+ console.log(engine.name()+' '+width+'px: original preview, six choices, HQ1024/CF500, one local mock submission per click, no JS errors PASS');
  }finally{await browser.close()}}
  }finally{await new Promise(r=>server.close(r))}
 })().catch(e=>{console.error(e);process.exitCode=1});
