@@ -288,7 +288,7 @@ const policy={highDaily:3,standardDaily:5,purchaseBonus:3,websiteCalls:70,social
    for(let i=0;i<4;i++){
      const card=page.locator(`[data-version-index="${i}"]`);
      await card.scrollIntoViewIfNeeded();
-     await card.locator('img').evaluate(img=>img.complete&&img.naturalWidth?true:new Promise((resolve,reject)=>{img.onload=()=>resolve(true);img.onerror=()=>reject(Error('Saved image failed'));}));
+     await page.waitForFunction(index=>document.querySelector(`[data-version-index="${index}"] img`)?.naturalWidth>0,i,{timeout:12000});
    }
    assert.equal(new Set(state.previewReads).size,4,'Every saved version loads when approached');
    await page.locator('[data-version-index="3"] [data-history-action="use"]').click();
