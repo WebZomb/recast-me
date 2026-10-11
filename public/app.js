@@ -294,7 +294,7 @@ function updateQualityUI(){
   const mode=selectedQuality();
   document.querySelectorAll('[data-quality-card]').forEach(card=>card.classList.toggle('selected',card.dataset.qualityCard===mode));
   const button=document.querySelector('#generate-button');
-  if(button&&!generationInFlight)button.textContent=mode==='quick'?'Try Standard Preview':'Create My Picture';
+  if(button&&!generationInFlight)button.textContent=mode==='quick'?'Try Standard':'Make My Picture';
   const copy=document.querySelector('#model-copy');
   if(copy)copy.textContent=mode==='quick'
     ? 'Standard · Lower detail'
@@ -428,7 +428,7 @@ function applyReadiness(){
   const mode=selectedQuality(),health=readinessFor(mode),button=document.querySelector('#generate-button'),notice=document.querySelector('#render-availability');
   const fallback=updateFallback();
   const ready=Boolean(readinessSnapshot?.local?.ready&&health?.ready&&(mode==='quick'?fallback.standardReady:!fallback.exhausted));
-  if(button&&!generationInFlight){button.disabled=!ready;button.textContent=ready?(mode==='quick'?'Try Standard Preview':'Create My Picture'):fallback.exhausted&&mode==='high'?'High Quality used up':'Checking availability…';}
+  if(button&&!generationInFlight){button.disabled=!ready;button.textContent=ready?(mode==='quick'?'Try Standard':'Make My Picture'):fallback.exhausted&&mode==='high'?'High Quality used up':'Checking availability…';}
   const copy=document.querySelector('#model-copy');if(copy)copy.textContent=fallback.exhausted&&mode==='high'?'High Quality · No credits left':mode==='quick'&&fallback.standardExhausted?'Standard · No credits left':readinessMessage(mode);
   const dot=document.querySelector('.quality-dot');if(dot)dot.dataset.state=ready&&!recoveryUnverified(health)?'ready':readinessSnapshot?.local?.ready?'waiting':'error';
   if(notice){notice.hidden=ready&&!recoveryUnverified(health);notice.textContent=ready&&!recoveryUnverified(health)?'':fallback.exhausted&&mode==='high'?'High Quality is used up. Check the reset below.':readinessMessage(mode)+' Your photo stays here.';}
