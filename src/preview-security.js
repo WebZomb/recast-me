@@ -310,6 +310,9 @@ export function secureApplication(application) {
             const choice=url.searchParams.get('model');
             if(!['dev','dev-edit','nano-banana','qwen-protected','fill-protected','klein9','klein4'].includes(choice))throw error('invalid_model','Choose a supported test model.',400);
             const experimental=['dev-edit','nano-banana','qwen-protected','fill-protected'].includes(choice);
+            const recipe=form.get('promptRecipe')||'baseline';
+            if(!['baseline','concise'].includes(recipe)||recipe==='concise'&&!['dev-edit','nano-banana'].includes(choice))throw error('invalid_recipe','Choose a supported prompt recipe for this engine.',400);
+            env={...env,RECAST_OWNER_IDENTITY_RECIPE:recipe};
             env={...env,RECAST_RENDER_MODE:choice.startsWith('klein')?'quick':'high'};
             if(experimental){
               if(form.get('ownerProvider')!=='fal'||env.FAL_OWNER_TEST_ENABLED!=='true')throw error('owner_fal_not_enabled','This comparison requires the activated owner fal test.',503);

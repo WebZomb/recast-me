@@ -1,6 +1,6 @@
 const $=s=>document.querySelector(s);
 const falModels=new Set(['dev','dev-edit','nano-banana','qwen-protected','fill-protected']);
-function syncHost(){if(['dev-edit','nano-banana','qwen-protected','fill-protected'].includes($('#engine').value))$('#host').value='fal';if($('#engine').value.startsWith('klein'))$('#host').value='cloudflare';$('#host').disabled=$('#engine').value!=='dev'}
+function syncHost(){if(['dev-edit','nano-banana','qwen-protected','fill-protected'].includes($('#engine').value))$('#host').value='fal';if($('#engine').value.startsWith('klein'))$('#host').value='cloudflare';$('#host').disabled=$('#engine').value!=='dev';$('#recipe').disabled=!['nano-banana','dev-edit'].includes($('#engine').value)}
 $('#engine').addEventListener('change',syncHost);syncHost();
 let originalUrl;
 function showOriginal(file){if(originalUrl)URL.revokeObjectURL(originalUrl);originalUrl=URL.createObjectURL(file);$('#original').src=originalUrl;$('#original').hidden=false}
@@ -19,8 +19,8 @@ $('#use-demo-dog').addEventListener('click',async e=>{
   const file=new File([blob],'recast-demo-jack-russell.webp',{type:'image/webp'});
   const transfer=new DataTransfer();transfer.items.add(file);
   $('#reference').files=transfer.files;
-  $('#engine').value='dev';$('#host').value='fal';syncHost();showOriginal(file);
-  $('#direction').value='Add a royal blue embroidered cape and a small crown. Preserve the original face, eyes, features, markings, age, expression, head angle and natural anatomy.';
+  $('#engine').value='nano-banana';$('#recipe').value='concise';$('#host').value='fal';syncHost();showOriginal(file);
+  $('#direction').value='Add a royal blue embroidered cape and a small crown.';
   $('#environment').value='A sunlit palace courtyard with warm natural light.';
   $('#status').textContent='Demo dog loaded. Choose Generate one comparison image to test the fal High Quality model.';
  }catch(error){$('#status').textContent=error.message}finally{button.disabled=false}
@@ -30,9 +30,9 @@ $('#lab').addEventListener('submit',async e=>{
  const timer=setInterval(()=>$('#status').textContent=`${model.endsWith('-protected')?'Detecting heads / creating scene':'Rendering'} ${label} · ${Math.floor((Date.now()-started)/1000)} seconds elapsed`,1000);
  try{
   if(host==='fal'&&!falModels.has(model))throw Error('Choose Cloudflare for the Standard engines.');
-  const form=new FormData();form.set('ownerProvider',host==='fal'?'fal':'cloudflare');form.set('style','custom');form.set('subject',subject);form.set('notes',notes);form.set('customWorld',world);form.set('qualityMode',model.startsWith('klein')?'quick':'high');form.set('image_0',await prepare(file),'reference.jpg');
+  const form=new FormData();form.set('promptRecipe',$('#recipe').disabled?'baseline':$('#recipe').value);form.set('ownerProvider',host==='fal'?'fal':'cloudflare');form.set('style','custom');form.set('subject',subject);form.set('notes',notes);form.set('customWorld',world);form.set('qualityMode',model.startsWith('klein')?'quick':'high');form.set('image_0',await prepare(file),'reference.jpg');
   if(host==='fal')form.set('hq_image_0',await prepare(file,1024),'detail.jpg');
   const response=await fetch('/api/admin/model-test?model='+model,{method:'POST',headers:{Authorization:'Bearer '+token},body:form});const data=await response.json();if(!response.ok||!data.ok)throw Error((data.userMessage||data.error||'Generation did not finish.')+(data.diagnosticId?' Support reference: '+data.diagnosticId:''));
-  const card=document.createElement('article');const title=document.createElement('h2');title.textContent=label;const img=document.createElement('img');img.src=data.image;img.alt='Owner comparison result';const detail=document.createElement('p');detail.textContent=`${Math.round((Date.now()-started)/1000)}s · ${data.providerUsed||host} · ${data.modelUsed} · ${data.promptVersion} · ${file.name} · ${subject} · ${notes} · ${world}`;card.append(title,img,detail);$('#results').append(card);while($('#results').children.length>4)$('#results').firstElementChild.remove();$('#status').textContent='Comparison ready. Select the next engine to run another test.';
+  const card=document.createElement('article');const title=document.createElement('h2');title.textContent=label+' · '+(form.get('promptRecipe')==='concise'?'concise':'earlier recipe');const img=document.createElement('img');img.src=data.image;img.alt='Owner comparison result';const detail=document.createElement('p');detail.textContent=`${Math.round((Date.now()-started)/1000)}s · ${data.providerUsed||host} · ${data.modelUsed} · ${data.promptVersion} · ${file.name} · ${subject} · ${notes} · ${world}`;card.append(title,img,detail);$('#results').append(card);while($('#results').children.length>4)$('#results').firstElementChild.remove();$('#status').textContent='Comparison ready. Select the next engine to run another test.';
  }catch(error){$('#status').textContent=error.message}finally{clearInterval(timer);$('#run').disabled=false}
 });

@@ -6,8 +6,8 @@ import {moderationVerdict} from './safety-fixtures.mjs';
 const JOB='01a11f14-bd12-7083-aa72-2e494db231a0';
 const DETAIL=Buffer.concat([CLEAN,Buffer.from('original-detail-preserved')]);
 function env(extra={}){return {ARTWORK:new Bucket(),IMAGES:imageMock(),ADMIN_TOKEN:'fake-admin',CONTENT_MODERATION_ENABLED:'true',MODERATION_OPENAI_API_KEY:'offline',AI:{run:async()=>{throw Error('Unexpected Cloudflare inference')}},FAL_API_KEY:'MOCK-FAL-KEY-NOT-A-REAL-CREDENTIAL',FAL_OWNER_TEST_ENABLED:'true',RECAST_HQ_PROVIDER:'fal',FAL_PROVIDER_ENABLED:'true',FAL_PROVIDER_VERIFIED:'true',IMAGE_MODEL_HIGH_QUALITY:'@cf/black-forest-labs/flux-2-dev',IMAGE_HIGH_QUALITY_STEPS:'18',IMAGE_HIGH_QUALITY_GUIDANCE:'5',RENDER_CREDITS_ENABLED:'false',AI_DAILY_CALL_LIMIT:'70',AI_DAILY_BUDGET_CENTS:'500',AI_CALL_RESERVE_CENTS:'7',...extra}}
-function req({choice='nano-banana',admin=true,path='/api/admin/model-test',host='fal'}={}){
- const f=new FormData();f.set('ownerProvider',host);f.set('style','custom');f.set('subject','auto');f.set('notes','A royal blue cape');f.set('customWorld','Sunlit palace courtyard');f.set('qualityMode','high');f.set('image_0',new File([CLEAN],'small.jpg',{type:'image/jpeg'}));f.set('hq_image_0',new File([DETAIL],'detail.jpg',{type:'image/jpeg'}));
+function req({choice='nano-banana',admin=true,path='/api/admin/model-test',host='fal',recipe='baseline'}={}){
+ const f=new FormData();f.set('promptRecipe',recipe);f.set('ownerProvider',host);f.set('style','custom');f.set('subject','auto');f.set('notes','A royal blue cape');f.set('customWorld','Sunlit palace courtyard');f.set('qualityMode','high');f.set('image_0',new File([CLEAN],'small.jpg',{type:'image/jpeg'}));f.set('hq_image_0',new File([DETAIL],'detail.jpg',{type:'image/jpeg'}));
  // Forged public fields must never activate an owner experiment.
  f.set('RECAST_OWNER_IDENTITY_MODEL',choice);f.set('ownerModel',choice);
  return new Request('https://recast.test'+path+'?model='+choice,{method:'POST',headers:admin?{authorization:'Bearer fake-admin'}:{},body:f});
@@ -53,10 +53,25 @@ test('candidate respects the existing daily generation limit',async t=>{
 
 test('approved public Nano route keeps moderation, one paid request, originals, metadata and health tracking',async t=>{
  const e=env({FAL_CUSTOMER_MODEL:'nano-banana'}),calls=mock(t);await e.ARTWORK.put('system/providers/hq-fal.json',JSON.stringify({status:'success'}));
- const r=await router.fetch(req({admin:false,path:'/api/transform-v2'}),e,{}),d=await r.json();assert.equal(r.status,200,JSON.stringify(d));assert.equal(d.modelUsed,'fal-ai/nano-banana/edit');assert.equal(d.promptVersion,'nano-identity-adventures-v5');assert.equal(d.image,'data:image/jpeg;base64,'+MARKED.toString('base64'));
+ const r=await router.fetch(req({admin:false,path:'/api/transform-v2'}),e,{}),d=await r.json();assert.equal(r.status,200,JSON.stringify(d));assert.equal(d.modelUsed,'fal-ai/nano-banana/edit');assert.equal(d.promptVersion,'nano-identity-adventures-v6');assert.equal(d.image,'data:image/jpeg;base64,'+MARKED.toString('base64'));
  assert.equal(calls.filter(c=>c.url.includes('queue.fal.run')&&c.method==='POST').length,1);assert.equal(calls.filter(c=>c.url.endsWith('/moderations')).length,2);
  assert.equal((await(await e.ARTWORK.get('system/providers/hq-fal.json')).json()).status,'success');const meta=await(await e.ARTWORK.get('requests/'+d.requestId+'/request.json')).json();assert.equal(meta.modelUsed,d.modelUsed);assert.equal(meta.promptVersion,d.promptVersion);
 });
 test('public Nano requires output screening before any paid submission',async t=>{
  const e=env({FAL_CUSTOMER_MODEL:'nano-banana',CONTENT_MODERATION_ENABLED:'false'}),calls=mock(t);await e.ARTWORK.put('system/providers/hq-fal.json',JSON.stringify({status:'success'}));const r=await router.fetch(req({admin:false,path:'/api/transform-v2'}),e,{});assert.ok(r.status>=400);assert.equal(calls.filter(c=>c.url.includes('queue.fal.run')).length,0);
+});
+
+for(const choice of ['nano-banana','dev-edit'])test(choice+': concise recipe uses unchanged original, one generation and accurate version',async t=>{
+ const e=env(),calls=mock(t,{nano:choice==='nano-banana'});
+ const response=await router.fetch(req({choice,recipe:'concise'}),e,{}),data=await response.json();
+ assert.equal(response.status,200,JSON.stringify(data));assert.equal(data.promptVersion,'owner-identity-concise-v2');
+ const posts=calls.filter(c=>c.url.includes('queue.fal.run')&&c.method==='POST');assert.equal(posts.length,1);
+ const sent=JSON.parse(posts[0].body);assert.deepEqual(sent.image_urls,['data:image/jpeg;base64,'+DETAIL.toString('base64')]);
+ assert.match(sent.prompt,/eye shape and spacing/);assert.match(sent.prompt,/Sunlit palace courtyard/);assert.match(sent.prompt,/A royal blue cape/);
+ assert.doesNotMatch(sent.prompt,/Crop the lower body|frame a close head-and-upper-body/);
+ assert.equal(await e.ARTWORK.get('system/providers/hq-fal.json'),null);
+});
+test('invalid recipe stops before any external call',async t=>{
+ const calls=mock(t);const response=await router.fetch(req({recipe:'unknown'}),env(),{});
+ assert.equal(response.status,400);assert.equal(calls.length,0);
 });
