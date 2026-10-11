@@ -11,9 +11,9 @@ test('AI or original photo are two visible, touch-sized, clearly named first act
   assert.match(page,new RegExp('id="'+id+'"'));
   assert.equal(count(page,'id="'+id+'"'),1,'No duplicate controls for '+id);
  }
- assert.match(page,/Create a new picture/);
- assert.match(page,/Use my original photo/);
- assert.match(page,/No AI · Keep the photo as-is/);
+ assert.match(page,/Make a Picture/);
+ assert.match(page,/Use My Photo/);
+ assert.match(page,/No AI · Keep it original/);
  assert.match(style,/\.create-method\{[^}]*min-height:100px/);
  assert.match(style,/\.create-method-original[^}]*border-color/);
  assert.match(ux,/slot\.append\(original\)/,'Old validated original-photo form is moved, not replaced');
