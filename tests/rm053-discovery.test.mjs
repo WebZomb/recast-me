@@ -12,7 +12,7 @@ test('Advanced photo guidance retains existing group categories without a mandat
  for(const excessive of ['Two or more pets','Horse</option>','Friends / group','Child / teen','Baby</option>','Family + pet','Motorcycle / bike','Home / special place','Memorial / tribute']) assert.equal(html.includes(excessive),false,excessive);
  assert.match(html,/id="photo-subject-details"/);
  assert.doesNotMatch(html,/data-create-step="0"/);
- assert.match(wizard,/for\(const value of \['auto','pet','person','person and pet','couple','family','car','custom'\]/);
+ assert.match(wizard,/for\(const value of \['auto','pet','person and pet','person','group','couple','family','car','custom'\]/);
  assert.equal(wizard.includes('Browse all subjects ↓'),false);
  assert.match(html,/data-launch-build="RM-056"/);
 });

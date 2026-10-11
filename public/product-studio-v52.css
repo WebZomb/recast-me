@@ -50,3 +50,6 @@
  #product-grid.checkout-catalog .product{border-radius:22px!important}
 }
 @media(prefers-reduced-motion:reduce){#product-grid.checkout-catalog .product{transition:none!important;transform:none!important}}
+
+/* Keep artwork legible when one preview is enough. */
+.final-review-angles:has(figure:only-child){grid-template-columns:1fr}.final-review-angles figure:only-child{max-width:380px;width:100%;justify-self:center}.final-review-angles figure:only-child img{max-height:360px}.fast-review .final-review-actions{grid-template-columns:1fr 1fr}.fast-review .final-review-panel{box-sizing:border-box}.fast-artwork{margin-top:16px}@media(max-width:700px){.fast-review .final-review-actions{grid-template-columns:1fr}.fast-review .final-review-top h2{font-size:28px}}

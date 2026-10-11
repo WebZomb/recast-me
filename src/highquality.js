@@ -1,3 +1,4 @@
+import {customerNano,customerIdentityPrompt,CUSTOMER_IDENTITY_VERSION} from './customer-identity.js';
 import {ownerIdentityModel,ownerIdentityPrompt,OWNER_IDENTITY_PROMPT_VERSION} from './owner-identity-comparison.js';
 import {moderateContent,screenText,CONTENT_MESSAGE} from './content-safety.js';
 import {makeFalCompactPrompt} from './fal-prompt.js';
@@ -277,7 +278,7 @@ async function generateHighQuality({env,model,styleId,subjectType,notes,customWo
   // Both fal HQ and Cloudflare HQ fallback receive the SAME concise
   // identity-first prompt as Standard. Model settings and call count are fixed.
   const candidate=ownerIdentityModel(env);
-  const main=candidate?ownerIdentityPrompt({notes:safeNotes(notes),customWorld:safeNotes(customWorld)}):makeFalCompactPrompt({styleId,subjectType,style:STYLES[styleId],
+  const main=customerNano(env)?customerIdentityPrompt({styleId,subjectType,notes:safeNotes(notes),customWorld:safeNotes(customWorld),hasBranch}):candidate?ownerIdentityPrompt({notes:safeNotes(notes),customWorld:safeNotes(customWorld)}):makeFalCompactPrompt({styleId,subjectType,style:STYLES[styleId],
     notes:safeNotes(notes),customWorld:safeNotes(customWorld),inputCount:inputFiles.length,hasBranch});
   const steps=Math.max(8,Math.min(30,Number(candidate?28:env.IMAGE_HIGH_QUALITY_STEPS||18)));
   const guidance=Math.max(1,Math.min(10,Number(candidate?2.5:env.IMAGE_HIGH_QUALITY_GUIDANCE||5)));
@@ -465,10 +466,10 @@ export async function highQualityTransform(request,env,{trustedSocialJob=false}=
     const requestId=`RC-${Date.now().toString(36).toUpperCase()}-${randomHex(3).toUpperCase()}`;
     const accessToken=randomHex(32);
     safety.outputScreening=await moderateContent(env,{images:[new File([Uint8Array.from(atob(image),c=>c.charCodeAt(0))],"output",{type:previewMime})]});
-    const stored=await store(env,{requestId,accessToken,styleId,subjectType,notes,customWorld,parentRequestId,source,sourceTweet,qualityMode,inputs:storedInputs,originalInputCount,image,previewMime,safety,modelUsed:generated.modelUsed,providerUsed:generated.providerUsed,promptVersion:ownerIdentityModel(env)?OWNER_IDENTITY_PROMPT_VERSION:PROMPT_VERSION,attemptKind:generated.attemptKind});
+    const stored=await store(env,{requestId,accessToken,styleId,subjectType,notes,customWorld,parentRequestId,source,sourceTweet,qualityMode,inputs:storedInputs,originalInputCount,image,previewMime,safety,modelUsed:generated.modelUsed,providerUsed:generated.providerUsed,promptVersion:ownerIdentityModel(env)?OWNER_IDENTITY_PROMPT_VERSION:qualityMode==='high'&&customerNano(env)?CUSTOMER_IDENTITY_VERSION:PROMPT_VERSION,attemptKind:generated.attemptKind});
 
     await writeAttemptReceipt(env,clientAttemptId,{status:"success",completedAt:new Date().toISOString(),durationMs:Date.now()-attemptStartedAt,requestId,qualityMode,modelUsed:generated.modelUsed,providerUsed:generated.providerUsed,providerRequestId:generated.providerRequestId,attemptKind:generated.attemptKind,persisted:stored.persisted});
-    return json({ok:true,requestId,accessToken,style:STYLES[styleId]?.name||"Custom World",image:`data:${previewMime};base64,${image}`,persisted:stored.persisted,storageError:stored.storageError,qualityMode,qualityLabel:qualityMode==="quick"?"Standard Preview":"High-Quality Preview",modelUsed:generated.modelUsed,providerUsed:generated.providerUsed,usedSafeRetry:generated.usedSafeRetry,usedFastFallback:false,promptVersion:ownerIdentityModel(env)?OWNER_IDENTITY_PROMPT_VERSION:PROMPT_VERSION,clientAttemptId});
+    return json({ok:true,requestId,accessToken,style:STYLES[styleId]?.name||"Custom World",image:`data:${previewMime};base64,${image}`,persisted:stored.persisted,storageError:stored.storageError,qualityMode,qualityLabel:qualityMode==="quick"?"Standard Preview":"High-Quality Preview",modelUsed:generated.modelUsed,providerUsed:generated.providerUsed,usedSafeRetry:generated.usedSafeRetry,usedFastFallback:false,promptVersion:ownerIdentityModel(env)?OWNER_IDENTITY_PROMPT_VERSION:qualityMode==='high'&&customerNano(env)?CUSTOMER_IDENTITY_VERSION:PROMPT_VERSION,clientAttemptId});
   }catch(error){
     const reason=error?.reason||"provider";
     if(!ownerIdentityModel(env)&&['capacity','quota','timeout','unavailable'].includes(reason))await recordRenderHealth(env,env.RECAST_RENDER_SCOPE==='social'?'social':qualityMode,'failed',reason);
@@ -487,17 +488,18 @@ export async function highQualityTransform(request,env,{trustedSocialJob=false}=
 }
 
 export async function modelStatus(env){
-  const highQuality=String(env.IMAGE_MODEL_HIGH_QUALITY||DEFAULT_HIGH_QUALITY);
+  const nano=env.FAL_CUSTOMER_MODEL==='nano-banana'&&env.RECAST_HQ_PROVIDER==='fal';
+  const highQuality=nano?'fal-ai/nano-banana/edit':String(env.IMAGE_MODEL_HIGH_QUALITY||DEFAULT_HIGH_QUALITY);
   const quick=String(env.IMAGE_MODEL_QUICK||DEFAULT_QUICK);
   return json({
     ok:true,
     modes:{
-      high:{label:"High-Quality Preview",model:highQuality,steps:Number(env.IMAGE_HIGH_QUALITY_STEPS||18),guidance:Number(env.IMAGE_HIGH_QUALITY_GUIDANCE||5)},
+      high:{label:"High-Quality Preview",model:highQuality,steps:nano?null:Number(env.IMAGE_HIGH_QUALITY_STEPS||18),guidance:nano?null:Number(env.IMAGE_HIGH_QUALITY_GUIDANCE||5)},
       quick:{label:"Standard Preview",model:quick,steps:quick.includes("flux-2-klein")?null:Number(env.IMAGE_QUICK_STEPS||12),guidance:Number(env.IMAGE_QUICK_GUIDANCE||5)}
     },
     defaultMode:"high",
     version:"v1.6",
-    promptVersion:PROMPT_VERSION,
+    promptVersion:nano?CUSTOMER_IDENTITY_VERSION:PROMPT_VERSION,
     availability:await readinessSnapshot(env)
   })
 }

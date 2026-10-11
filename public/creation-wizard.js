@@ -1,11 +1,13 @@
+import {initSubjectFocus} from './subject-focus.js?v=283';
 // RM117: Two steps. The editing model sees uploaded photos and selects which
 // person/pet/vehicle directions apply. Subject tags are OPTIONAL for unusual
 // multi-subject photos; no extra model call, image upload or paid inference.
 export function initCreationWizard({styles,photos,subject,style,updateWorld,hasBranch}){
  const $=selector=>document.querySelector(selector);
  const labels=new WeakMap();
+ const focus=initSubjectFocus(photos);
  let step=1;
- const names={auto:'Let AI decide',pet:'My pet',person:'Just me','person and pet':'Me + my pet',couple:'Couple',family:'Family',car:'My car',custom:'Other — describe it'};
+ const names={auto:'Automatic',pet:'Pet',person:'Person','person and pet':'People & pets',group:'Group of people',couple:'Couple',family:'Family',car:'My car',custom:'Other — describe it'};
  const kind=()=>subject.value||'auto';
  function roles(){
   const type=kind(),count=Number($('#family-count').value);
@@ -20,7 +22,10 @@ export function initCreationWizard({styles,photos,subject,style,updateWorld,hasB
  const roleName=value=>value==='together'?'Everyone together':value==='pet'?'Your pet':value==='car'?'Your car':'Person '+value.slice(6);
  function refreshPhotos(){
   const selected=[...photos.files],choices=roles();
+  focus.refresh();
   $('#photo-step-error').textContent='';
+  $('#photo-include-summary').hidden=!selected.length;
+  $('#photo-include-label').textContent=names[kind()]||'Automatic';
   $('#family-count-label').hidden=kind()!=='family';
   // Never label a random uploaded photo "Your pet" based on the last screen.
   // The image model can inspect pet/person/vehicle content directly.
@@ -59,10 +64,10 @@ export function initCreationWizard({styles,photos,subject,style,updateWorld,hasB
   });
   if(scroll)$('.creation-progress').scrollIntoView({behavior:'auto',block:'start'});
  }
- for(const value of ['auto','pet','person','person and pet','couple','family','car','custom']){
+ for(const value of ['auto','pet','person and pet','person','group','couple','family','car','custom']){
   const button=document.createElement('button');button.type='button';button.dataset.subjectChoice=value;button.textContent=names[value];
-  button.addEventListener('click',()=>{subject.value=value;subject.dispatchEvent(new Event('change'));});
-  $('#subject-choices').append(button);
+  button.addEventListener('click',()=>{subject.value=value;subject.dispatchEvent(new Event('change'));$('#photo-subject-details').open=false;$('#change-photo-subject').focus();});
+  if(['couple','family','car','custom'].includes(value)){$('#extra-subject-choices').append(button);}else $('#subject-choices').append(button);
  }
  function refreshAdventures(){
   $('#adventure-choices').replaceChildren();
@@ -87,6 +92,7 @@ export function initCreationWizard({styles,photos,subject,style,updateWorld,hasB
   if(!allWorlds.hidden)style.focus({preventScroll:true});
  });
  setAllWorldsOpen(style.value==='custom'||!['royal','fantasy','space','game'].includes(style.value));
+ $('#change-photo-subject').addEventListener('click',()=>{const details=$('#photo-subject-details');details.open=!details.open;if(details.open)details.querySelector('[data-subject-choice]')?.focus();});
  subject.addEventListener('change',refreshPhotos);$('#family-count').addEventListener('change',refreshPhotos);
  document.addEventListener('recast-photos-change',refreshPhotos);
  document.addEventListener('recast-style-change',refreshAdventures);
@@ -101,7 +107,7 @@ export function initCreationWizard({styles,photos,subject,style,updateWorld,hasB
  },true);
  refreshPhotos();refreshAdventures();
  go(1,{scroll:false});
- return {go,
+ return {go,focusNotes:()=>focus.notes(),
   // Only send labels the customer explicitly supplied for ALL photos.
   // Otherwise let the editing model identify the photo contents; no extra step.
   references:()=>{

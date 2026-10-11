@@ -1,4 +1,5 @@
 import {prepareFalInput,decodeFalInlineResult,decodeFalInlineImage,FAL_PILOT_HEADERS,FAL_ENDPOINT} from './fal-format.js';
+import {customerNano} from './customer-identity.js';
 import {ownerIdentityModel} from './owner-identity-comparison.js';
 import {recordProviderResult} from './provider-routing.js';
 // One acknowledged job per customer AI.run, with read-only polling afterwards.
@@ -45,7 +46,9 @@ async function json(response){
 export async function runFalEdit(env,model,originalRequest){
  if(!env.FAL_API_KEY||typeof env.FAL_API_KEY!=='string'||env.FAL_PROVIDER_ENABLED!=='true')throw Object.assign(new Error('Fal provider is not configured'),{reason:'configuration'});
  const candidate=ownerIdentityModel(env);
- const endpoint=candidate?.endpoint||FAL_ENDPOINT;
+ const publicNano=customerNano(env);
+ const endpoint=candidate?.endpoint||(publicNano?'fal-ai/nano-banana/edit':FAL_ENDPOINT);
+ const queueRoot=candidate?.queueRoot||(publicNano?'fal-ai/nano-banana':undefined);
  const prepared=await prepareFalInput(model,originalRequest);
  const nano=endpoint==='fal-ai/nano-banana/edit';
  if(nano&&(env.CONTENT_MODERATION_ENABLED!=='true'||!env.MODERATION_OPENAI_API_KEY))throw Object.assign(new Error('Candidate requires existing image safety screening.'),{reason:'configuration'});
@@ -65,8 +68,8 @@ export async function runFalEdit(env,model,originalRequest){
   const info=await json(submit);
   requestId=String(info?.request_id||'');
   if(!/^[0-9a-z-]{25,100}$/i.test(requestId))throw Object.assign(new Error('503 provider accepted without request identifier'),{reason:'unavailable'});
-  statusUrl=safeQueueUrl(info.status_url,requestId,'status',candidate?.queueRoot);
-  resultUrl=safeQueueUrl(info.response_url,requestId,'result',candidate?.queueRoot);
+  statusUrl=safeQueueUrl(info.status_url,requestId,'status',queueRoot);
+  resultUrl=safeQueueUrl(info.response_url,requestId,'result',queueRoot);
   submitted=true;
   await receipt(env,localId,{status:'accepted',requestId,acknowledgedAt:new Date().toISOString()});
   const deadline=Date.now()+MAX_WAIT_MS;
@@ -92,7 +95,7 @@ export async function runFalEdit(env,model,originalRequest){
     }
     await receipt(env,localId,{status:'completed',completedAt:new Date().toISOString(),requestId,bytes:Math.round(image.image.length*.75)});
     if(!candidate)await recordProviderResult(env,'fal','success');
-    return {...image,providerUsed:'fal',providerRequestId:requestId,...(candidate?{modelUsed:endpoint}:{})};
+    return {...image,providerUsed:'fal',providerRequestId:requestId,...(candidate||publicNano?{modelUsed:endpoint}:{})};
    }
    if(state.status!=='IN_QUEUE'&&state.status!=='IN_PROGRESS')throw Object.assign(new Error('503 unknown provider job state'),{reason:'unavailable'});
    await wait(POLL_MS);
@@ -129,7 +132,7 @@ export function wrapImageProvider(env,selection){
  const originalAI=env.AI,host=selection.host;
  return {...env,RECAST_HQ_SELECTED_PROVIDER:host,AI:{...originalAI,async run(model,args,options){
   if(model!==String(env.IMAGE_MODEL_HIGH_QUALITY||'@cf/black-forest-labs/flux-2-dev'))return originalAI.run(model,args,options);
-  if(host==='fal')return runFalEdit(env,model,args);
+  if(host==='fal')return runFalEdit({...env,RECAST_HQ_SELECTED_PROVIDER:host},model,args);
   return runCloudflareTracked(env,model,args,options);
  }}};
 }

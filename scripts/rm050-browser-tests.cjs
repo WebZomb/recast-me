@@ -6,9 +6,9 @@ const ready={ok:true,local:{ready:true},modes:{high:{ready:true,state:'ready'},q
 const policy={highDaily:3,standardDaily:5,purchaseBonus:3,websiteCalls:70,socialCalls:100,budgetCents:500,paused:false};
 (async()=>{
  const report={type:'Mocked APIs and image placeholders; not a live provider or visual-art acceptance test',checks:[],failures:[]};
- for(const [engine,width] of [[webkit,393],[chromium,320],[chromium,1440]]){
+ for(const [engine,width] of (process.env.RECAST_CHROMIUM_ONLY==='1'?[[chromium,320],[chromium,1440]]:[[webkit,393],[chromium,320],[chromium,1440]])){
   const browser=await engine.launch(),context=await browser.newContext({viewport:{width,height:900},reducedMotion:'reduce'});
-  const state={remaining:3,free:3,bonus:0,standardRemaining:5,busy:false,hqOutage:false,quickDown:false,settings:{...policy},revision:0,saved:[]},errors=[];
+  const state={remaining:3,free:3,bonus:0,standardRemaining:5,busy:false,hqOutage:false,quickDown:false,settings:{...policy},revision:0,saved:[],checkouts:[],mockups:[]},errors=[];
   await context.route('**/*',async route=>{
    const request=route.request(),url=new URL(request.url()),p=url.pathname;
    if(url.hostname!=='recast.test'){
@@ -28,6 +28,9 @@ const policy={highDaily:3,standardDaily:5,purchaseBonus:3,websiteCalls:70,social
    else if(p==='/api/render-readiness'){d=structuredClone(ready);d.modes.high.ready=!state.busy&&!state.hqOutage;d.modes.high.reason=state.hqOutage?'unavailable':null;d.modes.quick.ready=!state.quickDown;d.standardOutageAvailable=state.hqOutage&&!state.quickDown;}
    else if(p==='/api/model-status')d={ok:true,modes:{high:{label:'High Quality',model:'dev'},quick:{label:'Standard',model:'klein9'}},availability:ready};
    else if(p==='/api/checkout-options')d.products=[{title:'Custom Recast Mug',status:'ACTIVE',variants:[{sku:'RECAST-MUG-11OZ',variantTitle:'11 oz',price:'24.99'}]}];
+   else if(p==='/api/checkout-link'){state.checkouts.push(request.postDataJSON());return route.fulfill({status:503,json:{ok:false,error:'Test checkout unavailable — your artwork is saved.'}});}
+   else if(p==='/api/mockup/create'){state.mockups.push(request.postDataJSON());d={ok:true,mockupId:'fixture-mockup'};}
+   else if(p==='/api/mockup/status')d={ok:true,status:'completed',images:[{title:'Front',url:'http://recast.test/assets/world-game-v18.webp'}]};
    else if(p==='/api/admin/status')Object.assign(d,{jobs:{total:1,awaiting:1},trends:{review:0},xRequests:0,connections:{printful:true,admin:true},generationErrors:{total:0,recent:0},automation:{}});
    else if(p==='/api/admin/jobs')Object.assign(d,{jobs:[{id:'fixture',orderName:'#TEST',product:'Mug',sku:'TEST',requestId:'TEST',status:'owner_release_review',ownerReleaseError:'<img onerror="alert(1)">',quantity:1,digital:false}],cursor:null});
    else if(p==='/api/admin/social')d.requests=[];
@@ -72,9 +75,17 @@ const policy={highDaily:3,standardDaily:5,purchaseBonus:3,websiteCalls:70,social
     path.join(root,'assets/dog-original-v17.webp')
    ]);
    assert.equal(await page.locator('.reference-label').count(),0,'Two photos are automatic by default');
-   await page.locator('#photo-subject-details summary').click();
+   assert.match(await page.locator('#photo-include-summary').textContent(),/Automatic/);
+   await page.locator('#photo-subject-details > summary').click();
+   await page.locator('#select-photo-faces').click();
+   await page.locator('.focus-surface').first().click({position:{x:40,y:40}});
+   assert.equal(await page.locator('.face-marker').count(),1);
+   await page.screenshot({path:path.join(out,`${engine.name()}-${width}-rm124-faces.png`),fullPage:false});
+   await page.locator('[data-focus-done]').click();
+   assert.match(await page.locator('#select-photo-faces').textContent(),/Change selected faces/);
    await page.locator('[data-subject-choice="person and pet"]').click();
    assert.equal(await page.locator('.reference-label').count(),2,'Optional labels only appear when group help is requested');
+   await page.locator('#change-photo-subject').click();
    await page.locator('[data-subject-choice="auto"]').click();
    assert.equal(await page.locator('.reference-label').count(),0,'Manual choice can be undone without losing photos');
    assert.equal(await page.locator('#photos').evaluate(x=>x.files.length),2);
@@ -83,6 +94,8 @@ const policy={highDaily:3,standardDaily:5,purchaseBonus:3,websiteCalls:70,social
    await page.locator('#photos').setInputFiles(path.join(root,'assets/jack-russell-source-v18.webp'));
    assert.equal(await page.locator('#photos').evaluate(x=>x.files.length),1,'New upload must replace previously selected photos');
    assert.equal(await page.locator('.photo-thumbnail').count(),1,'Only the new photo can appear in the preview');
+   assert.equal(await page.locator('#subject').inputValue(),'auto');
+   assert.match(await page.locator('#select-photo-faces').textContent(),/Select specific faces/);
    // Deliberately selected multi-photo references still work in one operation.
    await page.locator('#photos').setInputFiles([
     path.join(root,'assets/jack-russell-source-v18.webp'),
@@ -173,6 +186,23 @@ const policy={highDaily:3,standardDaily:5,purchaseBonus:3,websiteCalls:70,social
    assert.equal(await page.locator('input[name="qualityMode"][value="high"]').isChecked(),true);
    assert.equal(await page.locator('#quality-fallback').isHidden(),true);
    Object.assign(state,{hqOutage:false,quickDown:false,remaining:3,free:3,bonus:3});
+   // Fast path still presents the exact selected artwork, and does not ask Printful for a mockup.
+   await page.evaluate(()=>{window.__recastActiveRequest={requestId:'RC-TEST0001-ABCDEF',accessToken:'fixture-token'};const c=document.querySelector('#preview-canvas');c.width=400;c.height=500;c.getContext('2d').fillRect(0,0,400,500);document.dispatchEvent(new Event('recast-artwork-selected'));});
+   const fast=page.locator('.recast-buy-now').first();await fast.waitFor({state:'visible'});
+   assert.match(await page.locator('#product-grid').textContent(),/Estimated 1–2 minutes/);
+   await fast.click();assert.equal(await page.locator('.fast-artwork img').count(),1);
+   await page.locator('.final-review-panel').evaluate(el=>el.scrollTop=0);
+   await page.screenshot({path:path.join(out,`${engine.name()}-${width}-rm124-fast.png`),fullPage:false});
+   await page.locator('[data-fast-confirm]').click();await page.locator('.final-review-error:not([hidden])').waitFor();
+   assert.equal(state.checkouts.length,1);assert.equal(state.mockups.length,0);assert.equal(state.checkouts[0].skipMockup,true);assert.equal(state.checkouts[0].confirmArtwork,true);assert.equal(state.checkouts[0].requestId,'RC-TEST0001-ABCDEF');
+   assert.equal(await page.locator('[data-fast-confirm]').isEnabled(),true,'Failed checkout can retry without losing artwork');
+   await page.keyboard.press('Escape');
+   await page.locator('.product-design-controls > summary').first().click();await page.locator('[data-design-scale]').first().fill('100');
+   assert.equal(await fast.isDisabled(),true,'Custom placement requires preview');await page.locator('[data-reset-design]').first().click();assert.equal(await fast.isEnabled(),true);
+   await page.locator('.product-preview-action').first().click();await page.locator('.real-mockup-ready').waitFor({timeout:20000});
+   assert.equal(state.mockups.length,1);assert.equal(await fast.isHidden(),true);await page.locator('.recast-buy').first().click();assert.match(await page.locator('#recast-review-title').textContent(),/Check your design/);
+   await page.locator('[data-final-confirm]').click();await page.locator('.final-review-error:not([hidden])').waitFor();assert.equal(state.checkouts.length,2);assert.equal(state.checkouts[1].mockupId,'fixture-mockup');assert.equal(state.checkouts[1].skipMockup,undefined);
+   await page.screenshot({path:path.join(out,`${engine.name()}-${width}-rm124-review.png`),fullPage:false});
    await page.goto('http://recast.test/admin.html',{waitUntil:'networkidle'});
    await page.locator('#admin-token').fill('fixture-not-a-real-secret');await page.locator('#admin-login button').click();await page.waitForTimeout(300);
    // With nine admin sections, all mobile tabs must remain real tappable targets,

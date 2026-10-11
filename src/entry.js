@@ -1,6 +1,7 @@
 import {checkStoredArtwork} from './content-safety.js';
 import core, { shopifyCatalog } from "./index.js";
-import { hash, normalizeProductDesign } from "./commerce-store.js";
+import {createMockup} from "./workflow.js";
+import { hash, normalizeProductDesign, recommendedCheckoutDesign } from "./commerce-store.js";
 
 export const FULFILLMENT = {
   "RECAST-HOODIE-S":      { printfulProductId: 380, printfulVariantId: 10779, preferredPlacement: "front", orderFileType: "front", quantity: 1, baseCost: 27.84, product: "Hoodie", color: "Black" },
@@ -201,6 +202,18 @@ function htmlEscape(value){
 async function freezeApprovedPreview(request,env,{requestId,sku,mockupId,proofHash,mockup,design,accessToken}){
   const token=(await hash([requestId,sku,mockupId,proofHash,accessToken,"approved-product-preview"].join("|"))).slice(0,48);
   const imageKey=`commerce/checkout-previews/${token}.jpg`,metaKey=`commerce/checkout-previews/${token}.json`;
+  const artworkOnly=mockup.approvalMode==='recommended-no-mockup';
+  if(artworkOnly){
+    const source=await env.ARTWORK.get(`requests/${requestId}/preview.b64`);
+    if(!source)throw new Error('Selected artwork is unavailable.');
+    const bytes=Uint8Array.from(atob(await source.text()),c=>c.charCodeAt(0));
+    // Private frozen source; secureApplication watermarks EVERY public image response.
+    const protectedBytes=bytes;
+    for(const key of [imageKey,`commerce/checkout-previews/${token}/view-0.jpg`])await env.ARTWORK.put(key,protectedBytes,{httpMetadata:{contentType:'image/jpeg',cacheControl:'private, no-store'}});
+    await env.ARTWORK.put(metaKey,JSON.stringify({token,requestId,sku,mockupId,proofHash,design,approvalMode:'recommended-no-mockup',views:[{index:0,title:'Approved artwork · product mockup skipped'}],createdAt:new Date().toISOString()}),{httpMetadata:{contentType:'application/json'}});
+    const base=liveBase(env,request);
+    return {token,url:`${base}/proof/${token}`,imageUrl:`${base}/api/approved-preview/${token}`,images:[{title:'Approved artwork · product mockup skipped',url:`${base}/api/approved-preview/${token}/0`}]};
+  }
   const views=(mockup.images||[]).slice(0,3);
   if(!views.length)return null;
   const folder=`mockups/${requestId}/${sku}/${mockupId}`;
@@ -230,7 +243,7 @@ async function freezeCheckoutApproval(env,{requestId,sku,mockupId,proofHash,mock
   const record={
     token,requestId,sku,mockupId,proofHash,previewToken:token,design,snapshotKey,
     sourceHash:await hash(sourceBase64),position:mockup.position,images:approvedPreview.images||[],
-    approvedAt:new Date().toISOString(),schemaVersion:1
+    approvedAt:new Date().toISOString(),schemaVersion:1,approvalMode:mockup.approvalMode||'product-mockup'
   };
   await env.ARTWORK.put(recordKey,JSON.stringify(record),{httpMetadata:{contentType:"application/json"}});
   return record;
@@ -267,6 +280,15 @@ async function checkoutLink(request, env, ctx) {
   if(!FULFILLMENT[sku].digital){
     if(body.confirmDesign!==true)return json({ok:false,error:"Confirm the final product design before checkout."},409);
     verifiedDesign=normalizeProductDesign(FULFILLMENT[sku],body.design||{});
+    if(body.skipMockup===true){
+      if(body.confirmArtwork!==true)return json({ok:false,error:'Approve this artwork before using the recommended placement.'},409);
+      const recommended=recommendedCheckoutDesign(FULFILLMENT[sku]);
+      if(JSON.stringify(verifiedDesign)!==JSON.stringify(recommended))return json({ok:false,error:'Preview custom placement, or reset to the recommended setup for Buy now.'},409);
+      const prepared=await createMockup(new Request(request.url,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({requestId,accessToken,sku,design:recommended})}),env,{prepareOnly:true});
+      const result=await prepared.json();
+      if(!prepared.ok||!result.ok)return json({ok:false,error:'We could not verify this product’s print setup. Your artwork is saved; please try again or preview the product.'},prepared.status>=400?prepared.status:503);
+      body.mockupId=result.mockupId;
+    }
     mockupId=String(body.mockupId||"");
     if(!/^[a-zA-Z0-9._-]{1,180}$/.test(mockupId))return json({ok:false,error:"Generate a fresh product preview before checkout."},409);
     const mockupObject=await env.ARTWORK?.get(`mockups/${requestId}/${sku}/${mockupId}/task.json`);
@@ -276,7 +298,7 @@ async function checkoutLink(request, env, ctx) {
     if(!source)return json({ok:false,error:"The selected artwork is unavailable."},404);
     const sourceBase64=await source.text();
     proofHash=await hash(sourceBase64+'|'+JSON.stringify(verifiedDesign));
-    if(mockup.status!=="completed"||!mockup.position||mockup.sourceHash!==proofHash||JSON.stringify(mockup.design||{})!==JSON.stringify(verifiedDesign)){
+    if((body.skipMockup===true?mockup.status!=='prepared'||mockup.approvalMode!=='recommended-no-mockup':mockup.status!=='completed')||!mockup.position||mockup.sourceHash!==proofHash||JSON.stringify(mockup.design||{})!==JSON.stringify(verifiedDesign)){
       return json({ok:false,error:"Your product settings changed after the preview. Generate and review a fresh preview before checkout."},409);
     }
     approvedPreview=await freezeApprovedPreview(request,env,{requestId,sku,mockupId,proofHash,mockup,design:verifiedDesign,accessToken});
@@ -293,7 +315,7 @@ async function checkoutLink(request, env, ctx) {
       "Recast Size":verifiedDesign.scale+"%",
       ...(verifiedDesign.layout==="fit"?{"Recast Fill":verifiedDesign.fill==="dark"?"Dark fill":verifiedDesign.fill==="light"?"Light fill":verifiedDesign.fill==="full-bleed"?"Artwork edge fill":"Blended artwork colors"}:{}),
       ...(verifiedDesign.layout==="two-sided"?{"Recast Spacing":verifiedDesign.spacing==="close"?"Closer together":verifiedDesign.spacing==="wide"?"Farther apart":"Standard"}:{}),
-      "Recast Design":"Confirmed before checkout",
+      "Recast Design":body.skipMockup===true?"Artwork approved · recommended placement · product mockup skipped":"Confirmed before checkout",
       "Recast Next Step":"Payment completes your order — no extra design approval needed",
       ...(approvedPreview?{"Approved Preview":approvedPreview.url}:{}),
       "_Recast Design":JSON.stringify(verifiedDesign),
@@ -420,7 +442,7 @@ async function approvedPreviewPage(env,token){
     const label=previewAngleLabel(view.title,i),src=`/api/approved-preview/${htmlEscape(token)}/${view.index}`;
     return `<figure class="angle"><img src="${src}" alt="${htmlEscape(label)} of approved Recast product preview"><figcaption><strong>${htmlEscape(label)}</strong><a href="${src}" download="recast-approved-${i+1}.jpg">Save this angle</a></figcaption></figure>`;
   }).join("");
-  const html=`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><meta name="referrer" content="no-referrer"><title>Approved Recast Product Preview</title><style>body{margin:0;background:#070812;color:#fff;font-family:system-ui,-apple-system,sans-serif}.wrap{max-width:980px;margin:auto;padding:32px 18px 64px}.card{border:1px solid #33354d;border-radius:24px;background:#0d0f1d;padding:20px;box-shadow:0 25px 80px #0007}h1{font-size:clamp(34px,7vw,58px);line-height:1;margin:8px 0 14px}.eyebrow{font-size:11px;letter-spacing:.18em;color:#9fe9ff;font-weight:800}.approve{display:inline-block;padding:14px 18px;border-radius:13px;background:linear-gradient(90deg,#8f43ff,#20c7ef);color:#fff;text-decoration:none;font-weight:900}.safety{margin:18px 0 8px;padding:16px;border:1px solid #4d426f;border-radius:14px;background:#151229;color:#e7e7f2;line-height:1.5}.gallery{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin:22px 0}.angle{margin:0;border:1px solid #2f3148;border-radius:16px;overflow:hidden;background:#090a14}.angle img{display:block;width:100%;aspect-ratio:1/1;object-fit:contain;background:#fff}.angle figcaption{padding:11px;display:grid;gap:7px;color:#d8d8e5}.angle a{color:#9fe9ff;font-size:13px}.meta{display:grid;gap:8px;color:#c3c4d4}.note{color:#9799ae;line-height:1.55;margin-top:20px}.brand{font-weight:900;letter-spacing:.04em;color:#fff;text-decoration:none}.save-all{display:inline-block;padding:12px 16px;border-radius:12px;background:#fff;color:#080812;text-decoration:none;font-weight:800}@media(max-width:700px){.gallery{grid-template-columns:1fr}.angle img{aspect-ratio:auto;max-height:560px}}</style></head><body><main class="wrap"><a class="brand" href="/">RECAST ME</a><section class="card">${preapproval?`<div class="eyebrow">DESIGN CONFIRMED BEFORE CHECKOUT</div><h1>You’re done. No extra design approval is needed.</h1><div class="safety"><strong>Next step:</strong> nothing else from you. After payment is verified, Recast prepares the clean print file and sends the confirmed design into fulfillment automatically. Shopify or Shop may show its own delivery estimate while that happens.</div><h2>These are the product-preview angles saved with your order.</h2>`:`<div class="eyebrow">ORDER CONFIRMED · PRINT SAFEGUARD ACTIVE</div><h1>Your order is paid, but it is not sent to production yet.</h1><div class="safety"><strong>Next step:</strong> review the saved product previews below, then continue to Recast and approve this design for printing. Shopify or Shop may show an estimated arrival date before this approval is complete; Recast production remains paused until you approve.</div><p><a class="approve" href="/proof/${htmlEscape(token)}/approve">Complete design approval →</a></p><h2>These are the product-preview angles saved with your order.</h2>`}<div class="gallery">${gallery}</div><div class="meta"><div><strong>Artwork ID:</strong> ${htmlEscape(meta.requestId)}</div><div><strong>Product:</strong> ${htmlEscape(meta.sku)}</div><div><strong>Layout:</strong> ${htmlEscape(layout)}</div><div><strong>Position:</strong> ${htmlEscape(design.x||"center")}</div><div><strong>Size:</strong> ${htmlEscape(design.scale||100)}%</div>${spacing?`<div><strong>Spacing:</strong> ${htmlEscape(spacing)}</div>`:""}</div><p class="note">These saved pictures are the watermarked product previews you reviewed. The production file uses your clean private artwork with these approved settings, not the preview watermark.</p><p><a class="save-all" href="/#preview-section" style="margin-right:10px">Return to Recast Me</a><a class="save-all" href="/api/approved-preview/${htmlEscape(token)}/${views[0]?.index??0}" download="recast-approved-product-preview.jpg">Save first preview</a></p></section></main></body></html>`;
+  const html=`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><meta name="referrer" content="no-referrer"><title>Approved Recast Product Preview</title><style>body{margin:0;background:#070812;color:#fff;font-family:system-ui,-apple-system,sans-serif}.wrap{max-width:980px;margin:auto;padding:32px 18px 64px}.card{border:1px solid #33354d;border-radius:24px;background:#0d0f1d;padding:20px;box-shadow:0 25px 80px #0007}h1{font-size:clamp(34px,7vw,58px);line-height:1;margin:8px 0 14px}.eyebrow{font-size:11px;letter-spacing:.18em;color:#9fe9ff;font-weight:800}.approve{display:inline-block;padding:14px 18px;border-radius:13px;background:linear-gradient(90deg,#8f43ff,#20c7ef);color:#fff;text-decoration:none;font-weight:900}.safety{margin:18px 0 8px;padding:16px;border:1px solid #4d426f;border-radius:14px;background:#151229;color:#e7e7f2;line-height:1.5}.gallery{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin:22px 0}.angle{margin:0;border:1px solid #2f3148;border-radius:16px;overflow:hidden;background:#090a14}.angle img{display:block;width:100%;aspect-ratio:1/1;object-fit:contain;background:#fff}.angle figcaption{padding:11px;display:grid;gap:7px;color:#d8d8e5}.angle a{color:#9fe9ff;font-size:13px}.meta{display:grid;gap:8px;color:#c3c4d4}.note{color:#9799ae;line-height:1.55;margin-top:20px}.brand{font-weight:900;letter-spacing:.04em;color:#fff;text-decoration:none}.save-all{display:inline-block;padding:12px 16px;border-radius:12px;background:#fff;color:#080812;text-decoration:none;font-weight:800}@media(max-width:700px){.gallery{grid-template-columns:1fr}.angle img{aspect-ratio:auto;max-height:560px}}</style></head><body><main class="wrap"><a class="brand" href="/">RECAST ME</a><section class="card">${preapproval?`<div class="eyebrow">DESIGN CONFIRMED BEFORE CHECKOUT</div><h1>You’re done. No extra design approval is needed.</h1><div class="safety"><strong>Next step:</strong> nothing else from you. After payment is verified, Recast prepares the clean print file and sends the confirmed design into fulfillment automatically. Shopify or Shop may show its own delivery estimate while that happens.</div><h2>${meta.approvalMode==='recommended-no-mockup'?'You approved this artwork with recommended placement and skipped the product mockup.':'These are the product-preview angles saved with your order.'}</h2>`:`<div class="eyebrow">ORDER CONFIRMED · PRINT SAFEGUARD ACTIVE</div><h1>Your order is paid, but it is not sent to production yet.</h1><div class="safety"><strong>Next step:</strong> review the saved product previews below, then continue to Recast and approve this design for printing. Shopify or Shop may show an estimated arrival date before this approval is complete; Recast production remains paused until you approve.</div><p><a class="approve" href="/proof/${htmlEscape(token)}/approve">Complete design approval →</a></p><h2>${meta.approvalMode==='recommended-no-mockup'?'You approved this artwork with recommended placement and skipped the product mockup.':'These are the product-preview angles saved with your order.'}</h2>`}<div class="gallery">${gallery}</div><div class="meta"><div><strong>Artwork ID:</strong> ${htmlEscape(meta.requestId)}</div><div><strong>Product:</strong> ${htmlEscape(meta.sku)}</div><div><strong>Layout:</strong> ${htmlEscape(layout)}</div><div><strong>Position:</strong> ${htmlEscape(design.x||"center")}</div><div><strong>Size:</strong> ${htmlEscape(design.scale||100)}%</div>${spacing?`<div><strong>Spacing:</strong> ${htmlEscape(spacing)}</div>`:""}</div><p class="note">${meta.approvalMode==='recommended-no-mockup'?'This is your watermarked artwork record, not a product mockup.':'These saved pictures are the watermarked product previews you reviewed.'} The production file uses your clean private artwork with these approved settings, not the preview watermark.</p><p><a class="save-all" href="/#preview-section" style="margin-right:10px">Return to Recast Me</a><a class="save-all" href="/api/approved-preview/${htmlEscape(token)}/${views[0]?.index??0}" download="recast-approved-product-preview.jpg">Save first preview</a></p></section></main></body></html>`;
   return new Response(html,{headers:{"content-type":"text/html; charset=utf-8","cache-control":"private, no-store","referrer-policy":"no-referrer","x-content-type-options":"nosniff"}});
 }
 

@@ -138,6 +138,15 @@ let checkoutLoadId=0;
 const mockupState=new WeakMap();
 const productReviewState=new WeakMap();
 
+function previewEstimate(){
+ try{const samples=JSON.parse(sessionStorage.getItem('recast-preview-seconds')||'[]').filter(n=>Number.isFinite(n)&&n>=3&&n<=300).sort((a,b)=>a-b);
+ if(samples.length>=3){const median=samples[Math.floor(samples.length/2)];return `Estimated ${Math.max(5,Math.floor(median*.7/5)*5)}–${Math.ceil(median*1.5/5)*5} seconds`;}}catch{}
+ return 'Estimated 1–2 minutes';
+}
+function recordPreviewTime(seconds){try{const old=JSON.parse(sessionStorage.getItem('recast-preview-seconds')||'[]');sessionStorage.setItem('recast-preview-seconds',JSON.stringify([...old,seconds].slice(-12)))}catch{}}
+function usesRecommendedSetup(card){const design=productDesign(card),preset=presetFor(card);return ['layout','fill','x','scale','spacing','finish'].every(k=>design[k]===preset[k]);}
+function syncBuyNow(card){const button=card.querySelector?.('.recast-buy-now');if(!button)return;const recommended=usesRecommendedSetup(card);button.hidden=card.classList.contains('real-mockup-ready');button.disabled=!recommended;const note=card.querySelector?.('[data-buy-now-note]');if(note){note.hidden=button.hidden;note.textContent=recommended?'Skip the mockup · use recommended placement':'Preview your custom layout, or reset to use Buy now';}}
+function activeArtworkMatches(req){const active=lastRequest();return active?.requestId===req.requestId&&active?.accessToken===req.accessToken&&active?.shareId===req.shareId;}
 function stateFor(card){
   let state=mockupState.get(card);
   if(!state){state={run:0,busy:false,cooldownUntil:0};mockupState.set(card,state);}
@@ -219,7 +228,7 @@ function setPreviewLoading(card,busy){
     art.append(panel);
   }
   panel.hidden=false;
-  panel.querySelector('p').textContent='We’re placing your artwork on your selected product. Please keep this page open.';
+  panel.querySelector('p').textContent=previewEstimate()+'. We’re placing your artwork; keep this page open.';
   const started=Date.now(),elapsed=panel.querySelector('[data-preview-elapsed]');
   elapsed.textContent='Just started…';
   state.loadingTimer=setInterval(()=>{
@@ -247,6 +256,7 @@ function resetProductPreview(card,{invalidate=true}={}){
   const preview=card.querySelector?.(".product-preview-action");
   if(preview){preview.disabled=state.busy;preview.textContent=state.busy?"Waiting for current preview…":"Preview my product";}
   requireFreshPreview(card);
+  syncBuyNow(card);
   applyCatalogExample(card,card?.querySelector?.(".recast-variant")?.value);
 }
 
@@ -292,13 +302,15 @@ function designSummary(card){
   if(d.scale!==100)parts.push(`${d.scale}% size`);
   return parts.join(" · ");
 }
+let reviewKeydown=null;
 function closeFinalReview(){
+  if(reviewKeydown)document.removeEventListener('keydown',reviewKeydown);reviewKeydown=null;
   document.querySelector(".recast-final-review")?.remove();
   document.documentElement.classList.remove("recast-review-open");
 }
 async function confirmCheckout({req,sku,card,button,modal}){
   const state=productReviewState.get(card),errorCopy=modal.querySelector(".final-review-error"),confirm=modal.querySelector("[data-final-confirm]");
-  if(!state||card.dataset.mockupSignature!==state.signature||card.dataset.mockupId!==state.mockupId){
+  if(!activeArtworkMatches(req)||!state||card.dataset.mockupSignature!==state.signature||card.dataset.mockupId!==state.mockupId){
     errorCopy.textContent="Your product settings changed. Close this review and generate a fresh product preview.";errorCopy.hidden=false;return;
   }
   confirm.disabled=true;confirm.textContent="Opening secure checkout…";errorCopy.hidden=true;
@@ -317,7 +329,7 @@ async function confirmCheckout({req,sku,card,button,modal}){
 }
 function openFinalReview({req,sku,card,button}){
   const state=productReviewState.get(card);
-  if(!state||card.dataset.mockupSignature!==state.signature||card.dataset.mockupId!==state.mockupId){
+  if(!activeArtworkMatches(req)||!state||card.dataset.mockupSignature!==state.signature||card.dataset.mockupId!==state.mockupId){
     const error=card.querySelector(".checkout-error");if(error){error.textContent="Generate and review the product preview for these exact settings first.";error.hidden=false;}requireFreshPreview(card);return;
   }
   closeFinalReview();
@@ -341,11 +353,37 @@ function openFinalReview({req,sku,card,button}){
   modal.querySelector("[data-final-confirm]").focus();
 }
 
+function openRecommendedReview({req,sku,card,button}){
+ if(!activeArtworkMatches(req)||!usesRecommendedSetup(card))return;
+ closeFinalReview();
+ const canvas=document.querySelector('#preview-canvas'),shared=document.querySelector('#share-image');
+ let image='';try{image=req.shareId?shared?.src:(canvas?.width?canvas.toDataURL('image/jpeg'):'')}catch{}
+ if(!image?.startsWith('data:image/')){const error=card.querySelector('.checkout-error');error.textContent='Open your saved artwork again so you can review it before checkout.';error.hidden=false;return;}
+ const signature=designSignature(card,sku),design=productDesign(card);
+ const modal=document.createElement('div');modal.className='recast-final-review';modal.setAttribute('role','dialog');modal.setAttribute('aria-modal','true');modal.setAttribute('aria-labelledby','recast-fast-title');modal.classList.add('fast-review');
+ modal.innerHTML=`<div class="final-review-backdrop" data-final-close></div><section class="final-review-panel"><div class="final-review-top"><div><span>YOUR ARTWORK</span><h2 id="recast-fast-title">Ready to make it yours?</h2><p>Check the face and details. We’ll print this saved artwork with the recommended placement.</p></div><button type="button" class="final-review-x" data-final-close aria-label="Close artwork review">×</button></div><div class="fast-artwork"></div><p class="fast-product"></p><p class="final-review-note">Product mockup skipped. Artwork may be fitted or cropped to the product’s print area. Preview the product first if you want to check the edges. <strong>The watermark won’t print.</strong></p><p class="final-review-error" role="alert" hidden></p><div class="final-review-actions"><button type="button" class="button ghost" data-fast-preview>Preview product instead</button><button type="button" class="button primary" data-fast-confirm>Approve artwork & checkout</button></div></section>`;
+ const art=document.createElement('img');art.src=image;art.alt='Your selected artwork to approve';art.style.cssText='display:block;width:100%;max-height:360px;object-fit:contain';modal.querySelector('.fast-artwork').append(art);
+ modal.querySelector('.fast-product').textContent=(card.dataset.productTitle||'Product').replace(/^Custom Recast /,'')+' · '+(card.querySelector('.recast-variant option:checked')?.textContent||card.querySelector('.recast-variant')?.dataset?.variantLabel||sku)+' · '+designSummary(card);
+ document.body.append(modal);document.documentElement.classList.add('recast-review-open');
+ const close=()=>{closeFinalReview();button.focus();};modal.querySelectorAll('[data-final-close]').forEach(el=>el.addEventListener('click',close));
+ modal.querySelector('[data-fast-preview]').addEventListener('click',()=>{close();card.querySelector('.product-preview-action')?.click();});
+ const confirm=modal.querySelector('[data-fast-confirm]'),error=modal.querySelector('.final-review-error');
+ confirm.addEventListener('click',async()=>{
+  if(!activeArtworkMatches(req)||signature!==designSignature(card,card.querySelector('.recast-variant')?.value)){error.textContent='Your artwork or product changed. Close this review and check the new selection.';error.hidden=false;return;}
+  confirm.disabled=true;confirm.textContent='Preparing secure checkout…';error.hidden=true;
+  try{const response=await fetch(checkoutEndpoint('/api/checkout-link',req),{method:'POST',headers:{'x-recast-request':'1','content-type':'application/json'},body:JSON.stringify({requestId:req.requestId,accessToken:req.accessToken,sku,design,confirmDesign:true,confirmArtwork:true,skipMockup:true})});const data=await response.json();if(!response.ok||!data.ok||!data.checkoutUrl)throw Error(data.error||'Checkout is temporarily unavailable.');if(!activeArtworkMatches(req))throw Error('Your selected artwork changed. Please review it again.');if(modal.isConnected)location.href=data.checkoutUrl;}
+  catch(cause){confirm.disabled=false;confirm.textContent='Approve artwork & checkout';error.textContent=cause.message;error.hidden=false;}
+ });
+ reviewKeydown=event=>{if(event.key==='Escape'){event.preventDefault();close();}if(event.key==='Tab'){const focusable=[...modal.querySelectorAll('button:not([disabled])')];const first=focusable[0],last=focusable.at(-1);if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus();}else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus();}}};document.addEventListener('keydown',reviewKeydown);
+ confirm.focus();
+}
+
 async function generateRealMockup({req,sku,card,button}){
   if(!sku||!card||!button)return;
   if(stateFor(card).busy)return;
   const state=stateFor(card),run=++state.run,design=productDesign(card),signature=JSON.stringify({sku,design});
   state.busy=true;
+  const previewStarted=Date.now();
   resetProductPreview(card,{invalidate:false});
   const errorCopy=card.querySelector(".mockup-error");
   button.disabled=true;button.textContent="Preparing real product preview…";
@@ -437,6 +475,7 @@ async function generateRealMockup({req,sku,card,button}){
         card.dataset.mockupSignature=signature;card.dataset.mockupId=mockupId;
         productReviewState.set(card,{sku,design,mockupId,views:views.slice(0,3),signature});
         card.classList.add("real-mockup-ready");
+        recordPreviewTime((Date.now()-previewStarted)/1000);syncBuyNow(card);
         window.recastTrack?.("product_preview");
         state.busy=false;
         button.disabled=true;button.textContent="Preview ready ✓";
@@ -509,7 +548,7 @@ async function loadCheckout(){
       : `<input type="hidden" class="recast-variant" data-product="${index}" data-variant-label="${first?.variantTitle||""} · ${money(first?.price)}" value="${first?.sku||""}">`;
     const preset=PRODUCT_DESIGN_PRESETS[product.title]||presetFor({dataset:{productTitle:product.title}});
     const designControls=digital?"":designControlsMarkup(product.title,preset);
-    const realPreview=digital?"":`<button class="product-preview-action" data-product="${index}" type="button">Preview my product</button><p class="mockup-error" role="alert" hidden></p>`;
+    const realPreview=digital?"":`<button class="product-preview-action" data-product="${index}" type="button">Preview on product</button><p class="product-mockup-note">${previewEstimate()} · you can keep browsing</p><button type="button" class="recast-buy-now button primary" data-product="${index}" ${active?"":"disabled"}>Buy now</button><p class="product-mockup-note" data-buy-now-note>Skip the mockup · use recommended placement</p><p class="mockup-error" role="alert" hidden></p>`;
 
     return `<div class="${classes}" data-product-index="${index}" data-product-title="${product.title}" data-active="${active}" data-digital="${digital}">
       <div class="product-art"><img src="${PRODUCT_ART[product.title]}" alt="Style illustration for ${product.title}; generate the selected-size preview before buying" loading="lazy"><span class="example-design-label">Lifestyle example · preview your selected size</span></div>
@@ -534,6 +573,7 @@ async function loadCheckout(){
   const moreToggle=grid.querySelector?.(".catalog-more-toggle");
   moreToggle?.addEventListener("click",()=>{grid.classList.add("show-all-products");moreToggle.remove();});
 
+  document.querySelectorAll('.recast-buy-now').forEach(button=>button.addEventListener('click',()=>{const card=button.closest('[data-product-index]'),sku=card.querySelector('.recast-variant')?.value;if(sku)openRecommendedReview({req,sku,card,button});}));
   document.querySelectorAll(".product-preview-action").forEach(button=>{
     button.addEventListener("click",async()=>{
       const index=button.dataset.product;

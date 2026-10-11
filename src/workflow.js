@@ -173,7 +173,7 @@ export function mockupPosition(catalog, variantId, placement, size, rawDesign=nu
   return {area_width:areaWidth,area_height:areaHeight,width,height,top:Math.floor((areaHeight-height)/2),left:Math.floor(areaWidth*center-width/2)};
 }
 
-export async function createMockup(request,env){
+export async function createMockup(request,env,{prepareOnly=false}={}){
   let stage="request";
   try{
     const body=await request.json().catch(()=>({}));
@@ -193,10 +193,10 @@ export async function createMockup(request,env){
     const savedSource=await env.ARTWORK.get(requestKey(requestId,'preview.b64'));
     if(!savedSource)throw fault('artwork_missing','The saved artwork is unavailable.',404);
     const savedBase64=await savedSource.text(),sourceHash=await hash(savedBase64+'|'+JSON.stringify(design));
-    const contextual=body.presentation==='room-v1';
-    const mockupId=mockupDesignId(design)+(contextual?(['Blanket','Canvas'].includes(map.product)?'-room2':'-room1'):'');
+    const contextual=!prepareOnly&&body.presentation==='room-v1';
+    const mockupId=(prepareOnly?'recommended-':'')+mockupDesignId(design)+(contextual?(['Blanket','Canvas'].includes(map.product)?'-room2':'-room1'):'');
     const existing=await readJson(env,mockupKey(requestId,sku,mockupId));
-    if(existing?.sourceHash===sourceHash&&existing.position&&['completed','pending'].includes(existing.status))return json({ok:true,status:existing.status,taskKey:existing.taskKey,sku,mockupId,design:existing.design||design,waitSeconds:10});
+    if(existing?.sourceHash===sourceHash&&existing.position&&(prepareOnly?['prepared']:['completed','pending']).includes(existing.status))return json({ok:true,status:existing.status,taskKey:existing.taskKey,sku,mockupId,design:existing.design||design,waitSeconds:10});
     if(!env.IMAGES)throw fault('images_required','Image processing is not configured.',503);
     stage="image-info";
     const size=await env.IMAGES.info(new Blob([decodeBase64(savedBase64)]).stream());size.design=design;size.product=map.product;
@@ -249,6 +249,11 @@ export async function createMockup(request,env){
     for(const other of placements.filter(p=>p!==placement)){
       const area=productPrintfile(catalog,map.printfulVariantId,other);
       if(area.width!==position.area_width||area.height!==position.area_height)throw fault('print_area_mismatch','Both sides need matching supplier print dimensions.',503);
+    }
+    if(prepareOnly){
+      const record={variantIdentity,requestId,sku,mockupId,sourceHash,design,position,status:'prepared',approvalMode:'recommended-no-mockup',createdAt:now(),updatedAt:now(),printfulProductId:map.printfulProductId,printfulVariantId:map.printfulVariantId};
+      await putJson(env,mockupKey(requestId,sku,mockupId),record);
+      return json({ok:true,status:'prepared',sku,mockupId,design});
     }
     const groups=selectMockupGroups(catalog,map.product);
     const payload={...(groups.length?{option_groups:groups}:{}),variant_ids:[map.printfulVariantId],format:"jpg",width:1200,files:placements.map(placement=>({placement,image_url:sourceUrl,position}))};
