@@ -277,8 +277,8 @@ test('illustrated and realistic worlds preserve identity instructions in both qu
       assert.match(prompt,/IDENTITY FIRST:/);
       assert.match(prompt,/No generic beauty face/);
       assert.match(prompt,/Keep faces visible and original head angles/);
-      assert.match(prompt,/change drawing style, NOT facial identity/);
-      assert.match(prompt,/CHANGE ONLY outfit, background, props and scene lighting/);
+      assert.match(prompt,/Illustration changes style, not identity/);
+      assert.match(prompt,/Change outfit, background, props and lighting/);
       if(quality==='high'){
         assert.ok(prompt.indexOf('IDENTITY FIRST:') < prompt.indexOf('WORLD:'));
       }else{

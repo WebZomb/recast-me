@@ -86,7 +86,7 @@ test('Adventure-specific transformation remains real, not a generic unchanged so
   const prompt=makeFalCompactPrompt({styleId:id,subjectType:'pet'});
   assert.match(prompt,new RegExp(scene,'i'),id);
   assert.match(prompt,new RegExp(attire,'i'),id);
-  assert.match(prompt,/CHANGE ONLY outfit, background, props and scene lighting/);
+  assert.match(prompt,/Change outfit, background, props and lighting/);
  }
 });
 

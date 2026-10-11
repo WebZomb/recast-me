@@ -45,7 +45,7 @@ export function makeIdentityFirstAdventurePrompt({
   compactIdentity(subjectType),
   'WORLD: '+setting+'. '+costume,
   guide?.look?'FINISH: '+guide.look+'.':'',
-  'CHANGE ONLY outfit, background, props and scene lighting; for illustration, change drawing style, NOT facial identity. Keep faces visible and original head angles. The original subject must be the clear, close foreground focus, not a tiny sidekick to an invented hero. REPLACE THE ORIGINAL BACKGROUND and match light and shadow; no obvious cutout.',
+  'Change outfit, background, props and lighting; remove only excluded figures completely, including their torsos, clothing, arms and hands. Reconstruct newly exposed areas naturally. Preserve included subjects and limbs. Keep faces visible and original head angles. Illustration changes style, not identity. Close foreground framing. REPLACE THE ORIGINAL BACKGROUND; match light and shadows; no obvious cutout.',
   role.pet||role.auto?'Real pets keep animal bodies and paws, never human hands or human torsos. Keep the actual animal body and leg proportions; no upright humanoid pose, human clothing sleeves or human-style boots.':'',
   refs,
   referenceGuide?'PHOTO ROLES: '+clean(referenceGuide,520)+'.':'',
