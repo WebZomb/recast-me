@@ -23,3 +23,14 @@ No live AI image generation, payment, credit mutation, order, message, key or su
 Automated mocked tests cannot establish actual face likeness. Owner acceptance still requires same-photo real HQ/Standard results. Other launch gates from earlier records remain: paid checkout/fulfillment/tracking acceptance, credit-pack activation/payment/refund gates, Shopify branding/support, and X testing/approval. Do not describe those as complete.
 
 Rollback: revert the eventual RM120 code merge and use existing guarded deployment. No customer objects are deleted. Old code ignores `originalInputCount`; rollback restores the prior refinement risks.
+
+## Final release evidence — 2026-10-11 UTC
+- Exact reviewed PR #40 head `4eb99c594be67169c957ab3af9e0005f4c1c94b2`; GitHub source was fetched and compared with the tested local tree (identical). Security Actions `38150583525` SUCCESS; customer-policy WebKit/Chromium Actions `38150583540` SUCCESS with no browser failures. Local Wrangler dry-run passed. Additional America/New_York timezone regression: 9/9 creator tests passed.
+- PR #40 squash merged as `6a0670b3c31a580c98b05c819e553955ee85b5f4`.
+- Guarded Cloudflare Actions `38150778495` SUCCESS: 459 tests, dry-run, deployment and production read-only smoke. Worker version `f1f514fd-4f5c-4888-9b2d-df398a6f286a`, deployment 2026-10-11T15:19:51Z. Homepage/readiness/models HTTP200; local/HQ/Standard ready; anonymous admin HTTP401.
+- Public launch audit Actions `38150778493` SUCCESS: live public browser checks, published product examples and isolated mocked social purchase flow all passed. No live generation or payment in these workflows.
+- No real facial-likeness comparison performed. Zero paid renders, orders, messages or personal credit changes in this session. Remaining launch gates above are unchanged.
+- Resulting implementation SHA is the squash merge above. A documentation-only evidence commit does not trigger the guarded Actions deployment; the separate Cloudflare Git integration may still rebuild identical application source. Rollback implementation by reverting `6a0670b` through guarded CI/deployment.
+
+### Final serving-version reconciliation
+The public audit and direct health endpoint returned `c0516cb4-844d-426f-a8a4-336aaeee53c9`, not the initial Actions version. GitHub check `114503845286` (Workers Builds: recast-me) confirms a second successful Cloudflare-native build of the SAME merge SHA `6a0670b`, completed 2026-10-11T15:20:23Z, with exactly that version ID. Thus the live audit was on the correct new source. Both GitHub Actions and native Cloudflare build integrations are active; deduplicating deployment triggers is a future configuration cleanup, not performed here. One Python cache-busting health request returned HTTP403; the ordinary Node fetch succeeded with the matching version.
