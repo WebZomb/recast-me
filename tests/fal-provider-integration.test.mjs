@@ -16,7 +16,7 @@ test('fal-shaped JPEG fixture: screened twice, 1 queue POST, private R2, waterma
   calls.push({url:String(url),method:options.method||'GET'});
   if(String(url).startsWith('https://api.openai.com/v1/moderations'))return content();
   if(String(url)==='https://queue.fal.run/fal-ai/flux-2/edit'){
-   const json=JSON.parse(options.body);assert.equal(json.num_inference_steps,18);assert.equal(json.image_urls.length,1);assert.ok(json.prompt.length<2500);assert.match(json.prompt,/royal/i);assert.match(json.prompt,/EXACT original dog\/animal/i);assert.equal(json.image_size.width,1024);
+   const json=JSON.parse(options.body);assert.equal(json.num_inference_steps,18);assert.equal(json.image_urls.length,1);assert.ok(json.prompt.length<2500);assert.match(json.prompt,/royal/i);assert.match(json.prompt,/Same actual pet: keep exact eyes/i);assert.equal(json.image_size.width,1024);
    assert.equal(new Headers(options.headers).get('X-Fal-No-Retry'),'1');assert.equal(new Headers(options.headers).get('X-Fal-Store-IO'),'0');
    return Response.json({request_id:JOB,status_url:BASE+'/requests/'+JOB+'/status',response_url:BASE+'/requests/'+JOB});
   }
@@ -29,7 +29,7 @@ test('fal-shaped JPEG fixture: screened twice, 1 queue POST, private R2, waterma
  assert.equal(result.status,200,JSON.stringify(data).slice(0,500));assert.equal(data.providerUsed,'fal');assert.equal(data.watermarked,true);
  assert.equal(data.image,'data:image/jpeg;base64,'+MARKED.toString('base64'));
  const meta=await(await env.ARTWORK.get('requests/'+data.requestId+'/request.json')).json();
- assert.equal(meta.providerUsed,'fal');assert.equal(meta.promptVersion,'fal-adventure-scenes-v2');
+ assert.equal(meta.providerUsed,'fal');assert.equal(meta.promptVersion,'identity-first-48-worlds-v1');
  assert.equal(meta.safety.inputScreening.status,'passed');assert.equal(meta.safety.outputScreening.status,'passed');
  const original=await env.ARTWORK.get('requests/'+data.requestId+'/preview.b64');assert.equal(await original.text(),OUTPUT.toString('base64'));
  const balanced=await(await router.fetch(cookieReq(cookie),env,{})).json();assert.equal(balanced.remaining,2);
