@@ -8,7 +8,7 @@ const policy={highDaily:3,standardDaily:5,purchaseBonus:3,websiteCalls:70,social
  const report={type:'Mocked APIs and image placeholders; not a live provider or visual-art acceptance test',checks:[],failures:[]};
  for(const [engine,width] of (process.env.RECAST_CHROMIUM_ONLY==='1'?[[chromium,320],[chromium,1440]]:[[webkit,393],[chromium,320],[chromium,1440]])){
   const browser=await engine.launch(),context=await browser.newContext({viewport:{width,height:900},reducedMotion:'reduce'});
-  const state={remaining:3,free:3,bonus:0,standardRemaining:5,busy:false,hqOutage:false,quickDown:false,settings:{...policy},revision:0,saved:[],checkouts:[],mockups:[]},errors=[];
+  const state={remaining:3,free:3,bonus:0,standardRemaining:5,busy:false,hqOutage:false,quickDown:false,settings:{...policy},revision:0,saved:[],checkouts:[],mockups:[],previewReads:[]},errors=[];
   await context.route('**/*',async route=>{
    const request=route.request(),url=new URL(request.url()),p=url.pathname;
    if(url.hostname!=='recast.test'){
@@ -23,7 +23,7 @@ const policy={highDaily:3,standardDaily:5,purchaseBonus:3,websiteCalls:70,social
    }
    let d={ok:true};
    if(p==='/api/render-credits')d={...d,enabled:true,initialized:true,freeAllowance:3,standardAllowance:5,purchaseBonus:3,resetAt:'2026-10-07T20:00:00Z',standardResetAt:'2026-10-07T20:00:00Z',...Object.fromEntries(['remaining','free','bonus','standardRemaining'].map(k=>[k,state[k]]))};
-   else if(p==='/api/request/RC-TEST0001-ABCDEF/preview')d={ok:true,watermarked:true,image:'data:image/webp;base64,'+fs.readFileSync(path.join(root,'assets/world-game-v18.webp')).toString('base64')};
+   else if(/^\/api\/request\/RC-TEST000[1-4]-ABCDEF\/preview$/.test(p)){state.previewReads.push(p);d={ok:true,watermarked:true,image:'data:image/webp;base64,'+fs.readFileSync(path.join(root,'assets/world-game-v18.webp')).toString('base64')};}
    else if(p==='/api/public-config')d.turnstileSiteKey=null;
    else if(p==='/api/render-readiness'){d=structuredClone(ready);d.modes.high.ready=!state.busy&&!state.hqOutage;d.modes.high.reason=state.hqOutage?'unavailable':null;d.modes.quick.ready=!state.quickDown;d.standardOutageAvailable=state.hqOutage&&!state.quickDown;}
    else if(p==='/api/model-status')d={ok:true,modes:{high:{label:'High Quality',model:'dev'},quick:{label:'Standard',model:'klein9'}},availability:ready};
@@ -278,6 +278,21 @@ const policy={highDaily:3,standardDaily:5,purchaseBonus:3,websiteCalls:70,social
    const demo=await page.locator('#reference').evaluate(input=>({count:input.files?.length,name:input.files?.[0]?.name,size:input.files?.[0]?.size}));
    assert.equal(demo.count,1);assert.match(demo.name,/jack-russell/i);assert.ok(demo.size>1000);
    assert.match(await page.locator('#status').textContent(),/Demo dog loaded/);
+   // Saved history stays available without fetching all four images at startup.
+   await page.evaluate(()=>localStorage.setItem('recast_recent_versions_v12',JSON.stringify(
+     [1,2,3,4].map(n=>({requestId:`RC-TEST000${n}-ABCDEF`,accessToken:'fixture-token',styleName:'Saved test',createdAt:'2026-10-11T12:00:00Z'}))
+   )));
+   state.previewReads=[];
+   await page.goto('http://recast.test/',{waitUntil:'networkidle'});
+   assert.equal(state.previewReads.length,1,'Only active saved preview loads at startup');
+   for(let i=0;i<4;i++){
+     const card=page.locator(`[data-version-index="${i}"]`);
+     await card.scrollIntoViewIfNeeded();
+     await page.waitForFunction(index=>document.querySelector(`[data-version-index="${index}"] img`)?.naturalWidth>0,i,{timeout:12000});
+   }
+   assert.equal(new Set(state.previewReads).size,4,'Every saved version loads when approached');
+   await page.locator('[data-version-index="3"] [data-history-action="use"]').click();
+   await page.waitForFunction(()=>window.__recastActiveRequest?.requestId==='RC-TEST0004-ABCDEF');
    assert.deepEqual(errors,[]);
 
    report.checks.push({engine:engine.name(),width,hqOnly:true,outageHidesStandard:true,exhaustionWarning:true,bonusReturnsToHQ:true,collapsedEditsAndReset:true,adminSettingsSave:true,higherBudgetConfirmed:true,modelLabDemoDog:true,pageErrors:errors});
