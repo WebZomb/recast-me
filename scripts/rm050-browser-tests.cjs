@@ -61,6 +61,10 @@ const policy={highDaily:3,standardDaily:5,purchaseBonus:3,websiteCalls:70,social
    assert.equal(await originalChoice.getAttribute('aria-pressed'),'false');
    assert.equal(await page.locator('#original-photo-form').isHidden(),true);
    assert.equal(await page.locator('#recast-form').isVisible(),true,'Returning to AI preserves the wizard');
+   assert.equal(await page.locator('.creation-progress button').count(),2,'Only Photos and Style are required');
+   assert.equal(await page.locator('[data-create-step="1"]').isVisible(),true,'Upload comes first with no Who step');
+   assert.equal(await page.locator('#subject').inputValue(),'auto','Image editor recognizes the photo content by default');
+   assert.equal(await page.locator('#photo-subject-details').getAttribute('open'),null,'Advanced group options are collapsed');
    assert.equal(await page.locator('#all-worlds-group').isHidden(),true,'Advanced worlds are optional by default');
    assert.equal(await page.locator('#render-time-hint').count(),0,'Only the waiting screen contains the time estimate');
    const timerStyles=await page.evaluate(()=>{
@@ -87,8 +91,9 @@ const policy={highDaily:3,standardDaily:5,purchaseBonus:3,websiteCalls:70,social
    await page.locator('[data-reset-design]').click();assert.equal(await page.locator('[data-design-layout]').isHidden(),true);
    state.busy=true;await page.reload({waitUntil:'networkidle'});assert.equal(await page.locator('#quality-fallback').isHidden(),true);
    Object.assign(state,{busy:false,remaining:0,free:0,standardRemaining:4});await page.reload({waitUntil:'networkidle'});
-   await page.locator('[data-create-step="0"] [data-go-step="1"]').click();
    await page.locator('#photos').setInputFiles(path.join(root,'assets/jack-russell-source-v18.webp'));
+   assert.equal(await page.locator('.reference-label').count(),0,'No hard-coded Your pet label for single uploads');
+   assert.equal(await page.locator('#subject').inputValue(),'auto');
    await page.locator('[data-create-step="1"] [data-go-step="2"]').click();
    assert.equal(await page.locator('#all-worlds-group').isHidden(),true);
    assert.equal(await page.locator('#surprise-world').isVisible(),true,'Surprise me is a clear alternative');
@@ -101,20 +106,25 @@ const policy={highDaily:3,standardDaily:5,purchaseBonus:3,websiteCalls:70,social
    assert.equal(await page.locator('#all-worlds-group').isHidden(),true,'A long list can be closed again');
    assert.equal(await page.locator('#quality-fallback').isVisible(),true);
    assert.match(await page.locator('#quality-fallback-reason').textContent(),/High Quality is used up/);
+   assert.equal(await page.locator('#generate-button').isHidden(),true,'Hide dead HQ CTA while offering Standard');
+   assert.equal(await page.locator('#render-availability').isHidden(),true,'Do not repeat HQ exhaustion as separate banner');
    assert.match(await page.locator('#render-credits').textContent(),/Standard: 4 left/,'Show Standard remaining while eligible');
    assert.match(await page.locator('#render-credits-details').textContent(),/Standard: 4 of 5 daily previews left \(1 used\)/,'Exact counts and resets remain available under details');
    await page.locator('#choose-standard').click();assert.equal(await page.locator('input[name="qualityMode"][value="quick"]').isChecked(),true);
+   assert.equal(await page.locator('#generate-button').isVisible(),true,'Opting into Standard reveals the create action');
    await page.screenshot({path:path.join(out,`${engine.name()}-${width}-customer.png`)});
    // Real owner case: both free allowances used; show a reset notice rather
    // than presenting a Standard CTA that cannot be clicked.
    Object.assign(state,{standardRemaining:0});
    await page.reload({waitUntil:'networkidle'});
-   await page.locator('[data-create-step="0"] [data-go-step="1"]').click();
    await page.locator('#photos').setInputFiles(path.join(root,'assets/jack-russell-source-v18.webp'));
+   assert.equal(await page.locator('.reference-label').count(),0,'No hard-coded Your pet label for single uploads');
+   assert.equal(await page.locator('#subject').inputValue(),'auto');
    await page.locator('[data-create-step="1"] [data-go-step="2"]').click();
    assert.equal(await page.locator('#choose-standard').isHidden(),true,'Spent Standard should never look actionable');
-   assert.equal(await page.locator('#standard-limit-status').isVisible(),true,'Show a conspicuous Standard reset notice');
-   assert.match(await page.locator('#standard-limit-status').textContent(),/Standard: 0 of 5 left/);
+   assert.equal(await page.locator('#standard-limit-status').isHidden(),true,'Avoid duplicate zero-credits notice');
+   assert.match(await page.locator('#render-credits-details').textContent(),/Standard: 0 of 5 daily previews left/);
+   assert.equal(await page.locator('#generate-button').isHidden(),true,'No dead action after all credits are used');
    assert.match(await page.locator('#render-credits').textContent(),/Standard: 0 left/);
    Object.assign(state,{remaining:3,bonus:3,standardRemaining:4});await page.evaluate(()=>window.dispatchEvent(new Event('focus')));await page.waitForTimeout(500);
    assert.equal(await page.locator('input[name="qualityMode"][value="high"]').isChecked(),true);assert.equal(await page.locator('#quality-fallback').isHidden(),true);
@@ -122,7 +132,7 @@ const policy={highDaily:3,standardDaily:5,purchaseBonus:3,websiteCalls:70,social
    // model is not known to be down: explicit warning and explicit customer opt-in.
    Object.assign(state,{hqOutage:true,quickDown:false,remaining:3,free:3,bonus:0,standardRemaining:4});
    // A quality change refreshes the readiness API immediately, without
-   // resetting the three-step creation wizard (a reload hides this panel).
+   // resetting the two-step photo-first creator (a reload hides this panel).
    await page.locator('input[name="qualityMode"][value="high"]').dispatchEvent('change');
    await page.waitForFunction(()=>!document.querySelector('#quality-fallback').hidden);
    assert.equal(await page.locator('#quality-fallback').isVisible(),true);
