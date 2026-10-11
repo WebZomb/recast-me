@@ -33,7 +33,7 @@ test('homepage polish keeps alternates separate and preview utilities collapsed'
   assert.match(html,/world-game-v18\.webp/);
   assert.match(html,/class="process-ribbon"/);
   assert.match(html,/class="preview-more"/);
-  assert.match(html,/Choose a product →/);
+  assert.match(html,/Put It on a Product →/);
   assert.match(html,/Pick another version/);
   assert.doesNotMatch(html,/Choose a product for your Recast →/);
 });
