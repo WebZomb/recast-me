@@ -225,23 +225,25 @@
 </details>
             <p id="prefill-note" class="prefill-note"></p>
             <div id="branch-note" class="branch-note hidden"></div>
-            <div class="consent"><input id="consent" type="checkbox" required><label for="consent">I have permission to use these photos and send them to an AI image service to create my picture. Family-friendly only. <a href="/privacy.html" target="_blank" rel="noopener">Privacy</a>.</label></div>
-            <details class="create-privacy-details"><summary>How are my photos used?</summary><p>Your photos and instructions go to fal.ai or Cloudflare Workers AI for this preview. Your original photo stays private. <a href="/privacy.html" target="_blank" rel="noopener">Read the full policy</a>.</p></details>
             <input type="radio" name="qualityMode" value="high" checked hidden>
             <input type="radio" name="qualityMode" value="quick" hidden>
             <p id="render-credits" class="credit-quick-count" role="status" aria-live="polite" hidden></p>
-            <details id="render-credits-more" class="credit-extra" hidden><summary>Credits &amp; reset times</summary><p id="render-credits-details"></p></details>
-            <p id="credit-gifts-link" class="credit-gifts-link" hidden><a href="/credits.html#redeem">Redeem a code →</a></p>
+            <details id="render-credits-more" class="credit-extra" hidden><summary>Credits, resets &amp; gifts</summary>
+              <p id="render-credits-details"></p>
+              <p id="credit-gifts-link" class="credit-gifts-link" hidden><a href="/credits.html#redeem">Redeem a code →</a></p>
+            </details>
             <aside id="quality-fallback" hidden aria-live="polite">
               <p id="quality-fallback-reason"></p>
               <p id="standard-limit-status" class="standard-limit-status" role="status" hidden></p>
-              <details class="standard-allowance-note"><summary>About previews &amp; credits</summary><p>Standard may look less detailed. Failed previews return their credit. Buying an eligible product adds 3 more High Quality previews for your next picture. Credits don’t change confirmed orders or bypass site availability limits.</p></details>
               <button type="button" class="button primary full" id="choose-standard">Use Standard (lower detail) →</button>
               <button type="button" class="button ghost" id="choose-high" hidden>Back to High Quality</button>
+              <details class="standard-allowance-note"><summary>About Standard previews</summary><p>Standard uses a different model and can change facial details. Failed previews return their credit. Eligible product purchases grant 3 bonus High Quality credits. Credits don't change confirmed orders or override site availability limits.</p></details>
               <a id="credit-purchase-link" href="#recent-versions-shell" hidden>See saved pictures →</a>
             </aside>
             <p id="render-availability" class="prefill-note" role="status" hidden></p>
             <p id="return-to-order" hidden><a class="button ghost" href="/order.html">Return to my order and choose its design →</a></p>
+            <div class="consent"><input id="consent" type="checkbox" required><label for="consent">I have permission to use these photos and send them to an AI image service to create my picture. Family-friendly only. <a href="/privacy.html" target="_blank" rel="noopener">Privacy</a>.</label></div>
+            <details class="create-privacy-details"><summary>How are my photos used?</summary><p>Your photos and instructions go to fal.ai or Cloudflare Workers AI for this preview. Your original photo stays private. <a href="/privacy.html" target="_blank" rel="noopener">Read the full policy</a>.</p></details>
             <div id="turnstile-container" class="turnstile-container hidden"></div>
             
              <button type="submit" class="button primary full" id="generate-button">Make My Picture</button>
