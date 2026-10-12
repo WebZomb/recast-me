@@ -17,10 +17,10 @@ test('original photo has independent bounded upload allowance and fails closed w
   const env=await setup();for(let i=0;i<10;i++)assert.equal((await router.fetch(upload(),env,{})).status,200);assert.equal((await router.fetch(upload(),env,{})).status,429);
   const noImages=await setup({IMAGES:null});assert.equal((await router.fetch(upload(),noImages,{})).status,503);
 });
-test('history recovers last saved credential without duplicating or dropping four-version bound',()=>{
-  const rows=[1,2,3,4].map(n=>({requestId:`RC-TEST000${n}-ABCDEF`,accessToken:`token${n}`}));
+test('history recovers last saved credential without duplicating or dropping six-version bound',()=>{
+  const rows=[1,2,3,4,5,6].map(n=>({requestId:`RC-TEST000${n}-ABCDEF`,accessToken:`token${n}`}));
   assert.deepEqual(mergeHistory(rows,rows[2]),rows);
-  const last={requestId:'RC-LATEST00-ABCDEF',accessToken:'last',style:'Space Explorer'};const restored=mergeHistory(rows,last);assert.equal(restored.length,4);assert.equal(restored[0].styleName,'Space Explorer');
+  const last={requestId:'RC-LATEST00-ABCDEF',accessToken:'last',style:'Space Explorer'};const restored=mergeHistory(rows,last);assert.equal(restored.length,6);assert.equal(restored[0].styleName,'Space Explorer');
 });
 test('recovery link keeps credentials in fragment and refuses a different site',()=>{
   const v={requestId:'RC-TEST0001-ABCDEF',accessToken:'private-token'};const link=privateRecastLink('https://recast.test',v);assert.equal(new URL(link).search,'');assert.deepEqual(readRecastLink(link,'https://recast.test'),v);assert.throws(()=>readRecastLink(link,'https://other.test'));assert.throws(()=>readRecastLink('https://recast.test/#recast=bad','https://recast.test'));

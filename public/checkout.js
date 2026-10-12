@@ -138,12 +138,7 @@ let checkoutLoadId=0;
 const mockupState=new WeakMap();
 const productReviewState=new WeakMap();
 
-function previewEstimate(){
- try{const samples=JSON.parse(sessionStorage.getItem('recast-preview-seconds')||'[]').filter(n=>Number.isFinite(n)&&n>=3&&n<=300).sort((a,b)=>a-b);
- if(samples.length>=3){const median=samples[Math.floor(samples.length/2)];return `Estimated ${Math.max(5,Math.floor(median*.7/5)*5)}–${Math.ceil(median*1.5/5)*5} seconds`;}}catch{}
- return 'Estimated 1–2 minutes';
-}
-function recordPreviewTime(seconds){try{const old=JSON.parse(sessionStorage.getItem('recast-preview-seconds')||'[]');sessionStorage.setItem('recast-preview-seconds',JSON.stringify([...old,seconds].slice(-12)))}catch{}}
+function previewEstimate(){return 'Estimated 20–45 seconds';}
 function usesRecommendedSetup(card){const design=productDesign(card),preset=presetFor(card);return ['layout','fill','x','scale','spacing','finish'].every(k=>design[k]===preset[k]);}
 function syncBuyNow(card){const button=card.querySelector?.('.recast-buy-now');if(!button)return;const recommended=usesRecommendedSetup(card);button.hidden=card.classList.contains('real-mockup-ready');button.disabled=!recommended;const note=card.querySelector?.('[data-buy-now-note]');if(note){note.hidden=button.hidden;note.textContent=recommended?'Skip the mockup · use recommended placement':'Preview your custom layout, or reset to use Buy now';}}
 function activeArtworkMatches(req){const active=lastRequest();return active?.requestId===req.requestId&&active?.accessToken===req.accessToken&&active?.shareId===req.shareId;}
@@ -228,16 +223,15 @@ function setPreviewLoading(card,busy){
     art.append(panel);
   }
   panel.hidden=false;
-  panel.querySelector('p').textContent=previewEstimate()+'. We’re placing your artwork; keep this page open.';
+  panel.querySelector('p').textContent=previewEstimate()+'. Keep this page open. Preview as many products as you like — keep scrolling and tap other product previews.';
   const started=Date.now(),elapsed=panel.querySelector('[data-preview-elapsed]');
   elapsed.textContent='Just started…';
   state.loadingTimer=setInterval(()=>{
     if(card.isConnected===false){setPreviewLoading(card,false);return;}
     const seconds=Math.floor((Date.now()-started)/1000);
     elapsed.textContent=`${seconds}s elapsed`;
-    if(seconds>=30)panel.querySelector('p').textContent='Still preparing your preview. Some products take longer. There’s no need to click again.';
+    if(seconds>45)panel.querySelector('p').textContent='Still preparing your preview. Some products take longer. Keep this page open; you can scroll and preview other products.';
   },1000);
-  art.scrollIntoView?.({block:'center',behavior:'smooth'});
 }
 function resetProductPreview(card,{invalidate=true}={}){
   if(!card)return;
@@ -384,7 +378,6 @@ async function generateRealMockup({req,sku,card,button}){
   if(stateFor(card).busy)return;
   const state=stateFor(card),run=++state.run,design=productDesign(card),signature=JSON.stringify({sku,design});
   state.busy=true;
-  const previewStarted=Date.now();
   resetProductPreview(card,{invalidate:false});
   const errorCopy=card.querySelector(".mockup-error");
   button.disabled=true;button.textContent="Preparing real product preview…";
@@ -476,7 +469,7 @@ async function generateRealMockup({req,sku,card,button}){
         card.dataset.mockupSignature=signature;card.dataset.mockupId=mockupId;
         productReviewState.set(card,{sku,design,mockupId,views:views.slice(0,3),signature});
         card.classList.add("real-mockup-ready");
-        recordPreviewTime((Date.now()-previewStarted)/1000);syncBuyNow(card);
+        syncBuyNow(card);
         window.recastTrack?.("product_preview");
         state.busy=false;
         button.disabled=true;button.textContent="Preview ready ✓";
@@ -549,7 +542,7 @@ async function loadCheckout(){
       : `<input type="hidden" class="recast-variant" data-product="${index}" data-variant-label="${first?.variantTitle||""} · ${money(first?.price)}" value="${first?.sku||""}">`;
     const preset=PRODUCT_DESIGN_PRESETS[product.title]||presetFor({dataset:{productTitle:product.title}});
     const designControls=digital?"":designControlsMarkup(product.title,preset);
-    const realPreview=digital?"":`<button class="product-preview-action" data-product="${index}" type="button">Preview on product</button><p class="product-mockup-note">${previewEstimate()} · you can keep browsing</p><button type="button" class="recast-buy-now button primary" data-product="${index}" ${active?"":"disabled"}>Buy now</button><p class="product-mockup-note" data-buy-now-note>Skip the mockup · use recommended placement</p><p class="mockup-error" role="alert" hidden></p>`;
+    const realPreview=digital?"":`<button class="product-preview-action" data-product="${index}" type="button">Preview on product</button><button type="button" class="recast-buy-now button primary" data-product="${index}" ${active?"":"disabled"}>Buy now</button><p class="product-mockup-note" data-buy-now-note>Skip the mockup · use recommended placement</p><p class="mockup-error" role="alert" hidden></p>`;
 
     return `<div class="${classes}" data-product-index="${index}" data-product-title="${product.title}" data-active="${active}" data-digital="${digital}">
       <div class="product-art"><img src="${PRODUCT_ART[product.title]}" alt="Style illustration for ${product.title}; generate the selected-size preview before buying" loading="lazy"><span class="example-design-label">Lifestyle example · preview your selected size</span></div>

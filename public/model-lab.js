@@ -2,8 +2,14 @@ const $=s=>document.querySelector(s);
 const falModels=new Set(['dev','dev-edit','nano-banana','qwen-protected','fill-protected']);
 function syncHost(){if(['dev-edit','nano-banana','qwen-protected','fill-protected'].includes($('#engine').value))$('#host').value='fal';if($('#engine').value.startsWith('klein'))$('#host').value='cloudflare';$('#host').disabled=$('#engine').value!=='dev';$('#recipe').disabled=!['nano-banana','dev-edit'].includes($('#engine').value)}
 $('#engine').addEventListener('change',syncHost);syncHost();
-let originalUrl;
-function showOriginal(file){if(originalUrl)URL.revokeObjectURL(originalUrl);originalUrl=URL.createObjectURL(file);$('#original').src=originalUrl;$('#original').hidden=false}
+let originalUrl,originalPreviewRun=0;
+async function showOriginal(file){
+ const run=++originalPreviewRun;const img=$('#original');img.hidden=true;img.removeAttribute('src');
+ if(originalUrl){URL.revokeObjectURL(originalUrl);originalUrl=null;}
+ try{const small=await prepare(file,480);if(run!==originalPreviewRun)return;
+ originalUrl=URL.createObjectURL(small);img.src=originalUrl;img.hidden=false;
+ }catch{if(run===originalPreviewRun)$('#status').textContent='Photo selected; display preview unavailable.';}
+}
 $('#reference').addEventListener('change',()=>{if($('#reference').files[0])showOriginal($('#reference').files[0])});
 try{$('#token').value=sessionStorage.getItem('recast_admin_token')||''}catch{}
 async function prepare(file,maxEdge=500){
@@ -33,6 +39,6 @@ $('#lab').addEventListener('submit',async e=>{
   const form=new FormData();form.set('promptRecipe',$('#recipe').disabled?'baseline':$('#recipe').value);form.set('ownerProvider',host==='fal'?'fal':'cloudflare');form.set('style','custom');form.set('subject',subject);form.set('notes',notes);form.set('customWorld',world);form.set('qualityMode',model.startsWith('klein')?'quick':'high');form.set('image_0',await prepare(file),'reference.jpg');
   if(host==='fal')form.set('hq_image_0',await prepare(file,1024),'detail.jpg');
   const response=await fetch('/api/admin/model-test?model='+model,{method:'POST',headers:{Authorization:'Bearer '+token},body:form});const data=await response.json();if(!response.ok||!data.ok)throw Error((data.userMessage||data.error||'Generation did not finish.')+(data.diagnosticId?' Support reference: '+data.diagnosticId:''));
-  const card=document.createElement('article');const title=document.createElement('h2');title.textContent=label+' · '+(form.get('promptRecipe')==='concise'?'concise':'earlier recipe');const img=document.createElement('img');img.src=data.image;img.alt='Owner comparison result';const detail=document.createElement('p');detail.textContent=`${Math.round((Date.now()-started)/1000)}s · ${data.providerUsed||host} · ${data.modelUsed} · ${data.promptVersion} · ${file.name} · ${subject} · ${notes} · ${world}`;card.append(title,img,detail);$('#results').append(card);while($('#results').children.length>4)$('#results').firstElementChild.remove();$('#status').textContent='Comparison ready. Select the next engine to run another test.';
+  const card=document.createElement('article');const title=document.createElement('h2');title.textContent=label+' · '+(form.get('promptRecipe')==='concise'?'concise':'earlier recipe');const img=document.createElement('img');img.loading='lazy';img.decoding='async';img.src=data.image;img.alt='Owner comparison result';const detail=document.createElement('p');detail.textContent=`${Math.round((Date.now()-started)/1000)}s · ${data.providerUsed||host} · ${data.modelUsed} · ${data.promptVersion} · ${file.name} · ${subject} · ${notes} · ${world}`;card.append(title,img,detail);$('#results').append(card);while($('#results').children.length>4)$('#results').firstElementChild.remove();$('#status').textContent='Comparison ready. Select the next engine to run another test.';
  }catch(error){$('#status').textContent=error.message}finally{clearInterval(timer);$('#run').disabled=false}
 });
