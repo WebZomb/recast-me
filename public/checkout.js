@@ -50,7 +50,7 @@ const PRODUCT_META = {
 
 const PRIMARY_PRODUCT_TITLES=new Set(["Custom Recast Mug","Custom Recast Blanket","Custom Recast Poster","Custom Recast Canvas"]);
 const PRODUCT_DESIGN_PRESETS = {
-  "Custom Recast Tough Phone Case": {product:"Phone Case",caseType:"tough",layout:"fit",fill:"ambient",x:"center",scale:100,spacing:"standard",label:"Larger photo · camera-clear wrap"},
+  "Custom Recast Tough Phone Case": {product:"Phone Case",caseType:"tough",layout:"cover",fill:"full-bleed",x:"center",scale:100,spacing:"standard",label:"Full photo wrap · check camera opening"},
   "Custom Recast Hoodie": {product:"Hoodie",layout:"fit",fill:"transparent",x:"center",scale:100,spacing:"standard",finish:"soft",label:"Scene blend · soft fade into fabric"},
   "Custom Recast T-Shirt": {product:"T-Shirt",layout:"fit",fill:"transparent",x:"center",scale:100,spacing:"standard",finish:"soft",label:"Scene blend · soft fade into fabric"},
   "Custom Recast Mug": {product:"Mug",layout:"two-sided",fill:"ambient",x:"center",scale:110,spacing:"close",label:"Best setup · two pictures meet at front"},
@@ -157,7 +157,7 @@ function productDesign(card){
   const scale=Number(card?.querySelector?.("[data-design-scale]")?.value||preset.scale);
   const spacing=card?.querySelector?.("[data-design-spacing]")?.value||preset.spacing;
   const fill=card?.querySelector?.("[data-design-fill]")?.value||preset.fill;
-  return {version:(preset.caseType==="tough"&&layout!=="cover")||preset.product==="Mug"?10:preset.product==="Sticker Sheet"?8:(preset.product==="Hardcover Journal"||(preset.product==="Phone Case"&&preset.caseType!=="tough"&&layout!=="cover"))?7:6,product:preset.product,layout,fill,x,scale,spacing,...(["Poster","Framed Poster","Canvas","Puzzle"].includes(preset.product)?{orientation:"portrait"}:{}),...(preset.finish?{finish:card?.querySelector?.("[data-design-finish]")?.value||preset.finish}:{})};
+  return {version:preset.product==="Mug"?11:(preset.caseType==="tough"&&layout!=="cover")?10:preset.product==="Sticker Sheet"?8:(preset.product==="Hardcover Journal"||(preset.product==="Phone Case"&&preset.caseType!=="tough"&&layout!=="cover"))?7:6,product:preset.product,layout,fill,x,scale,spacing,...(["Poster","Framed Poster","Canvas","Puzzle"].includes(preset.product)?{orientation:"portrait"}:{}),...(preset.finish?{finish:card?.querySelector?.("[data-design-finish]")?.value||preset.finish}:{})};
 }
 function designSignature(card,sku){return JSON.stringify({sku,design:productDesign(card)})}
 function designControlsMarkup(title,preset){
@@ -166,7 +166,7 @@ function designControlsMarkup(title,preset){
   const wrap=['Custom Recast Mug','Custom Recast Tumbler'].includes(title);
   const apparel=Boolean(preset.finish);
   const journal=preset.product==="Hardcover Journal",phone=preset.product==="Phone Case";
-  const layoutOptions=preset.caseType==="tough"?`<option value="fit" selected>Best setup · larger photo below camera</option><option value="cover">Edge-to-edge crop · check camera opening</option>`:phone?`<option value="fit" selected>Whole image below camera opening</option><option value="cover">Fill the printable back · crops photo</option>`:journal?`<option value="fit" selected>Whole image on both covers</option>`:wrap
+  const layoutOptions=preset.caseType==="tough"?`<option value="cover" selected>Full photo wrap · crops to fill</option><option value="fit">Keep whole photo below camera</option>`:phone?`<option value="fit" selected>Whole image below camera opening</option><option value="cover">Fill the printable back · crops photo</option>`:journal?`<option value="fit" selected>Whole image on both covers</option>`:wrap
     ? `<option value="two-sided" selected>Best setup · image on both sides</option><option value="wrap">Full wrap / full bleed</option><option value="single">One image</option><option value="fit">Keep whole image + blended background</option>`
     : `<option value="cover" selected>Best setup · fill the product</option><option value="fit">Keep whole image + background fill</option>`;
   const spacing=wrap?`<label data-design-spacing-wrap>Image spacing<select data-design-spacing><option value="close">${preset.product==="Mug"?"Meet at front center":"Closer together"}</option><option value="standard" selected>Standard</option><option value="wide">Farther apart</option></select></label>`:"";
@@ -176,7 +176,7 @@ function designControlsMarkup(title,preset){
       <label data-layout-label>Layout<select data-design-layout>${layoutOptions}</select></label>
       ${apparel?`<label>Artwork finish<select data-design-finish><option value="soft">Scene blend · fade into fabric</option><option value="cutout">Subject cutout · no background</option><option value="rectangle">Original photo · straight edges</option></select></label><p class="apparel-finish-note">Scene blend keeps the full Recast sharp in the center and gradually dissolves the outer edges into the garment so there is no visible rectangular border. Cutout remains available for designs that work better without a scene.</p>`:""}
       ${spacing}
-      ${preset.caseType==="tough"?`<p class="product-mockup-note">Best setup keeps your whole photo below the camera, with blended colors wrapping around the edges. Edge-to-edge crop can hide faces behind the camera opening; check your preview.</p>`:phone?`<p class="product-mockup-note">Clear case: printed back, clear sides. Fill the back crops the photo; check faces and the camera opening in your preview.</p>`:""}
+      ${preset.caseType==="tough"?`<p class="product-mockup-note">Full photo wrap fills the back and printable edges with one continuous photo. Check faces and the camera opening in your preview. Choose Keep whole photo below camera if needed.</p>`:phone?`<p class="product-mockup-note">Clear case: printed back, clear sides. Fill the back crops the photo; check faces and the camera opening in your preview.</p>`:preset.product==="Mug"?`<p class="product-mockup-note">Two copies fill the wrap and meet at the front. Each side view shows one copy. Photos crop to fill; check faces in your preview.</p>`:""}
       <label data-design-fill-wrap hidden>Background fill<select data-design-fill><option value="ambient" selected>Blend artwork colors</option><option value="transparent" hidden>No added background</option><option value="dark">Dark fill</option><option value="light">Light fill</option><option value="full-bleed">Artwork edge fill</option></select></label>
       <label data-design-position-wrap>Image position<select data-design-x><option value="left">Left</option><option value="center" selected>Center</option><option value="right">Right</option></select></label>
       <label data-design-scale-wrap>Print-area size <strong data-design-scale-label>${preset.scale}%</strong><input data-design-scale type="range" min="75" max="${apparel||journal||phone?100:125}" step="${apparel?1:5}" value="${preset.scale}"></label>
@@ -205,7 +205,7 @@ function syncDesignControls(card){
   if(fill)fill.hidden=layout!=="fit";
   const fullBleed=layout==="cover"||layout==="wrap";
   if(position)position.hidden=fullBleed||["Hardcover Journal","Phone Case"].includes(presetFor(card).product);
-  if(scale)scale.hidden=fullBleed;
+  if(scale)scale.hidden=fullBleed||(presetFor(card).product==="Mug"&&layout==="two-sided"&&card.querySelector?.("[data-design-spacing]")?.value==="close");
 }
 
 function requireFreshPreview(card){

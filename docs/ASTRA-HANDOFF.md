@@ -1,5 +1,7 @@
 # Recast Me — cumulative Astra handoff
 
+RM146 (2026-10-12) — Owner selected continuous Full photo wrap after explicit crop/camera tradeoff. Tough Case defaults to existing v6 cover; v10 below-camera fit remains optional. Mug v11 uses two full-height half-width panels meeting at centre with no filler strips, preserving old approvals. 524 tests/dry-run PASS; hosted CI/release/real supplier verification pending. See [RM146](ASTRA-SESSION-RM-146.md).
+
 Updated: 2026-10-07. Keep this index and append-only session records current whenever work is performed; the owner does not need to repeat the request for notes.
 
 ## Start here

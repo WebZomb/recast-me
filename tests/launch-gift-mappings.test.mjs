@@ -56,7 +56,8 @@ test('Tough Case preserves whole artwork below camera with a full-template backd
  const transforms=[];const env={IMAGES:{input(){const chain={transform(t){transforms.push(t);return chain},draw(){return chain},async output(){return {response:()=>new Response(new Uint8Array([255,216,255,...Array(100).fill(0)]))}}};return chain}}};
  for(const [suffix,id] of Object.entries(variants)){
   const map=FULFILLMENT['RECAST-TOUGH-'+suffix];assert.equal(map.printfulProductId,601);assert.equal(map.printfulVariantId,id);assert.equal(map.baseCost,14.23);assert.equal(FULFILLMENT['RECAST-CASE-'+suffix].printfulProductId,181);
-  const design=recommendedCheckoutDesign(map);assert.equal(design.version,10);assert.equal(design.layout,'fit');
+  const current=recommendedCheckoutDesign(map);assert.equal(current.version,6);assert.equal(current.layout,'cover');
+  const design={version:10,layout:'fit',fill:'ambient',scale:100};
   const out=await composeProductLayout(env,new Uint8Array([1]),{width:1024,height:1280},{width:1392,height:2220},map,design,1392);
   assert.equal(out.method,'phone-v10-bottom-wrap');assert.deepEqual(out.outputSize,{width:1392,height:2220});assert.ok(out.artworkBox.top>=2220*.35);assert.ok(out.artworkBox.top+out.artworkBox.height<=2220+1);assert.ok(transforms.some(t=>t.width===1392&&t.height===2220&&t.fit==='cover'));
  }
@@ -67,14 +68,14 @@ test('Tough Case preserves whole artwork below camera with a full-template backd
  const map=FULFILLMENT['RECAST-TOUGH-IP16PRO'];
  const env={IMAGES:{input(){const chain={transform(){return chain},draw(){return chain},async output(){return {response:()=>new Response(new Uint8Array([255,216,255,...Array(100).fill(0)]))}}};return chain}}};
  for(const [width,height] of [[900,1600],[1600,900],[1000,1000],[3000,750]]){
-  const d={...recommendedCheckoutDesign(map),scale:140,x:'left'};
+  const d={version:10,layout:'fit',fill:'ambient',scale:140,x:'left'};
   const out=await composeProductLayout(env,new Uint8Array([1]),{width,height},{width:1392,height:2220},map,d,1392),b=out.artworkBox;
   assert.equal(out.design.scale,100);assert.equal(out.design.x,'center');
   assert.ok(b.top>=2220*.35);assert.equal(b.top+b.height,2220);
   assert.ok(b.left>=1392*.02-1&&b.left+b.width<=1392*.98+1);
   assert.ok(Math.abs(b.width/b.height-width/height)<.01,'No cropping or stretching of source');
  }
- const recommended=recommendedCheckoutDesign(map);
+ const recommended={version:10,layout:'fit',fill:'ambient',scale:100};
  const preview=await composeProductLayout(env,new Uint8Array([1]),{width:900,height:1600},{width:1392,height:2220},{product:'Phone Case'},recommended,2400);
  const production=await composeProductLayout(env,new Uint8Array([1]),{width:900,height:1600},{width:1392,height:2220},{product:'Phone Case'},recommended,4096);
  assert.equal(preview.method,'phone-v10-bottom-wrap');assert.equal(production.method,preview.method);
@@ -87,19 +88,23 @@ test('Tough Case preserves whole artwork below camera with a full-template backd
  assert.equal(normalizeProductDesign(map,old).version,6);
  const legacy=await composeProductLayout(env,new Uint8Array([1]),{width:900,height:1600},{width:1392,height:2220},map,old,1392);
  assert.equal(legacy.method,'full-bleed-cover');
- await assert.rejects(()=>composeProductLayout(env,new Uint8Array([1]),{width:900,height:1600},{width:900,height:1800},map,recommendedCheckoutDesign(map),1392),/supplier review/);
+ await assert.rejects(()=>composeProductLayout(env,new Uint8Array([1]),{width:900,height:1600},{width:900,height:1800},map,recommended,1392),/supplier review/);
+ const full=await composeProductLayout(env,new Uint8Array([1]),{width:1024,height:1280},{width:1392,height:2220},map,recommendedCheckoutDesign(map),1392);
+ assert.equal(full.method,'full-bleed-cover');
  });
 
 
 test('new mug pairs meet at front centre for different photo ratios without overlapping',async()=>{
  const {recommendedCheckoutDesign,composeMugLayout}=await import('../src/commerce-store.js');
  const map=FULFILLMENT['RECAST-MUG-11OZ'],d=recommendedCheckoutDesign(map);
- assert.equal(d.version,10);
+ assert.equal(d.version,11);
  const env={IMAGES:{input(){const chain={transform(){return chain},draw(){return chain},async output(){return {response:()=>new Response(new Uint8Array([255,216,255,...Array(100).fill(0)]))}}};return chain}}};
  for(const size of [{width:1024,height:1280},{width:1600,height:900},{width:900,height:1600}]){
   const out=await composeMugLayout(env,new Uint8Array([1]),size,{width:2700,height:1050},d,1800);
-  const [a,b]=out.artworkBoxes;assert.equal(a.left+a.width,b.left);assert.equal(b.left,900);assert.equal(a.top,0);assert.equal(a.height,out.outputSize.height);assert.ok(a.left>=0&&b.left+b.width<=1800);
+  const [a,b]=out.artworkBoxes;assert.equal(a.left+a.width,b.left);assert.equal(b.left,900);assert.equal(a.top,0);assert.equal(a.height,out.outputSize.height);assert.equal(a.left,0);assert.equal(b.left+b.width,1800);assert.equal(out.method,'mug-v11-two-panel-wrap');
  }
  const legacy=await composeMugLayout(env,new Uint8Array([1]),{width:1024,height:1280},{width:2700,height:1050},{...d,version:6},1800);
  assert.equal(legacy.design.version,6);assert.equal(legacy.artworkBoxes,undefined);
+ const prior=await composeMugLayout(env,new Uint8Array([1]),{width:1024,height:1280},{width:2700,height:1050},{...d,version:10},1800);
+ assert.equal(prior.method,'mug-v10-front-meeting');assert.ok(prior.artworkBoxes[0].left>0);
 });

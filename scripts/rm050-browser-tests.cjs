@@ -221,7 +221,10 @@ const policy={highDaily:3,standardDaily:5,purchaseBonus:3,websiteCalls:70,social
    assert.equal(state.checkouts.length,1);assert.equal(state.mockups.length,0);assert.equal(state.checkouts[0].skipMockup,true);assert.equal(state.checkouts[0].confirmArtwork,true);assert.equal(state.checkouts[0].requestId,'RC-TEST0001-ABCDEF');
    assert.equal(await page.locator('[data-fast-confirm]').isEnabled(),true,'Failed checkout can retry without losing artwork');
    await page.keyboard.press('Escape');
-   await page.locator('.product-design-controls > summary').first().click();await page.locator('[data-design-scale]').first().fill('100');
+   await page.locator('.product-design-controls > summary').first().click();
+   assert.equal(await page.locator('[data-design-scale]').first().isHidden(),true,'Full mug panels have no ineffective size slider');
+   await page.locator('[data-design-spacing]').first().selectOption('standard');
+   await page.locator('[data-design-scale]').first().fill('100');
    assert.equal(await fast.isDisabled(),true,'Custom placement requires preview');await page.locator('[data-reset-design]').first().click();assert.equal(await fast.isEnabled(),true);
    await page.locator('.product-preview-action').first().click();
    assert.match(await page.locator('.product-preview-loading:not([hidden]) p').textContent(),/Estimated 20–45 seconds.*keep scrolling/);
