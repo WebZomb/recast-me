@@ -14,7 +14,7 @@ struct RecastMeApp: App {
                     List {
                         Section("Make something worth keeping") {
                             Label("Choose clear photos of your pet or people.", systemImage: "photo")
-                            Label("Describe their look and their world.", systemImage: "sparkles")
+                            Label("Choose a world and check who to include.", systemImage: "sparkles")
                             Label("Check likeness before choosing merchandise.", systemImage: "checkmark.seal")
                         }
                         Section("Your private collection") {
@@ -22,8 +22,11 @@ struct RecastMeApp: App {
                             Text("Deleting a local preview does not delete the artwork on Recast Me or cancel an order. Use the private order page to delete unpaid server artwork.")
                             Link("Photo privacy & AI processing", destination: StudioView.origin.appendingPathComponent("privacy.html"))
                         }
-                        Section("Development build") {
-                            Text("This version connects to the preview service. Public release, purchases and fulfillment still need acceptance testing. Keep Create open while an image renders; background completion is not supported yet.")
+                        Section("Testing this app") {
+                            Text("This build connects to Recast Me. App checkout and return still need device testing before release. Keep Create open while an image renders; background completion is not supported yet.")
+                        }
+                        Section("Orders & support") {
+                            Link("Order help and shipping", destination: StudioView.origin.appendingPathComponent("support.html"))
                         }
                     }
                     .navigationTitle("Photo guide")

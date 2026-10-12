@@ -33,7 +33,7 @@ const PRODUCT_META = {
   "Custom Recast T-Shirt": {order:5,badge:"WEAR IT",pitch:"An easy everyday way to show off your Recast.",tier:"secondary",cta:"Shop T-Shirt"},
   "Custom Recast Blanket": {order:6,badge:"COZY PICK",pitch:"Big, soft, personal — especially good for pets and gifts.",tier:"secondary",cta:"Shop Blanket"},
   "Custom Recast Mug": {order:7,badge:"GIFTABLE",pitch:"A personalized gift that gets used every day.",tier:"secondary",cta:"Shop Mug"},
-  "Custom Recast Tumbler": {order:8,badge:"TAKE IT WITH YOU",pitch:"Your Recast on a 20 oz everyday tumbler.",tier:"secondary",cta:"Shop Tumbler"},
+  "Custom Recast Tumbler": {order:8,badge:"TAKE IT WITH YOU",pitch:"Your photo on both sides of a 20 oz tumbler, with blended background between them.",tier:"secondary",cta:"Shop Tumbler"},
   "Custom Recast Magnet 3-Pack": {order:15,badge:"ADD-ON",pitch:"Three matching magnets for a smaller, easy add-on.",tier:"secondary",cta:"Shop Magnet Set"},
   "Custom Recast Coaster 4-Pack": {order:16,badge:"ADD-ON",pitch:"Four matching cork-back coasters featuring your artwork.",tier:"secondary",cta:"Shop Coaster Set"},
   "HD Digital Recast": {order:90,badge:"DIGITAL ONLY",pitch:"Just want the clean artwork? Keep the high-resolution file without ordering merch.",tier:"digital",cta:"Get HD File"},
@@ -283,7 +283,9 @@ function uniqueMockupViews(input=[],productTitle=""){
     const key=casePreview?`${view.group||""}|${view.title||""}`:isScene?`${view.group||""}|${view.title||""}`:viewLabel(view.title,output.length);
     if(labels.has(key))continue;labels.add(key);
     const label=casePreview?(output.length===0?"Case":`View ${output.length+1}`):isScene?(++scenes===1?"In a room":`Room view ${scenes}`):viewLabel(view.title,output.length);
-    output.push({...view,label,isScene});if(output.length===4)break;
+    const apparel=["Custom Recast Hoodie","Custom Recast T-Shirt"].includes(productTitle);
+    const displayLabel=apparel&&isScene?(scenes===1?"On a model":`Model view ${scenes}`):label;
+    output.push({...view,label:displayLabel,isScene});if(output.length===4)break;
   }
   return output;
 }
