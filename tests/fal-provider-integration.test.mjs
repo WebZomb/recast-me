@@ -29,7 +29,7 @@ test('fal-shaped JPEG fixture: screened twice, 1 queue POST, private R2, waterma
  assert.equal(result.status,200,JSON.stringify(data).slice(0,500));assert.equal(data.providerUsed,'fal');assert.equal(data.watermarked,true);
  assert.equal(data.image,'data:image/jpeg;base64,'+MARKED.toString('base64'));
  const meta=await(await env.ARTWORK.get('requests/'+data.requestId+'/request.json')).json();
- assert.equal(meta.providerUsed,'fal');assert.equal(meta.promptVersion,'identity-adventures-v7');
+ assert.equal(meta.providerUsed,'fal');assert.equal(meta.promptVersion,'identity-adventures-v8');
  assert.equal(meta.safety.inputScreening.status,'passed');assert.equal(meta.safety.outputScreening.status,'passed');
  const original=await env.ARTWORK.get('requests/'+data.requestId+'/preview.b64');assert.equal(await original.text(),OUTPUT.toString('base64'));
  const balanced=await(await router.fetch(cookieReq(cookie),env,{})).json();assert.equal(balanced.remaining,2);
@@ -94,7 +94,7 @@ test('Known Nano outage makes one FLUX request with accepted prompt, screening, 
   return Response.json({images:[{width:1024,height:1280,url:'data:image/jpeg;base64,'+OUTPUT.toString('base64')}],has_nsfw_concepts:[false]});
  });
  const cookie=await initWallet(env),response=await router.fetch(submission(cookie,'BACKUP-ONE'),env,{}),data=await response.json();
- assert.equal(response.status,200,JSON.stringify(data));assert.equal(posts,1);assert.equal(data.modelUsed,'fal-ai/flux-2/edit');assert.equal(data.promptVersion,'identity-adventures-v7');assert.equal(data.watermarked,true);assert.match(data.qualityLabel,/FLUX backup/);
+ assert.equal(response.status,200,JSON.stringify(data));assert.equal(posts,1);assert.equal(data.modelUsed,'fal-ai/flux-2/edit');assert.equal(data.promptVersion,'identity-adventures-v8');assert.equal(data.watermarked,true);assert.match(data.qualityLabel,/FLUX backup/);
  assert.equal((await(await router.fetch(cookieReq(cookie),env,{})).json()).remaining,2);
  assert.equal((await(await env.ARTWORK.get('system/providers/hq-nano-banana.json')).json()).status,'failed');
  assert.equal((await(await env.ARTWORK.get('system/providers/hq-flux-2-dev.json')).json()).status,'success');

@@ -1,0 +1,24 @@
+# RM140 — Live upload subject suggestions, same facial recipe
+
+2026-10-12. Baseline `ace6fad4cdd0fd80f427b5f675ef4937ea3508a9` (runtime RM138 `fcfe8f12abe7305231f8f52483e4df33a7749f87`). Owner explicitly requests installing/activating automatic photo detection directly on the site, replacing the old Automatic behavior while keeping facial settings. This supersedes the earlier private-pilot-only recommendation.
+
+## Implemented (release pending)
+
+- New `src/subject-detection.js` and POST `/api/subject-detection`: small JPEG thumbnail, Cloudflare Llama vision category-only output. Pets, people, people & pets, vehicle, other, or uncertain Automatic. Instructions distinguish a faceless supporting torso/hands from an intentional mixed portrait. No inferred names or family relationships. Results are suggestions, not a guarantee of intended-subject selection.
+- Existing Cloudflare AI/Images/R2 bindings; new separate burst limiter, 20 unique checks/network/day and 200 account-wide/day. Honor render pause. Does not consume rendering credits or submit an image-generation request. Additional analysis spend is separate from generation budget. Strict 300KB streamed body limit and verified <=512px dimensions; same-origin/header checks; private responses; category allowlist; no arbitrary model prose in render prompts.
+- Salted network/photo-hash cache and atomic claims suppress duplicate/uncertain requests. Only hashes/categories are saved, no analysis image copies. Failed/pending results do not automatically resubmit. Single account-level Meta model activation (`prompt:agree`) is explicitly configured for this owner-authorized activation; CAS prevents repeated license initialization. Failed/uncertain activation requires owner review, not hidden retries.
+- Frontend small 480px copy, serial preparation alongside existing thumbnail queue; checking status beneath upload; suggested Include selection and Change. Manual override, new-upload revision guard and generation freeze defeat late responses. Mixed reference categories aggregate conservatively without claiming people counts; uncertainty falls back to editable Automatic. No manual cropping or browser ML.
+- Separate `inclusionSubject` field across HQ/Standard changes only controlled inclusion wording, leaving the accepted automatic face/pose/wardrobe/environment recipe unchanged. Saved metadata/history retain selected subject. Shared recipe version v8; Nano primary, FLUX HQ backup and Standard engines unchanged. Existing explicit owner lab controls unchanged.
+- Upload notice and privacy explanation cover analysis on selection. Privacy history count corrected to existing six-version behavior. Original-as-is upload remains separate and does not invoke detector.
+
+## Verification and limits
+
+Initial full suite exposed stale recipe-version/selector/asset-version assertions; updated to the intentional new contract. Focused 10 tests pass: enum sanitation, body/origin/dimensions guards, atomic duplicate prevention, rate limits, no analysis-image persistence, failure no-retry, unchanged facial/scene text, manual override/stale results/freeze. Full suite subsequently 517/517 PASS. Worker dry-run PASS. Browser/CI/deploy and real analysis smoke pending.
+
+Code review caught removed `submittedSubject` local still used by history and corrected before release. Existing browser regression extended to check visible Pet suggestion and manual mixed override. Mock tests do not establish real detection or image quality. Existing iPhone intermittent crash remains unproven; no new heavy client model. Face preservation and supporting-person removal still require owner visual acceptance; no second image render added.
+
+Sources: https://developers.cloudflare.com/workers-ai/guides/tutorials/llama-vision-tutorial/ and https://developers.cloudflare.com/workers-ai/models/llama-3.2-11b-vision-instruct/ (checked current docs). Rates/example estimates from RM139 are not measured bills. No assistant paid calls as of this draft; planned one bounded public sample analysis after release, no customer photos or paid image generation.
+
+Rollback: disable `SUBJECT_DETECTION_ENABLED` for service-only fallback to editable Automatic; revert RM140 commit for previous selector/recipe. Pending/failed activation is intentionally not auto-retried. No order/fulfillment change.
+
+Pre-release verification: final local 517/517 Node tests PASS; full mocked customer Chromium 320px and 1440px checks PASS, including live-suggestion UI/Change and six-history/product flows. Screenshot reviewed at 320px; label wraps within card. Local WebKit is unavailable from prior missing system dependencies; hosted WebKit gate required. Final integration test submits separate inclusion through actual HQ/Standard handlers and verifies identical controlled pet prompt. No paid calls yet.

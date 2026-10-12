@@ -1,13 +1,11 @@
 import {initSubjectFocus} from './subject-focus.js?v=283';
-// RM117: Two steps. The editing model sees uploaded photos and selects which
-// person/pet/vehicle directions apply. Subject tags are OPTIONAL for unusual
-// multi-subject photos; no extra model call, image upload or paid inference.
+// Upload-time suggestions and manual choices share one visible selector.
 export function initCreationWizard({styles,photos,subject,style,updateWorld,hasBranch}){
  const $=selector=>document.querySelector(selector);
  const labels=new WeakMap();
  const focus=initSubjectFocus(photos);
  let step=1;
- const names={auto:'Automatic',pet:'Pet',person:'Person','person and pet':'People & pets',group:'Group of people',couple:'Couple',family:'Family',car:'My car',custom:'Other — describe it'};
+ const names={auto:'Automatic',pet:'Pets only',people:'People only',person:'Person','person and pet':'People & pets',group:'Group of people',couple:'Couple',family:'Family',car:'My car',custom:'Other — describe it'};
  const kind=()=>subject.value||'auto';
  function roles(){
   const type=kind(),count=Number($('#family-count').value);
@@ -65,7 +63,7 @@ export function initCreationWizard({styles,photos,subject,style,updateWorld,hasB
   });
   if(scroll)$('.creation-progress').scrollIntoView({behavior:'auto',block:'start'});
  }
- for(const value of ['auto','pet','person and pet','person','group','couple','family','car','custom']){
+ for(const value of ['auto','pet','people','person and pet','person','group','couple','family','car','custom']){
   const button=document.createElement('button');button.type='button';button.dataset.subjectChoice=value;button.textContent=names[value];
   button.addEventListener('click',()=>{subject.value=value;subject.dispatchEvent(new Event('change'));$('#photo-subject-details').open=false;$('#change-photo-subject').focus();});
   if(['couple','family','car','custom'].includes(value)){$('#extra-subject-choices').append(button);}else $('#subject-choices').append(button);

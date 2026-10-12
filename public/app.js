@@ -1,6 +1,7 @@
+import {initSubjectDetection} from './subject-detection.js?v=291';
 import {ADVENTURE_GUIDES} from './adventure-guides.js?v=2';
 import {mergeHistory,privateRecastLink,readRecastLink} from './recast-history.js?v=290';
-import {initCreationWizard} from './creation-wizard.js?v=290';
+import {initCreationWizard} from './creation-wizard.js?v=291';
 import {fallbackState,creditSummary,creditHeadline,recoveryUnverified} from './quality-policy.js?v=267';
 import {protectedPreviewFile} from './preview-export.js';
 let creditInfo=null;
@@ -229,6 +230,10 @@ function showSelectedPhotos(message=''){
   document.dispatchEvent(new Event('recast-photos-change'));
 }
 const wizard=initCreationWizard({styles:STYLES,photos,subject:document.querySelector('#subject'),style:styleSelect,updateWorld:updateWorldFields,hasBranch:()=>Boolean(branchReference)});
+const subjectDetection=initSubjectDetection({photos,subject:document.querySelector('#subject'),status:document.querySelector('#subject-detection-status'),prepare:file=>{
+  const task=photoPreviewQueue.catch(()=>{}).then(()=>resizeFile(file,480));
+  photoPreviewQueue=task.catch(()=>{});return task;
+}});
 photos.addEventListener('change',()=>{
   // A new upload replaces the previous set. Previously we silently merged old
   // subjects into new jobs (e.g. an earlier car/person alongside a new pet).
@@ -291,12 +296,6 @@ async function renderWatermark(dataUrl){
   canvas.getContext('2d').drawImage(img,0,0);
 }
 
-function inferSubject(subject,notes){
-  const text=String(notes||'').toLowerCase();
-  if(subject==='person' && /\b(dog|puppy|pup|cat|kitten|pet|horse)\b/.test(text)) return 'person and pet';
-  if(subject==='person' && /\b(car|truck|vehicle|motorcycle|bike)\b/.test(text)) return 'person and car';
-  return subject;
-}
 
 let generationTimer=null;
 let generationStartedAt=0;
@@ -837,6 +836,7 @@ form.addEventListener('submit',async e=>{
     document.querySelector('#request-id').textContent='';
   }
   document.querySelector('#preview-title').textContent=hasSuccessfulPreview?'Creating another version…':'Creating your Recast…';
+  subjectDetection.freeze();
   button.disabled=true;button.textContent='Preparing photos…';
   section.classList.remove('hidden');section.scrollIntoView({behavior:'smooth'});loading.classList.remove('hidden');
   startGenerationUI(selectedQuality(),'preparing');
@@ -847,8 +847,10 @@ form.addEventListener('submit',async e=>{
     const fd=new FormData();
     fd.append('style',styleSelect.value);
     const customWorld=styleSelect.value==='custom'?document.querySelector('#custom-world').value.trim():'';
-    const submittedSubject=inferSubject(document.querySelector('#subject').value,`${customWorld} ${document.querySelector('#notes').value}`);
-    fd.append('subject',submittedSubject);
+    // Inclusion is independent of wardrobe: retain the accepted automatic recipe.
+    const submittedSubject=document.querySelector('#subject').value;
+    fd.append('subject','auto');
+    fd.append('inclusionSubject',submittedSubject);
     fd.append('customWorld',customWorld);
     fd.append('notes',[wizard.focusNotes(),document.querySelector('#notes').value].filter(Boolean).join(' ').slice(0,1200));
     const referenceLabels=wizard.references();

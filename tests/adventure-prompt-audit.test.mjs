@@ -89,15 +89,16 @@ test('Actual Standard and HQ Cloudflare model submissions receive the same short
      submitted.push({qualityMode,model,options,prompt:String(form.get('prompt')),width:form.get('width'),height:form.get('height')});
      return {image:CLEAN.toString('base64')};
     }}};
-   const form=new FormData();form.set('style',styleId);form.set('subject','pet');form.set('qualityMode',qualityMode);
+   const form=new FormData();form.set('style',styleId);form.set('subject','auto');form.set('inclusionSubject','pet');form.set('qualityMode',qualityMode);
    form.set('image_0',new File([CLEAN],'dog.jpg',{type:'image/jpeg'}));
    const response=await highQualityTransform(new Request('https://recast.test/api/transform-v2',{method:'POST',body:form}),env);
    assert.equal(response.status,200,qualityMode+' '+styleId);
    const result=await response.json();
-   assert.equal(result.promptVersion,'identity-adventures-v7');
+   assert.equal(result.promptVersion,'identity-adventures-v8');
   }
   assert.equal(submitted.length,2,styleId+' only one call per selected quality');
   assert.equal(submitted[0].prompt,submitted[1].prompt);
+  assert.match(submitted[0].prompt,/Include only the main pets/);
   assert.ok(submitted[0].prompt.length<2200);
   assert.equal(submitted[0].model,'@cf/black-forest-labs/flux-2-klein-9b');
   assert.equal(submitted[0].width,'768');assert.equal(submitted[0].height,'960');
@@ -181,7 +182,7 @@ test('Automatic photo mode needs no manual subject or paid classification pass',
   const result=await highQualityTransform(new Request('https://recast.test/api/transform-v2',{method:'POST',body:form}),env);
   assert.equal(result.status,200);
   const data=await result.json();
-  assert.equal(data.promptVersion,'identity-adventures-v7');
+  assert.equal(data.promptVersion,'identity-adventures-v8');
   assert.equal(calls.length,1,'Use the same model edit, no extra subject-classifier request');
   assert.match(calls[0].prompt,/main people and pets with visible reference faces/);
   assert.match(calls[0].prompt,/eye shape and spacing, nose or muzzle/);

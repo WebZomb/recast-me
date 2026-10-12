@@ -276,10 +276,10 @@ async function tryGeneration(env,model,prompt,inputFiles,kind,settings){
   }
 }
 
-async function generateHighQuality({env,model,styleId,subjectType,notes,customWorld,inputFiles,hasBranch}){
+async function generateHighQuality({env,model,styleId,subjectType,inclusionSubject,notes,customWorld,inputFiles,hasBranch}){
   // All customer engines share the accepted recipe; owner controls remain separate.
   const candidate=ownerIdentityModel(env);
-  const main=env.RECAST_OWNER_PILOT_REQUEST!=='true'?customerIdentityPrompt({styleId,subjectType,notes:safeNotes(notes),customWorld:safeNotes(customWorld),hasBranch}):candidate?ownerComparisonPrompt(env,{notes:safeNotes(notes),customWorld:safeNotes(customWorld)}):makeFalCompactPrompt({styleId,subjectType,style:STYLES[styleId],
+  const main=env.RECAST_OWNER_PILOT_REQUEST!=='true'?customerIdentityPrompt({styleId,subjectType,inclusionSubject,notes:safeNotes(notes),customWorld:safeNotes(customWorld),hasBranch}):candidate?ownerComparisonPrompt(env,{notes:safeNotes(notes),customWorld:safeNotes(customWorld)}):makeFalCompactPrompt({styleId,subjectType,style:STYLES[styleId],
     notes:safeNotes(notes),customWorld:safeNotes(customWorld),inputCount:inputFiles.length,hasBranch});
   const steps=Math.max(8,Math.min(30,Number(candidate?28:env.IMAGE_HIGH_QUALITY_STEPS||18)));
   const guidance=Math.max(1,Math.min(10,Number(candidate?2.5:env.IMAGE_HIGH_QUALITY_GUIDANCE||5)));
@@ -302,8 +302,8 @@ async function generateHighQuality({env,model,styleId,subjectType,notes,customWo
   }
 }
 
-async function generateQuick({env,model,styleId,subjectType,notes,referenceGuide='',customWorld,inputFiles,hasBranch}){
-  const main=makeStandardAdventurePrompt({styleId,subjectType,notes:safeNotes([referenceGuide,notes].filter(Boolean).join(' ')),inputCount:inputFiles.length,customWorld:safeNotes(customWorld),hasBranch});
+async function generateQuick({env,model,styleId,subjectType,inclusionSubject,notes,referenceGuide='',customWorld,inputFiles,hasBranch}){
+  const main=makeStandardAdventurePrompt({styleId,subjectType,inclusionSubject,notes:safeNotes([referenceGuide,notes].filter(Boolean).join(' ')),inputCount:inputFiles.length,customWorld:safeNotes(customWorld),hasBranch});
   const guidance=Math.max(1,Math.min(10,Number(env.IMAGE_QUICK_GUIDANCE||5)));
   const steps=Math.max(8,Math.min(30,Number(env.IMAGE_QUICK_STEPS||12)));
   const settings={width:768,height:960,guidance,steps:model.includes('flux-2-klein')?null:steps};
@@ -322,10 +322,10 @@ async function generateQuick({env,model,styleId,subjectType,notes,referenceGuide
   throw Object.assign(new Error("provider"),{reason:"provider",cause:firstError});
 }
 
-async function store(env,{requestId,accessToken,styleId,subjectType,notes,customWorld,parentRequestId,source,sourceTweet,qualityMode,inputs,originalInputCount,image,previewMime,safety,modelUsed,attemptKind,providerUsed,promptVersion}){
+async function store(env,{requestId,accessToken,styleId,subjectType,inclusionSubject,notes,customWorld,parentRequestId,source,sourceTweet,qualityMode,inputs,originalInputCount,image,previewMime,safety,modelUsed,attemptKind,providerUsed,promptVersion}){
   if(!env.ARTWORK)return{persisted:false,storageError:"ARTWORK binding is missing."};
   const now=new Date().toISOString();
-  const metadata={creditWalletId:env.RECAST_CREDIT_WALLET?.id||null,requestId,accessToken,styleId,styleName:STYLES[styleId]?.name||"Custom World",subjectType,notes,customWorld,parentRequestId:parentRequestId||null,previewMime,source:source||"site",sourceTweet:sourceTweet||null,safety,status:"preview_ready",createdAt:now,updatedAt:now,inputCount:inputs.length,originalInputCount,paid:false,fulfillment:"not_started",modelUsed,providerUsed:providerUsed||'cloudflare',attemptKind,qualityMode,promptVersion:promptVersion||PROMPT_VERSION};
+  const metadata={creditWalletId:env.RECAST_CREDIT_WALLET?.id||null,requestId,accessToken,styleId,styleName:STYLES[styleId]?.name||"Custom World",subjectType:inclusionSubject||subjectType,inclusionSubject,notes,customWorld,parentRequestId:parentRequestId||null,previewMime,source:source||"site",sourceTweet:sourceTweet||null,safety,status:"preview_ready",createdAt:now,updatedAt:now,inputCount:inputs.length,originalInputCount,paid:false,fulfillment:"not_started",modelUsed,providerUsed:providerUsed||'cloudflare',attemptKind,qualityMode,promptVersion:promptVersion||PROMPT_VERSION};
   try{
     for(let i=0;i<inputs.length;i++)await env.ARTWORK.put(requestKey(requestId,`input-${i}.jpg`),await inputs[i].arrayBuffer());
     await env.ARTWORK.put(requestKey(requestId,"preview.b64"),image);
@@ -355,6 +355,7 @@ export async function highQualityTransform(request,env,{trustedSocialJob=false}=
     }
     const styleId=String(incoming.get("style")||"game");
     const subjectType=String(incoming.get("subject")||"person").slice(0,80);
+    const inclusionSubject=['auto','pet','people','person','group','couple','family','person and pet','car','custom'].includes(incoming.get('inclusionSubject'))?incoming.get('inclusionSubject'):'';
     const notes=String(incoming.get("notes")||"").trim().slice(0,1200);
     const customWorld=styleId==="custom"?String(incoming.get("customWorld")||"").trim().slice(0,800):"";
     if(styleId!=="custom"&&!STYLES[styleId])return json({error:"bad_style",userMessage:"Choose a valid World.",reason:"input"},400);
@@ -399,7 +400,7 @@ export async function highQualityTransform(request,env,{trustedSocialJob=false}=
     let storedInputs=[...inputFiles];
     let originalInputCount=inputFiles.length;
     let referenceGuide='';
-    try{referenceGuide=referenceDirections(incoming.get('referenceLabels'),inputFiles.length,subjectType==='family'?incoming.get('subjectCount'):'');}
+    try{referenceGuide=referenceDirections(incoming.get('referenceLabels'),inputFiles.length,(inclusionSubject||subjectType)==='family'?incoming.get('subjectCount'):'');}
     catch(e){return json({error:'bad_reference_labels',userMessage:e.message,reason:'input'},400);}
     let parentRequestId=null;
     const branchRequestId=String(incoming.get("branchRequestId")||"");
@@ -456,8 +457,8 @@ export async function highQualityTransform(request,env,{trustedSocialJob=false}=
     const quickModel=String(env.IMAGE_MODEL_QUICK||DEFAULT_QUICK);
     stage="ai-generation";
     const generated=qualityMode==="quick"
-      ? await generateQuick({env,model:quickModel,styleId,subjectType,notes,referenceGuide,customWorld,inputFiles,hasBranch:Boolean(parentRequestId)})
-      : await generateHighQuality({env,model:highQualityModel,styleId,subjectType,notes:[referenceGuide,notes].filter(Boolean).join(" "),customWorld,inputFiles,hasBranch:Boolean(parentRequestId)});
+      ? await generateQuick({env,model:quickModel,styleId,subjectType,inclusionSubject,notes,referenceGuide,customWorld,inputFiles,hasBranch:Boolean(parentRequestId)})
+      : await generateHighQuality({env,model:highQualityModel,styleId,subjectType,inclusionSubject,notes:[referenceGuide,notes].filter(Boolean).join(" "),customWorld,inputFiles,hasBranch:Boolean(parentRequestId)});
     const image=normalizeBase64(generated.image);
     if(!image||image.length<100)throw Object.assign(new Error("malformed"),{reason:"provider"});
     const previewMime=imageMime(image);
@@ -467,7 +468,7 @@ export async function highQualityTransform(request,env,{trustedSocialJob=false}=
     const requestId=`RC-${Date.now().toString(36).toUpperCase()}-${randomHex(3).toUpperCase()}`;
     const accessToken=randomHex(32);
     safety.outputScreening=await moderateContent(env,{images:[new File([Uint8Array.from(atob(image),c=>c.charCodeAt(0))],"output",{type:previewMime})]});
-    const stored=await store(env,{requestId,accessToken,styleId,subjectType,notes,customWorld,parentRequestId,source,sourceTweet,qualityMode,inputs:storedInputs,originalInputCount,image,previewMime,safety,modelUsed:generated.modelUsed,providerUsed:generated.providerUsed,promptVersion:protectedChoice(env.RECAST_OWNER_IDENTITY_MODEL)?PROTECTED_FACE_VERSION:ownerIdentityModel(env)?ownerPromptVersion(env):qualityMode==='high'&&customerNano(env)?CUSTOMER_IDENTITY_VERSION:PROMPT_VERSION,attemptKind:generated.attemptKind});
+    const stored=await store(env,{requestId,accessToken,styleId,subjectType,inclusionSubject,notes,customWorld,parentRequestId,source,sourceTweet,qualityMode,inputs:storedInputs,originalInputCount,image,previewMime,safety,modelUsed:generated.modelUsed,providerUsed:generated.providerUsed,promptVersion:protectedChoice(env.RECAST_OWNER_IDENTITY_MODEL)?PROTECTED_FACE_VERSION:ownerIdentityModel(env)?ownerPromptVersion(env):qualityMode==='high'&&customerNano(env)?CUSTOMER_IDENTITY_VERSION:PROMPT_VERSION,attemptKind:generated.attemptKind});
 
     await writeAttemptReceipt(env,clientAttemptId,{status:"success",completedAt:new Date().toISOString(),durationMs:Date.now()-attemptStartedAt,requestId,qualityMode,modelUsed:generated.modelUsed,providerUsed:generated.providerUsed,providerRequestId:generated.providerRequestId,attemptKind:generated.attemptKind,persisted:stored.persisted});
     return json({ok:true,requestId,accessToken,style:STYLES[styleId]?.name||"Custom World",image:`data:${previewMime};base64,${image}`,persisted:stored.persisted,storageError:stored.storageError,qualityMode,qualityLabel:qualityMode==="quick"?"Standard Preview":env.RECAST_HQ_USING_BACKUP?"High-Quality Preview · FLUX backup":"High-Quality Preview",modelUsed:generated.modelUsed,providerUsed:generated.providerUsed,usedSafeRetry:generated.usedSafeRetry,usedFastFallback:false,promptVersion:protectedChoice(env.RECAST_OWNER_IDENTITY_MODEL)?PROTECTED_FACE_VERSION:ownerIdentityModel(env)?ownerPromptVersion(env):qualityMode==='high'&&customerNano(env)?CUSTOMER_IDENTITY_VERSION:PROMPT_VERSION,clientAttemptId});

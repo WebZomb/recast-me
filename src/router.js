@@ -1,4 +1,5 @@
 import app from "./entry.js";
+import {subjectDetection} from "./subject-detection.js";
 import {printfulDiagnosticRoute} from "./printful-diagnostics.js";
 import {creditPackRoutes} from './credit-packs.js';
 import {trafficRoutes} from './traffic-analytics.js';
@@ -13,6 +14,7 @@ import { printFinishRoutes } from './print-finish.js';
 const application = {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
+    if(url.pathname==='/api/subject-detection' && request.method==='POST')return subjectDetection(request,env);
     const traffic=await trafficRoutes(request,env);
     if(traffic)return traffic;
     const creditPacks=await creditPackRoutes(request,env);

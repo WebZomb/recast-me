@@ -165,7 +165,7 @@
             <div data-create-step="1">
               <fieldset class="creative-step">
                 <legend><span>01</span> Add your photos</legend>
-                <p class="photo-tip">One clear photo works best.</p>
+                <p class="photo-tip">One clear photo works best. Choosing photos sends a small copy to AI to suggest who to include. You can change the suggestion. <a href="/privacy.html">Photo privacy</a>.</p>
                 <label class="upload-zone" for="photos">
                   <input id="photos" type="file" accept="image/*" multiple class="photo-input" />
                   <span class="upload-icon" aria-hidden="true">+</span>
@@ -173,15 +173,17 @@
                   <span id="file-summary" class="file-summary" role="status">No photo selected</span>
                 </label>
                 <div id="photo-thumbnails" class="photo-thumbnails" aria-label="Selected photos"></div>
+                <p id="subject-detection-status" role="status" hidden></p>
                 <details id="photo-subject-details" class="photo-subject-details" hidden>
                   <summary id="change-photo-subject"><span id="photo-include-summary">Include: <strong id="photo-include-label">Automatic</strong></span><span class="include-change">Change</span></summary>
-                  <p>Automatic uses the main subjects in your photo. Change this if you want only certain people or pets included.</p>
+                  <p>Choose who belongs in your picture. The suggestion can be wrong; your choice takes priority.</p>
                   <button type="button" id="select-photo-faces" class="button ghost" hidden>Select specific faces (optional)</button>
                   <div id="subject-choices" class="subject-choices"></div><details><summary>More choices</summary><div id="extra-subject-choices" class="subject-choices"></div></details>
                   <label class="native-subject" hidden>Subject
                     <select name="subject" id="subject">
                       <option value="auto" selected>Recognize automatically</option>
                       <option value="pet">My pet</option>
+                      <option value="people">People only</option>
                       <option value="person">Just me</option>
                       <option value="person and pet">Me + my pet</option>
                       <option value="group">Group of people</option>
@@ -369,7 +371,7 @@
   </footer>
   <script src="/analytics.js?v=1" defer></script>
   <script src="/simple-creator-v115.js?v=1" defer></script>
-  <script src="/app.js?v=290" type="module"></script>
+  <script src="/app.js?v=291" type="module"></script>
   <script src="/checkout.js?v=290" type="module"></script>
 </body>
 </html>

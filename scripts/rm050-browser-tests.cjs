@@ -26,6 +26,7 @@ const policy={highDaily:3,standardDaily:5,purchaseBonus:3,websiteCalls:70,social
    let d={ok:true};
    if(p==='/api/render-credits')d={...d,enabled:true,initialized:true,freeAllowance:3,standardAllowance:5,purchaseBonus:3,resetAt:'2026-10-07T20:00:00Z',standardResetAt:'2026-10-07T20:00:00Z',...Object.fromEntries(['remaining','free','bonus','standardRemaining'].map(k=>[k,state[k]]))};
    else if(/^\/api\/request\/RC-TEST000[1-6]-ABCDEF\/preview$/.test(p)){state.previewReads.push(p);d={ok:true,watermarked:true,image:'data:image/webp;base64,'+fs.readFileSync(path.join(root,'assets/world-game-v18.webp')).toString('base64')};}
+   else if(p==='/api/subject-detection')d={subject:state.detectedSubject||'auto'};
    else if(p==='/api/public-config')d.turnstileSiteKey=null;
    else if(p==='/api/render-readiness'){d=structuredClone(ready);d.modes.high.ready=!state.busy&&!state.hqOutage;d.modes.high.reason=state.hqOutage?'unavailable':null;d.modes.quick.ready=!state.quickDown;d.standardOutageAvailable=state.hqOutage&&!state.quickDown;}
    else if(p==='/api/model-status')d={ok:true,modes:{high:{label:'High Quality',model:'dev'},quick:{label:'Standard',model:'klein9'}},availability:ready};
@@ -309,6 +310,21 @@ const policy={highDaily:3,standardDaily:5,purchaseBonus:3,websiteCalls:70,social
    assert.equal(new Set(state.previewReads).size,6,'Every saved version loads when approached');
    await page.locator('[data-version-index="5"] [data-history-action="use"]').click();
    await page.waitForFunction(()=>window.__recastActiveRequest?.requestId==='RC-TEST0006-ABCDEF');
+   assert.deepEqual(errors,[]);
+
+   // The live-upload suggestion is visible and editable; no extra wizard step.
+   state.detectedSubject='pet';
+   await page.goto('http://recast.test/',{waitUntil:'networkidle'});
+   await page.locator('.site-header .nav-cta').click();
+   await page.locator('#photos').setInputFiles(path.join(root,'assets/jack-russell-source-v18.webp'));
+   await page.waitForFunction(()=>document.querySelector('#subject').value==='pet');
+   assert.match(await page.locator('#photo-include-summary').textContent(),/Pets only/);
+   assert.match(await page.locator('#subject-detection-status').textContent(),/Suggested/);
+   await page.locator('#change-photo-subject').click();
+   await page.locator('[data-subject-choice="person and pet"]').click();
+   assert.equal(await page.locator('#subject').inputValue(),'person and pet');
+   assert.match(await page.locator('#subject-detection-status').textContent(),/Your selection/);
+   await page.screenshot({path:path.join(out,`${engine.name()}-${width}-rm140-subject.png`)});
    assert.deepEqual(errors,[]);
 
    report.checks.push({engine:engine.name(),width,hqOnly:true,outageHidesStandard:true,exhaustionWarning:true,bonusReturnsToHQ:true,collapsedEditsAndReset:true,adminSettingsSave:true,higherBudgetConfirmed:true,modelLabDemoDog:true,pageErrors:errors});
