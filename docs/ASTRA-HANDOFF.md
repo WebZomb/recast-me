@@ -323,3 +323,6 @@ PR64 https://github.com/WebZomb/recast-me/pull/64 merged with final head f14a88b
 Actual live site now shows styled royal-dog case alongside other products; screenshot /workspace/scratch/recast-rm145-catalog.jpg. Shopify get-product readback confirms featured royal-dog art and all9previous model/SKU/price identities unchanged.
 
 Fresh browser has no prior saved artwork. Public hero file selected through normal no-AI upload, consent checked; submission stopped at human-verification requirement. No challenge click or bypass, no upload success, no supplier mockup submitted this turn. After deployment page reloaded to current scripts and prepared at visible checkbox; action-time CAPTCHA permission needed for remaining real mockup verification. Do not claim new v10 supplier preview verified. Owner may also test fresh mug/case previews normally.
+
+
+RM147 — Owner-selected whole-photo/dark-fill/100% defaults for tote, pillow, blanket; clear optional full-product crop. Existing compositor and approved layouts retained. Release pending; see [RM147](ASTRA-SESSION-RM-147.md).

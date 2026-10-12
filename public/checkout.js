@@ -55,7 +55,7 @@ const PRODUCT_DESIGN_PRESETS = {
   "Custom Recast T-Shirt": {product:"T-Shirt",layout:"fit",fill:"transparent",x:"center",scale:100,spacing:"standard",finish:"soft",label:"Scene blend · soft fade into fabric"},
   "Custom Recast Mug": {product:"Mug",layout:"two-sided",fill:"ambient",x:"center",scale:110,spacing:"close",label:"Best setup · two pictures meet at front"},
   "Custom Recast Tumbler": {product:"Tumbler",layout:"two-sided",fill:"ambient",x:"center",scale:108,spacing:"standard",label:"Best setup · two-sided wrap"},
-  "Custom Recast Blanket": {product:"Blanket",layout:"fit",fill:"ambient",x:"center",scale:110,spacing:"standard",label:"Best setup · larger blanket artwork"},
+  "Custom Recast Blanket": {product:"Blanket",layout:"fit",fill:"dark",x:"center",scale:100,spacing:"standard",label:"Best setup · whole photo with dark borders"},
   "Custom Recast Poster": {product:"Poster",layout:"cover",fill:"full-bleed",x:"center",scale:100,spacing:"standard",label:"Best setup · full bleed"},
   "Custom Recast Framed Poster": {product:"Framed Poster",layout:"cover",fill:"full-bleed",x:"center",scale:100,spacing:"standard",label:"Best setup · full bleed"},
   "Custom Recast Canvas": {product:"Canvas",layout:"fit",fill:"ambient",x:"center",scale:90,spacing:"standard",label:"Best setup · whole image inside wrapped edges"},
@@ -64,10 +64,10 @@ const PRODUCT_DESIGN_PRESETS = {
   "Custom Recast Sticker Sheet": {product:"Sticker Sheet",layout:"six-pictures",fill:"transparent",x:"center",scale:100,spacing:"safe",label:"Six whole pictures · safe peel spacing"},
   "Custom Recast Sticker": {product:"Sticker",layout:"cover",fill:"full-bleed",x:"center",scale:100,spacing:"standard",label:"Best setup · full sticker"},
   "Custom Recast Phone Case": {product:"Phone Case",layout:"fit",fill:"ambient",x:"center",scale:100,spacing:"standard",label:"Best setup · whole image below camera"},
-  "Custom Recast Pillow": {product:"Pillow",layout:"fit",fill:"ambient",x:"center",scale:100,spacing:"standard",label:"Best setup · whole image"},
+  "Custom Recast Pillow": {product:"Pillow",layout:"fit",fill:"dark",x:"center",scale:100,spacing:"standard",label:"Best setup · whole photo with dark borders"},
   "Custom Recast Hardcover Journal": {product:"Hardcover Journal",layout:"fit",fill:"ambient",x:"center",scale:100,spacing:"standard",label:"Best setup · whole image on both covers"},
   "Custom Recast Puzzle": {product:"Puzzle",layout:"cover",fill:"full-bleed",x:"center",scale:100,spacing:"standard",label:"Best setup · full puzzle"},
-  "Custom Recast Tote Bag": {product:"Tote Bag",layout:"fit",fill:"ambient",x:"center",scale:100,spacing:"standard",label:"Best setup · whole image"}
+  "Custom Recast Tote Bag": {product:"Tote Bag",layout:"fit",fill:"dark",x:"center",scale:100,spacing:"standard",label:"Best setup · whole photo with dark borders"}
 };
 function presetFor(card){return PRODUCT_DESIGN_PRESETS[card?.dataset?.productTitle]||{product:"Generic",layout:"fit",fill:"ambient",x:"center",scale:100,spacing:"standard",label:"Recommended setup"}}
 
@@ -166,7 +166,8 @@ function designControlsMarkup(title,preset){
   const wrap=['Custom Recast Mug','Custom Recast Tumbler'].includes(title);
   const apparel=Boolean(preset.finish);
   const journal=preset.product==="Hardcover Journal",phone=preset.product==="Phone Case";
-  const layoutOptions=preset.caseType==="tough"?`<option value="cover" selected>Full photo wrap · crops to fill</option><option value="fit">Keep whole photo below camera</option>`:phone?`<option value="fit" selected>Whole image below camera opening</option><option value="cover">Fill the printable back · crops photo</option>`:journal?`<option value="fit" selected>Whole image on both covers</option>`:wrap
+  const homePhoto=["Blanket","Pillow","Tote Bag"].includes(preset.product);
+  const layoutOptions=homePhoto?`<option value="fit" selected>Whole photo + dark borders (recommended)</option><option value="cover">Fill entire product · crop to fit</option>`:preset.caseType==="tough"?`<option value="cover" selected>Full photo wrap · crops to fill</option><option value="fit">Keep whole photo below camera</option>`:phone?`<option value="fit" selected>Whole image below camera opening</option><option value="cover">Fill the printable back · crops photo</option>`:journal?`<option value="fit" selected>Whole image on both covers</option>`:wrap
     ? `<option value="two-sided" selected>Best setup · image on both sides</option><option value="wrap">Full wrap / full bleed</option><option value="single">One image</option><option value="fit">Keep whole image + blended background</option>`
     : `<option value="cover" selected>Best setup · fill the product</option><option value="fit">Keep whole image + background fill</option>`;
   const spacing=wrap?`<label data-design-spacing-wrap>Image spacing<select data-design-spacing><option value="close">${preset.product==="Mug"?"Meet at front center":"Closer together"}</option><option value="standard" selected>Standard</option><option value="wide">Farther apart</option></select></label>`:"";
@@ -176,6 +177,7 @@ function designControlsMarkup(title,preset){
       <label data-layout-label>Layout<select data-design-layout>${layoutOptions}</select></label>
       ${apparel?`<label>Artwork finish<select data-design-finish><option value="soft">Scene blend · fade into fabric</option><option value="cutout">Subject cutout · no background</option><option value="rectangle">Original photo · straight edges</option></select></label><p class="apparel-finish-note">Scene blend keeps the full Recast sharp in the center and gradually dissolves the outer edges into the garment so there is no visible rectangular border. Cutout remains available for designs that work better without a scene.</p>`:""}
       ${spacing}
+      ${homePhoto?`<p class="product-mockup-note">Whole photo keeps every part of your picture with borders where needed. Fill entire product uses only your photo, with no added background or stretching. It crops the top and bottom or sides to fit; how much depends on the photo and product shape. Check faces and edges in a new preview.</p>`:""}
       ${preset.caseType==="tough"?`<p class="product-mockup-note">Full photo wrap fills the back and printable edges with one continuous photo. Check faces and the camera opening in your preview. Choose Keep whole photo below camera if needed.</p>`:phone?`<p class="product-mockup-note">Clear case: printed back, clear sides. Fill the back crops the photo; check faces and the camera opening in your preview.</p>`:preset.product==="Mug"?`<p class="product-mockup-note">Two copies fill the wrap and meet at the front. Each side view shows one copy. Photos crop to fill; check faces in your preview.</p>`:""}
       <label data-design-fill-wrap hidden>Background fill<select data-design-fill><option value="ambient" selected>Blend artwork colors</option><option value="transparent" hidden>No added background</option><option value="dark">Dark fill</option><option value="light">Light fill</option><option value="full-bleed">Artwork edge fill</option></select></label>
       <label data-design-position-wrap>Image position<select data-design-x><option value="left">Left</option><option value="center" selected>Center</option><option value="right">Right</option></select></label>

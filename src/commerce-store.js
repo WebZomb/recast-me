@@ -30,7 +30,7 @@ export function recommendedProductDesign(map={}){
   if(product==='Phone Case'&&map.caseType==='tough')return {layout:'cover',fill:'full-bleed',x:'center',scale:100,spacing:'standard'};
   if(product==='Mug')return {layout:'two-sided',fill:'ambient',x:'center',scale:110,spacing:'close'};
   if(product==='Tumbler')return {layout:'two-sided',fill:'ambient',x:'center',scale:108,spacing:'standard'};
-  if(product==='Blanket')return {layout:'fit',fill:'ambient',x:'center',scale:110,spacing:'standard'};
+  if(['Blanket','Pillow','Tote Bag'].includes(product))return {layout:'fit',fill:'dark',x:'center',scale:100,spacing:'standard'};
   if(['Poster','Framed Poster','Canvas','Magnet 3-Pack','Coaster 4-Pack'].includes(product))return {layout:'cover',fill:'full-bleed',x:'center',scale:100,spacing:'standard'};
   return {layout:'fit',fill:'ambient',x:'center',scale:100,spacing:'standard'};
 }
