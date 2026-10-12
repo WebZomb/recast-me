@@ -2,6 +2,8 @@
 
 RM146 (2026-10-12) — Owner selected continuous Full photo wrap after explicit crop/camera tradeoff. Tough Case defaults to existing v6 cover; v10 below-camera fit remains optional. Mug v11 uses two full-height half-width panels meeting at centre with no filler strips, preserving old approvals. 524 tests/dry-run PASS; hosted CI/release/real supplier verification pending. See [RM146](ASTRA-SESSION-RM-146.md).
 
+RM146 LIVE — PR65/66 deployed runtime217ec01a46195b4b0a66531317919307c7f6a94c, Workerafc7538c-9aaa-48c8-9226-765c8f35bcbb. 525tests/security/customer WebKit+Chromium/deploy smoke PASS. Final mug v12 full panels use automatic focal crop after real v11 test cut off a high face. Real v12 mug now shows human/pet faces/no filler, with head close to rim. Real case fullwrap removes band but masks high face under camera; owner-selected tradeoff explicitly explained, optional safe-fit preserved. Four supplier attempts (one generic mug failure recovered), no AI renders/orders/payments. Shopify description aligned, IDs/SKUs/prices unchanged. See RM146 evidence/limits/rollback.
+
 Updated: 2026-10-07. Keep this index and append-only session records current whenever work is performed; the owner does not need to repeat the request for notes.
 
 ## Start here
