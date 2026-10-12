@@ -14,6 +14,7 @@ export function productFromMention(text=''){
   const row=options.find(([pattern])=>pattern.test(t));
   if(!row)return null;
   const [,sku,product]=row;
+  if(product==='Phone Case')return {sku,product,design:{version:9,product,layout:'fit',fill:'ambient',x:'center',scale:100,spacing:'standard'}};
   if(product==='Sticker Sheet')return {sku,product,design:{version:8,product,layout:'six-pictures',fill:'transparent',x:'center',scale:100,spacing:'safe'}};
   const drink=['Mug','Tumbler'].includes(product),apparel=['Hoodie','T-Shirt'].includes(product),safe=product==='Hardcover Journal';
   const cover=['Phone Case','Poster','Framed Poster','Sticker','Puzzle','Magnet 3-Pack','Coaster 4-Pack'].includes(product);

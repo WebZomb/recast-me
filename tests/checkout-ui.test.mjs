@@ -129,5 +129,14 @@ test('phone full-back option uses full-bleed composition while safe layout stays
  const ui=setup(catalog);ui.context.toughCard={dataset:{productTitle:'Custom Recast Tough Phone Case'},querySelector:()=>null};
  const design=vm.runInNewContext('productDesign(toughCard)',ui.context);
  assert.deepEqual(normalizeProductDesign(FULFILLMENT['RECAST-TOUGH-IP14'],design),recommendedCheckoutDesign(FULFILLMENT['RECAST-TOUGH-IP14']));
- assert.equal(design.layout,'cover');assert.equal(design.version,6);
+ assert.equal(design.layout,'fit');assert.equal(design.version,9);
+ });
+
+ test('case alternate previews use neutral labels and explicit crop is not the recommended setup',()=>{
+ const ui=setup(catalog);ui.context.views=[{url:'a',title:'default',group:'Flat'},{url:'b',title:'Front',group:'Lifestyle'}];
+ const views=vm.runInNewContext("uniqueMockupViews(views,'Custom Recast Tough Phone Case')",ui.context);
+ assert.equal(views.length,2);assert.equal(views[0].label,'Case');assert.equal(views[1].label,'View 2');assert.equal(views[1].isScene,false);
+ ui.context.c={dataset:{productTitle:'Custom Recast Tough Phone Case'},querySelector:s=>s==='[data-design-layout]'?{value:'cover'}:null};
+ assert.equal(vm.runInNewContext('productDesign(c).version',ui.context),6);
+ assert.equal(vm.runInNewContext('usesRecommendedSetup(c)',ui.context),false);
  });

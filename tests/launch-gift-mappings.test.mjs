@@ -50,14 +50,33 @@ test('tumbler uses the exact front sublimation placement returned by supplier ca
 
 test('legacy puzzle proofs retain their original orientation unless explicitly selected',async()=>{const {normalizeProductDesign}=await import('../src/commerce-store.js');const map=FULFILLMENT['RECAST-PUZZLE-252'];assert.equal(normalizeProductDesign(map,{version:6,layout:'cover'}).orientation,undefined);assert.equal(normalizeProductDesign(map,{version:6,layout:'cover',orientation:'portrait'}).orientation,'portrait')});
 
-test('Tough Case uses verified glossy variants and fills the entire wrap template',async()=>{
+test('Tough Case preserves whole artwork below camera with a full-template backdrop',async()=>{
  const {recommendedCheckoutDesign,composeProductLayout}=await import('../src/commerce-store.js');
  const variants={IP14:16124,IP14PLUS:16128,IP14PRO:16126,IP14PM:16130,IP15:17714,IP15PRO:17718,IP15PM:17720,IP16:20302,IP16PRO:20304};
- const transforms=[];const env={IMAGES:{input(){const chain={transform(t){transforms.push(t);return chain},async output(){return {response:()=>new Response(new Uint8Array([255,216,255,...Array(100).fill(0)]))}}};return chain}}};
+ const transforms=[];const env={IMAGES:{input(){const chain={transform(t){transforms.push(t);return chain},draw(){return chain},async output(){return {response:()=>new Response(new Uint8Array([255,216,255,...Array(100).fill(0)]))}}};return chain}}};
  for(const [suffix,id] of Object.entries(variants)){
   const map=FULFILLMENT['RECAST-TOUGH-'+suffix];assert.equal(map.printfulProductId,601);assert.equal(map.printfulVariantId,id);assert.equal(map.baseCost,14.23);assert.equal(FULFILLMENT['RECAST-CASE-'+suffix].printfulProductId,181);
-  const design=recommendedCheckoutDesign(map);assert.equal(design.version,6);assert.equal(design.layout,'cover');
+  const design=recommendedCheckoutDesign(map);assert.equal(design.version,9);assert.equal(design.layout,'fit');
   const out=await composeProductLayout(env,new Uint8Array([1]),{width:1024,height:1280},{width:1392,height:2220},map,design,1392);
-  assert.equal(out.method,'full-bleed-cover');assert.deepEqual(out.outputSize,{width:1392,height:2220});assert.deepEqual(transforms.at(-1),{width:1392,height:2220,fit:'cover'});
+  assert.equal(out.method,'phone-v9-camera-clear-wrap');assert.deepEqual(out.outputSize,{width:1392,height:2220});assert.ok(out.artworkBox.top>=2220*.40);assert.ok(out.artworkBox.top+out.artworkBox.height<=2220*.87+1);assert.ok(transforms.some(t=>t.width===1392&&t.height===2220&&t.fit==='cover'));
  }
 });
+
+ test('camera-clear wrap retains all corners of portrait, group, and wide photos; legacy proofs unchanged',async()=>{
+ const {normalizeProductDesign,composeProductLayout,recommendedCheckoutDesign}=await import('../src/commerce-store.js');
+ const map=FULFILLMENT['RECAST-TOUGH-IP16PRO'];
+ const env={IMAGES:{input(){const chain={transform(){return chain},draw(){return chain},async output(){return {response:()=>new Response(new Uint8Array([255,216,255,...Array(100).fill(0)]))}}};return chain}}};
+ for(const [width,height] of [[900,1600],[1600,900],[1000,1000],[3000,750]]){
+  const d={...recommendedCheckoutDesign(map),scale:140,x:'left'};
+  const out=await composeProductLayout(env,new Uint8Array([1]),{width,height},{width:1392,height:2220},map,d,1392),b=out.artworkBox;
+  assert.equal(out.design.scale,100);assert.equal(out.design.x,'center');
+  assert.ok(b.top>=2220*.40);assert.ok(b.top+b.height<=2220*.87+1);
+  assert.ok(b.left>=1392*.13-1&&b.left+b.width<=1392*.87+1);
+  assert.ok(Math.abs(b.width/b.height-width/height)<.01,'No cropping or stretching of source');
+ }
+ const old={version:6,layout:'cover',fill:'full-bleed',scale:100,x:'center',spacing:'standard'};
+ assert.equal(normalizeProductDesign(map,old).version,6);
+ const legacy=await composeProductLayout(env,new Uint8Array([1]),{width:900,height:1600},{width:1392,height:2220},map,old,1392);
+ assert.equal(legacy.method,'full-bleed-cover');
+ await assert.rejects(()=>composeProductLayout(env,new Uint8Array([1]),{width:900,height:1600},{width:900,height:1800},map,recommendedCheckoutDesign(map),1392),/supplier review/);
+ });

@@ -297,3 +297,5 @@ RM143 — Owner approves Tough Case/full wrap. Read-only admin discovery prepare
 RM143 Stage2 LIVE — PR62 main0767de0193c0598b11e686abc7155152534b7929.521 tests/mobile gates and deploy38215291581 PASS. Shopify switched nine models to glossy Tough Case601, new SKUs, full-wrap default, same29.99. Historical clear mappings preserved. Actual supplier wrap sample pending. See RM143.
 
 RM143 live preview follow-up — Owner-authorized CAPTCHA click passed. Normal no-AI public-art upload and one iPhone14 supplier preview succeeded; full-back and outer-edge wrap verified. Sample faces overlap camera cutout, so camera-aware placement and secondary-view labeling remain polish items. No AI render/order/purchase. Runtime unchanged; see RM143.
+
+RM144 — Camera-clear Tough Case v9 (whole photo below camera, blended edge wrap), actual desktop grid fix, neutral case-view labels and truthful admin automation status.523 Node tests and Worker dry-run PASS; release/real preview pending. Operational review finds both prior test orders shipped, no open issues; email receipt/Safari/physical quality still unverified, X/SMS off. See [RM144](ASTRA-SESSION-RM-144.md).
