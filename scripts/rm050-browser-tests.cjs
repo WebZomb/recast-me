@@ -11,6 +11,8 @@ const policy={highDaily:3,standardDaily:5,purchaseBonus:3,websiteCalls:70,social
   const state={remaining:3,free:3,bonus:0,standardRemaining:5,busy:false,hqOutage:false,quickDown:false,settings:{...policy},revision:0,saved:[],checkouts:[],mockups:[],previewReads:[]},errors=[];
   await context.route('**/*',async route=>{
    const request=route.request(),url=new URL(request.url()),p=url.pathname;
+   // WebKit can route local blob images; never replace generated pixels with CDN fixtures.
+   if(url.protocol==='blob:'||url.protocol==='data:')return route.continue();
    if(url.hostname!=='recast.test'){
     if(request.resourceType()==='image')return route.fulfill({body:fs.readFileSync(path.join(root,'assets/world-game-v18.webp')),contentType:'image/webp'});
     return route.abort();
