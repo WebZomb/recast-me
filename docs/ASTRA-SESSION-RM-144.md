@@ -29,3 +29,12 @@ Official references checked2026-10-12: https://www.printful.com/custom/phone-cas
 Validation so far:523 Node tests PASS; Worker dry-run PASS. Hosted browser/security checks and release pending. No paid AI render, order, alert send or fulfillment action. Changes limited to commerce composition/defaults, product gallery presentation, admin status copy/flag, associated tests and this record. Rollback: restore prior recommendations/UI while retaining v9 compositor for any already-approved v9 orders; do not reinterpret frozen approvals.
 
 Pre-merge review caught an important integration constraint: preview-source and paid print finishing pass a product-only map. Made v9 self-contained by explicit design version, and verified equal normalized placement at2400px preview and4096px production widths without caseType metadata. Supplier ratio guard remains. No mismatched implementation was deployed.
+
+
+## RM144 live release receipt — 2026-10-12
+
+PR63 merged: https://github.com/WebZomb/recast-me/pull/63. Final PR head c4f15ca4008399ddfb160f653afd75d9570b031e; tree ed31badb851d55bf7046d06b36293926b5a035a2; deployed main/runtime 0ab94f134e3e010f3fb151a7931cb2f53de369b6. 523 Node tests and Worker dry run passed. Final security run38220217985 and WebKit/Chromium customer browser run38220218093 passed. Guarded production deployment38220559617 and post-merge read-only launch audit38220559584 both completed successfully.
+
+Live verification reopened existing public sample artwork RC-MV4XCYA3-31B4AC0F through the normal saved-picture UI. New Printful previews for iPhone14 and iPhone16Pro both reached Preview ready. Screenshots show the complete sample photo and both human/pet faces below the camera openings, with blended background across the upper back/edges. This validates those two mockups, not physical print quality or every possible source/model. Desktop catalog now visibly has three balanced columns. Proof screenshot: /workspace/scratch/recast-camera-clear-live.jpg.
+
+Reloaded live admin System confirms Approved-order auto-print Enabled and Paid-order sync Enabled; X/trends/retention remain safely off. No new AI render, payment, order, alert message, fulfillment action or configuration flag change. Two supplier mockup requests only, using already-saved public sample art. Remaining priorities above remain open: real-device Safari, physical samples, alert inbox receipt/independent uptime, separate X and paid-credit gates.

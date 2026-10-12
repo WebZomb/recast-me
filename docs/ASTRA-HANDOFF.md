@@ -299,3 +299,12 @@ RM143 Stage2 LIVE — PR62 main0767de0193c0598b11e686abc7155152534b7929.521 test
 RM143 live preview follow-up — Owner-authorized CAPTCHA click passed. Normal no-AI public-art upload and one iPhone14 supplier preview succeeded; full-back and outer-edge wrap verified. Sample faces overlap camera cutout, so camera-aware placement and secondary-view labeling remain polish items. No AI render/order/purchase. Runtime unchanged; see RM143.
 
 RM144 — Camera-clear Tough Case v9 (whole photo below camera, blended edge wrap), actual desktop grid fix, neutral case-view labels and truthful admin automation status.523 Node tests and Worker dry-run PASS; release/real preview pending. Operational review finds both prior test orders shipped, no open issues; email receipt/Safari/physical quality still unverified, X/SMS off. See [RM144](ASTRA-SESSION-RM-144.md).
+
+
+## RM144 live release receipt — 2026-10-12
+
+PR63 merged: https://github.com/WebZomb/recast-me/pull/63. Final PR head c4f15ca4008399ddfb160f653afd75d9570b031e; tree ed31badb851d55bf7046d06b36293926b5a035a2; deployed main/runtime 0ab94f134e3e010f3fb151a7931cb2f53de369b6. 523 Node tests and Worker dry run passed. Final security run38220217985 and WebKit/Chromium customer browser run38220218093 passed. Guarded production deployment38220559617 and post-merge read-only launch audit38220559584 both completed successfully.
+
+Live verification reopened existing public sample artwork RC-MV4XCYA3-31B4AC0F through the normal saved-picture UI. New Printful previews for iPhone14 and iPhone16Pro both reached Preview ready. Screenshots show the complete sample photo and both human/pet faces below the camera openings, with blended background across the upper back/edges. This validates those two mockups, not physical print quality or every possible source/model. Desktop catalog now visibly has three balanced columns. Proof screenshot: /workspace/scratch/recast-camera-clear-live.jpg.
+
+Reloaded live admin System confirms Approved-order auto-print Enabled and Paid-order sync Enabled; X/trends/retention remain safely off. No new AI render, payment, order, alert message, fulfillment action or configuration flag change. Two supplier mockup requests only, using already-saved public sample art. Remaining priorities above remain open: real-device Safari, physical samples, alert inbox receipt/independent uptime, separate X and paid-credit gates.
