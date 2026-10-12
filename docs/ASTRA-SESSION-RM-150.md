@@ -13,3 +13,8 @@ Remaining: Search Console property verification and sitemap submission need owne
 Rollback: revert this small static-content release. No data migration or production-settings change.
 
 Validation correction: initial525passed before release-marker change; PR run38311511701 then caught two tests pinned to old RM056 marker. Updated their expected marker to RM150 (checks preserved) and reran all525successfully. Hosted browser retry pending. Previous RM149 live audit38310283654 is now verified PASS.
+
+## Release receipt
+PR69 https://github.com/WebZomb/recast-me/pull/69: final head046d93099cc1d7cc05a57e59a25becd7cd500264; tree685a85303ac3f6096656519375946adf108e84f3; merged/deployed runtime5caa56dab538d9d4eedbd125b39bffaeb04e8e8b. Security38311644276 and customer/mobile/browser38311644171 PASS. Guarded deploy38312078445, including production read-only smoke, PASS. Local static validation: four pages each one H1/canonical and unique IDs; sitemap XML/identity JSON parse. Live browser verified /gift-ideas at its canonical URL with intended content and appearance; screenshot /workspace/scratch/recast-rm150-gift-guide.jpg. Search retrieval tool could not open robots/sitemap; no claim of search-engine ingestion. New files included in successful asset deployment. Post-merge launch audit38312078500 still in progress at receipt.
+
+Desktop Commander became available and listed one online device. A read-only platform command timed out (MCP request timeout); no output, machine changes, Apple login/signing or credentials accessed. Apple app continuation remains blocked on a working development/signing connection. No paid actions or messages sent.
