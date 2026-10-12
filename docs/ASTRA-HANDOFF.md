@@ -293,3 +293,5 @@ RM142 — Owner follow-up: blanket110%, mug closer spacing, optional phone full-
 RM142 LIVE — PR60 main935021551d37b89789a812b4db0c2d953e269d44.519tests, security/customer WebKit+Chromium and guarded deploy/production smoke38211352705 PASS. Worker e6182413-a5fd-41ae-b20c-05706afbd510. Blanket110/mug close defaults and optional full-back clear-case photo live. Actual supplier previews need owner review; full side wrap requires a different verified case product, not implemented. No paid calls. See RM142 receipt.
 
 RM143 — Owner approves Tough Case/full wrap. Read-only admin discovery prepared before mapping; customer switch pending. See [RM143](ASTRA-SESSION-RM-143.md).
+
+RM143 Stage2 LIVE — PR62 main0767de0193c0598b11e686abc7155152534b7929.521 tests/mobile gates and deploy38215291581 PASS. Shopify switched nine models to glossy Tough Case601, new SKUs, full-wrap default, same29.99. Historical clear mappings preserved. Actual supplier wrap sample pending. See RM143.
