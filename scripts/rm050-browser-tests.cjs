@@ -47,6 +47,7 @@ const policy={highDaily:3,standardDaily:5,purchaseBonus:3,websiteCalls:70,social
   const page=await context.newPage();page.on('pageerror',e=>errors.push(e.message));page.setDefaultTimeout(12000);
   try{
    await page.goto('http://recast.test/',{waitUntil:'networkidle'});
+   await page.locator('.site-header .nav-cta').click();
    // A customer unfamiliar with AI must see both paths immediately, not a
    // buried "no AI" accordion after all the adventure and consent controls.
    const aiChoice=page.locator('#choose-create-ai'),originalChoice=page.locator('#choose-original-photo');

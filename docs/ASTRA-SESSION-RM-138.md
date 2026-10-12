@@ -24,3 +24,11 @@ Initial Node run: 506/507; one stale asset-version assertion corrected. Then 507
 No paid assistant image renders, purchases, fulfillment, or provider/model/prompt changes. Safari device-level crash not reproduced; no claim of live iPhone stability. Six-history is explicitly owner authorized, superseding AGENTS last-four guideline. Rollback: revert RM138 frontend changes; six records may be reduced to four on a later write by old code, generated artwork/order storage remains untouched.
 
 Final local customer run also passes thumbnail dimensions and six-entry selection. Screenshot inspection then found inherited 135px minimum width causing discovery-card overflow at 320px; explicitly reset minimum width/margin and added container-bound assertions before release. Hosted checks must use corrected head.
+
+## Owner rendering evidence during this UI work
+
+New inline Dinosaur screenshot IMG_6574, artwork displayed as RC-MV4OK8LC-6D1440, shows close puppy facial markings/expression/head angle but still retains and dresses the faceless supporting torso. Thus RM137 is not a complete inclusion/removal success. No model/metadata API was inspected for this private image; no guarantee about engine/fields from screenshot alone. Do not modify the shared face baseline based on this single image during RM138. Supporting-person removal remains open.
+
+Hosted customer check first attempt failed WebKit 393px at initial Use My Photo click (stable/visible wait timeout), before changed controls, with no page JS error; Chromium passed. Artifact screenshot remained at the top hero. Same-head rerun requested to distinguish intermittent harness/device behavior; no forced-click workaround or test bypass. Local WebKit cannot start because system libraries are absent; hosted WebKit remains required.
+
+Same-head hosted rerun reproduced the identical initial offscreen-click timeout. Customer test now follows the visible header Make My Picture link before clicking the original-photo option, preserving standard pointer/actionability checks. This exercises real navigation rather than forcing clicks or skipping WebKit. Need corrected-head pass before merge.
