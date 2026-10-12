@@ -14,11 +14,11 @@ export function productFromMention(text=''){
   const row=options.find(([pattern])=>pattern.test(t));
   if(!row)return null;
   const [,sku,product]=row;
-  if(product==='Phone Case')return {sku,product,design:{version:10,product,layout:'fit',fill:'ambient',x:'center',scale:100,spacing:'standard'}};
+  if(product==='Phone Case')return {sku,product,design:{version:6,product,layout:'cover',fill:'full-bleed',x:'center',scale:100,spacing:'standard'}};
   if(product==='Sticker Sheet')return {sku,product,design:{version:8,product,layout:'six-pictures',fill:'transparent',x:'center',scale:100,spacing:'safe'}};
   const drink=['Mug','Tumbler'].includes(product),apparel=['Hoodie','T-Shirt'].includes(product),safe=product==='Hardcover Journal';
   const cover=['Phone Case','Poster','Framed Poster','Sticker','Puzzle','Magnet 3-Pack','Coaster 4-Pack'].includes(product);
-  return {sku,product,design:{version:product==='Mug'?10:safe?7:6,product,layout:drink?'two-sided':cover?'cover':'fit',fill:apparel?'transparent':cover?'full-bleed':'ambient',x:'center',scale:product==='Canvas'?90:product==='Blanket'?110:product==='Mug'?110:drink?108:100,spacing:product==='Mug'?'close':'standard',...(apparel?{finish:'soft'}:{}),...(['Canvas','Puzzle'].includes(product)?{orientation:'portrait'}:{})}};
+  return {sku,product,design:{version:product==='Mug'?11:safe?7:6,product,layout:drink?'two-sided':cover?'cover':'fit',fill:apparel?'transparent':cover?'full-bleed':'ambient',x:'center',scale:product==='Canvas'?90:product==='Blanket'?110:product==='Mug'?110:drink?108:100,spacing:product==='Mug'?'close':'standard',...(apparel?{finish:'soft'}:{}),...(['Canvas','Puzzle'].includes(product)?{orientation:'portrait'}:{})}};
 }
 export function socialIntent(text=''){
   const product=productFromMention(text);
