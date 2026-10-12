@@ -338,3 +338,6 @@ RM150 — Owner selects X support and confirms Apple membership. Public gift dis
 
 
 RM151 — Owner asks for simple own-photo gifts and discovery completion. Google Search Console property prepared; public verification tag and clearer gift CTA added, verification/submission pending deploy. Apple PC connection retry pending. See [RM151](ASTRA-SESSION-RM-151.md).
+
+
+RM152 — Prepared manual internal-only Codemagic TestFlight configuration and owner setup guide; syntax/guard checks PASS. Apple account/signing, app-icon/privacy packaging and actual build still pending. Website unchanged. See [RM152](ASTRA-SESSION-RM-152.md).
