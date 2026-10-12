@@ -37,7 +37,7 @@ export function recommendedProductDesign(map={}){
 // Current customer presets, explicitly versioned; fast checkout never accepts custom layout.
 export function recommendedCheckoutDesign(map={}){
  const product=map.product||'Generic';
- const base={version:map.caseType==='tough'?9:6,...recommendedProductDesign(map)};
+ const base={version:map.caseType==='tough'||product==='Mug'?10:6,...recommendedProductDesign(map)};
  if(['Hoodie','T-Shirt'].includes(product))Object.assign(base,{layout:'fit',fill:'transparent',scale:100,finish:'soft'});
  if(product==='Canvas')Object.assign(base,{layout:'fit',fill:'ambient',scale:90});
  if(['Poster','Framed Poster','Canvas','Puzzle'].includes(product))base.orientation='portrait';
@@ -49,12 +49,12 @@ export function normalizeProductDesign(map,raw={}){
   const product=String(map?.product||'Generic'),recommended=recommendedProductDesign(map);
   const rawVersion=Number(raw?.version||0);
   if(product==='Sticker Sheet')return {version:8,layout:'six-pictures',background:'transparent',fill:'transparent',x:'center',scale:100,spacing:'safe',product};
-  // Version9 is self-contained: preview-source and paid finishing pass only product.
+  // Versions9/10 are self-contained: preview-source and paid finishing pass only product.
   // New recommendations never reinterpret previously approved v6/v7 layouts.
-  if(rawVersion===9&&product==='Phone Case'){
+  if([9,10].includes(rawVersion)&&product==='Phone Case'){
     const n=Number(raw.scale),scale=Math.round(Math.max(70,Math.min(100,Number.isFinite(n)?n:100)));
     const fill=['ambient','dark','light'].includes(raw.fill)?raw.fill:'ambient';
-    return {version:9,layout:'fit',background:fill,fill,x:'center',scale,spacing:'standard',product};
+    return {version:rawVersion,layout:'fit',background:fill,fill,x:'center',scale,spacing:'standard',product};
   }
   if(rawVersion===7&&['Hardcover Journal','Phone Case'].includes(product)){
     const n=Number(raw.scale),scale=Math.round(Math.max(70,Math.min(100,Number.isFinite(n)?n:100)));
@@ -88,7 +88,7 @@ export function normalizeProductDesign(map,raw={}){
     const apparelScale=Math.min(raw.finish==='soft'?118:100,scale);
     return {version:5,layout:'fit',background:'transparent',fill:'transparent',x,scale:apparelScale,spacing,product,finish:raw.finish};
   }
-  if(rawVersion===6)return {version:6,layout,background,fill,x,scale,spacing,product,...((['Poster','Framed Poster','Canvas'].includes(product)||(product==='Puzzle'&&['portrait','landscape'].includes(raw.orientation)))?{orientation:raw.orientation==='landscape'?'landscape':'portrait'}:{})};
+  if(rawVersion===6||(rawVersion===10&&product==='Mug'))return {version:rawVersion,layout,background,fill,x,scale,spacing,product,...((['Poster','Framed Poster','Canvas'].includes(product)||(product==='Puzzle'&&['portrait','landscape'].includes(raw.orientation)))?{orientation:raw.orientation==='landscape'?'landscape':'portrait'}:{})};
   return {version:4,layout,background,fill,x,scale,spacing,product};
 }
 // Pillow front and back share one supplier-verified template and the same artwork.
@@ -186,6 +186,18 @@ export async function composeProductLayout(env,sourceBytes,sourceSize,area,map={
     const canvas=await transparentCanvas(outWidth,outHeight);
     const chain=env.IMAGES.input(new Blob([canvas],{type:'image/png'}).stream()).draw(overlay,{left,top});
     return {bytes:await pngOutput(chain),mime:'image/png',design,outputSize:{width:outWidth,height:outHeight},method:'apparel-v5-'+design.finish};
+  }
+  if(design.version===10&&design.product==='Phone Case'){
+    // Larger whole-photo placement: just below cameras through bottom bleed.
+    // Explicit new version keeps previously approved v9 compositions immutable.
+    if(Math.abs(area.width/area.height-1392/2220)>.001)throw fault('phone_template_changed','This case template needs a supplier review.',503);
+    const base=design.fill==='light'?LIGHT_BG_PNG:MUG_BG_PNG;
+    let chain=env.IMAGES.input(new Blob([base],{type:'image/png'}).stream()).transform({width:outWidth,height:outHeight,fit:'cover'});
+    if(design.fill==='ambient')chain=chain.draw(env.IMAGES.input(stream()).transform({width:outWidth,height:outHeight,fit:'cover',blur:180}),{left:0,top:0,opacity:0.78});
+    const fitted=fitDimensions(sourceSize.width,sourceSize.height,outWidth*.96*design.scale/100,outHeight*.65*design.scale/100);
+    const box={left:Math.round((outWidth-fitted.width)/2),top:outHeight-fitted.height,...fitted};
+    chain=chain.draw(env.IMAGES.input(stream()).transform({width:box.width,height:box.height,fit:'contain'}),{left:box.left,top:box.top});
+    return {bytes:await jpegBytes(chain),design,outputSize:{width:outWidth,height:outHeight},artworkBox:box,method:'phone-v10-bottom-wrap'};
   }
   if(design.version===9&&design.product==='Phone Case'){
     // Supplier 601 uses printfile331 across these verified models. Keep ALL source
@@ -287,6 +299,16 @@ export async function composeMugLayout(env,sourceBytes,sourceSize,area,rawDesign
   };
 
   let chain=background;
+  if(design.version===10&&design.product==='Mug'&&design.layout==='two-sided'&&design.spacing==='close'){
+    // Inner edges meet at the front centre (midpoint of the flat printfile).
+    // Compute actual photo width first, instead of fixed centres that leave gaps.
+    const aspect=Math.max(0.2,Math.min(4,Number(sourceSize.width)/Number(sourceSize.height)));
+    const width=Math.max(Math.round(outWidth*.24),Math.min(Math.floor(outWidth*.5),Math.round(outHeight*aspect*design.scale/100)));
+    const middle=Math.floor(outWidth/2);
+    const boxes=[{left:middle-width,top:0,width,height:outHeight},{left:middle,top:0,width,height:outHeight}];
+    for(const box of boxes)chain=chain.draw(env.IMAGES.input(stream()).transform({width:box.width,height:box.height,fit:'cover'}),{left:box.left,top:0});
+    return {bytes:await jpegBytes(chain),design,outputSize:{width:outWidth,height:outHeight},artworkBoxes:boxes,method:'mug-v10-front-meeting'};
+  }
   if(design.layout==='two-sided'){
     const centers=design.spacing==='close'?[0.31,0.69]:design.spacing==='wide'?[0.20,0.80]:[0.25,0.75];
     chain=addFullHeight(chain,centers[0],0.42);

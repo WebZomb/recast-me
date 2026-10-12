@@ -56,9 +56,9 @@ test('Tough Case preserves whole artwork below camera with a full-template backd
  const transforms=[];const env={IMAGES:{input(){const chain={transform(t){transforms.push(t);return chain},draw(){return chain},async output(){return {response:()=>new Response(new Uint8Array([255,216,255,...Array(100).fill(0)]))}}};return chain}}};
  for(const [suffix,id] of Object.entries(variants)){
   const map=FULFILLMENT['RECAST-TOUGH-'+suffix];assert.equal(map.printfulProductId,601);assert.equal(map.printfulVariantId,id);assert.equal(map.baseCost,14.23);assert.equal(FULFILLMENT['RECAST-CASE-'+suffix].printfulProductId,181);
-  const design=recommendedCheckoutDesign(map);assert.equal(design.version,9);assert.equal(design.layout,'fit');
+  const design=recommendedCheckoutDesign(map);assert.equal(design.version,10);assert.equal(design.layout,'fit');
   const out=await composeProductLayout(env,new Uint8Array([1]),{width:1024,height:1280},{width:1392,height:2220},map,design,1392);
-  assert.equal(out.method,'phone-v9-camera-clear-wrap');assert.deepEqual(out.outputSize,{width:1392,height:2220});assert.ok(out.artworkBox.top>=2220*.40);assert.ok(out.artworkBox.top+out.artworkBox.height<=2220*.87+1);assert.ok(transforms.some(t=>t.width===1392&&t.height===2220&&t.fit==='cover'));
+  assert.equal(out.method,'phone-v10-bottom-wrap');assert.deepEqual(out.outputSize,{width:1392,height:2220});assert.ok(out.artworkBox.top>=2220*.35);assert.ok(out.artworkBox.top+out.artworkBox.height<=2220+1);assert.ok(transforms.some(t=>t.width===1392&&t.height===2220&&t.fit==='cover'));
  }
 });
 
@@ -70,20 +70,36 @@ test('Tough Case preserves whole artwork below camera with a full-template backd
   const d={...recommendedCheckoutDesign(map),scale:140,x:'left'};
   const out=await composeProductLayout(env,new Uint8Array([1]),{width,height},{width:1392,height:2220},map,d,1392),b=out.artworkBox;
   assert.equal(out.design.scale,100);assert.equal(out.design.x,'center');
-  assert.ok(b.top>=2220*.40);assert.ok(b.top+b.height<=2220*.87+1);
-  assert.ok(b.left>=1392*.13-1&&b.left+b.width<=1392*.87+1);
+  assert.ok(b.top>=2220*.35);assert.equal(b.top+b.height,2220);
+  assert.ok(b.left>=1392*.02-1&&b.left+b.width<=1392*.98+1);
   assert.ok(Math.abs(b.width/b.height-width/height)<.01,'No cropping or stretching of source');
  }
  const recommended=recommendedCheckoutDesign(map);
  const preview=await composeProductLayout(env,new Uint8Array([1]),{width:900,height:1600},{width:1392,height:2220},{product:'Phone Case'},recommended,2400);
  const production=await composeProductLayout(env,new Uint8Array([1]),{width:900,height:1600},{width:1392,height:2220},{product:'Phone Case'},recommended,4096);
- assert.equal(preview.method,'phone-v9-camera-clear-wrap');assert.equal(production.method,preview.method);
+ assert.equal(preview.method,'phone-v10-bottom-wrap');assert.equal(production.method,preview.method);
  assert.deepEqual(preview.design,production.design);
  for(const dimension of ['left','width'])assert.ok(Math.abs(preview.artworkBox[dimension]/preview.outputSize.width-production.artworkBox[dimension]/production.outputSize.width)<.001);
  for(const dimension of ['top','height'])assert.ok(Math.abs(preview.artworkBox[dimension]/preview.outputSize.height-production.artworkBox[dimension]/production.outputSize.height)<.001);
+ const v9=await composeProductLayout(env,new Uint8Array([1]),{width:1024,height:1280},{width:1392,height:2220},map,{version:9,scale:100},1392);
+ assert.equal(v9.method,'phone-v9-camera-clear-wrap');assert.ok(v9.artworkBox.top>=2220*.40);assert.ok(v9.artworkBox.top+v9.artworkBox.height<=2220*.87+1);
  const old={version:6,layout:'cover',fill:'full-bleed',scale:100,x:'center',spacing:'standard'};
  assert.equal(normalizeProductDesign(map,old).version,6);
  const legacy=await composeProductLayout(env,new Uint8Array([1]),{width:900,height:1600},{width:1392,height:2220},map,old,1392);
  assert.equal(legacy.method,'full-bleed-cover');
  await assert.rejects(()=>composeProductLayout(env,new Uint8Array([1]),{width:900,height:1600},{width:900,height:1800},map,recommendedCheckoutDesign(map),1392),/supplier review/);
  });
+
+
+test('new mug pairs meet at front centre for different photo ratios without overlapping',async()=>{
+ const {recommendedCheckoutDesign,composeMugLayout}=await import('../src/commerce-store.js');
+ const map=FULFILLMENT['RECAST-MUG-11OZ'],d=recommendedCheckoutDesign(map);
+ assert.equal(d.version,10);
+ const env={IMAGES:{input(){const chain={transform(){return chain},draw(){return chain},async output(){return {response:()=>new Response(new Uint8Array([255,216,255,...Array(100).fill(0)]))}}};return chain}}};
+ for(const size of [{width:1024,height:1280},{width:1600,height:900},{width:900,height:1600}]){
+  const out=await composeMugLayout(env,new Uint8Array([1]),size,{width:2700,height:1050},d,1800);
+  const [a,b]=out.artworkBoxes;assert.equal(a.left+a.width,b.left);assert.equal(b.left,900);assert.equal(a.top,0);assert.equal(a.height,out.outputSize.height);assert.ok(a.left>=0&&b.left+b.width<=1800);
+ }
+ const legacy=await composeMugLayout(env,new Uint8Array([1]),{width:1024,height:1280},{width:2700,height:1050},{...d,version:6},1800);
+ assert.equal(legacy.design.version,6);assert.equal(legacy.artworkBoxes,undefined);
+});

@@ -2,7 +2,7 @@ const grid = document.querySelector("#product-grid");
 const requestLabel = document.querySelector("#request-id");
 
 const PRODUCT_ART = {
-  "Custom Recast Tough Phone Case":"https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-tough-case-glossy-rm143.jpg?v=1791788050",
+  "Custom Recast Tough Phone Case":"https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-tough-case-royal-lifestyle-rm145.png?v=1791819635&width=1000",
   "Custom Recast Sticker Sheet":"https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-lifestyle-sticker-sheet-rm061.png?v=1791427937&width=1000",
   "Custom Recast Poster":"https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-lifestyle-poster-rm059.png?v=1791422885&width=1000",
   "Custom Recast Hoodie":"https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-lifestyle-hoodie-rm059.png?v=1791422966&width=1000",
@@ -50,10 +50,10 @@ const PRODUCT_META = {
 
 const PRIMARY_PRODUCT_TITLES=new Set(["Custom Recast Mug","Custom Recast Blanket","Custom Recast Poster","Custom Recast Canvas"]);
 const PRODUCT_DESIGN_PRESETS = {
-  "Custom Recast Tough Phone Case": {product:"Phone Case",caseType:"tough",layout:"fit",fill:"ambient",x:"center",scale:100,spacing:"standard",label:"Whole photo · camera-clear wrap"},
+  "Custom Recast Tough Phone Case": {product:"Phone Case",caseType:"tough",layout:"fit",fill:"ambient",x:"center",scale:100,spacing:"standard",label:"Larger photo · camera-clear wrap"},
   "Custom Recast Hoodie": {product:"Hoodie",layout:"fit",fill:"transparent",x:"center",scale:100,spacing:"standard",finish:"soft",label:"Scene blend · soft fade into fabric"},
   "Custom Recast T-Shirt": {product:"T-Shirt",layout:"fit",fill:"transparent",x:"center",scale:100,spacing:"standard",finish:"soft",label:"Scene blend · soft fade into fabric"},
-  "Custom Recast Mug": {product:"Mug",layout:"two-sided",fill:"ambient",x:"center",scale:110,spacing:"close",label:"Best setup · close two-sided wrap"},
+  "Custom Recast Mug": {product:"Mug",layout:"two-sided",fill:"ambient",x:"center",scale:110,spacing:"close",label:"Best setup · two pictures meet at front"},
   "Custom Recast Tumbler": {product:"Tumbler",layout:"two-sided",fill:"ambient",x:"center",scale:108,spacing:"standard",label:"Best setup · two-sided wrap"},
   "Custom Recast Blanket": {product:"Blanket",layout:"fit",fill:"ambient",x:"center",scale:110,spacing:"standard",label:"Best setup · larger blanket artwork"},
   "Custom Recast Poster": {product:"Poster",layout:"cover",fill:"full-bleed",x:"center",scale:100,spacing:"standard",label:"Best setup · full bleed"},
@@ -157,7 +157,7 @@ function productDesign(card){
   const scale=Number(card?.querySelector?.("[data-design-scale]")?.value||preset.scale);
   const spacing=card?.querySelector?.("[data-design-spacing]")?.value||preset.spacing;
   const fill=card?.querySelector?.("[data-design-fill]")?.value||preset.fill;
-  return {version:preset.caseType==="tough"&&layout!=="cover"?9:preset.product==="Sticker Sheet"?8:(preset.product==="Hardcover Journal"||(preset.product==="Phone Case"&&preset.caseType!=="tough"&&layout!=="cover"))?7:6,product:preset.product,layout,fill,x,scale,spacing,...(["Poster","Framed Poster","Canvas","Puzzle"].includes(preset.product)?{orientation:"portrait"}:{}),...(preset.finish?{finish:card?.querySelector?.("[data-design-finish]")?.value||preset.finish}:{})};
+  return {version:(preset.caseType==="tough"&&layout!=="cover")||preset.product==="Mug"?10:preset.product==="Sticker Sheet"?8:(preset.product==="Hardcover Journal"||(preset.product==="Phone Case"&&preset.caseType!=="tough"&&layout!=="cover"))?7:6,product:preset.product,layout,fill,x,scale,spacing,...(["Poster","Framed Poster","Canvas","Puzzle"].includes(preset.product)?{orientation:"portrait"}:{}),...(preset.finish?{finish:card?.querySelector?.("[data-design-finish]")?.value||preset.finish}:{})};
 }
 function designSignature(card,sku){return JSON.stringify({sku,design:productDesign(card)})}
 function designControlsMarkup(title,preset){
@@ -166,10 +166,10 @@ function designControlsMarkup(title,preset){
   const wrap=['Custom Recast Mug','Custom Recast Tumbler'].includes(title);
   const apparel=Boolean(preset.finish);
   const journal=preset.product==="Hardcover Journal",phone=preset.product==="Phone Case";
-  const layoutOptions=preset.caseType==="tough"?`<option value="fit" selected>Best setup · whole photo below camera</option><option value="cover">Edge-to-edge crop · check camera opening</option>`:phone?`<option value="fit" selected>Whole image below camera opening</option><option value="cover">Fill the printable back · crops photo</option>`:journal?`<option value="fit" selected>Whole image on both covers</option>`:wrap
+  const layoutOptions=preset.caseType==="tough"?`<option value="fit" selected>Best setup · larger photo below camera</option><option value="cover">Edge-to-edge crop · check camera opening</option>`:phone?`<option value="fit" selected>Whole image below camera opening</option><option value="cover">Fill the printable back · crops photo</option>`:journal?`<option value="fit" selected>Whole image on both covers</option>`:wrap
     ? `<option value="two-sided" selected>Best setup · image on both sides</option><option value="wrap">Full wrap / full bleed</option><option value="single">One image</option><option value="fit">Keep whole image + blended background</option>`
     : `<option value="cover" selected>Best setup · fill the product</option><option value="fit">Keep whole image + background fill</option>`;
-  const spacing=wrap?`<label data-design-spacing-wrap>Image spacing<select data-design-spacing><option value="close">Closer together</option><option value="standard" selected>Standard</option><option value="wide">Farther apart</option></select></label>`:"";
+  const spacing=wrap?`<label data-design-spacing-wrap>Image spacing<select data-design-spacing><option value="close">${preset.product==="Mug"?"Meet at front center":"Closer together"}</option><option value="standard" selected>Standard</option><option value="wide">Farther apart</option></select></label>`:"";
   return `<details class="product-design-controls compact-product-edit ${apparel?"apparel-design":""}">
     <summary><span>Edit design</span></summary>
     <div class="design-edit-body">
@@ -292,10 +292,10 @@ function showProductView(card,img,view,close=true){
 }
 function designSummary(card){
   const d=productDesign(card),parts=[];
-  if(d.version===9&&d.product==="Phone Case")return "Whole photo below camera · blended wrap";
+  if([9,10].includes(d.version)&&d.product==="Phone Case")return "Photo below camera · blended edge wrap";
   if(d.product==="Sticker Sheet")return "Six whole pictures · 2 columns × 3 rows · safe peel spacing";
   parts.push(d.layout==="two-sided"?"Two-sided wrap":d.layout==="wrap"?"Full wrap":d.layout==="cover"?"Full bleed":d.layout==="fit"?"Keep whole image":"One image");
-  if(d.layout==="two-sided")parts.push(d.spacing==="close"?"Closer spacing":d.spacing==="wide"?"Wider spacing":"Standard spacing");
+  if(d.layout==="two-sided")parts.push(d.spacing==="close"?(d.product==="Mug"?"Meet at front center":"Closer spacing"):d.spacing==="wide"?"Wider spacing":"Standard spacing");
   if(d.finish)parts.push(d.finish==="cutout"?"Subject cutout · transparent background":d.finish==="soft"?"Soft-edge photo · transparent dot fade":"Original photo · no added background");
   if(d.layout==="fit"&&!d.finish)parts.push(d.fill==="dark"?"Dark fill":d.fill==="light"?"Light fill":d.fill==="full-bleed"?"Artwork fill":"Blended fill");
   parts.push((d.x||"center").replace(/^./,m=>m.toUpperCase()));
@@ -551,7 +551,7 @@ async function loadCheckout(){
     const realPreview=digital?"":`<button class="product-preview-action" data-product="${index}" type="button">Preview on product</button><button type="button" class="recast-buy-now button primary" data-product="${index}" ${active?"":"disabled"}>Buy now</button><p class="product-mockup-note" data-buy-now-note>Skip the mockup · use recommended placement</p><p class="mockup-error" role="alert" hidden></p>`;
 
     return `<div class="${classes}" data-product-index="${index}" data-product-title="${product.title}" data-active="${active}" data-digital="${digital}">
-      <div class="product-art"><img src="${PRODUCT_ART[product.title]}" alt="Style illustration for ${product.title}; generate the selected-size preview before buying" loading="lazy"><span class="example-design-label">${preset.caseType==="tough"?"Tough Case · preview your photo wrap":"Lifestyle example · preview your selected size"}</span></div>
+      <div class="product-art"><img src="${PRODUCT_ART[product.title]}" alt="Style illustration for ${product.title}; generate the selected-size preview before buying" loading="lazy"><span class="example-design-label">${preset.caseType==="tough"?"Lifestyle example · preview your photo wrap":"Lifestyle example · preview your selected size"}</span></div>
       <div class="product-body">
         <span class="product-badge">${meta.badge}</span>
         <strong>${product.title.replace(/^Custom Recast /,"")}</strong>
