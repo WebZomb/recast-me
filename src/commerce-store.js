@@ -49,8 +49,9 @@ export function normalizeProductDesign(map,raw={}){
   const product=String(map?.product||'Generic'),recommended=recommendedProductDesign(map);
   const rawVersion=Number(raw?.version||0);
   if(product==='Sticker Sheet')return {version:8,layout:'six-pictures',background:'transparent',fill:'transparent',x:'center',scale:100,spacing:'safe',product};
-  // New Tough Case recommendations never reinterpret previously approved v6/v7 layouts.
-  if(rawVersion===9&&product==='Phone Case'&&map.caseType==='tough'){
+  // Version9 is self-contained: preview-source and paid finishing pass only product.
+  // New recommendations never reinterpret previously approved v6/v7 layouts.
+  if(rawVersion===9&&product==='Phone Case'){
     const n=Number(raw.scale),scale=Math.round(Math.max(70,Math.min(100,Number.isFinite(n)?n:100)));
     const fill=['ambient','dark','light'].includes(raw.fill)?raw.fill:'ambient';
     return {version:9,layout:'fit',background:fill,fill,x:'center',scale,spacing:'standard',product};
@@ -186,7 +187,7 @@ export async function composeProductLayout(env,sourceBytes,sourceSize,area,map={
     const chain=env.IMAGES.input(new Blob([canvas],{type:'image/png'}).stream()).draw(overlay,{left,top});
     return {bytes:await pngOutput(chain),mime:'image/png',design,outputSize:{width:outWidth,height:outHeight},method:'apparel-v5-'+design.finish};
   }
-  if(design.version===9&&design.product==='Phone Case'&&map.caseType==='tough'){
+  if(design.version===9&&design.product==='Phone Case'){
     // Supplier 601 uses printfile331 across these verified models. Keep ALL source
     // pixels in a conservative lower-back rectangle, not merely detected faces.
     // The backdrop alone reaches camera openings, curved edges and print bleed.

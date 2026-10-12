@@ -74,6 +74,13 @@ test('Tough Case preserves whole artwork below camera with a full-template backd
   assert.ok(b.left>=1392*.13-1&&b.left+b.width<=1392*.87+1);
   assert.ok(Math.abs(b.width/b.height-width/height)<.01,'No cropping or stretching of source');
  }
+ const recommended=recommendedCheckoutDesign(map);
+ const preview=await composeProductLayout(env,new Uint8Array([1]),{width:900,height:1600},{width:1392,height:2220},{product:'Phone Case'},recommended,2400);
+ const production=await composeProductLayout(env,new Uint8Array([1]),{width:900,height:1600},{width:1392,height:2220},{product:'Phone Case'},recommended,4096);
+ assert.equal(preview.method,'phone-v9-camera-clear-wrap');assert.equal(production.method,preview.method);
+ assert.deepEqual(preview.design,production.design);
+ for(const dimension of ['left','width'])assert.ok(Math.abs(preview.artworkBox[dimension]/preview.outputSize.width-production.artworkBox[dimension]/production.outputSize.width)<.001);
+ for(const dimension of ['top','height'])assert.ok(Math.abs(preview.artworkBox[dimension]/preview.outputSize.height-production.artworkBox[dimension]/production.outputSize.height)<.001);
  const old={version:6,layout:'cover',fill:'full-bleed',scale:100,x:'center',spacing:'standard'};
  assert.equal(normalizeProductDesign(map,old).version,6);
  const legacy=await composeProductLayout(env,new Uint8Array([1]),{width:900,height:1600},{width:1392,height:2220},map,old,1392);
