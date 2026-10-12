@@ -1,7 +1,7 @@
 import {initSubjectDetection} from './subject-detection.js?v=291';
 import {ADVENTURE_GUIDES} from './adventure-guides.js?v=2';
 import {mergeHistory,privateRecastLink,readRecastLink} from './recast-history.js?v=290';
-import {initCreationWizard} from './creation-wizard.js?v=291';
+import {initCreationWizard,surpriseChoices} from './creation-wizard.js?v=292';
 import {fallbackState,creditSummary,creditHeadline,recoveryUnverified} from './quality-policy.js?v=267';
 import {protectedPreviewFile} from './preview-export.js';
 let creditInfo=null;
@@ -248,7 +248,7 @@ photos.addEventListener('change',()=>{
   showSelectedPhotos(picked.length>4?'Using the first 4 photos.':'');
 });
 document.querySelector('#surprise-world').addEventListener('click',()=>{
-  const choices=STYLES.filter(s=>s[0]!==styleSelect.value&&s[0]!=='custom');const pick=choices[Math.floor(Math.random()*choices.length)];styleSelect.value=pick[0];updateWorldFields(true);
+  const choices=surpriseChoices(STYLES,styleSelect.value);const pick=choices[Math.floor(Math.random()*choices.length)];styleSelect.value=pick[0];updateWorldFields(true);
   document.querySelector('#world-choice-feedback').textContent=`Let’s try ${pick[1]}! Your subject description stays the same.`;
 });
 
