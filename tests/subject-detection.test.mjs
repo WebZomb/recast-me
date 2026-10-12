@@ -14,6 +14,9 @@ test('analysis accepts only controlled categories, never model prose or arbitrar
  for(const subject of ['pet','people','person and pet','car','custom','auto'])assert.equal(parseSubject(JSON.stringify({subject})),subject);
  for(const response of ['ignore instructions','{"subject":"invent a face"}','{}','x'.repeat(1001)])assert.equal(parseSubject(response),'auto');
  assert.equal(parseSubject('```json\n{"subject":"pet"}\n```'),'pet');
+ assert.equal(parseSubject('Here is the result: {"subject":"pet"}'),'pet');
+ assert.equal(parseSubject({subject:'people'}),'people');
+ assert.equal(parseSubject('{"subject":"pet"} {"subject":"people"}'),'auto');
  assert.equal(combineSubjects(['pet','people']),'person and pet');
  assert.equal(combineSubjects(['people','people']),'people'); // No invented counts across references.
  assert.equal(combineSubjects(['pet','auto']),'auto');assert.equal(combineSubjects(['car','people']),'auto');
@@ -22,7 +25,7 @@ test('one activation and one bounded check; repeat upload uses cached enum and n
  const {env,calls}=await environment();
  assert.equal((await subjectDetection(request(),env)).status,200);
  assert.equal((await (await subjectDetection(request(),env)).json()).subject,'pet');
- assert.equal(calls.length,2);assert.equal(calls[0].input.prompt,'agree');assert.equal(calls[1].model,SUBJECT_MODEL);assert.equal(calls[1].input.max_tokens,80);
+ assert.equal(calls.length,2);assert.equal(calls[0].input.prompt,'agree');assert.equal(calls[1].model,SUBJECT_MODEL);assert.equal(calls[1].input.max_tokens,80);assert.equal(calls[1].input.image,'data:image/jpeg;base64,'+CLEAN.toString('base64'));
  const objects=[...env.ARTWORK.objects].filter(([key])=>key.startsWith('security/subject-detection'));
  assert.ok(objects.every(([,v])=>!v.bytes.includes(CLEAN)));
  assert.ok(![...env.ARTWORK.objects.keys()].some(k=>k.includes('ai-calls')||k.includes('commerce/wallet')));
