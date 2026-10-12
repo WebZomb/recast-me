@@ -70,7 +70,7 @@ test('blanket recommended setup preserves the image inside a full-area ambient c
  });
  const r=await createMockup(new Request('https://recast.test/api/mockup/create',{method:'POST',body:JSON.stringify({requestId:ID,accessToken:TOKEN,sku:'RECAST-BLANKET-50X60'})}),env);
  assert.equal(r.status,200);const data=await r.json();
- assert.match(data.mockupId,/^v4-Blanket-fit-ambient-studio2-center-92-/);
+ assert.match(data.mockupId,/^v4-Blanket-fit-ambient-studio2-center-110-/);
  assert.deepEqual(payload.files[0].position,{area_width:7500,area_height:9000,width:7500,height:9000,top:0,left:0});
  assert.match(payload.files[0].image_url,/product=Blanket/);assert.match(payload.files[0].image_url,/layout=fit/);assert.match(payload.files[0].image_url,/fill=ambient/);
 });

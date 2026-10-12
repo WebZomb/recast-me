@@ -1,0 +1,13 @@
+# RM142 — Product placement defaults and case options
+
+2026-10-12. Baseline/live RM141 8a439794632ad6308ffce9860daceb8f3fe41e09. Owner asks larger blanket near110%, closer mug images and research of full-wrap phone cases; review all recommendations.
+
+Blanket fit scale110 instead of92 across UI, server recommended checkout and social; existing fit algorithm includes0.92 margin so a height-limited portrait reaches101.2% of print-area height (slight top/bottom bleed), not a literal110% height. Aspect ratios differ: wide photos remain width-limited. Ambient fill retained on uncovered areas. Label no longer promises the entire photo remains uncropped. Mug110/close instead of110/standard; social mug aligned from108/standard. Existing close geometry reduces center gap without changing saved explicit compositions; not a guarantee arbitrary photo ratios touch.
+
+Clear-case product181 mapping retained. Added optional Fill the printable back / crops photo using existing version6 cover compositor. Default version7 below-camera fit remains for likeness protection. UI explicitly says printed back, clear sides and asks review faces/camera opening. Same approved pixels, no AI re-render. Existing safe approvals remain version7; full-back selection has distinct version6 identity and requires fresh preview. Switching actual supplier product not performed.
+
+Reviewed all presets: poster/frame/magnet/coaster/puzzle full bleed retained; apparel soft finish, canvas90 safe wrap, sticker six-picture safe spacing, journal two-cover/spine layout retained. Pillow/tote whole-image ambient layouts retained; stretching/cropping every product would lose faces. Tumbler unchanged108/standard. No generic110% applied across products.
+
+Official Printful pages checked2026-10-12: https://www.printful.com/custom/accessories/all/iphone-case (UV-printed clear case), https://www.printful.com/custom/phone-cases/personalized/tough-iphone-case (explicit designable edges/3D wrap), https://www.printful.com/custom/phone-cases/personalized/snap-case-for-iphone (all-over sublimation). Recommend Tough Case if owner wants actual edge wrap; requires verified variant/template/cost and catalog setup, not relabeling existing clear case.
+
+Initial Node suite failed two stale blanket92 assertions; updated intended default and wording.519 tests subsequently PASS; final browser/release pending. No supplier mockup/order/paid AI calls, so actual new Printful preview requires owner check. Existing exact approvals protected by version/settings identity. Rollback by reverting RM142.

@@ -5,10 +5,10 @@ import {normalizeProductDesign} from '../src/commerce-store.js';
 
 const checkout=readFileSync(new URL('../public/checkout.js',import.meta.url),'utf8');
 
-test('blanket default preserves the whole image over an ambient full-product background',()=>{
+test('blanket default enlarges artwork over an ambient full-product background',()=>{
  const d=normalizeProductDesign({product:'Blanket'},{});
- assert.equal(d.layout,'fit');assert.equal(d.fill,'ambient');assert.equal(d.scale,92);
- assert.match(checkout,/Best setup · full image on blanket/);
+ assert.equal(d.layout,'fit');assert.equal(d.fill,'ambient');assert.equal(d.scale,110);
+ assert.match(checkout,/Best setup · larger blanket artwork/);
 });
 
 test('wall art uses the selected-size supplier caption without the withdrawn scale panel',()=>{
