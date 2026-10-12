@@ -37,7 +37,7 @@ export function recommendedProductDesign(map={}){
 // Current customer presets, explicitly versioned; fast checkout never accepts custom layout.
 export function recommendedCheckoutDesign(map={}){
  const product=map.product||'Generic';
- const base={version:product==='Mug'?11:6,...recommendedProductDesign(map)};
+ const base={version:product==='Mug'?12:6,...recommendedProductDesign(map)};
  if(['Hoodie','T-Shirt'].includes(product))Object.assign(base,{layout:'fit',fill:'transparent',scale:100,finish:'soft'});
  if(product==='Canvas')Object.assign(base,{layout:'fit',fill:'ambient',scale:90});
  if(['Poster','Framed Poster','Canvas','Puzzle'].includes(product))base.orientation='portrait';
@@ -88,7 +88,7 @@ export function normalizeProductDesign(map,raw={}){
     const apparelScale=Math.min(raw.finish==='soft'?118:100,scale);
     return {version:5,layout:'fit',background:'transparent',fill:'transparent',x,scale:apparelScale,spacing,product,finish:raw.finish};
   }
-  if(rawVersion===6||([10,11].includes(rawVersion)&&product==='Mug'))return {version:rawVersion,layout,background,fill,x,scale,spacing,product,...((['Poster','Framed Poster','Canvas'].includes(product)||(product==='Puzzle'&&['portrait','landscape'].includes(raw.orientation)))?{orientation:raw.orientation==='landscape'?'landscape':'portrait'}:{})};
+  if(rawVersion===6||([10,11,12].includes(rawVersion)&&product==='Mug'))return {version:rawVersion,layout,background,fill,x,scale,spacing,product,...((['Poster','Framed Poster','Canvas'].includes(product)||(product==='Puzzle'&&['portrait','landscape'].includes(raw.orientation)))?{orientation:raw.orientation==='landscape'?'landscape':'portrait'}:{})};
   return {version:4,layout,background,fill,x,scale,spacing,product};
 }
 // Pillow front and back share one supplier-verified template and the same artwork.
@@ -299,13 +299,13 @@ export async function composeMugLayout(env,sourceBytes,sourceSize,area,rawDesign
   };
 
   let chain=background;
-  if(design.version===11&&design.product==='Mug'&&design.layout==='two-sided'&&design.spacing==='close'){
+  if([11,12].includes(design.version)&&design.product==='Mug'&&design.layout==='two-sided'&&design.spacing==='close'){
     // Two complete print-area panels, one on each side. No blurred filler strips.
     // Cover crops each copy without stretching; v10 approvals retain old widths.
     const middle=Math.floor(outWidth/2);
     const boxes=[{left:0,top:0,width:middle,height:outHeight},{left:middle,top:0,width:outWidth-middle,height:outHeight}];
-    for(const box of boxes)chain=chain.draw(env.IMAGES.input(stream()).transform({width:box.width,height:box.height,fit:'cover'}),{left:box.left,top:0});
-    return {bytes:await jpegBytes(chain),design,outputSize:{width:outWidth,height:outHeight},artworkBoxes:boxes,method:'mug-v11-two-panel-wrap'};
+    for(const box of boxes)chain=chain.draw(env.IMAGES.input(stream()).transform({width:box.width,height:box.height,fit:'cover',...(design.version===12?{gravity:'auto'}:{})}),{left:box.left,top:0});
+    return {bytes:await jpegBytes(chain),design,outputSize:{width:outWidth,height:outHeight},artworkBoxes:boxes,method:'mug-v'+design.version+'-two-panel-wrap'};
   }
   if(design.version===10&&design.product==='Mug'&&design.layout==='two-sided'&&design.spacing==='close'){
     // Inner edges meet at the front centre (midpoint of the flat printfile).

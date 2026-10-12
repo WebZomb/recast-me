@@ -97,14 +97,29 @@ test('Tough Case preserves whole artwork below camera with a full-template backd
 test('new mug pairs meet at front centre for different photo ratios without overlapping',async()=>{
  const {recommendedCheckoutDesign,composeMugLayout}=await import('../src/commerce-store.js');
  const map=FULFILLMENT['RECAST-MUG-11OZ'],d=recommendedCheckoutDesign(map);
- assert.equal(d.version,11);
+ assert.equal(d.version,12);
  const env={IMAGES:{input(){const chain={transform(){return chain},draw(){return chain},async output(){return {response:()=>new Response(new Uint8Array([255,216,255,...Array(100).fill(0)]))}}};return chain}}};
  for(const size of [{width:1024,height:1280},{width:1600,height:900},{width:900,height:1600}]){
   const out=await composeMugLayout(env,new Uint8Array([1]),size,{width:2700,height:1050},d,1800);
-  const [a,b]=out.artworkBoxes;assert.equal(a.left+a.width,b.left);assert.equal(b.left,900);assert.equal(a.top,0);assert.equal(a.height,out.outputSize.height);assert.equal(a.left,0);assert.equal(b.left+b.width,1800);assert.equal(out.method,'mug-v11-two-panel-wrap');
+  const [a,b]=out.artworkBoxes;assert.equal(a.left+a.width,b.left);assert.equal(b.left,900);assert.equal(a.top,0);assert.equal(a.height,out.outputSize.height);assert.equal(a.left,0);assert.equal(b.left+b.width,1800);assert.equal(out.method,'mug-v12-two-panel-wrap');
  }
  const legacy=await composeMugLayout(env,new Uint8Array([1]),{width:1024,height:1280},{width:2700,height:1050},{...d,version:6},1800);
  assert.equal(legacy.design.version,6);assert.equal(legacy.artworkBoxes,undefined);
  const prior=await composeMugLayout(env,new Uint8Array([1]),{width:1024,height:1280},{width:2700,height:1050},{...d,version:10},1800);
  assert.equal(prior.method,'mug-v10-front-meeting');assert.ok(prior.artworkBoxes[0].left>0);
+});
+
+test('new mug uses automatic focal crop in preview and production; approved v11 retains centre crop',async()=>{
+ const {composeProductLayout,recommendedCheckoutDesign}=await import('../src/commerce-store.js');
+ const transforms=[];
+ const env={IMAGES:{input(){const chain={transform(t){transforms.push(t);return chain},draw(){return chain},async output(){return {response:()=>new Response(new Uint8Array([255,216,255,...Array(100).fill(0)]))}}};return chain}}};
+ const map=FULFILLMENT['RECAST-MUG-11OZ'],d=recommendedCheckoutDesign(map);
+ for(const width of [2400,4096]){
+  transforms.length=0;
+  const out=await composeProductLayout(env,new Uint8Array([1]),{width:1122,height:1402},{width:2700,height:1050},{product:'Mug'},d,width);
+  assert.equal(out.design.version,12);assert.equal(transforms.filter(t=>t.gravity==='auto').length,2);
+ }
+ transforms.length=0;
+ const legacy=await composeProductLayout(env,new Uint8Array([1]),{width:1122,height:1402},{width:2700,height:1050},map,{...d,version:11},2400);
+ assert.equal(legacy.method,'mug-v11-two-panel-wrap');assert.ok(transforms.every(t=>!t.gravity));
 });
