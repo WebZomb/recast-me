@@ -11,6 +11,8 @@ const policy={highDaily:3,standardDaily:5,purchaseBonus:3,websiteCalls:70,social
   const state={remaining:3,free:3,bonus:0,standardRemaining:5,busy:false,hqOutage:false,quickDown:false,settings:{...policy},revision:0,saved:[],checkouts:[],mockups:[],previewReads:[]},errors=[];
   await context.route('**/*',async route=>{
    const request=route.request(),url=new URL(request.url()),p=url.pathname;
+   // WebKit can route local blob images; never replace generated pixels with CDN fixtures.
+   if(url.protocol==='blob:'||url.protocol==='data:')return route.continue();
    if(url.hostname!=='recast.test'){
     if(request.resourceType()==='image')return route.fulfill({body:fs.readFileSync(path.join(root,'assets/world-game-v18.webp')),contentType:'image/webp'});
     return route.abort();
@@ -23,13 +25,13 @@ const policy={highDaily:3,standardDaily:5,purchaseBonus:3,websiteCalls:70,social
    }
    let d={ok:true};
    if(p==='/api/render-credits')d={...d,enabled:true,initialized:true,freeAllowance:3,standardAllowance:5,purchaseBonus:3,resetAt:'2026-10-07T20:00:00Z',standardResetAt:'2026-10-07T20:00:00Z',...Object.fromEntries(['remaining','free','bonus','standardRemaining'].map(k=>[k,state[k]]))};
-   else if(/^\/api\/request\/RC-TEST000[1-4]-ABCDEF\/preview$/.test(p)){state.previewReads.push(p);d={ok:true,watermarked:true,image:'data:image/webp;base64,'+fs.readFileSync(path.join(root,'assets/world-game-v18.webp')).toString('base64')};}
+   else if(/^\/api\/request\/RC-TEST000[1-6]-ABCDEF\/preview$/.test(p)){state.previewReads.push(p);d={ok:true,watermarked:true,image:'data:image/webp;base64,'+fs.readFileSync(path.join(root,'assets/world-game-v18.webp')).toString('base64')};}
    else if(p==='/api/public-config')d.turnstileSiteKey=null;
    else if(p==='/api/render-readiness'){d=structuredClone(ready);d.modes.high.ready=!state.busy&&!state.hqOutage;d.modes.high.reason=state.hqOutage?'unavailable':null;d.modes.quick.ready=!state.quickDown;d.standardOutageAvailable=state.hqOutage&&!state.quickDown;}
    else if(p==='/api/model-status')d={ok:true,modes:{high:{label:'High Quality',model:'dev'},quick:{label:'Standard',model:'klein9'}},availability:ready};
    else if(p==='/api/checkout-options')d.products=[{title:'Custom Recast Mug',status:'ACTIVE',variants:[{sku:'RECAST-MUG-11OZ',variantTitle:'11 oz',price:'24.99'}]}];
    else if(p==='/api/checkout-link'){state.checkouts.push(request.postDataJSON());return route.fulfill({status:503,json:{ok:false,error:'Test checkout unavailable — your artwork is saved.'}});}
-   else if(p==='/api/mockup/create'){state.mockups.push(request.postDataJSON());d={ok:true,mockupId:'fixture-mockup'};}
+   else if(p==='/api/mockup/create'){state.mockups.push(request.postDataJSON());await new Promise(r=>setTimeout(r,800));d={ok:true,mockupId:'fixture-mockup'};}
    else if(p==='/api/mockup/status')d={ok:true,status:'completed',images:[{title:'Front',url:'http://recast.test/assets/world-game-v18.webp'}]};
    else if(p==='/api/admin/status')Object.assign(d,{jobs:{total:1,awaiting:1},trends:{review:0},xRequests:0,connections:{printful:true,admin:true},generationErrors:{total:0,recent:0},automation:{}});
    else if(p==='/api/admin/jobs')Object.assign(d,{jobs:[{id:'fixture',orderName:'#TEST',product:'Mug',sku:'TEST',requestId:'TEST',status:'owner_release_review',ownerReleaseError:'<img onerror="alert(1)">',quantity:1,digital:false}],cursor:null});
@@ -47,6 +49,7 @@ const policy={highDaily:3,standardDaily:5,purchaseBonus:3,websiteCalls:70,social
   const page=await context.newPage();page.on('pageerror',e=>errors.push(e.message));page.setDefaultTimeout(12000);
   try{
    await page.goto('http://recast.test/',{waitUntil:'networkidle'});
+   await page.locator('.site-header .nav-cta').click();
    // A customer unfamiliar with AI must see both paths immediately, not a
    // buried "no AI" accordion after all the adventure and consent controls.
    const aiChoice=page.locator('#choose-create-ai'),originalChoice=page.locator('#choose-original-photo');
@@ -138,6 +141,15 @@ const policy={highDaily:3,standardDaily:5,purchaseBonus:3,websiteCalls:70,social
    await page.locator('[data-create-step="1"] [data-go-step="2"]').click();
    assert.equal(await page.locator('#all-worlds-group').isHidden(),true);
    assert.equal(await page.locator('#surprise-world').isVisible(),true,'Surprise me is a clear alternative');
+   await page.waitForFunction(()=>document.querySelector('#photo-thumbnails img')?.naturalWidth>0);
+   assert.ok(await page.locator('#photo-thumbnails img').first().evaluate(img=>Math.max(img.naturalWidth,img.naturalHeight)<=480),'Upload display retains a small copy');
+   await page.locator('.adventure-extra-actions').scrollIntoViewIfNeeded();
+   await page.screenshot({path:path.join(out,`${engine.name()}-${width}-rm138-style-cards.png`)});
+   for(const selector of ['#surprise-world','#more-adventures']){
+    assert.equal(await page.locator(selector+' img').count(),1);
+    assert.ok(await page.locator(selector).evaluate(button=>{const a=button.getBoundingClientRect(),b=button.parentElement.getBoundingClientRect();return a.left>=b.left-1&&a.right<=b.right+1}),'Discovery card fits its container');
+    assert.ok((await page.locator(selector).boundingBox()).height>=145,'Discovery card has a large tap target');
+   }
    await page.locator('#surprise-world').click();
    assert.match(await page.locator('#adventure-selection-status').textContent(),/Selected: /,'Surprise mode always shows the chosen adventure');
    await page.locator('#more-adventures').click();
@@ -192,7 +204,7 @@ const policy={highDaily:3,standardDaily:5,purchaseBonus:3,websiteCalls:70,social
    // Fast path still presents the exact selected artwork, and does not ask Printful for a mockup.
    await page.evaluate(()=>{window.__recastActiveRequest={requestId:'RC-TEST0001-ABCDEF',accessToken:'fixture-token'};const c=document.querySelector('#preview-canvas');c.width=400;c.height=500;c.getContext('2d').fillRect(0,0,400,500);document.dispatchEvent(new Event('recast-artwork-selected'));});
    const fast=page.locator('.recast-buy-now').first();await fast.waitFor({state:'visible'});
-   assert.match(await page.locator('#product-grid').textContent(),/Estimated 1–2 minutes/);
+   assert.doesNotMatch(await page.locator('#product-grid').textContent(),/Estimated/);
    await fast.click();assert.equal(await page.locator('.fast-artwork img').count(),1);
    await page.locator('.final-review-panel').evaluate(el=>el.scrollTop=0);
    await page.screenshot({path:path.join(out,`${engine.name()}-${width}-rm124-fast.png`),fullPage:false});
@@ -202,7 +214,10 @@ const policy={highDaily:3,standardDaily:5,purchaseBonus:3,websiteCalls:70,social
    await page.keyboard.press('Escape');
    await page.locator('.product-design-controls > summary').first().click();await page.locator('[data-design-scale]').first().fill('100');
    assert.equal(await fast.isDisabled(),true,'Custom placement requires preview');await page.locator('[data-reset-design]').first().click();assert.equal(await fast.isEnabled(),true);
-   await page.locator('.product-preview-action').first().click();await page.locator('.real-mockup-ready').waitFor({timeout:20000});
+   await page.locator('.product-preview-action').first().click();
+   assert.match(await page.locator('.product-preview-loading:not([hidden]) p').textContent(),/Estimated 20–45 seconds.*keep scrolling/);
+   assert.equal(await page.locator('.product-mockup-note').filter({hasText:/Estimated/}).count(),0);
+   await page.locator('.real-mockup-ready').waitFor({timeout:20000});
    assert.equal(state.mockups.length,1);assert.equal(await fast.isHidden(),true);await page.locator('.recast-buy').first().click();assert.match(await page.locator('#recast-review-title').textContent(),/Check your design/);
    await page.locator('[data-final-confirm]').click();await page.locator('.final-review-error:not([hidden])').waitFor();assert.equal(state.checkouts.length,2);assert.equal(state.checkouts[1].mockupId,'fixture-mockup');assert.equal(state.checkouts[1].skipMockup,undefined);
    await page.screenshot({path:path.join(out,`${engine.name()}-${width}-rm124-review.png`),fullPage:false});
@@ -279,21 +294,21 @@ const policy={highDaily:3,standardDaily:5,purchaseBonus:3,websiteCalls:70,social
    const demo=await page.locator('#reference').evaluate(input=>({count:input.files?.length,name:input.files?.[0]?.name,size:input.files?.[0]?.size}));
    assert.equal(demo.count,1);assert.match(demo.name,/jack-russell/i);assert.ok(demo.size>1000);
    assert.match(await page.locator('#status').textContent(),/Demo dog loaded/);
-   // Saved history stays available without fetching all four images at startup.
+   // Saved history stays available without fetching all six images at startup.
    await page.evaluate(()=>localStorage.setItem('recast_recent_versions_v12',JSON.stringify(
-     [1,2,3,4].map(n=>({requestId:`RC-TEST000${n}-ABCDEF`,accessToken:'fixture-token',styleName:'Saved test',createdAt:'2026-10-11T12:00:00Z'}))
+     [1,2,3,4,5,6].map(n=>({requestId:`RC-TEST000${n}-ABCDEF`,accessToken:'fixture-token',styleName:'Saved test',createdAt:'2026-10-11T12:00:00Z'}))
    )));
    state.previewReads=[];
    await page.goto('http://recast.test/',{waitUntil:'networkidle'});
    assert.equal(state.previewReads.length,1,'Only active saved preview loads at startup');
-   for(let i=0;i<4;i++){
+   for(let i=0;i<6;i++){
      const card=page.locator(`[data-version-index="${i}"]`);
      await card.scrollIntoViewIfNeeded();
      await page.waitForFunction(index=>document.querySelector(`[data-version-index="${index}"] img`)?.naturalWidth>0,i,{timeout:12000});
    }
-   assert.equal(new Set(state.previewReads).size,4,'Every saved version loads when approached');
-   await page.locator('[data-version-index="3"] [data-history-action="use"]').click();
-   await page.waitForFunction(()=>window.__recastActiveRequest?.requestId==='RC-TEST0004-ABCDEF');
+   assert.equal(new Set(state.previewReads).size,6,'Every saved version loads when approached');
+   await page.locator('[data-version-index="5"] [data-history-action="use"]').click();
+   await page.waitForFunction(()=>window.__recastActiveRequest?.requestId==='RC-TEST0006-ABCDEF');
    assert.deepEqual(errors,[]);
 
    report.checks.push({engine:engine.name(),width,hqOnly:true,outageHidesStandard:true,exhaustionWarning:true,bonusReturnsToHQ:true,collapsedEditsAndReset:true,adminSettingsSave:true,higherBudgetConfirmed:true,modelLabDemoDog:true,pageErrors:errors});

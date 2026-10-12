@@ -68,3 +68,9 @@
 .photo-subject-details>summary::-webkit-details-marker{display:none}
 .include-change{border:1px solid #464252;border-radius:16px;padding:10px 16px;color:#fff}
 .photo-subject-details[open] .include-change{background:#282039}
+
+/* RM138: illustrated discovery controls, equal tap targets to style cards. */
+#recast-form .adventure-extra-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
+#recast-form .adventure-extra-actions .button{display:flex;flex-direction:column;min-width:0;width:100%;margin:0!important;overflow:hidden;padding:0!important;white-space:normal;border-radius:18px;gap:0}
+#recast-form .adventure-extra-actions img{width:100%;height:110px;object-fit:cover}
+#recast-form .adventure-extra-actions strong{display:block;padding:16px 8px;font-size:16px;line-height:1.3}

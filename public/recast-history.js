@@ -1,7 +1,7 @@
 export function mergeHistory(rows,last){
   const result=Array.isArray(rows)?rows.filter(v=>v?.requestId&&v?.accessToken):[];
   if(last?.requestId&&last?.accessToken&&!result.some(v=>v.requestId===last.requestId))result.unshift({...last,styleName:last.styleName||last.style||'Saved Recast'});
-  return result.filter((v,i)=>result.findIndex(x=>x.requestId===v.requestId)===i).slice(0,4);
+  return result.filter((v,i)=>result.findIndex(x=>x.requestId===v.requestId)===i).slice(0,6);
 }
 export function privateRecastLink(origin,version){
   const url=new URL('/',origin);url.hash=new URLSearchParams({recast:version.requestId,key:version.accessToken}).toString();return url.href;

@@ -80,13 +80,13 @@ export function initCreationWizard({styles,photos,subject,style,updateWorld,hasB
    $('#adventure-choices').append(button);
   });
   const list=$('#all-worlds-group');
-  $('#more-adventures').textContent=list.hidden?'More Styles ↓':'Fewer Styles ↑';
+  $('#more-adventures [data-more-label]').textContent=list.hidden?'More Styles ↓':'Fewer Styles ↑';
  }
  const allWorlds=$('#all-worlds-group'),moreWorlds=$('#more-adventures');
  function setAllWorldsOpen(open){
   allWorlds.hidden=!open;
   moreWorlds.setAttribute('aria-expanded',String(open));
-  moreWorlds.textContent=open?'Fewer Styles ↑':'More Styles ↓';
+  moreWorlds.querySelector('[data-more-label]').textContent=open?'Fewer Styles ↑':'More Styles ↓';
  }
  moreWorlds.addEventListener('click',()=>{
   setAllWorldsOpen(allWorlds.hidden);

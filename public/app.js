@@ -1,6 +1,6 @@
 import {ADVENTURE_GUIDES} from './adventure-guides.js?v=2';
-import {mergeHistory,privateRecastLink,readRecastLink} from './recast-history.js';
-import {initCreationWizard} from './creation-wizard.js?v=285';
+import {mergeHistory,privateRecastLink,readRecastLink} from './recast-history.js?v=290';
+import {initCreationWizard} from './creation-wizard.js?v=290';
 import {fallbackState,creditSummary,creditHeadline,recoveryUnverified} from './quality-policy.js?v=267';
 import {protectedPreviewFile} from './preview-export.js';
 let creditInfo=null;
@@ -205,6 +205,7 @@ document.querySelector('#custom-world').addEventListener('input',()=>{
 
 const photos = document.querySelector('#photos');
 let photoURLs=[];
+let photoPreviewQueue=Promise.resolve();
 function showSelectedPhotos(message=''){
   photoURLs.forEach(url=>URL.revokeObjectURL(url));photoURLs=[];
   const selected=[...photos.files];
@@ -212,7 +213,15 @@ function showSelectedPhotos(message=''){
   const root=document.querySelector('#photo-thumbnails');root.replaceChildren();
   selected.forEach((file,index)=>{
     const tile=document.createElement('div');tile.className='photo-thumbnail';
-    const img=document.createElement('img');const url=URL.createObjectURL(file);photoURLs.push(url);img.src=url;img.alt=`Selected photo ${index+1}`;
+    const img=document.createElement('img');img.alt=`Selected photo ${index+1}`;
+    // Decode selected photos one at a time, then retain only a small display copy.
+    // The original File remains untouched for the existing generation pipeline.
+    photoPreviewQueue=photoPreviewQueue.catch(()=>{}).then(async()=>{
+      if(!tile.isConnected)return;
+      try{const preview=await resizeFile(file,480);if(!tile.isConnected)return;
+        const url=URL.createObjectURL(preview);photoURLs.push(url);img.src=url;
+      }catch{img.alt='Photo selected — preview unavailable';}
+    });
     const button=document.createElement('button');button.type='button';button.textContent='Remove';button.setAttribute('aria-label',`Remove photo ${index+1}`);
     button.addEventListener('click',()=>{const transfer=new DataTransfer();[...photos.files].filter((_,i)=>i!==index).forEach(f=>transfer.items.add(f));photos.files=transfer.files;showSelectedPhotos();});
     tile.append(img,button);root.append(tile);
@@ -234,7 +243,7 @@ photos.addEventListener('change',()=>{
   showSelectedPhotos(picked.length>4?'Using the first 4 photos.':'');
 });
 document.querySelector('#surprise-world').addEventListener('click',()=>{
-  const choices=STYLES.filter(s=>s[0]!==styleSelect.value);const pick=choices[Math.floor(Math.random()*choices.length)];styleSelect.value=pick[0];updateWorldFields(true);
+  const choices=STYLES.filter(s=>s[0]!==styleSelect.value&&s[0]!=='custom');const pick=choices[Math.floor(Math.random()*choices.length)];styleSelect.value=pick[0];updateWorldFields(true);
   document.querySelector('#world-choice-feedback').textContent=`Let’s try ${pick[1]}! Your subject description stays the same.`;
 });
 
@@ -589,14 +598,14 @@ function readRecentVersions(){
   }catch{return[]}
 }
 function writeRecentVersions(rows){
-  try{localStorage.setItem(RECENT_VERSIONS_KEY,JSON.stringify(rows.slice(0,4)))}catch{
+  try{localStorage.setItem(RECENT_VERSIONS_KEY,JSON.stringify(rows.slice(0,6)))}catch{
     showRecastError('This browser cannot keep recent versions after you close it. Your current preview is still available.');
   }
 }
 function addRecentVersion(version){
   const rows=readRecentVersions().filter(x=>x?.requestId&&x.requestId!==version.requestId);
   rows.unshift(version);
-  writeRecentVersions(rows.slice(0,4));
+  writeRecentVersions(rows.slice(0,6));
   renderRecentVersions().catch(console.warn);
 }
 function activeRequestFromVersion(version){
