@@ -27,6 +27,20 @@ function healthy(item){
  // for any new public fal/Cloudflare auto route. Unknown is never healthy.
  return item?.status==='success';
 }
+export async function selectFalCustomerModel(env){
+ const legacy=(await providerHealth(env)).fal;
+ const primary=await jsonObject(env,PROVIDER_HEALTH_PREFIX+'nano-banana.json')||(legacy?.model==='flux-2-dev'?null:legacy);
+ if(primary?.status==='success')return {customerModel:'nano-banana',usingBackup:false};
+ // Only definite operational rejection permits choosing a backup on a NEW request.
+ // Pending/ambiguous jobs, billing and content failures never authorize failover.
+ if(env.FAL_HQ_BACKUP_MODEL==='flux-2-dev'&&primary?.status==='failed'&&['capacity','unavailable'].includes(primary.reason)){
+  const backup=await jsonObject(env,PROVIDER_HEALTH_PREFIX+'flux-2-dev.json');
+  // Owner explicitly approved this previously exercised model as backup.
+  // Absence of a record allows its first real request, not a claim of health.
+  if(!backup||backup.status==='success')return {customerModel:'flux-2-dev',usingBackup:true};
+ }
+ throw Object.assign(new Error('High Quality needs an owner recovery check. Your photo is safe.'),{code:'render_provider_unavailable',status:503});
+}
 export async function selectHighQualityProvider(env,form){
  const policy=String(env.RECAST_HQ_PROVIDER||'cloudflare').toLowerCase();
  if(!['cloudflare','fal','auto'].includes(policy))throw Object.assign(new Error('The image provider policy needs owner review.'),{code:'render_provider_config',status:503});
@@ -40,6 +54,11 @@ export async function selectHighQualityProvider(env,form){
   if(!enabled)throw Object.assign(new Error('The selected image provider is not configured.'),{code:'render_provider_config',status:503});
   const health=await providerHealth(env);
   if(env.FAL_PROVIDER_VERIFIED!=='true'&&env.RECAST_OWNER_PILOT_REQUEST!=='true')throw Object.assign(new Error('The fal provider has not passed customer acceptance.'),{code:'render_provider_unverified',status:503});
+  if(env.FAL_CUSTOMER_MODEL==='nano-banana'&&env.FAL_HQ_BACKUP_MODEL==='flux-2-dev'&&env.RECAST_OWNER_PILOT_REQUEST!=='true'){
+   const route=await selectFalCustomerModel(env);
+   if(route.usingBackup)prices.falUsd=estimateHighQualityCosts({steps:bounded(env.IMAGE_HIGH_QUALITY_STEPS,18),photos}).falUsd;
+   return {host:FAL,prices,configured:true,policy,strategy:'nano-first-flux-backup-before-submission',...route};
+  }
   if(!healthy(health.fal)&&env.RECAST_OWNER_PILOT_REQUEST!=='true')throw Object.assign(new Error('The fal image engine needs an owner recovery check. Your photo is safe.'),{code:'render_provider_unavailable',status:503});
   return {host:FAL,prices,configured:true,policy,strategy};
  }
@@ -55,11 +74,19 @@ export async function selectHighQualityProvider(env,form){
 export async function providerStatus(env){
  const state=await providerHealth(env),costs=estimateHighQualityCosts({steps:bounded(env.IMAGE_HIGH_QUALITY_STEPS,18)});
  if(env.FAL_CUSTOMER_MODEL==='nano-banana')costs.falUsd=0.039;
- return {customerModel:env.FAL_CUSTOMER_MODEL==='nano-banana'?'Nano Banana original':'FLUX.2 dev',mode:String(env.RECAST_HQ_PROVIDER||'cloudflare'),falEnabled:env.FAL_PROVIDER_ENABLED==='true',falConfigured:!!env.FAL_API_KEY, falVerified:env.FAL_PROVIDER_VERIFIED==='true',cloudflareVerified:env.CF_PROVIDER_VERIFIED==='true',health:state,costs,costsAreEstimates:true,priority:['fal','cloudflare'],priorityRule:'prefer a verified healthy fal host; Cloudflare is the backup'};
+ return {customerModel:env.FAL_CUSTOMER_MODEL==='nano-banana'?'Nano Banana original':'FLUX.2 dev',mode:String(env.RECAST_HQ_PROVIDER||'cloudflare'),falEnabled:env.FAL_PROVIDER_ENABLED==='true',falConfigured:!!env.FAL_API_KEY, falVerified:env.FAL_PROVIDER_VERIFIED==='true',cloudflareVerified:env.CF_PROVIDER_VERIFIED==='true',health:state,costs,costsAreEstimates:true,backupModel:env.FAL_HQ_BACKUP_MODEL||null,priority:env.FAL_HQ_BACKUP_MODEL==='flux-2-dev'?['nano-banana','flux-2-dev']:['fal','cloudflare'],priorityRule:env.FAL_HQ_BACKUP_MODEL==='flux-2-dev'?'Nano first; FLUX only on a new request after a definite operational rejection':'prefer a verified healthy fal host; Cloudflare is the backup'};
 }
 export async function recordProviderResult(env,host,status,reason=null){
  if(!env.ARTWORK||![CF,FAL].includes(host))return;
- const key=PROVIDER_HEALTH_PREFIX+host+'.json',current=await jsonObject(env,key),now=new Date().toISOString();
+ const model=host===FAL&&env.FAL_CUSTOMER_MODEL==='nano-banana'&&env.RECAST_OWNER_PILOT_REQUEST!=='true'?(env.RECAST_HQ_SELECTED_MODEL||'nano-banana'):null;
+ const key=PROVIDER_HEALTH_PREFIX+(model||host)+'.json',current=await jsonObject(env,key),now=new Date().toISOString();
  const payload={host,status,reason,checkedAt:now,lastSuccessAt:status==='success'?now:current?.lastSuccessAt||null,lastFailureAt:status==='failed'?now:current?.lastFailureAt||null};
- try{await env.ARTWORK.put(key,JSON.stringify(payload),{httpMetadata:{contentType:'application/json'}})}catch{}
+ try{await env.ARTWORK.put(key,JSON.stringify(payload),{httpMetadata:{contentType:'application/json'}});if(model)await env.ARTWORK.put(PROVIDER_HEALTH_PREFIX+host+'.json',JSON.stringify({...payload,model}),{httpMetadata:{contentType:'application/json'}})}catch{}
+}
+
+// A deliberate successful owner comparison can reopen a model without a paid health probe.
+export async function recordModelRecovery(env,model){
+ if(env.FAL_HQ_BACKUP_MODEL!=='flux-2-dev'||!['nano-banana','flux-2-dev'].includes(model)||!env.ARTWORK)return;
+ const now=new Date().toISOString();
+ await env.ARTWORK.put(PROVIDER_HEALTH_PREFIX+model+'.json',JSON.stringify({host:'fal',model,status:'success',reason:null,checkedAt:now,lastSuccessAt:now}),{httpMetadata:{contentType:'application/json'}});
 }

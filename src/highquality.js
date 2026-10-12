@@ -1,3 +1,4 @@
+import {selectFalCustomerModel} from './provider-routing.js';
 import {protectedChoice,PROTECTED_FACE_VERSION,protectedCostNotice} from './protected-face-edit.js';
 import {customerNano,customerIdentityPrompt,CUSTOMER_IDENTITY_VERSION} from './customer-identity.js';
 import {ownerIdentityModel,ownerComparisonPrompt,ownerPromptVersion} from './owner-identity-comparison.js';
@@ -7,7 +8,7 @@ import {makeStandardAdventurePrompt} from './standard-adventure-prompt.js';
 import {referenceDirections} from './reference-labels.js';
 import {originalReferenceCount,prepareSavedReference} from './refinement-references.js';
 import { assertRenderReady, readinessSnapshot, recordRenderHealth } from './render-health.js';
-const PROMPT_VERSION = "identity-first-48-worlds-v1";
+const PROMPT_VERSION = CUSTOMER_IDENTITY_VERSION;
 const DEFAULT_HIGH_QUALITY = "@cf/black-forest-labs/flux-2-dev";
 const DEFAULT_QUICK = "@cf/black-forest-labs/flux-2-dev";
 
@@ -276,10 +277,9 @@ async function tryGeneration(env,model,prompt,inputFiles,kind,settings){
 }
 
 async function generateHighQuality({env,model,styleId,subjectType,notes,customWorld,inputFiles,hasBranch}){
-  // Nano public v6 and the explicit concise lab recipe prioritize identity.
-  // Earlier lab control and Standard/legacy FLUX prompts remain separate.
+  // All customer engines share the accepted recipe; owner controls remain separate.
   const candidate=ownerIdentityModel(env);
-  const main=customerNano(env)?customerIdentityPrompt({styleId,subjectType,notes:safeNotes(notes),customWorld:safeNotes(customWorld),hasBranch}):candidate?ownerComparisonPrompt(env,{notes:safeNotes(notes),customWorld:safeNotes(customWorld)}):makeFalCompactPrompt({styleId,subjectType,style:STYLES[styleId],
+  const main=env.RECAST_OWNER_PILOT_REQUEST!=='true'?customerIdentityPrompt({styleId,subjectType,notes:safeNotes(notes),customWorld:safeNotes(customWorld),hasBranch}):candidate?ownerComparisonPrompt(env,{notes:safeNotes(notes),customWorld:safeNotes(customWorld)}):makeFalCompactPrompt({styleId,subjectType,style:STYLES[styleId],
     notes:safeNotes(notes),customWorld:safeNotes(customWorld),inputCount:inputFiles.length,hasBranch});
   const steps=Math.max(8,Math.min(30,Number(candidate?28:env.IMAGE_HIGH_QUALITY_STEPS||18)));
   const guidance=Math.max(1,Math.min(10,Number(candidate?2.5:env.IMAGE_HIGH_QUALITY_GUIDANCE||5)));
@@ -303,7 +303,7 @@ async function generateHighQuality({env,model,styleId,subjectType,notes,customWo
 }
 
 async function generateQuick({env,model,styleId,subjectType,notes,referenceGuide='',customWorld,inputFiles,hasBranch}){
-  const main=makeStandardAdventurePrompt({styleId,subjectType,notes,referenceGuide,inputCount:inputFiles.length,customWorld,hasBranch});
+  const main=makeStandardAdventurePrompt({styleId,subjectType,notes:safeNotes([referenceGuide,notes].filter(Boolean).join(' ')),inputCount:inputFiles.length,customWorld:safeNotes(customWorld),hasBranch});
   const guidance=Math.max(1,Math.min(10,Number(env.IMAGE_QUICK_GUIDANCE||5)));
   const steps=Math.max(8,Math.min(30,Number(env.IMAGE_QUICK_STEPS||12)));
   const settings={width:768,height:960,guidance,steps:model.includes('flux-2-klein')?null:steps};
@@ -470,7 +470,7 @@ export async function highQualityTransform(request,env,{trustedSocialJob=false}=
     const stored=await store(env,{requestId,accessToken,styleId,subjectType,notes,customWorld,parentRequestId,source,sourceTweet,qualityMode,inputs:storedInputs,originalInputCount,image,previewMime,safety,modelUsed:generated.modelUsed,providerUsed:generated.providerUsed,promptVersion:protectedChoice(env.RECAST_OWNER_IDENTITY_MODEL)?PROTECTED_FACE_VERSION:ownerIdentityModel(env)?ownerPromptVersion(env):qualityMode==='high'&&customerNano(env)?CUSTOMER_IDENTITY_VERSION:PROMPT_VERSION,attemptKind:generated.attemptKind});
 
     await writeAttemptReceipt(env,clientAttemptId,{status:"success",completedAt:new Date().toISOString(),durationMs:Date.now()-attemptStartedAt,requestId,qualityMode,modelUsed:generated.modelUsed,providerUsed:generated.providerUsed,providerRequestId:generated.providerRequestId,attemptKind:generated.attemptKind,persisted:stored.persisted});
-    return json({ok:true,requestId,accessToken,style:STYLES[styleId]?.name||"Custom World",image:`data:${previewMime};base64,${image}`,persisted:stored.persisted,storageError:stored.storageError,qualityMode,qualityLabel:qualityMode==="quick"?"Standard Preview":"High-Quality Preview",modelUsed:generated.modelUsed,providerUsed:generated.providerUsed,usedSafeRetry:generated.usedSafeRetry,usedFastFallback:false,promptVersion:protectedChoice(env.RECAST_OWNER_IDENTITY_MODEL)?PROTECTED_FACE_VERSION:ownerIdentityModel(env)?ownerPromptVersion(env):qualityMode==='high'&&customerNano(env)?CUSTOMER_IDENTITY_VERSION:PROMPT_VERSION,clientAttemptId});
+    return json({ok:true,requestId,accessToken,style:STYLES[styleId]?.name||"Custom World",image:`data:${previewMime};base64,${image}`,persisted:stored.persisted,storageError:stored.storageError,qualityMode,qualityLabel:qualityMode==="quick"?"Standard Preview":env.RECAST_HQ_USING_BACKUP?"High-Quality Preview · FLUX backup":"High-Quality Preview",modelUsed:generated.modelUsed,providerUsed:generated.providerUsed,usedSafeRetry:generated.usedSafeRetry,usedFastFallback:false,promptVersion:protectedChoice(env.RECAST_OWNER_IDENTITY_MODEL)?PROTECTED_FACE_VERSION:ownerIdentityModel(env)?ownerPromptVersion(env):qualityMode==='high'&&customerNano(env)?CUSTOMER_IDENTITY_VERSION:PROMPT_VERSION,clientAttemptId});
   }catch(error){
     const reason=error?.reason||"provider";
     if(!ownerIdentityModel(env)&&['capacity','quota','timeout','unavailable'].includes(reason))await recordRenderHealth(env,env.RECAST_RENDER_SCOPE==='social'?'social':qualityMode,'failed',reason);
@@ -491,12 +491,14 @@ export async function highQualityTransform(request,env,{trustedSocialJob=false}=
 
 export async function modelStatus(env){
   const nano=env.FAL_CUSTOMER_MODEL==='nano-banana'&&env.RECAST_HQ_PROVIDER==='fal';
-  const highQuality=nano?'fal-ai/nano-banana/edit':String(env.IMAGE_MODEL_HIGH_QUALITY||DEFAULT_HIGH_QUALITY);
+  let usingBackup=false;
+  if(nano&&env.FAL_HQ_BACKUP_MODEL==='flux-2-dev'){try{usingBackup=(await selectFalCustomerModel(env)).usingBackup}catch{}}
+  const highQuality=usingBackup?'fal-ai/flux-2/edit':nano?'fal-ai/nano-banana/edit':String(env.IMAGE_MODEL_HIGH_QUALITY||DEFAULT_HIGH_QUALITY);
   const quick=String(env.IMAGE_MODEL_QUICK||DEFAULT_QUICK);
   return json({
     ok:true,
     modes:{
-      high:{label:"High-Quality Preview",model:highQuality,steps:nano?null:Number(env.IMAGE_HIGH_QUALITY_STEPS||18),guidance:nano?null:Number(env.IMAGE_HIGH_QUALITY_GUIDANCE||5)},
+      high:{label:usingBackup?"High-Quality Preview · FLUX backup":"High-Quality Preview",model:highQuality,steps:nano&&!usingBackup?null:Number(env.IMAGE_HIGH_QUALITY_STEPS||18),guidance:nano&&!usingBackup?null:Number(env.IMAGE_HIGH_QUALITY_GUIDANCE||5)},
       quick:{label:"Standard Preview",model:quick,steps:quick.includes("flux-2-klein")?null:Number(env.IMAGE_QUICK_STEPS||12),guidance:Number(env.IMAGE_QUICK_GUIDANCE||5)}
     },
     defaultMode:"high",

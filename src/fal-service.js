@@ -2,7 +2,7 @@ import {protectedChoice,runProtectedFaceEdit} from './protected-face-edit.js';
 import {prepareFalInput,decodeFalInlineResult,decodeFalInlineImage,FAL_PILOT_HEADERS,FAL_ENDPOINT} from './fal-format.js';
 import {customerNano} from './customer-identity.js';
 import {ownerIdentityModel} from './owner-identity-comparison.js';
-import {recordProviderResult} from './provider-routing.js';
+import {recordProviderResult,recordModelRecovery} from './provider-routing.js';
 // One acknowledged job per customer AI.run, with read-only polling afterwards.
 // Unknown/slow submissions are NEVER resubmitted or switched to another host.
 const HOST='https://queue.fal.run';
@@ -18,6 +18,7 @@ function safeQueueUrl(value,id,kind,queueRoot='fal-ai/flux-2'){
 }
 function reasonFromHttp(status){
  if(status===429)return Object.assign(new Error('3040 out of capacity'),{reason:'capacity'});
+ if(status===401||status===403)return Object.assign(new Error('Fal credential rejected'),{reason:'configuration'});
  if(status===402)return Object.assign(new Error('3036 quota exceeded'),{reason:'quota'});
  if(status===422||status===400)return Object.assign(new Error('Fal rejected this image request.'),{reason:'provider'});
  return Object.assign(new Error('503 service unavailable'),{reason:'unavailable'});
@@ -65,10 +66,10 @@ export async function runFalEdit(env,model,originalRequest){
  const headers=new Headers({...FAL_PILOT_HEADERS,Authorization:'Key '+credential});
  const localId=String(env.RECAST_PROVIDER_ATTEMPT_ID||crypto.randomUUID()).replace(/[^a-zA-Z0-9._-]/g,'').slice(0,100);
  await receipt(env,localId,{host:'fal',model:endpoint,comparison:env.RECAST_OWNER_IDENTITY_MODEL||null,status:'submitting',startedAt:new Date().toISOString(),imageCount:input.image_urls.length,...(nano?{aspectRatio:input.aspect_ratio}:{width:prepared.image_size.width,height:prepared.image_size.height,steps:input.num_inference_steps})},{initial:true,required:true});
- let submitted=false,receivedFinalResult=false,requestId='',statusUrl='',resultUrl='';
+ let rejected=false,submitted=false,receivedFinalResult=false,requestId='',statusUrl='',resultUrl='';
  try{
   const submit=await fetch(HOST+'/'+endpoint,{method:'POST',headers,body:JSON.stringify(input),signal:AbortSignal.timeout(30000)});
-  if(!submit.ok){const providerError=reasonFromHttp(submit.status);await receipt(env,localId,{status:'rejected_before_ack',httpStatus:submit.status});throw providerError;}
+  if(!submit.ok){rejected=submit.status>=400&&submit.status<500;const providerError=reasonFromHttp(submit.status);await receipt(env,localId,{status:rejected?'rejected_before_ack':'submission_uncertain',httpStatus:submit.status});throw providerError;}
   const info=await json(submit);
   requestId=String(info?.request_id||'');
   if(!/^[0-9a-z-]{25,100}$/i.test(requestId))throw Object.assign(new Error('503 provider accepted without request identifier'),{reason:'unavailable'});
@@ -99,7 +100,8 @@ export async function runFalEdit(env,model,originalRequest){
     }
     await receipt(env,localId,{status:'completed',completedAt:new Date().toISOString(),requestId,bytes:Math.round(image.image.length*.75)});
     if(!candidate)await recordProviderResult(env,'fal','success');
-    return {...image,providerUsed:'fal',providerRequestId:requestId,...(candidate||publicNano?{modelUsed:endpoint}:{})};
+    else if(['nano-banana','dev-edit'].includes(env.RECAST_OWNER_IDENTITY_MODEL))await recordModelRecovery(env,nano?'nano-banana':'flux-2-dev').catch(()=>{});
+    return {...image,providerUsed:'fal',providerRequestId:requestId,modelUsed:endpoint};
    }
    if(state.status!=='IN_QUEUE'&&state.status!=='IN_PROGRESS')throw Object.assign(new Error('503 unknown provider job state'),{reason:'unavailable'});
    await wait(POLL_MS);
@@ -110,9 +112,9 @@ export async function runFalEdit(env,model,originalRequest){
   // Accepted jobs are NOT safe for a second paid submission until their
   // recorded provider request ID is reconciled, including connection loss.
   const ambiguous=Boolean(submitted&&!receivedFinalResult);
-  const status=error.pendingRequestId?'pending_for_recovery':receivedFinalResult?'completed_output_unavailable':submitted?'accepted_unknown_outcome':'submission_uncertain';
+  const status=rejected?'rejected_before_ack':error.pendingRequestId?'pending_for_recovery':receivedFinalResult?'completed_output_unavailable':submitted?'accepted_unknown_outcome':'submission_uncertain';
   await receipt(env,localId,{status,requestId:requestId||null,error:publicError(error)});
-  if(!candidate&&ambiguous)await recordProviderResult(env,'fal','pending','awaiting_result');
+  if(!candidate&&(ambiguous||!rejected&&!receivedFinalResult))await recordProviderResult(env,'fal','pending','awaiting_result');
   else if(!candidate&&['unavailable','capacity','timeout'].includes(error.reason))await recordProviderResult(env,'fal','failed',error.reason);
   if(ambiguous)throw Object.assign(new Error('Your image job was accepted, but its result is still being checked. Please do not start another paid attempt.'),{reason:'pending',pendingRequestId:requestId,cause:error});
   throw error;
@@ -133,6 +135,7 @@ export async function runCloudflareTracked(env,model,request,options){
 }
 export function wrapImageProvider(env,selection){
  if(!selection||!['cloudflare','fal'].includes(selection.host))return env;
+ env={...env,RECAST_HQ_SELECTED_MODEL:selection.customerModel,RECAST_HQ_USING_BACKUP:selection.usingBackup===true};
  const originalAI=env.AI,host=selection.host;
  return {...env,RECAST_HQ_SELECTED_PROVIDER:host,AI:{...originalAI,async run(model,args,options){
   if(model!==String(env.IMAGE_MODEL_HIGH_QUALITY||'@cf/black-forest-labs/flux-2-dev'))return originalAI.run(model,args,options);

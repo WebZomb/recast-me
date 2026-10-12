@@ -1,6 +1,6 @@
 import {ADVENTURE_GUIDES,adventureMode} from '../public/adventure-guides.js';
 export const CUSTOMER_IDENTITY_VERSION='nano-identity-adventures-v6';
-export function customerNano(env){return env.FAL_CUSTOMER_MODEL==='nano-banana'&&env.RECAST_OWNER_PILOT_REQUEST!=='true'&&env.RECAST_HQ_SELECTED_PROVIDER==='fal';}
+export function customerNano(env){return env.RECAST_HQ_SELECTED_MODEL!=='flux-2-dev'&&env.FAL_CUSTOMER_MODEL==='nano-banana'&&env.RECAST_OWNER_PILOT_REQUEST!=='true'&&env.RECAST_HQ_SELECTED_PROVIDER==='fal';}
 export function customerIdentityPrompt({styleId,subjectType='auto',notes='',customWorld='',hasBranch=false}){
  const guide=ADVENTURE_GUIDES[styleId];
  const subject={pet:'Include only the main pets; omit incidental people and supporting hands.',person:'Include only the main person; omit incidental people and animals.',group:'Include the main group of people; omit incidental background figures.',couple:'Include the two main people.',family:'Include the main family members.','person and pet':'Include the main people and pets together.'}[subjectType]||'Include the main people and pets with visible reference faces. Exclude faceless supporting figures; never invent their faces.';
