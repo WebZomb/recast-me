@@ -27,6 +27,7 @@ export function privateJson(data,status=200,extra={}){return Response.json(data,
 
 export function recommendedProductDesign(map={}){
   const product=String(map?.product||'Generic');
+  if(product==='Phone Case'&&map.caseType==='tough')return {layout:'cover',fill:'full-bleed',x:'center',scale:100,spacing:'standard'};
   if(product==='Mug')return {layout:'two-sided',fill:'ambient',x:'center',scale:110,spacing:'close'};
   if(product==='Tumbler')return {layout:'two-sided',fill:'ambient',x:'center',scale:108,spacing:'standard'};
   if(product==='Blanket')return {layout:'fit',fill:'ambient',x:'center',scale:110,spacing:'standard'};
@@ -41,7 +42,7 @@ export function recommendedCheckoutDesign(map={}){
  if(product==='Canvas')Object.assign(base,{layout:'fit',fill:'ambient',scale:90});
  if(['Poster','Framed Poster','Canvas','Puzzle'].includes(product))base.orientation='portrait';
  if(product==='Puzzle'||product==='Sticker')Object.assign(base,{layout:'cover',fill:'full-bleed'});
- if(['Hardcover Journal','Phone Case'].includes(product))base.version=7;
+ if(product==='Hardcover Journal'||(product==='Phone Case'&&map.caseType!=='tough'))base.version=7;
  return normalizeProductDesign(map,base);
 }
 export function normalizeProductDesign(map,raw={}){

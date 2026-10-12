@@ -1,0 +1,37 @@
+name: RM143 approved Tough Case wrap example
+on:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+concurrency:
+  group: rm143-tough-case-example-once
+  cancel-in-progress: false
+defaults:
+  run:
+    shell: bash
+jobs:
+  public-product-examples:
+    if: >-
+      github.event.head_commit.message == 'validate: RM143 Tough Case wrap example' && github.run_attempt == 1
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    env:
+      RECAST_PUBLIC_EXAMPLES: APPROVED_PUBLIC_ART_ONLY
+    steps:
+      - name: Fetch exact release source without credentials
+        run: |
+          git init .
+          git remote add origin "https://github.com/${GITHUB_REPOSITORY}.git"
+          git fetch --depth=1 origin "${GITHUB_SHA}"
+          git checkout --detach FETCH_HEAD
+      - name: One public-art upload and bounded product mockups, never orders
+        run: node scripts/rm143-tough-case-example.cjs
+      - name: Retain real provider samples for human visual inspection
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rm143-tough-case-example
+          path: rm143-tough-case-example/
+          retention-days: 7
+          if-no-files-found: warn

@@ -49,3 +49,15 @@ test('phone layout reserves the camera area and keeps the complete image within 
 test('tumbler uses the exact front sublimation placement returned by supplier catalog',()=>{const m=FULFILLMENT['RECAST-TUMBLER-20OZ'];assert.equal(m.printfulProductId,909);assert.equal(m.printfulVariantId,23470);assert.equal(m.preferredPlacement,'front');assert.equal(m.orderFileType,'front')});
 
 test('legacy puzzle proofs retain their original orientation unless explicitly selected',async()=>{const {normalizeProductDesign}=await import('../src/commerce-store.js');const map=FULFILLMENT['RECAST-PUZZLE-252'];assert.equal(normalizeProductDesign(map,{version:6,layout:'cover'}).orientation,undefined);assert.equal(normalizeProductDesign(map,{version:6,layout:'cover',orientation:'portrait'}).orientation,'portrait')});
+
+test('Tough Case uses verified glossy variants and fills the entire wrap template',async()=>{
+ const {recommendedCheckoutDesign,composeProductLayout}=await import('../src/commerce-store.js');
+ const variants={IP14:16124,IP14PLUS:16128,IP14PRO:16126,IP14PM:16130,IP15:17714,IP15PRO:17718,IP15PM:17720,IP16:20302,IP16PRO:20304};
+ const transforms=[];const env={IMAGES:{input(){const chain={transform(t){transforms.push(t);return chain},async output(){return {response:()=>new Response(new Uint8Array([255,216,255,...Array(100).fill(0)]))}}};return chain}}};
+ for(const [suffix,id] of Object.entries(variants)){
+  const map=FULFILLMENT['RECAST-TOUGH-'+suffix];assert.equal(map.printfulProductId,601);assert.equal(map.printfulVariantId,id);assert.equal(map.baseCost,14.23);assert.equal(FULFILLMENT['RECAST-CASE-'+suffix].printfulProductId,181);
+  const design=recommendedCheckoutDesign(map);assert.equal(design.version,6);assert.equal(design.layout,'cover');
+  const out=await composeProductLayout(env,new Uint8Array([1]),{width:1024,height:1280},{width:1392,height:2220},map,design,1392);
+  assert.equal(out.method,'full-bleed-cover');assert.deepEqual(out.outputSize,{width:1392,height:2220});assert.deepEqual(transforms.at(-1),{width:1392,height:2220,fit:'cover'});
+ }
+});

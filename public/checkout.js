@@ -2,6 +2,7 @@ const grid = document.querySelector("#product-grid");
 const requestLabel = document.querySelector("#request-id");
 
 const PRODUCT_ART = {
+  "Custom Recast Tough Phone Case":"https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-tough-case-glossy-rm143.jpg?v=1791788050",
   "Custom Recast Sticker Sheet":"https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-lifestyle-sticker-sheet-rm061.png?v=1791427937&width=1000",
   "Custom Recast Poster":"https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-lifestyle-poster-rm059.png?v=1791422885&width=1000",
   "Custom Recast Hoodie":"https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-lifestyle-hoodie-rm059.png?v=1791422966&width=1000",
@@ -24,6 +25,7 @@ const PRODUCT_ART = {
 };
 
 const PRODUCT_META = {
+  "Custom Recast Tough Phone Case": {order:10,badge:"FULL PHOTO WRAP",pitch:"Glossy Tough Case with your photo across the back and printable edges. Dual-layer protection.",tier:"secondary",cta:"Shop Tough Case"},
   "Custom Recast Poster": {order:1,badge:"MOST POPULAR",pitch:"The easiest way to turn your Recast into wall art.",tier:"featured",cta:"Shop Poster"},
   "Custom Recast Hoodie": {order:2,badge:"FAN FAVORITE",pitch:"Wear your Recast as a premium statement piece.",tier:"featured",cta:"Customize Hoodie"},
   "Custom Recast Framed Poster": {order:3,badge:"DESK + WALL",pitch:"Choose an 8×10 desk frame or larger framed wall art.",tier:"featured",cta:"Shop Framed Print"},
@@ -48,6 +50,7 @@ const PRODUCT_META = {
 
 const PRIMARY_PRODUCT_TITLES=new Set(["Custom Recast Mug","Custom Recast Blanket","Custom Recast Poster","Custom Recast Canvas"]);
 const PRODUCT_DESIGN_PRESETS = {
+  "Custom Recast Tough Phone Case": {product:"Phone Case",caseType:"tough",layout:"cover",fill:"full-bleed",x:"center",scale:100,spacing:"standard",label:"Full photo wrap · back and edges"},
   "Custom Recast Hoodie": {product:"Hoodie",layout:"fit",fill:"transparent",x:"center",scale:100,spacing:"standard",finish:"soft",label:"Scene blend · soft fade into fabric"},
   "Custom Recast T-Shirt": {product:"T-Shirt",layout:"fit",fill:"transparent",x:"center",scale:100,spacing:"standard",finish:"soft",label:"Scene blend · soft fade into fabric"},
   "Custom Recast Mug": {product:"Mug",layout:"two-sided",fill:"ambient",x:"center",scale:110,spacing:"close",label:"Best setup · close two-sided wrap"},
@@ -154,7 +157,7 @@ function productDesign(card){
   const scale=Number(card?.querySelector?.("[data-design-scale]")?.value||preset.scale);
   const spacing=card?.querySelector?.("[data-design-spacing]")?.value||preset.spacing;
   const fill=card?.querySelector?.("[data-design-fill]")?.value||preset.fill;
-  return {version:preset.product==="Sticker Sheet"?8:(preset.product==="Hardcover Journal"||(preset.product==="Phone Case"&&layout!=="cover"))?7:6,product:preset.product,layout,fill,x,scale,spacing,...(["Poster","Framed Poster","Canvas","Puzzle"].includes(preset.product)?{orientation:"portrait"}:{}),...(preset.finish?{finish:card?.querySelector?.("[data-design-finish]")?.value||preset.finish}:{})};
+  return {version:preset.product==="Sticker Sheet"?8:(preset.product==="Hardcover Journal"||(preset.product==="Phone Case"&&preset.caseType!=="tough"&&layout!=="cover"))?7:6,product:preset.product,layout,fill,x,scale,spacing,...(["Poster","Framed Poster","Canvas","Puzzle"].includes(preset.product)?{orientation:"portrait"}:{}),...(preset.finish?{finish:card?.querySelector?.("[data-design-finish]")?.value||preset.finish}:{})};
 }
 function designSignature(card,sku){return JSON.stringify({sku,design:productDesign(card)})}
 function designControlsMarkup(title,preset){
@@ -163,7 +166,7 @@ function designControlsMarkup(title,preset){
   const wrap=['Custom Recast Mug','Custom Recast Tumbler'].includes(title);
   const apparel=Boolean(preset.finish);
   const journal=preset.product==="Hardcover Journal",phone=preset.product==="Phone Case";
-  const layoutOptions=phone?`<option value="fit" selected>Whole image below camera opening</option><option value="cover">Fill the printable back · crops photo</option>`:journal?`<option value="fit" selected>Whole image on both covers</option>`:wrap
+  const layoutOptions=preset.caseType==="tough"?`<option value="cover" selected>Full photo wrap · back and edges</option><option value="fit">Whole image + blended background</option>`:phone?`<option value="fit" selected>Whole image below camera opening</option><option value="cover">Fill the printable back · crops photo</option>`:journal?`<option value="fit" selected>Whole image on both covers</option>`:wrap
     ? `<option value="two-sided" selected>Best setup · image on both sides</option><option value="wrap">Full wrap / full bleed</option><option value="single">One image</option><option value="fit">Keep whole image + blended background</option>`
     : `<option value="cover" selected>Best setup · fill the product</option><option value="fit">Keep whole image + background fill</option>`;
   const spacing=wrap?`<label data-design-spacing-wrap>Image spacing<select data-design-spacing><option value="close">Closer together</option><option value="standard" selected>Standard</option><option value="wide">Farther apart</option></select></label>`:"";
@@ -173,7 +176,7 @@ function designControlsMarkup(title,preset){
       <label data-layout-label>Layout<select data-design-layout>${layoutOptions}</select></label>
       ${apparel?`<label>Artwork finish<select data-design-finish><option value="soft">Scene blend · fade into fabric</option><option value="cutout">Subject cutout · no background</option><option value="rectangle">Original photo · straight edges</option></select></label><p class="apparel-finish-note">Scene blend keeps the full Recast sharp in the center and gradually dissolves the outer edges into the garment so there is no visible rectangular border. Cutout remains available for designs that work better without a scene.</p>`:""}
       ${spacing}
-      ${phone?`<p class="product-mockup-note">Clear case: printed back, clear sides. Fill the back crops the photo; check faces and the camera opening in your preview.</p>`:""}
+      ${preset.caseType==="tough"?`<p class="product-mockup-note">Your photo wraps across the back and printable edges. Camera and port openings remain clear. Check faces and edge cropping in your preview.</p>`:phone?`<p class="product-mockup-note">Clear case: printed back, clear sides. Fill the back crops the photo; check faces and the camera opening in your preview.</p>`:""}
       <label data-design-fill-wrap hidden>Background fill<select data-design-fill><option value="ambient" selected>Blend artwork colors</option><option value="transparent" hidden>No added background</option><option value="dark">Dark fill</option><option value="light">Light fill</option><option value="full-bleed">Artwork edge fill</option></select></label>
       <label data-design-position-wrap>Image position<select data-design-x><option value="left">Left</option><option value="center" selected>Center</option><option value="right">Right</option></select></label>
       <label data-design-scale-wrap>Print-area size <strong data-design-scale-label>${preset.scale}%</strong><input data-design-scale type="range" min="75" max="${apparel||journal||phone?100:125}" step="${apparel?1:5}" value="${preset.scale}"></label>
@@ -546,7 +549,7 @@ async function loadCheckout(){
     const realPreview=digital?"":`<button class="product-preview-action" data-product="${index}" type="button">Preview on product</button><button type="button" class="recast-buy-now button primary" data-product="${index}" ${active?"":"disabled"}>Buy now</button><p class="product-mockup-note" data-buy-now-note>Skip the mockup · use recommended placement</p><p class="mockup-error" role="alert" hidden></p>`;
 
     return `<div class="${classes}" data-product-index="${index}" data-product-title="${product.title}" data-active="${active}" data-digital="${digital}">
-      <div class="product-art"><img src="${PRODUCT_ART[product.title]}" alt="Style illustration for ${product.title}; generate the selected-size preview before buying" loading="lazy"><span class="example-design-label">Lifestyle example · preview your selected size</span></div>
+      <div class="product-art"><img src="${PRODUCT_ART[product.title]}" alt="Style illustration for ${product.title}; generate the selected-size preview before buying" loading="lazy"><span class="example-design-label">${preset.caseType==="tough"?"Tough Case · preview your photo wrap":"Lifestyle example · preview your selected size"}</span></div>
       <div class="product-body">
         <span class="product-badge">${meta.badge}</span>
         <strong>${product.title.replace(/^Custom Recast /,"")}</strong>
