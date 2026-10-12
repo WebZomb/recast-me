@@ -335,3 +335,6 @@ RM149 — Safe website labels/metadata and iPhone development source updated to 
 
 
 RM150 — Owner selects X support and confirms Apple membership. Public gift discovery guide, search metadata, sitemap/robots and clearer private order-number guidance; no commerce/runtime logic changes.525Node tests pass; hosted browser/release pending. See [RM150](ASTRA-SESSION-RM-150.md).
+
+
+RM151 — Owner asks for simple own-photo gifts and discovery completion. Google Search Console property prepared; public verification tag and clearer gift CTA added, verification/submission pending deploy. Apple PC connection retry pending. See [RM151](ASTRA-SESSION-RM-151.md).
