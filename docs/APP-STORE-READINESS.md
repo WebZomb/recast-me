@@ -36,3 +36,11 @@ Description: Turn a favorite photo of your pet, you together, or your family int
 
 https://developer.apple.com/app-store/review/guidelines/ — 4.2 minimum functionality, 3.1 payments, 5.1 privacy and explicit third-party AI permission. Native gallery/share are intended to add utility; acceptance is Apple's decision.
 https://developer.apple.com/documentation/webkit/wkframeinfo/securityorigin — origin checks for native bridge.
+
+## October 12 RM149 update
+
+The development app is now version0.2/build2 and points to https://recastmeai.com/#start. Existing native offline gallery/save/share remains. Added studio loading feedback, current photo guide/support links and explicit user-confirmed external HTTPS browser navigation, including script-initiated checkout navigation that previously failed silently. Main-frame/exact-origin bridge validation and query-token guard remain. This is an owner-test source build, not a signed TestFlight/App Store release. Native checkout handoff/return and camera/gallery require real device testing. No automatic background render retry.
+
+Earlier checklist statements about five bonus credits and preview-only origin are historical: current website grants three bonus HQ credits; production origin now selected explicitly. Existing shipped test orders and website checks do not replace app purchase testing. Shared website/backend logic can be reused on Android, but SwiftUI gallery and navigation need Android implementations.
+
+Apple membership is99USD/year; existing active membership can host additional apps. App submission still needs owner team/bundle registration, signing connection, approved icon, privacy disclosures, storefront-specific digital purchase design and device acceptance. Official sources checked2026-10-12: https://developer.apple.com/programs/whats-included/ and https://developer.apple.com/app-store/review/guidelines/ (3.1,4.2). No membership purchase or App Store upload performed.

@@ -2,23 +2,36 @@ import SwiftUI
 import WebKit
 
 struct StudioView: View {
-    // Deliberately preview-only until commerce, privacy and App Review gates pass.
-    static let origin = URL(string: "https://recast-secure-previews-2026-09-29-recast-me.sergz24.workers.dev")!
+    // Production service for owner testing; App Store release remains gated.
+    static let origin = URL(string: "https://recastmeai.com")!
     @ObservedObject var gallery: PreviewGallery
     @State private var loadError: String?
+    @State private var isLoading = true
+    @State private var externalURL: URL?
     @State private var reloadID = UUID()
     var body: some View {
         ZStack {
-            StudioWebView(gallery: gallery, loadError: $loadError).id(reloadID)
+            StudioWebView(gallery: gallery, loadError: $loadError, isLoading: $isLoading, externalURL: $externalURL).id(reloadID)
+            if isLoading && loadError == nil {
+                ProgressView("Opening your studio…").padding().background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
+            }
             if let loadError {
                 VStack(spacing: 20) {
                     Image(systemName: "wifi.exclamationmark").font(.largeTitle)
                     Text("We couldn’t open the studio").font(.title2.bold())
                     Text(loadError).foregroundStyle(.secondary).multilineTextAlignment(.center)
                     Text("Saved pictures are still in My Recasts.").font(.callout)
-                    Button("Try again") { self.loadError = nil; reloadID = UUID() }.buttonStyle(.borderedProminent)
+                    Button("Try again") { self.loadError = nil; isLoading = true; reloadID = UUID() }.buttonStyle(.borderedProminent)
                 }.padding(30).frame(maxWidth: .infinity, maxHeight: .infinity).background(Color(.systemBackground))
             }
+        }
+        .confirmationDialog("Continue in your browser?", isPresented: Binding(get: { externalURL != nil }, set: { if !$0 { externalURL = nil } })) {
+            if let destination = externalURL {
+                Button("Open browser") { UIApplication.shared.open(destination); externalURL = nil }
+            }
+            Button("Stay here", role: .cancel) { externalURL = nil }
+        } message: {
+            Text("Open \(externalURL?.host ?? "the website") outside Recast Me. Your studio and saved previews stay here.")
         }
     }
 }
@@ -26,6 +39,8 @@ struct StudioView: View {
 struct StudioWebView: UIViewRepresentable {
     let gallery: PreviewGallery
     @Binding var loadError: String?
+    @Binding var isLoading: Bool
+    @Binding var externalURL: URL?
     func makeCoordinator() -> Coordinator { Coordinator(self) }
     func makeUIView(context: Context) -> WKWebView {
         let config = WKWebViewConfiguration()
@@ -37,7 +52,7 @@ struct StudioWebView: UIViewRepresentable {
         view.isOpaque = false
         view.backgroundColor = .black
         view.allowsBackForwardNavigationGestures = true
-        view.load(URLRequest(url: StudioView.origin))
+        view.load(URLRequest(url: URL(string: "#start", relativeTo: StudioView.origin)!.absoluteURL))
         return view
     }
     func updateUIView(_ uiView: WKWebView, context: Context) { context.coordinator.parent = self }
@@ -68,10 +83,11 @@ struct StudioWebView: UIViewRepresentable {
                 decisionHandler(.allow); return
             }
             decisionHandler(.cancel)
-            // No automatic cross-origin redirects or custom schemes. Explicit HTTPS links open outside the studio.
-            if action.navigationType == .linkActivated, url.scheme == "https",
+            parent.isLoading = false
+            // Cross-origin HTTPS navigation requires an explicit native browser handoff.
+            if url.scheme == "https",
                !(URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems ?? []).contains(where: { $0.name.lowercased().contains("token") }) {
-                UIApplication.shared.open(url)
+                parent.externalURL = url
             }
         }
         func webView(_ webView: WKWebView, createWebViewWith configuration: WKWebViewConfiguration, for action: WKNavigationAction, windowFeatures: WKWindowFeatures) -> WKWebView? {
@@ -80,12 +96,15 @@ struct StudioWebView: UIViewRepresentable {
             }
             return nil
         }
+        func webView(_ webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation!) { parent.isLoading = true }
+        func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) { parent.isLoading = false; parent.loadError = nil }
         func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) { show(error) }
         func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) { show(error) }
         func webViewWebContentProcessDidTerminate(_ webView: WKWebView) {
             parent.loadError = "The studio was interrupted. Check your recent previews before starting another render."
         }
         private func show(_ error: Error) {
+            parent.isLoading = false
             if (error as NSError).code != NSURLErrorCancelled { parent.loadError = "Check your connection and try again. If a render was running, check Recent Versions before retrying." }
         }
     }
