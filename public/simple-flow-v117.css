@@ -74,3 +74,14 @@
 #recast-form .adventure-extra-actions .button{display:flex;flex-direction:column;min-width:0;width:100%;margin:0!important;overflow:hidden;padding:0!important;white-space:normal;border-radius:18px;gap:0}
 #recast-form .adventure-extra-actions img{width:100%;height:110px;object-fit:cover}
 #recast-form .adventure-extra-actions strong{display:block;padding:16px 8px;font-size:16px;line-height:1.3}
+
+/* RM141: flush style thumbnails and distinct lightweight discovery artwork. */
+#recast-form .adventure-choices button{display:flex;flex-direction:column;padding:0;gap:0;text-align:center}
+#recast-form [data-create-step="2"] .adventure-choices img{width:100%;height:auto;aspect-ratio:4/3;object-fit:cover;flex:none}
+#recast-form .adventure-choices strong{width:100%;box-sizing:border-box;flex:1;min-height:62px}
+#recast-form .discovery-art{display:block;position:relative;width:100%;background:#17172e;overflow:hidden}
+#recast-form .adventure-extra-actions .discovery-art img{display:block;width:100%;height:auto;aspect-ratio:16/9;object-fit:cover}
+#recast-form .discovery-count{display:flex;align-items:center;justify-content:center;min-height:32px;padding:3px 5px;box-sizing:border-box;text-align:center;font-size:clamp(10px,2.5vw,13px);font-weight:600;line-height:1.4;color:#e2e5ff;letter-spacing:.01em}
+#recast-form .adventure-extra-actions strong{margin:auto 0;width:100%;box-sizing:border-box;padding:15px 5px;font-size:clamp(13px,3.6vw,17px)}
+#recast-form .adventure-choices button:focus-visible,#recast-form .adventure-extra-actions button:focus-visible{outline:3px solid #a4edff;outline-offset:4px}
+#recast-form [data-create-step="2"] .adventure-extra-actions .button{min-height:145px}

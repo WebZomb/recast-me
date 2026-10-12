@@ -1,4 +1,5 @@
 import {initSubjectFocus} from './subject-focus.js?v=283';
+export const surpriseChoices=(styles,current)=>styles.filter(([id])=>id!=='custom'&&id!==current);
 // Upload-time suggestions and manual choices share one visible selector.
 export function initCreationWizard({styles,photos,subject,style,updateWorld,hasBranch}){
  const $=selector=>document.querySelector(selector);
@@ -69,6 +70,8 @@ export function initCreationWizard({styles,photos,subject,style,updateWorld,hasB
   if(['couple','family','car','custom'].includes(value)){$('#extra-subject-choices').append(button);}else $('#subject-choices').append(button);
  }
  function refreshAdventures(){
+  $('[data-style-count]').textContent=`Explore ${styles.filter(([id])=>id!=='custom').length} styles`;
+  $('[data-surprise-count]').textContent=`Random pick · ${surpriseChoices(styles,style.value).length} styles`;
   $('#adventure-choices').replaceChildren();
   ['royal','fantasy','space','game'].map(id=>styles.find(s=>s[0]===id)).filter(Boolean).forEach(([id,name,,image,alt])=>{
    const button=document.createElement('button');button.type='button';button.setAttribute('aria-pressed',String(style.value===id));
