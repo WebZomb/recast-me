@@ -14,7 +14,7 @@ test('Advanced photo guidance retains existing group categories without a mandat
  assert.doesNotMatch(html,/data-create-step="0"/);
  assert.match(wizard,/for\(const value of \['auto','pet','people','person and pet','person','group','couple','family','car','custom'\]/);
  assert.equal(wizard.includes('Browse all subjects ↓'),false);
- assert.match(html,/data-launch-build="RM-056"/);
+ assert.match(html,/data-launch-build="RM-150"/);
 });
 
 test('simple subjects retain deliberate multi-reference labeling',()=>{

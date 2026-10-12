@@ -332,3 +332,6 @@ RM148 — Final readiness review: live Shopify both test orders paid/fulfilled, 
 
 
 RM149 — Safe website labels/metadata and iPhone development source updated to current service;525tests pass, hosted browser/iOS compile and release pending. No printing/automation changes. See [RM149](ASTRA-SESSION-RM-149.md).
+
+
+RM150 — Owner selects X support and confirms Apple membership. Public gift discovery guide, search metadata, sitemap/robots and clearer private order-number guidance; no commerce/runtime logic changes.525Node tests pass; hosted browser/release pending. See [RM150](ASTRA-SESSION-RM-150.md).

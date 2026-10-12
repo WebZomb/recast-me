@@ -338,6 +338,15 @@ const policy={highDaily:3,standardDaily:5,purchaseBonus:3,websiteCalls:70,social
    await page.screenshot({path:path.join(out,`${engine.name()}-${width}-rm140-subject.png`)});
    assert.deepEqual(errors,[]);
 
+   // New static discovery page must remain readable without the creator app.
+   await page.goto('http://recast.test/gift-ideas.html',{waitUntil:'networkidle'});
+   assert.equal(await page.locator('h1').count(),1);
+   assert.equal(await page.locator('link[rel="canonical"]').getAttribute('href'),'https://recastmeai.com/gift-ideas');
+   const giftWidth=await page.evaluate(()=>({scroll:document.documentElement.scrollWidth,width:innerWidth}));
+   assert.ok(giftWidth.scroll<=giftWidth.width+1,'Gift guide horizontal overflow '+JSON.stringify(giftWidth));
+   assert.equal(await page.locator('a[href="/#start"]').count(),3);
+   await page.screenshot({path:path.join(out,`${engine.name()}-${width}-rm150-gift-guide.png`),fullPage:true});
+   assert.deepEqual(errors,[]);
    report.checks.push({engine:engine.name(),width,hqOnly:true,outageHidesStandard:true,exhaustionWarning:true,bonusReturnsToHQ:true,collapsedEditsAndReset:true,adminSettingsSave:true,higherBudgetConfirmed:true,modelLabDemoDog:true,pageErrors:errors});
   }catch(e){report.failures.push({engine:engine.name(),width,error:e.stack,pageErrors:errors});await page.screenshot({path:path.join(out,`${engine.name()}-${width}-failure.png`)}).catch(()=>{});}
   await browser.close();
