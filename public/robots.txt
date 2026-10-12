@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /proof/
+
+Sitemap: https://recastmeai.com/sitemap.xml
