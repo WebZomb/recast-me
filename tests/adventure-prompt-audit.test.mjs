@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {ADVENTURE_GUIDES,adventureMode} from '../public/adventure-guides.js';
+import {AUTOMATIC_EDIT_PRESETS} from '../src/customer-identity.js';
 import {makeStandardAdventurePrompt} from '../src/standard-adventure-prompt.js';
 import {makeFalCompactPrompt} from '../src/fal-prompt.js';
 import {compactIdentity,makeIdentityFirstAdventurePrompt} from '../src/identity-first-adventure-prompt.js';
@@ -33,11 +34,12 @@ test('Accepted recipe preserves all 48 worlds and matches Standard exactly',asyn
   const prompt=makeStandardAdventurePrompt(args);
   assert.equal(prompt,customerIdentityPrompt(args));
   assert.ok(prompt.indexOf('Preserve each retained face')<prompt.indexOf('Background:'));
-  for(const part of ['scene','look'])assert.ok(prompt.includes(ADVENTURE_GUIDES[id][part]));
+  const preset=subjectType==='auto'?AUTOMATIC_EDIT_PRESETS[id]:null;
+  if(preset)assert.ok(prompt.includes(preset.scene));else for(const part of ['scene','look'])assert.ok(prompt.includes(ADVENTURE_GUIDES[id][part]));
   assert.match(prompt,/pets retain animal bodies and paws/);
   assert.match(prompt,/Include each subject once/);
   assert.ok(prompt.length<2200);
-  if(subjectType==='auto'){assert.ok(prompt.includes(ADVENTURE_GUIDES[id].pet));assert.ok(prompt.includes(ADVENTURE_GUIDES[id].person));assert.match(prompt,/visible reference faces/);}
+  if(subjectType==='auto'){if(preset)assert.ok(prompt.includes(preset.outfit));else {assert.ok(prompt.includes(ADVENTURE_GUIDES[id].pet));assert.ok(prompt.includes(ADVENTURE_GUIDES[id].person));}assert.match(prompt,/visible reference faces/);}
  }
  assert.doesNotMatch(site,/gender-choice|pet-gender|sex-choice/);
 });
@@ -92,7 +94,7 @@ test('Actual Standard and HQ Cloudflare model submissions receive the same short
    const response=await highQualityTransform(new Request('https://recast.test/api/transform-v2',{method:'POST',body:form}),env);
    assert.equal(response.status,200,qualityMode+' '+styleId);
    const result=await response.json();
-   assert.equal(result.promptVersion,'nano-identity-adventures-v6');
+   assert.equal(result.promptVersion,'identity-adventures-v7');
   }
   assert.equal(submitted.length,2,styleId+' only one call per selected quality');
   assert.equal(submitted[0].prompt,submitted[1].prompt);
@@ -179,7 +181,7 @@ test('Automatic photo mode needs no manual subject or paid classification pass',
   const result=await highQualityTransform(new Request('https://recast.test/api/transform-v2',{method:'POST',body:form}),env);
   assert.equal(result.status,200);
   const data=await result.json();
-  assert.equal(data.promptVersion,'nano-identity-adventures-v6');
+  assert.equal(data.promptVersion,'identity-adventures-v7');
   assert.equal(calls.length,1,'Use the same model edit, no extra subject-classifier request');
   assert.match(calls[0].prompt,/main people and pets with visible reference faces/);
   assert.match(calls[0].prompt,/eye shape and spacing, nose or muzzle/);
