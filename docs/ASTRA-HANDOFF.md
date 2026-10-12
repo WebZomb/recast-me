@@ -310,3 +310,12 @@ Live verification reopened existing public sample artwork RC-MV4XCYA3-31B4AC0F t
 Reloaded live admin System confirms Approved-order auto-print Enabled and Paid-order sync Enabled; X/trends/retention remain safely off. No new AI render, payment, order, alert message, fulfillment action or configuration flag change. Two supplier mockup requests only, using already-saved public sample art. Remaining priorities above remain open: real-device Safari, physical samples, alert inbox receipt/independent uptime, separate X and paid-credit gates.
 
 RM145 — Owner correction: larger bottom-anchored case v10, two mug copies meeting at printfile centre, styled royal dog case merchandising in site/Shopify.524tests/dry-run pass; deployment/live preview pending. Historical approved versions retained. See [RM145](ASTRA-SESSION-RM-145.md).
+
+
+## RM145 live receipt
+
+PR64 https://github.com/WebZomb/recast-me/pull/64 merged with final head f14a88b2b6e5261b1f21594066d2d8b12bec973f, tree0f40f906ba8f722d41643bb1455f11f35ca1b8a3, main/runtime ed74e670d9b722cba2d36f69697c1b47d43e67d9. Security38272255712 and customer WebKit/Chromium38272255865 PASS. Guarded deploy38272663477 including production smoke PASS; Worker7cd3808e-c92d-480f-81c7-879594070ce9. Post-merge read-only launch audit38272663536 still in progress at receipt.
+
+Actual live site now shows styled royal-dog case alongside other products; screenshot /workspace/scratch/recast-rm145-catalog.jpg. Shopify get-product readback confirms featured royal-dog art and all9previous model/SKU/price identities unchanged.
+
+Fresh browser has no prior saved artwork. Public hero file selected through normal no-AI upload, consent checked; submission stopped at human-verification requirement. No challenge click or bypass, no upload success, no supplier mockup submitted this turn. After deployment page reloaded to current scripts and prepared at visible checkbox; action-time CAPTCHA permission needed for remaining real mockup verification. Do not claim new v10 supplier preview verified. Owner may also test fresh mug/case previews normally.

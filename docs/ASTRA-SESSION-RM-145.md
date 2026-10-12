@@ -13,3 +13,12 @@ Shopify product15419162460404 image replaced with built-in imagegen royal Jack R
 Rollback recommendations/defaults/UI to prior version while retaining v10 compositor for any newly approved purchases. Shopify previous blank image available at https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-tough-case-glossy-rm143.jpg?v=1791788050; variant/SKU/price mappings unchanged.
 
 Final test pass initially caught stale app-v293 assertion after cache bump; updated it to intended v294. No runtime issue in that failure.
+
+
+## RM145 live receipt
+
+PR64 https://github.com/WebZomb/recast-me/pull/64 merged with final head f14a88b2b6e5261b1f21594066d2d8b12bec973f, tree0f40f906ba8f722d41643bb1455f11f35ca1b8a3, main/runtime ed74e670d9b722cba2d36f69697c1b47d43e67d9. Security38272255712 and customer WebKit/Chromium38272255865 PASS. Guarded deploy38272663477 including production smoke PASS; Worker7cd3808e-c92d-480f-81c7-879594070ce9. Post-merge read-only launch audit38272663536 still in progress at receipt.
+
+Actual live site now shows styled royal-dog case alongside other products; screenshot /workspace/scratch/recast-rm145-catalog.jpg. Shopify get-product readback confirms featured royal-dog art and all9previous model/SKU/price identities unchanged.
+
+Fresh browser has no prior saved artwork. Public hero file selected through normal no-AI upload, consent checked; submission stopped at human-verification requirement. No challenge click or bypass, no upload success, no supplier mockup submitted this turn. After deployment page reloaded to current scripts and prepared at visible checkbox; action-time CAPTCHA permission needed for remaining real mockup verification. Do not claim new v10 supplier preview verified. Owner may also test fresh mug/case previews normally.
