@@ -157,7 +157,7 @@ function productDesign(card){
   const scale=Number(card?.querySelector?.("[data-design-scale]")?.value||preset.scale);
   const spacing=card?.querySelector?.("[data-design-spacing]")?.value||preset.spacing;
   const fill=card?.querySelector?.("[data-design-fill]")?.value||preset.fill;
-  return {version:preset.product==="Mug"?11:(preset.caseType==="tough"&&layout!=="cover")?10:preset.product==="Sticker Sheet"?8:(preset.product==="Hardcover Journal"||(preset.product==="Phone Case"&&preset.caseType!=="tough"&&layout!=="cover"))?7:6,product:preset.product,layout,fill,x,scale,spacing,...(["Poster","Framed Poster","Canvas","Puzzle"].includes(preset.product)?{orientation:"portrait"}:{}),...(preset.finish?{finish:card?.querySelector?.("[data-design-finish]")?.value||preset.finish}:{})};
+  return {version:preset.product==="Mug"?12:(preset.caseType==="tough"&&layout!=="cover")?10:preset.product==="Sticker Sheet"?8:(preset.product==="Hardcover Journal"||(preset.product==="Phone Case"&&preset.caseType!=="tough"&&layout!=="cover"))?7:6,product:preset.product,layout,fill,x,scale,spacing,...(["Poster","Framed Poster","Canvas","Puzzle"].includes(preset.product)?{orientation:"portrait"}:{}),...(preset.finish?{finish:card?.querySelector?.("[data-design-finish]")?.value||preset.finish}:{})};
 }
 function designSignature(card,sku){return JSON.stringify({sku,design:productDesign(card)})}
 function designControlsMarkup(title,preset){
