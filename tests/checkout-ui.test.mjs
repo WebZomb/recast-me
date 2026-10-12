@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import vm from 'node:vm';
+import {normalizeProductDesign} from '../src/commerce-store.js';
 import {readFileSync} from 'node:fs';
 const source=readFileSync(new URL('../public/checkout.js',import.meta.url),'utf8');
 function setup(fetcher){
@@ -106,4 +107,19 @@ test('mockup failure is visible in an inline alert on touch devices',async()=>{
  app.context.mockupArgs={req:{requestId:'saved',accessToken:'test'},sku:'RECAST-MUG-11OZ',card:{dataset:{productTitle:'Custom Recast Mug',active:'false',digital:'false'},classList:{add(){},remove(){},contains(){return false}},querySelector:s=>s==='.product-art'?null:alert},button};
  await vm.runInNewContext('generateRealMockup(mockupArgs)',app.context);
  assert.equal(alert.hidden,false);assert.match(alert.textContent,/couldn't build this product preview/i);assert.doesNotMatch(alert.textContent,/Worker:|Stage:/);assert.equal(button.disabled,false);
+});
+
+
+test('phone full-back option uses full-bleed composition while safe layout stays versioned',()=>{
+ const ui=setup(async()=>catalog());
+ const make=layout=>({dataset:{productTitle:'Custom Recast Phone Case'},querySelector:s=>s==='[data-design-layout]'?{value:layout}:null});
+ ui.context.phoneCard=make('cover');
+ const full=vm.runInNewContext('productDesign(phoneCard)',ui.context);
+ assert.equal(full.layout,'cover');assert.equal(full.version,6);
+ assert.equal(normalizeProductDesign({product:'Phone Case'},full).background,'full-bleed');
+ ui.context.phoneCard=make('fit');
+ const safe=vm.runInNewContext('productDesign(phoneCard)',ui.context);
+ assert.equal(safe.layout,'fit');assert.equal(safe.version,7);
+ assert.equal(normalizeProductDesign({product:'Phone Case'},safe).version,7);
+ assert.match(source,/printed back, clear sides/);
 });
