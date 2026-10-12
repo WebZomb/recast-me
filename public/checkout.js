@@ -50,7 +50,7 @@ const PRODUCT_META = {
 
 const PRIMARY_PRODUCT_TITLES=new Set(["Custom Recast Mug","Custom Recast Blanket","Custom Recast Poster","Custom Recast Canvas"]);
 const PRODUCT_DESIGN_PRESETS = {
-  "Custom Recast Tough Phone Case": {product:"Phone Case",caseType:"tough",layout:"cover",fill:"full-bleed",x:"center",scale:100,spacing:"standard",label:"Full photo wrap · back and edges"},
+  "Custom Recast Tough Phone Case": {product:"Phone Case",caseType:"tough",layout:"fit",fill:"ambient",x:"center",scale:100,spacing:"standard",label:"Whole photo · camera-clear wrap"},
   "Custom Recast Hoodie": {product:"Hoodie",layout:"fit",fill:"transparent",x:"center",scale:100,spacing:"standard",finish:"soft",label:"Scene blend · soft fade into fabric"},
   "Custom Recast T-Shirt": {product:"T-Shirt",layout:"fit",fill:"transparent",x:"center",scale:100,spacing:"standard",finish:"soft",label:"Scene blend · soft fade into fabric"},
   "Custom Recast Mug": {product:"Mug",layout:"two-sided",fill:"ambient",x:"center",scale:110,spacing:"close",label:"Best setup · close two-sided wrap"},
@@ -157,7 +157,7 @@ function productDesign(card){
   const scale=Number(card?.querySelector?.("[data-design-scale]")?.value||preset.scale);
   const spacing=card?.querySelector?.("[data-design-spacing]")?.value||preset.spacing;
   const fill=card?.querySelector?.("[data-design-fill]")?.value||preset.fill;
-  return {version:preset.product==="Sticker Sheet"?8:(preset.product==="Hardcover Journal"||(preset.product==="Phone Case"&&preset.caseType!=="tough"&&layout!=="cover"))?7:6,product:preset.product,layout,fill,x,scale,spacing,...(["Poster","Framed Poster","Canvas","Puzzle"].includes(preset.product)?{orientation:"portrait"}:{}),...(preset.finish?{finish:card?.querySelector?.("[data-design-finish]")?.value||preset.finish}:{})};
+  return {version:preset.caseType==="tough"&&layout!=="cover"?9:preset.product==="Sticker Sheet"?8:(preset.product==="Hardcover Journal"||(preset.product==="Phone Case"&&preset.caseType!=="tough"&&layout!=="cover"))?7:6,product:preset.product,layout,fill,x,scale,spacing,...(["Poster","Framed Poster","Canvas","Puzzle"].includes(preset.product)?{orientation:"portrait"}:{}),...(preset.finish?{finish:card?.querySelector?.("[data-design-finish]")?.value||preset.finish}:{})};
 }
 function designSignature(card,sku){return JSON.stringify({sku,design:productDesign(card)})}
 function designControlsMarkup(title,preset){
@@ -166,7 +166,7 @@ function designControlsMarkup(title,preset){
   const wrap=['Custom Recast Mug','Custom Recast Tumbler'].includes(title);
   const apparel=Boolean(preset.finish);
   const journal=preset.product==="Hardcover Journal",phone=preset.product==="Phone Case";
-  const layoutOptions=preset.caseType==="tough"?`<option value="cover" selected>Full photo wrap · back and edges</option><option value="fit">Whole image + blended background</option>`:phone?`<option value="fit" selected>Whole image below camera opening</option><option value="cover">Fill the printable back · crops photo</option>`:journal?`<option value="fit" selected>Whole image on both covers</option>`:wrap
+  const layoutOptions=preset.caseType==="tough"?`<option value="fit" selected>Best setup · whole photo below camera</option><option value="cover">Edge-to-edge crop · check camera opening</option>`:phone?`<option value="fit" selected>Whole image below camera opening</option><option value="cover">Fill the printable back · crops photo</option>`:journal?`<option value="fit" selected>Whole image on both covers</option>`:wrap
     ? `<option value="two-sided" selected>Best setup · image on both sides</option><option value="wrap">Full wrap / full bleed</option><option value="single">One image</option><option value="fit">Keep whole image + blended background</option>`
     : `<option value="cover" selected>Best setup · fill the product</option><option value="fit">Keep whole image + background fill</option>`;
   const spacing=wrap?`<label data-design-spacing-wrap>Image spacing<select data-design-spacing><option value="close">Closer together</option><option value="standard" selected>Standard</option><option value="wide">Farther apart</option></select></label>`:"";
@@ -176,7 +176,7 @@ function designControlsMarkup(title,preset){
       <label data-layout-label>Layout<select data-design-layout>${layoutOptions}</select></label>
       ${apparel?`<label>Artwork finish<select data-design-finish><option value="soft">Scene blend · fade into fabric</option><option value="cutout">Subject cutout · no background</option><option value="rectangle">Original photo · straight edges</option></select></label><p class="apparel-finish-note">Scene blend keeps the full Recast sharp in the center and gradually dissolves the outer edges into the garment so there is no visible rectangular border. Cutout remains available for designs that work better without a scene.</p>`:""}
       ${spacing}
-      ${preset.caseType==="tough"?`<p class="product-mockup-note">Your photo wraps across the back and printable edges. Camera and port openings remain clear. Check faces and edge cropping in your preview.</p>`:phone?`<p class="product-mockup-note">Clear case: printed back, clear sides. Fill the back crops the photo; check faces and the camera opening in your preview.</p>`:""}
+      ${preset.caseType==="tough"?`<p class="product-mockup-note">Best setup keeps your whole photo below the camera, with blended colors wrapping around the edges. Edge-to-edge crop can hide faces behind the camera opening; check your preview.</p>`:phone?`<p class="product-mockup-note">Clear case: printed back, clear sides. Fill the back crops the photo; check faces and the camera opening in your preview.</p>`:""}
       <label data-design-fill-wrap hidden>Background fill<select data-design-fill><option value="ambient" selected>Blend artwork colors</option><option value="transparent" hidden>No added background</option><option value="dark">Dark fill</option><option value="light">Light fill</option><option value="full-bleed">Artwork edge fill</option></select></label>
       <label data-design-position-wrap>Image position<select data-design-x><option value="left">Left</option><option value="center" selected>Center</option><option value="right">Right</option></select></label>
       <label data-design-scale-wrap>Print-area size <strong data-design-scale-label>${preset.scale}%</strong><input data-design-scale type="range" min="75" max="${apparel||journal||phone?100:125}" step="${apparel?1:5}" value="${preset.scale}"></label>
@@ -276,10 +276,11 @@ function uniqueMockupViews(input=[],productTitle=""){
     if(!view?.url||seen.has(view.url)||/multi-product/i.test(`${view.group||""} ${view.title||""}`))continue;
     if(productTitle==='Custom Recast Blanket'&&/^Lifestyle(?: [2-5])?$/i.test(view.group||""))continue;
     seen.add(view.url);
-    const isScene=/lifestyle|room|interior|sofa|bed|kitchen|desk|home/i.test(`${view.group||""} ${view.title||""}`);
-    const key=isScene?`${view.group||""}|${view.title||""}`:viewLabel(view.title,output.length);
+    const casePreview=productTitle==='Custom Recast Tough Phone Case';
+    const isScene=!casePreview&&/lifestyle|room|interior|sofa|bed|kitchen|desk|home/i.test(`${view.group||""} ${view.title||""}`);
+    const key=casePreview?`${view.group||""}|${view.title||""}`:isScene?`${view.group||""}|${view.title||""}`:viewLabel(view.title,output.length);
     if(labels.has(key))continue;labels.add(key);
-    const label=isScene?(++scenes===1?"In a room":`Room view ${scenes}`):viewLabel(view.title,output.length);
+    const label=casePreview?(output.length===0?"Case":`View ${output.length+1}`):isScene?(++scenes===1?"In a room":`Room view ${scenes}`):viewLabel(view.title,output.length);
     output.push({...view,label,isScene});if(output.length===4)break;
   }
   return output;
@@ -291,6 +292,7 @@ function showProductView(card,img,view,close=true){
 }
 function designSummary(card){
   const d=productDesign(card),parts=[];
+  if(d.version===9&&d.product==="Phone Case")return "Whole photo below camera · blended wrap";
   if(d.product==="Sticker Sheet")return "Six whole pictures · 2 columns × 3 rows · safe peel spacing";
   parts.push(d.layout==="two-sided"?"Two-sided wrap":d.layout==="wrap"?"Full wrap":d.layout==="cover"?"Full bleed":d.layout==="fit"?"Keep whole image":"One image");
   if(d.layout==="two-sided")parts.push(d.spacing==="close"?"Closer spacing":d.spacing==="wide"?"Wider spacing":"Standard spacing");

@@ -1,5 +1,5 @@
 /* RM052 — bounded media stages. The image is not an auto-minimum grid row. */
-#product-grid.checkout-catalog{gap:24px!important;align-items:start!important}
+#product-grid.checkout-catalog{display:grid!important;gap:24px!important;align-items:start!important}
 #product-grid.checkout-catalog .product{border-radius:24px!important;isolation:isolate;overflow:hidden!important}
 #product-grid.checkout-catalog .product .product-art{
   display:block!important;position:relative!important;width:100%!important;

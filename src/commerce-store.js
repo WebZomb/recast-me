@@ -27,7 +27,7 @@ export function privateJson(data,status=200,extra={}){return Response.json(data,
 
 export function recommendedProductDesign(map={}){
   const product=String(map?.product||'Generic');
-  if(product==='Phone Case'&&map.caseType==='tough')return {layout:'cover',fill:'full-bleed',x:'center',scale:100,spacing:'standard'};
+  if(product==='Phone Case'&&map.caseType==='tough')return {layout:'fit',fill:'ambient',x:'center',scale:100,spacing:'standard'};
   if(product==='Mug')return {layout:'two-sided',fill:'ambient',x:'center',scale:110,spacing:'close'};
   if(product==='Tumbler')return {layout:'two-sided',fill:'ambient',x:'center',scale:108,spacing:'standard'};
   if(product==='Blanket')return {layout:'fit',fill:'ambient',x:'center',scale:110,spacing:'standard'};
@@ -37,7 +37,7 @@ export function recommendedProductDesign(map={}){
 // Current customer presets, explicitly versioned; fast checkout never accepts custom layout.
 export function recommendedCheckoutDesign(map={}){
  const product=map.product||'Generic';
- const base={version:6,...recommendedProductDesign(map)};
+ const base={version:map.caseType==='tough'?9:6,...recommendedProductDesign(map)};
  if(['Hoodie','T-Shirt'].includes(product))Object.assign(base,{layout:'fit',fill:'transparent',scale:100,finish:'soft'});
  if(product==='Canvas')Object.assign(base,{layout:'fit',fill:'ambient',scale:90});
  if(['Poster','Framed Poster','Canvas','Puzzle'].includes(product))base.orientation='portrait';
@@ -49,6 +49,13 @@ export function normalizeProductDesign(map,raw={}){
   const product=String(map?.product||'Generic'),recommended=recommendedProductDesign(map);
   const rawVersion=Number(raw?.version||0);
   if(product==='Sticker Sheet')return {version:8,layout:'six-pictures',background:'transparent',fill:'transparent',x:'center',scale:100,spacing:'safe',product};
+  // Version9 is self-contained: preview-source and paid finishing pass only product.
+  // New recommendations never reinterpret previously approved v6/v7 layouts.
+  if(rawVersion===9&&product==='Phone Case'){
+    const n=Number(raw.scale),scale=Math.round(Math.max(70,Math.min(100,Number.isFinite(n)?n:100)));
+    const fill=['ambient','dark','light'].includes(raw.fill)?raw.fill:'ambient';
+    return {version:9,layout:'fit',background:fill,fill,x:'center',scale,spacing:'standard',product};
+  }
   if(rawVersion===7&&['Hardcover Journal','Phone Case'].includes(product)){
     const n=Number(raw.scale),scale=Math.round(Math.max(70,Math.min(100,Number.isFinite(n)?n:100)));
     const fill=['ambient','dark','light'].includes(raw.fill)?raw.fill:'ambient';
@@ -179,6 +186,19 @@ export async function composeProductLayout(env,sourceBytes,sourceSize,area,map={
     const canvas=await transparentCanvas(outWidth,outHeight);
     const chain=env.IMAGES.input(new Blob([canvas],{type:'image/png'}).stream()).draw(overlay,{left,top});
     return {bytes:await pngOutput(chain),mime:'image/png',design,outputSize:{width:outWidth,height:outHeight},method:'apparel-v5-'+design.finish};
+  }
+  if(design.version===9&&design.product==='Phone Case'){
+    // Supplier 601 uses printfile331 across these verified models. Keep ALL source
+    // pixels in a conservative lower-back rectangle, not merely detected faces.
+    // The backdrop alone reaches camera openings, curved edges and print bleed.
+    if(Math.abs(area.width/area.height-1392/2220)>.001)throw fault('phone_template_changed','This case template needs a supplier review.',503);
+    const base=design.fill==='light'?LIGHT_BG_PNG:MUG_BG_PNG;
+    let chain=env.IMAGES.input(new Blob([base],{type:'image/png'}).stream()).transform({width:outWidth,height:outHeight,fit:'cover'});
+    if(design.fill==='ambient')chain=chain.draw(env.IMAGES.input(stream()).transform({width:outWidth,height:outHeight,fit:'cover',blur:180}),{left:0,top:0,opacity:0.58});
+    const fitted=fitDimensions(sourceSize.width,sourceSize.height,outWidth*.74*design.scale/100,outHeight*.47*design.scale/100);
+    const box={left:Math.round((outWidth-fitted.width)/2),top:Math.round(outHeight*.40+(outHeight*.47-fitted.height)/2),...fitted};
+    chain=chain.draw(env.IMAGES.input(stream()).transform({width:box.width,height:box.height,fit:'contain'}),{left:box.left,top:box.top});
+    return {bytes:await jpegBytes(chain),design,outputSize:{width:outWidth,height:outHeight},artworkBox:box,method:'phone-v9-camera-clear-wrap'};
   }
   if(design.version===7&&design.product==='Phone Case'){
     // Reserve the upper 32% for the verified clear-case camera openings.
