@@ -76,3 +76,11 @@ test('generation freezes selection and detector failure leaves editable automati
  const x=ui();x.upload();await tick();x.detection.freeze();x.waiting[0](Response.json({subject:'pet'}));await tick();assert.equal(x.subject.value,'auto');
  const y=ui();y.upload();await tick();y.waiting[0](Response.json({subject:'auto'},{status:503}));await tick();assert.equal(y.subject.value,'auto');assert.match(y.status.textContent,/Change/);
 });
+
+test('public router keeps analysis outside image-generation credit/call/budget reservations',async()=>{
+ const {default:router}=await import('../src/router.js');
+ const {env,calls}=await environment({RENDER_CREDITS_ENABLED:'true',AI_DAILY_CALL_LIMIT:'0',AI_DAILY_BUDGET_CENTS:'0',AI_CALL_RESERVE_CENTS:'7'});
+ const response=await router.fetch(request(),env,{});
+ assert.equal(response.status,200,await response.clone().text());assert.equal((await response.json()).subject,'pet');assert.equal(calls.length,2);
+ assert.ok(![...env.ARTWORK.objects.keys()].some(k=>/security\/ai-(calls|budget)|commerce\/wallet/.test(k)));
+});

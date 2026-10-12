@@ -289,6 +289,9 @@ export function secureApplication(application) {
           // The existing entitlement path serves the exact stored artwork.
           return hardened(await application.fetch(request, env, ctx));
         }
+        // Photo analysis has its own strict body, origin, atomic cache and spending caps.
+        // It must not reserve picture-generation calls or credits through the image wrapper.
+        if(path==='/api/subject-detection'&&request.method==='POST')return hardened(await application.fetch(request,env,ctx));
         const generation = request.method === 'POST' && ['/api/transform', '/api/transform-v2', '/api/admin/model-test'].includes(path);
         let fingerprint = null;
         if (generation) {
