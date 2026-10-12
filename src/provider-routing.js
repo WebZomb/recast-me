@@ -81,7 +81,7 @@ export async function recordProviderResult(env,host,status,reason=null){
  const model=host===FAL&&env.FAL_CUSTOMER_MODEL==='nano-banana'&&env.RECAST_OWNER_PILOT_REQUEST!=='true'?(env.RECAST_HQ_SELECTED_MODEL||'nano-banana'):null;
  const key=PROVIDER_HEALTH_PREFIX+(model||host)+'.json',current=await jsonObject(env,key),now=new Date().toISOString();
  const payload={host,status,reason,checkedAt:now,lastSuccessAt:status==='success'?now:current?.lastSuccessAt||null,lastFailureAt:status==='failed'?now:current?.lastFailureAt||null};
- try{await env.ARTWORK.put(key,JSON.stringify(payload),{httpMetadata:{contentType:'application/json'}});if(model)await env.ARTWORK.put(PROVIDER_HEALTH_PREFIX+host+'.json',JSON.stringify({...payload,model}),{httpMetadata:{contentType:'application/json'}})}catch{}
+ try{await env.ARTWORK.put(key,JSON.stringify(payload),{httpMetadata:{contentType:'application/json'}});if(model&&model!=='flux-2-dev')await env.ARTWORK.put(PROVIDER_HEALTH_PREFIX+host+'.json',JSON.stringify({...payload,model}),{httpMetadata:{contentType:'application/json'}})}catch{}
 }
 
 // A deliberate successful owner comparison can reopen a model without a paid health probe.

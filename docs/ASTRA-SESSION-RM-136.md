@@ -22,3 +22,5 @@ First local pass hit a syntax typo in readiness ternary; fixed. Next 499-test ru
 ## Rollback
 
 Remove `FAL_HQ_BACKUP_MODEL` to disable the new model backup; Nano remains lead. Revert this runtime patch to restore RM135 Standard text/routing while retaining Nano v6. Do not erase job ledger, overwrite approved artwork or replay accepted/uncertain jobs. Runtime deployment pending at this entry.
+
+Pre-release review caught a legacy-health migration edge: a successful backup could overwrite the old Nano-only host record before a Nano model record existed. Corrected by keeping FLUX success exclusively in its model record; a dedicated migration regression now passes. Final local suite 505/505 PASS. First PR-head security CI passed; customer browser CI still running when corrected head prepared. Final-head CI required before merge.

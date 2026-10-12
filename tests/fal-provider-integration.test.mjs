@@ -119,3 +119,12 @@ test('Deliberate owner recovery reopens Nano without rewriting FLUX health',asyn
  assert.equal((await selectHighQualityProvider(env,await submission('unused').formData())).customerModel,'nano-banana');
  assert.equal(await env.ARTWORK.get('system/providers/hq-flux-2-dev.json'),null);
 });
+
+test('Backup success cannot erase a migrated legacy Nano outage',async()=>{
+ const {recordProviderResult}=await import('../src/provider-routing.js');
+ const env=envConfig({FAL_CUSTOMER_MODEL:'nano-banana',FAL_HQ_BACKUP_MODEL:'flux-2-dev'}),form=await submission('unused').formData();
+ await env.ARTWORK.put('system/providers/hq-fal.json',JSON.stringify({status:'failed',reason:'capacity'}));
+ assert.equal((await selectHighQualityProvider(env,form)).customerModel,'flux-2-dev');
+ await recordProviderResult({...env,RECAST_HQ_SELECTED_MODEL:'flux-2-dev'},'fal','success');
+ assert.equal((await selectHighQualityProvider(env,form)).customerModel,'flux-2-dev');
+});
