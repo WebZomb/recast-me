@@ -22,6 +22,10 @@
     "RENDER_CREDITS_ENABLED": "true",
     "CREDIT_PACKS_ENABLED": "true",
     "SITE_ANALYTICS_ENABLED": "true",
+    "SUBJECT_DETECTION_ENABLED": "true",
+    "SUBJECT_DETECTION_ACCEPT_META_LICENSE": "true",
+    "SUBJECT_DETECTION_DAILY_LIMIT": "200",
+    "SUBJECT_DETECTION_NETWORK_LIMIT": "20",
     "CREDIT_SALES_ENABLED": "false",
     "CREDIT_TEST_CHECKOUT_ENABLED": "false",
     "RENDER_CREDITS_STORAGE_SALT": "true",
@@ -65,6 +69,7 @@
   },
   "images": { "binding": "IMAGES" },
   "ratelimits": [
+    {"name":"SUBJECT_RATE_LIMITER","namespace_id":"5302","simple":{"limit":12,"period":60}},
     {
       "name": "RENDER_RATE_LIMITER",
       "namespace_id": "5301",
