@@ -123,3 +123,11 @@ test('phone full-back option uses full-bleed composition while safe layout stays
  assert.equal(normalizeProductDesign({product:'Phone Case'},safe).version,7);
  assert.match(source,/printed back, clear sides/);
 });
+
+ test('Tough Case frontend and fast checkout agree on full-wrap default',async()=>{
+ const {FULFILLMENT}=await import('../src/entry.js');const {recommendedCheckoutDesign}=await import('../src/commerce-store.js');
+ const ui=setup(catalog);ui.context.toughCard={dataset:{productTitle:'Custom Recast Tough Phone Case'},querySelector:()=>null};
+ const design=vm.runInNewContext('productDesign(toughCard)',ui.context);
+ assert.deepEqual(normalizeProductDesign(FULFILLMENT['RECAST-TOUGH-IP14'],design),recommendedCheckoutDesign(FULFILLMENT['RECAST-TOUGH-IP14']));
+ assert.equal(design.layout,'cover');assert.equal(design.version,6);
+ });
