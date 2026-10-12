@@ -129,7 +129,7 @@ test('phone full-back option uses full-bleed composition while safe layout stays
  const ui=setup(catalog);ui.context.toughCard={dataset:{productTitle:'Custom Recast Tough Phone Case'},querySelector:()=>null};
  const design=vm.runInNewContext('productDesign(toughCard)',ui.context);
  assert.deepEqual(normalizeProductDesign(FULFILLMENT['RECAST-TOUGH-IP14'],design),recommendedCheckoutDesign(FULFILLMENT['RECAST-TOUGH-IP14']));
- assert.equal(design.layout,'fit');assert.equal(design.version,9);
+ assert.equal(design.layout,'fit');assert.equal(design.version,10);
  });
 
  test('case alternate previews use neutral labels and explicit crop is not the recommended setup',()=>{

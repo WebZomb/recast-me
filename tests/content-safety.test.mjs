@@ -43,7 +43,7 @@ test('X original-product intent avoids AI; requested AI transformation stays exp
   assert.equal(socialIntent('send me any product with this picture').product.sku,'RECAST-MUG-11OZ');
   assert.equal(socialIntent('make AI artwork of my dog on a mug').mode,'ai');
   assert.equal(socialIntent('put this photo on a journal').product.design.version,7);
-  const phone=socialIntent('put it on a phone case').product;assert.equal(phone.design.version,9);assert.equal(phone.design.layout,'fit');assert.equal(phone.sku,'RECAST-TOUGH-IP14');
+  const phone=socialIntent('put it on a phone case').product;assert.equal(phone.design.version,10);assert.equal(phone.design.layout,'fit');assert.equal(phone.sku,'RECAST-TOUGH-IP14');
 });
 test('gift fulfillment uses recipient shipping details and buyer email, never buyer billing address',()=>{
   const recipient=recipientFromOrder({email:'buyer@example.test',shippingAddress:{firstName:'Gift',lastName:'Recipient',address1:'123 Recipient Road',city:'Philadelphia',countryCodeV2:'US',zip:'19103'},billingAddress:{name:'Buyer',address1:'999 Billing Street'}});
