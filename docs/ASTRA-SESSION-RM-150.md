@@ -11,3 +11,5 @@ Search-intent review covers custom pet portraits, AI dog/cat portraits, gifts fo
 Remaining: Search Console property verification and sitemap submission need owner account connection; rankings and index inclusion not guaranteed. Existing SPA fallback may return homepage for unknown paths; left unchanged to avoid breaking legacy links, homepage canonical consolidates these but a future routing inventory should precede stricter404 behavior. Native app signing, privacy/storefront decisions and physical purchase acceptance remain separate.
 
 Rollback: revert this small static-content release. No data migration or production-settings change.
+
+Validation correction: initial525passed before release-marker change; PR run38311511701 then caught two tests pinned to old RM056 marker. Updated their expected marker to RM150 (checks preserved) and reran all525successfully. Hosted browser retry pending. Previous RM149 live audit38310283654 is now verified PASS.
