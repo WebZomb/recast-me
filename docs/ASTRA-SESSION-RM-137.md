@@ -17,3 +17,9 @@ Tests cover exact lab/preset equality, all-48 scene contracts with deliberate ov
 ## Release / rollback
 
 Publication pending. Revert RM137 to restore RM136 automatic preset text. Preserve original photos, generated art and ledger. Do not regenerate purchased artwork. Next owner test: normal-site fresh upload with default Automatic and Dinosaur; no manual crop or customer description required.
+
+## Final release receipt
+
+PR #54 head `56a37bb8f2edb36edcac435a77724e1010c63277`, exact local/remote tree `b3cfa7b5bbca878d964fdcc56d1748c8a128f7b3`, main `d56e86b1c8c8bbdf6dc6bbaaae1503edfebd00ae`. Security `38198141140` and customer/mobile-browser policy `38198141142` PASS. Guarded deployment `38198365411` PASS: 507 tests, dry-run, deploy and production read-only smoke. Worker reported `883d4900-38d6-4bf7-abea-5ec74edbd30e` at 2026-10-12T03:05:52Z. Public launch audit `38198365473` still running at receipt; not claimed pass.
+
+Reviewed upload path: default Automatic/fresh single photo supplies neither explicit reference labels nor face-selection notes; these remain optional customer controls. Thus default Royal/Dinosaur text can match the lab exactly. No actual new paid output tested by assistant. Ready for owner fresh-original/default-Automatic Dinosaur test through normal site; visual success remains open.
