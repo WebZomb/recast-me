@@ -74,7 +74,3 @@
 #recast-form .adventure-extra-actions .button{display:flex;flex-direction:column;min-width:0;width:100%;margin:0!important;overflow:hidden;padding:0!important;white-space:normal;border-radius:18px;gap:0}
 #recast-form .adventure-extra-actions img{width:100%;height:110px;object-fit:cover}
 #recast-form .adventure-extra-actions strong{display:block;padding:16px 8px;font-size:16px;line-height:1.3}
-@media(max-width:600px){
- .hero-glow{display:none!important}
- .site-header,.create-card,.product,.callout{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
-}
