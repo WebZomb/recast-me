@@ -326,3 +326,6 @@ Fresh browser has no prior saved artwork. Public hero file selected through norm
 
 
 RM147 — Owner-selected whole-photo/dark-fill/100% defaults for tote, pillow, blanket; clear optional full-product crop. Existing compositor and approved layouts retained. Release pending; see [RM147](ASTRA-SESSION-RM-147.md).
+
+
+RM148 — Final readiness review: live Shopify both test orders paid/fulfilled, RM147 public audit verified successful,77focused commerce/alert/UI tests pass. No runtime changes. Support inbox, alert delivery/uptime, share-card polish and actual purchase/sample checks remain; see [RM148](ASTRA-SESSION-RM-148.md).
