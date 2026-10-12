@@ -16,7 +16,7 @@ test('fal-shaped JPEG fixture: screened twice, 1 queue POST, private R2, waterma
   calls.push({url:String(url),method:options.method||'GET'});
   if(String(url).startsWith('https://api.openai.com/v1/moderations'))return content();
   if(String(url)==='https://queue.fal.run/fal-ai/flux-2/edit'){
-   const json=JSON.parse(options.body);assert.equal(json.num_inference_steps,18);assert.equal(json.image_urls.length,1);assert.ok(json.prompt.length<2500);assert.match(json.prompt,/royal/i);assert.match(json.prompt,/Same actual pet: keep exact eyes/i);assert.equal(json.image_size.width,1024);
+   const json=JSON.parse(options.body);assert.equal(json.num_inference_steps,18);assert.equal(json.image_urls.length,1);assert.ok(json.prompt.length<2500);assert.match(json.prompt,/royal/i);assert.match(json.prompt,/Preserve each retained face/i);assert.equal(json.image_size.width,1024);
    assert.equal(new Headers(options.headers).get('X-Fal-No-Retry'),'1');assert.equal(new Headers(options.headers).get('X-Fal-Store-IO'),'0');
    return Response.json({request_id:JOB,status_url:BASE+'/requests/'+JOB+'/status',response_url:BASE+'/requests/'+JOB});
   }
@@ -29,7 +29,7 @@ test('fal-shaped JPEG fixture: screened twice, 1 queue POST, private R2, waterma
  assert.equal(result.status,200,JSON.stringify(data).slice(0,500));assert.equal(data.providerUsed,'fal');assert.equal(data.watermarked,true);
  assert.equal(data.image,'data:image/jpeg;base64,'+MARKED.toString('base64'));
  const meta=await(await env.ARTWORK.get('requests/'+data.requestId+'/request.json')).json();
- assert.equal(meta.providerUsed,'fal');assert.equal(meta.promptVersion,'identity-first-48-worlds-v1');
+ assert.equal(meta.providerUsed,'fal');assert.equal(meta.promptVersion,'nano-identity-adventures-v6');
  assert.equal(meta.safety.inputScreening.status,'passed');assert.equal(meta.safety.outputScreening.status,'passed');
  const original=await env.ARTWORK.get('requests/'+data.requestId+'/preview.b64');assert.equal(await original.text(),OUTPUT.toString('base64'));
  const balanced=await(await router.fetch(cookieReq(cookie),env,{})).json();assert.equal(balanced.remaining,2);
@@ -71,4 +71,60 @@ test('failed accepted fal request records one job, refunds credit, never submits
  const cookie=await initWallet(env),r=await router.fetch(submission(cookie,'FAIL-URL'),env,{});assert.equal(submits,1);assert.equal(r.status,500);const balance=await(await router.fetch(cookieReq(cookie),env,{})).json();assert.equal(balance.remaining,3);
  const objects=await env.ARTWORK.list({prefix:'system/providers/fal-jobs/'});assert.equal(objects.objects.length,1);
  const job=await(await env.ARTWORK.get(objects.objects[0].key)).json();assert.equal(job.status,'completed_output_unavailable');assert.equal(job.requestId,JOB);
+});
+
+test('Nano lead and FLUX backup selection blocks unknown, ambiguous, billing and policy failures',async()=>{
+ const env=envConfig({FAL_CUSTOMER_MODEL:'nano-banana',FAL_HQ_BACKUP_MODEL:'flux-2-dev'}),form=await submission('unused').formData();
+ const key='system/providers/hq-nano-banana.json';
+ for(const state of [{status:'pending',reason:'awaiting_result'},{status:'failed',reason:'quota'},{status:'failed',reason:'moderation'},{status:'failed',reason:'timeout'}]){
+  await env.ARTWORK.put(key,JSON.stringify(state));await assert.rejects(selectHighQualityProvider(env,form));
+ }
+ await env.ARTWORK.put(key,JSON.stringify({status:'success'}));assert.equal((await selectHighQualityProvider(env,form)).customerModel,'nano-banana');
+ await env.ARTWORK.put(key,JSON.stringify({status:'failed',reason:'capacity'}));assert.equal((await selectHighQualityProvider(env,form)).customerModel,'flux-2-dev');
+ await env.ARTWORK.put('system/providers/hq-flux-2-dev.json',JSON.stringify({status:'failed',reason:'unavailable'}));await assert.rejects(selectHighQualityProvider(env,form));
+ await env.ARTWORK.put(key,JSON.stringify({status:'success'}));assert.equal((await selectHighQualityProvider(env,form)).customerModel,'nano-banana');
+});
+test('Known Nano outage makes one FLUX request with accepted prompt, screening, watermark and one credit',async t=>{
+ const env=envConfig({FAL_CUSTOMER_MODEL:'nano-banana',FAL_HQ_BACKUP_MODEL:'flux-2-dev'});let posts=0;
+ await env.ARTWORK.put('system/providers/hq-nano-banana.json',JSON.stringify({status:'failed',reason:'capacity'}));
+ t.mock.method(globalThis,'fetch',async(url,options={})=>{
+  if(String(url).includes('/moderations'))return content();
+  if(options.method==='POST'){posts++;assert.equal(String(url),BASE+'/edit');const input=JSON.parse(options.body);assert.match(input.prompt,/Preserve each retained face/);return Response.json({request_id:JOB,status_url:BASE+'/requests/'+JOB+'/status',response_url:BASE+'/requests/'+JOB});}
+  if(String(url).endsWith('/status'))return Response.json({status:'COMPLETED'});
+  return Response.json({images:[{width:1024,height:1280,url:'data:image/jpeg;base64,'+OUTPUT.toString('base64')}],has_nsfw_concepts:[false]});
+ });
+ const cookie=await initWallet(env),response=await router.fetch(submission(cookie,'BACKUP-ONE'),env,{}),data=await response.json();
+ assert.equal(response.status,200,JSON.stringify(data));assert.equal(posts,1);assert.equal(data.modelUsed,'fal-ai/flux-2/edit');assert.equal(data.promptVersion,'nano-identity-adventures-v6');assert.equal(data.watermarked,true);assert.match(data.qualityLabel,/FLUX backup/);
+ assert.equal((await(await router.fetch(cookieReq(cookie),env,{})).json()).remaining,2);
+ assert.equal((await(await env.ARTWORK.get('system/providers/hq-nano-banana.json')).json()).status,'failed');
+ assert.equal((await(await env.ARTWORK.get('system/providers/hq-flux-2-dev.json')).json()).status,'success');
+});
+for(const mode of ['429','503','lost-ack'])test('Nano '+mode+' makes no second dispatch and only definite rejection permits next-request backup',async t=>{
+ const env=envConfig({FAL_CUSTOMER_MODEL:'nano-banana',FAL_HQ_BACKUP_MODEL:'flux-2-dev'});let posts=0;
+ await env.ARTWORK.put('system/providers/hq-fal.json',JSON.stringify({status:'success'}));
+ t.mock.method(globalThis,'fetch',async(url,options={})=>{
+  if(String(url).includes('/moderations'))return content();
+  posts++;assert.equal(String(url),'https://queue.fal.run/fal-ai/nano-banana/edit');
+  if(mode==='lost-ack')throw Error('network lost');return new Response('',{status:Number(mode)});
+ });
+ const cookie=await initWallet(env),response=await router.fetch(submission(cookie,'FAIL-'+mode),env,{});assert.ok(response.status>=400);assert.equal(posts,1);
+ const form=await submission('unused').formData();
+ if(mode==='429')assert.equal((await selectHighQualityProvider(env,form)).customerModel,'flux-2-dev');else await assert.rejects(selectHighQualityProvider(env,form));
+});
+test('Deliberate owner recovery reopens Nano without rewriting FLUX health',async()=>{
+ const {recordModelRecovery}=await import('../src/provider-routing.js');
+ const env=envConfig({FAL_CUSTOMER_MODEL:'nano-banana',FAL_HQ_BACKUP_MODEL:'flux-2-dev'});
+ await env.ARTWORK.put('system/providers/hq-nano-banana.json',JSON.stringify({status:'pending'}));
+ await recordModelRecovery(env,'nano-banana');
+ assert.equal((await selectHighQualityProvider(env,await submission('unused').formData())).customerModel,'nano-banana');
+ assert.equal(await env.ARTWORK.get('system/providers/hq-flux-2-dev.json'),null);
+});
+
+test('Backup success cannot erase a migrated legacy Nano outage',async()=>{
+ const {recordProviderResult}=await import('../src/provider-routing.js');
+ const env=envConfig({FAL_CUSTOMER_MODEL:'nano-banana',FAL_HQ_BACKUP_MODEL:'flux-2-dev'}),form=await submission('unused').formData();
+ await env.ARTWORK.put('system/providers/hq-fal.json',JSON.stringify({status:'failed',reason:'capacity'}));
+ assert.equal((await selectHighQualityProvider(env,form)).customerModel,'flux-2-dev');
+ await recordProviderResult({...env,RECAST_HQ_SELECTED_MODEL:'flux-2-dev'},'fal','success');
+ assert.equal((await selectHighQualityProvider(env,form)).customerModel,'flux-2-dev');
 });

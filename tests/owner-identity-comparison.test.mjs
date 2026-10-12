@@ -41,7 +41,7 @@ test('owner experiments fail before paid calls without authentication, activatio
 });
 test('public forged experiment selection leaves production model and prompt intact',async t=>{
  const e=env(),calls=mock(t,{nano:false});await e.ARTWORK.put('system/providers/hq-fal.json',JSON.stringify({status:'success',lastSuccessAt:new Date().toISOString()}));
- const r=await router.fetch(req({admin:false,path:'/api/transform-v2'}),e,{}),d=await r.json();assert.equal(r.status,200,JSON.stringify(d));assert.equal(d.modelUsed,'@cf/black-forest-labs/flux-2-dev');assert.notEqual(d.promptVersion,'owner-identity-edit-v1');
+ const r=await router.fetch(req({admin:false,path:'/api/transform-v2'}),e,{}),d=await r.json();assert.equal(r.status,200,JSON.stringify(d));assert.equal(d.modelUsed,'fal-ai/flux-2/edit');assert.notEqual(d.promptVersion,'owner-identity-edit-v1');
  const input=JSON.parse(calls.find(c=>c.url.endsWith('/flux-2/edit')).body);assert.equal(input.guidance_scale,5);assert.equal(input.num_inference_steps,18);
 });
 for(const problem of ['fail','remote','badCallback','blockedOutput'])test('candidate '+problem+' fails closed, no second paid call or public provider outage',async t=>{

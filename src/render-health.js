@@ -1,5 +1,5 @@
 import {budgetStatus} from './render-controls.js';
-import {providerHealth} from './provider-routing.js';
+import {providerHealth,selectFalCustomerModel} from './provider-routing.js';
 const PREFIX='system/render-health',LEGACY_KEY='system/render-health.json',MODES=new Set(['high','quick','social']);
 const BLOCKING_REASONS=new Set(['capacity','quota','timeout','unavailable']);
 const modeName=m=>MODES.has(m)?m:'high',key=m=>`${PREFIX}-${modeName(m)}.json`,scopedKey=(env,m)=>m==='high'&&['fal','cloudflare'].includes(env.RECAST_HQ_SELECTED_PROVIDER)?`${PREFIX}-high-${env.RECAST_HQ_SELECTED_PROVIDER}.json`:key(m),nowMs=n=>n instanceof Date?n.getTime():Number(n??Date.now()),parseMs=v=>{const n=Date.parse(v||'');return Number.isFinite(n)?n:0};
@@ -20,7 +20,9 @@ export async function renderHealth(env,mode='high',now=Date.now()){
    const mode=env.RECAST_HQ_PROVIDER,health=await providerHealth(env);
    const approvedFal=(env.FAL_PROVIDER_VERIFIED==='true'||env.RECAST_OWNER_PILOT_REQUEST==='true')&&env.FAL_PROVIDER_ENABLED==='true'&&Boolean(env.FAL_API_KEY);
    const approvedCf=env.CF_PROVIDER_VERIFIED==='true';
-   const falReady=approvedFal&&(env.RECAST_OWNER_PILOT_REQUEST==='true'||health.fal?.status==='success');
+   let modelReady=null;
+   if(mode==='fal'&&env.FAL_CUSTOMER_MODEL==='nano-banana'&&env.FAL_HQ_BACKUP_MODEL==='flux-2-dev'&&env.RECAST_OWNER_PILOT_REQUEST!=='true'){try{await selectFalCustomerModel(env);modelReady=true}catch{modelReady=false}}
+   const falReady=approvedFal&&(modelReady===null?(env.RECAST_OWNER_PILOT_REQUEST==='true'||health.fal?.status==='success'):modelReady);
    const cfReady=approvedCf&&health.cloudflare?.status==='success';
    const ready=mode==='fal'?falReady:falReady||cfReady;
    const result=mode==='fal'?health.fal:(falReady?health.fal:health.cloudflare);

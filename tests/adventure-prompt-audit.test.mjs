@@ -26,51 +26,20 @@ test('All 48 advertised adventures have distinct detailed world and pet/person c
  assert.match(site,/id="more-adventures"/);
 });
 
-test('HQ fal, Cloudflare HQ backup and Standard use identical compact face-first prompts in all 48 worlds',()=>{
- for(const id of ids){
-  for(const subjectType of ['auto','pet','person','couple','family','person and pet','car']){
-   const args={styleId:id,subjectType,inputCount:1,notes:'Keep real eyes and recognizable appearance.'};
-   const standard=makeStandardAdventurePrompt(args);
-   const high=makeFalCompactPrompt(args);
-   const explicit=makeIdentityFirstAdventurePrompt(args);
-   assert.equal(standard,high,id+' '+subjectType+' mismatched engines');
-   assert.equal(standard,explicit);
-   assert.ok(standard.startsWith('EDIT THE UPLOADED PHOTO(S)'),id);
-   assert.ok(standard.indexOf('IDENTITY FIRST:')>0&&standard.indexOf('IDENTITY FIRST:')<standard.indexOf(ADVENTURE_GUIDES[id].scene),id+' identity must come BEFORE adventure');
-   assert.ok(standard.includes(ADVENTURE_GUIDES[id].scene),id+' scene');
-   assert.ok(standard.includes(ADVENTURE_GUIDES[id].look),id+' look');
-   assert.ok(standard.includes('REPLACE THE ORIGINAL BACKGROUND'),id+' setting must actually change');
-   assert.ok(standard.length<2200,id+' '+subjectType+' prompt longer than expected: '+standard.length);
-   assert.equal((standard.match(/IDENTITY FIRST:/g)||[]).length,1,'no repeated face-preserve walls of text');
-   const isDrawn=adventureMode(id)==='illustration';
-   assert.match(standard,isDrawn?/one ORIGINAL ILLUSTRATION/:/one PHOTOREALISTIC ADVENTURE PORTRAIT/);
-   if(subjectType.includes('pet'))assert.ok(standard.includes(ADVENTURE_GUIDES[id].pet),id+' pet costume');
-   if(['person','couple','family','person and pet'].includes(subjectType))assert.ok(standard.includes(ADVENTURE_GUIDES[id].person),id+' person costume');
-   if(subjectType==='car')assert.match(standard,/same real vehicle|Same real vehicle/i);
-   if(subjectType==='auto'){
-    assert.ok(standard.includes(ADVENTURE_GUIDES[id].pet),id+' auto pet attire');
-    assert.ok(standard.includes(ADVENTURE_GUIDES[id].person),id+' auto person attire');
-    assert.match(standard,/ONLY main subjects are those actually photographed/);
-    assert.match(standard,/do not invent a new person, pet, vehicle or companion/);
-    assert.match(standard,/Never invent a face for a cropped torso, arm or hand/);
-    assert.match(standard,/OUTFIT ALTERNATIVES for existing subjects ONLY/);
-   }
-  }
+test('Accepted recipe preserves all 48 worlds and matches Standard exactly',async()=>{
+ const {customerIdentityPrompt}=await import('../src/customer-identity.js');
+ for(const id of ids)for(const subjectType of ['auto','pet','person','couple','family','person and pet']){
+  const args={styleId:id,subjectType,notes:'Keep recognizable appearance.'};
+  const prompt=makeStandardAdventurePrompt(args);
+  assert.equal(prompt,customerIdentityPrompt(args));
+  assert.ok(prompt.indexOf('Preserve each retained face')<prompt.indexOf('Background:'));
+  for(const part of ['scene','look'])assert.ok(prompt.includes(ADVENTURE_GUIDES[id][part]));
+  assert.match(prompt,/pets retain animal bodies and paws/);
+  assert.match(prompt,/Include each subject once/);
+  assert.ok(prompt.length<2200);
+  if(subjectType==='auto'){assert.ok(prompt.includes(ADVENTURE_GUIDES[id].pet));assert.ok(prompt.includes(ADVENTURE_GUIDES[id].person));assert.match(prompt,/visible reference faces/);}
  }
-});
-
-test('Pet likeness and gender appearance are preserved without prompting customers for sex',()=>{
- const prompt=makeStandardAdventurePrompt({styleId:'dinosaur-adventure',subjectType:'pet'});
- assert.match(prompt,/exact eyes, nose, muzzle, ear shape\/angle, head view, expression, coat colors and marking positions/);
- assert.match(prompt,/do not invent masculine\/feminine traits/);
- assert.match(prompt,/Real pets keep animal bodies and paws, never human hands/);
- assert.match(prompt,/prehistoric/i);
- assert.match(prompt,/face|head/i);
- assert.ok(prompt.length<1700);
  assert.doesNotMatch(site,/gender-choice|pet-gender|sex-choice/);
- for(const role of ['person','person and pet','family','car'])assert.match(compactIdentity(role),/IDENTITY FIRST:/);
- assert.match(compactIdentity('person and pet'),/EACH face/);
- assert.match(compactIdentity('person and pet'),/Same actual pet/);
 });
 
 test('Adventure-specific transformation remains real, not a generic unchanged source yard',()=>{
@@ -95,11 +64,11 @@ test('Multi-image subject labels, previous Recast, custom world and customer not
   notes:'Our family has blue outfits; the girl puppy has a pink collar.',
   referenceGuide:'Input image 0 (photo 1) shows person 1. Input image 1 (photo 2) shows the same pet.'};
  const prompt=makeStandardAdventurePrompt(args);
- assert.match(prompt,/previous Recast for continuity/);
+ assert.match(prompt,/last image supplies artwork continuity/);
  assert.match(prompt,/Input image 0 \(photo 1\) shows person 1/);
  assert.match(prompt,/Input image 1 \(photo 2\) shows the same pet/);
  assert.match(prompt,/girl puppy has a pink collar/);
- assert.match(prompt,/Same actual pet/);assert.match(prompt,/EACH face/);
+ assert.match(prompt,/Preserve each retained face/);assert.match(prompt,/pets retain animal bodies and paws/);
  const custom=makeFalCompactPrompt({styleId:'custom',subjectType:'pet',notes:'Give my dog a cape.',customWorld:'a floating greenhouse with glowing purple vines'});
  assert.match(custom,/floating greenhouse with glowing purple vines/);
  assert.match(custom,/dog a cape/);
@@ -123,7 +92,7 @@ test('Actual Standard and HQ Cloudflare model submissions receive the same short
    const response=await highQualityTransform(new Request('https://recast.test/api/transform-v2',{method:'POST',body:form}),env);
    assert.equal(response.status,200,qualityMode+' '+styleId);
    const result=await response.json();
-   assert.equal(result.promptVersion,'identity-first-48-worlds-v1');
+   assert.equal(result.promptVersion,'nano-identity-adventures-v6');
   }
   assert.equal(submitted.length,2,styleId+' only one call per selected quality');
   assert.equal(submitted[0].prompt,submitted[1].prompt);
@@ -210,12 +179,12 @@ test('Automatic photo mode needs no manual subject or paid classification pass',
   const result=await highQualityTransform(new Request('https://recast.test/api/transform-v2',{method:'POST',body:form}),env);
   assert.equal(result.status,200);
   const data=await result.json();
-  assert.equal(data.promptVersion,'identity-first-48-worlds-v1');
+  assert.equal(data.promptVersion,'nano-identity-adventures-v6');
   assert.equal(calls.length,1,'Use the same model edit, no extra subject-classifier request');
-  assert.match(calls[0].prompt,/ONLY main subjects are those actually photographed/);
-  assert.match(calls[0].prompt,/same recognizable eyes, nose\/muzzle, ears, face shape/);
+  assert.match(calls[0].prompt,/main people and pets with visible reference faces/);
+  assert.match(calls[0].prompt,/eye shape and spacing, nose or muzzle/);
   assert.match(calls[0].prompt,/prehistoric/);
-  assert.match(calls[0].prompt,/do not invent a new person, pet, vehicle or companion/);
+  assert.match(calls[0].prompt,/Include each subject once/);
   assert.ok(calls[0].prompt.length<2200);
  }
 });

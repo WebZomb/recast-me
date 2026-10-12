@@ -43,6 +43,7 @@
     "FAL_PROVIDER_ENABLED": "true",
     "FAL_PROVIDER_VERIFIED": "true",
     "FAL_CUSTOMER_MODEL": "nano-banana",
+    "FAL_HQ_BACKUP_MODEL": "flux-2-dev",
     "CF_PROVIDER_VERIFIED": "false",
     "ALERT_EMAIL_PROVIDER": "gmail",
     "ORDER_SYNC_ENABLED": "true",

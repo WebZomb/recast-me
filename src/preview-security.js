@@ -336,7 +336,7 @@ export function secureApplication(application) {
           }
           if(env.RECAST_RENDER_MODE==='high' && ['fal','auto'].includes(String(env.RECAST_HQ_PROVIDER||'cloudflare'))){
             const selected=await selectHighQualityProvider(env,form);
-            const estimated=['qwen-protected','fill-protected'].includes(env.RECAST_OWNER_IDENTITY_MODEL)?0.065:(env.RECAST_OWNER_IDENTITY_MODEL==='nano-banana'||(env.RECAST_OWNER_PILOT_REQUEST!=='true'&&env.FAL_CUSTOMER_MODEL==='nano-banana'&&selected.host==='fal'))?0.039:selected.host==='fal'?selected.prices.falUsd:selected.prices.cloudflareUsd;
+            const estimated=['qwen-protected','fill-protected'].includes(env.RECAST_OWNER_IDENTITY_MODEL)?0.065:(env.RECAST_OWNER_IDENTITY_MODEL==='nano-banana'||(env.RECAST_OWNER_PILOT_REQUEST!=='true'&&env.FAL_CUSTOMER_MODEL==='nano-banana'&&selected.customerModel!=='flux-2-dev'&&selected.host==='fal'))?0.039:selected.host==='fal'?selected.prices.falUsd:selected.prices.cloudflareUsd;
             const reserve=Math.max(Number(env.AI_CALL_RESERVE_CENTS||7),Math.ceil(estimated*100)+1);
             env=wrapImageProvider({...env,RECAST_PROVIDER_ATTEMPT_ID:fingerprint||crypto.randomUUID(),AI_CALL_RESERVE_CENTS:String(reserve)},selected);
           }
