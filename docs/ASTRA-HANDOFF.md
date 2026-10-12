@@ -291,3 +291,5 @@ RM141 LIVE — PR59 main8a439794632ad6308ffce9860daceb8f3fe41e09.518tests, secur
 RM142 — Owner follow-up: blanket110%, mug closer spacing, optional phone full-back photo with clear-side/camera disclaimer. Actual Tough Case3D-wrap research completed; supplier SKU unchanged.519tests PASS; browser/release pending. See [RM142](ASTRA-SESSION-RM-142.md). No paid calls.
 
 RM142 LIVE — PR60 main935021551d37b89789a812b4db0c2d953e269d44.519tests, security/customer WebKit+Chromium and guarded deploy/production smoke38211352705 PASS. Worker e6182413-a5fd-41ae-b20c-05706afbd510. Blanket110/mug close defaults and optional full-back clear-case photo live. Actual supplier previews need owner review; full side wrap requires a different verified case product, not implemented. No paid calls. See RM142 receipt.
+
+RM143 — Owner approves Tough Case/full wrap. Read-only admin discovery prepared before mapping; customer switch pending. See [RM143](ASTRA-SESSION-RM-143.md).

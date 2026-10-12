@@ -705,6 +705,18 @@ export async function adminProductCandidates(request,env){
   try{
     requireAdmin(request,env);
     const sku=new URL(request.url).searchParams.get('sku');
+    if(new URL(request.url).searchParams.get('product')==='tough-case'){
+      const listings=await printful(env,'/products',{method:'GET'});
+      const candidates=(Array.isArray(listings)?listings:[]).filter(row=>/tough.*case.*iphone/i.test(row.title||row.name||'')&&!/magsafe/i.test(row.title||row.name||'')).slice(0,2);
+      const products=[];
+      for(const row of candidates){
+        const id=Number(row.id);if(!Number.isSafeInteger(id)||id<=0)continue;
+        const detail=await printful(env,`/products/${id}`,{method:'GET'});
+        const catalog=await printful(env,`/mockup-generator/printfiles/${id}`,{method:'GET'});
+        products.push({product:detail.product,variants:detail.variants,catalog});
+      }
+      return json({ok:true,productionSubmitted:false,products});
+    }
     if(sku==='RECAST-STICKER-PACK'){
       // Read-only verification of the pre-existing RM054 sheet candidate.
       const detail=await printful(env,'/products/505',{method:'GET'});
