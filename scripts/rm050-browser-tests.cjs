@@ -144,6 +144,7 @@ const policy={highDaily:3,standardDaily:5,purchaseBonus:3,websiteCalls:70,social
    await page.screenshot({path:path.join(out,`${engine.name()}-${width}-rm138-style-cards.png`)});
    for(const selector of ['#surprise-world','#more-adventures']){
     assert.equal(await page.locator(selector+' img').count(),1);
+    assert.ok(await page.locator(selector).evaluate(button=>{const a=button.getBoundingClientRect(),b=button.parentElement.getBoundingClientRect();return a.left>=b.left-1&&a.right<=b.right+1}),'Discovery card fits its container');
     assert.ok((await page.locator(selector).boundingBox()).height>=145,'Discovery card has a large tap target');
    }
    await page.locator('#surprise-world').click();
