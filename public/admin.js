@@ -137,3 +137,5 @@ async function loadOrderIssues(more=false){
 $('#more-order-issues').onclick=()=>loadOrderIssues(true).catch(e=>toast(e.message));
 $('#audit-orders').onclick=async()=>{const button=$('#audit-orders');button.disabled=true;try{const d=await api('/api/admin/audit-orders',{method:'POST',body:{}});button.textContent=d.more?'Continue checking older orders':'Check last 30 days for missing orders';toast(`${d.created||0} recovered jobs held · ${d.issues||0} issues found${d.more?' · more orders remain':''}. No production submitted.`);await Promise.all([loadOrderIssues(),loadJobs(),loadStatus()]);}catch(e){toast(e.message)}finally{button.disabled=false}};
 setInterval(()=>{if(token&&!document.hidden)loadOrderIssues().catch(()=>{$('#order-sync-health').textContent='Could not refresh order alerts. Check your connection and reload.';});},60000);
+
+$('#verify-tough-case').onclick=async()=>{const el=$('#new-products-result');el.textContent='Reading Tough Case catalog…';try{const d=await api('/api/admin/product-candidates?product=tough-case');el.textContent=JSON.stringify(d.products,null,2)}catch(e){el.textContent=e.message}};
