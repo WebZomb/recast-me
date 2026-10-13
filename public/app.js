@@ -4,7 +4,7 @@ import {mergeHistory,privateRecastLink,readRecastLink} from './recast-history.js
 import {initCreationWizard,surpriseChoices} from './creation-wizard.js?v=292';
 import {fallbackState,creditSummary,creditHeadline,recoveryUnverified} from './quality-policy.js?v=267';
 import {protectedPreviewFile} from './preview-export.js';
-import {initCheckoutReturnExperience} from './order-experience.js?v=1';
+import {initCheckoutReturnExperience} from './order-experience.js?v=2';
 import {saveRecast} from './recast-collection.js?v=1';
 let creditInfo=null;
 async function refreshCredits(initialize=false){
@@ -654,7 +654,7 @@ async function activateRecentVersion(version,{scroll=true}={}){
     qualityMode:version.qualityMode||'high'
   };
   activeRequestFromVersion(version);
-  const orderLink=document.querySelector('#order-status-link');
+  const orderLink=document.querySelector('#artwork-manage-link');
   if(orderLink){
     orderLink.href=`/order.html?requestId=${encodeURIComponent(version.requestId)}&token=${encodeURIComponent(version.accessToken)}`;
     orderLink.classList.remove('hidden');
@@ -940,7 +940,7 @@ form.addEventListener('submit',async e=>{
     activeRequestFromVersion(successVersion);
     addRecentVersion(successVersion);
     clearBranchReference();
-    const orderLink=document.querySelector('#order-status-link');
+    const orderLink=document.querySelector('#artwork-manage-link');
     if(orderLink){orderLink.href=`/order.html?requestId=${encodeURIComponent(data.requestId)}&token=${encodeURIComponent(data.accessToken)}`;orderLink.classList.remove('hidden')}
     stopGenerationUI(true);
   }catch(err){

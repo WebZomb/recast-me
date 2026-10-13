@@ -56,3 +56,48 @@ button,.button,.nav-cta{transition:transform .14s ease,filter .14s ease,box-shad
 .orders-privacy-note{font-size:14px}
 @media(max-width:480px){.recast-celebration{padding:34px 19px 23px}.order-history-actions{flex-direction:column}.order-history-actions .button{width:100%}.my-orders-shell{padding:24px 15px 90px}}
 @media(prefers-reduced-motion:reduce){.recast-confetti i,.recast-celebration,.recast-save-toast{animation:none!important}.recast-confetti{display:none}button,.button,.nav-cta{transition:none}}
+
+/* RM157 — bigger full-screen-style celebration for verified purchases. */
+.recast-celebration-layer{padding:10px}
+.recast-celebration{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;
+  box-sizing:border-box;width:min(100%,560px);min-height:min(690px,calc(100dvh - 24px));
+  max-height:calc(100dvh - 22px);padding:54px 31px 42px;
+  border:2px solid #b998ff;border-radius:33px;
+  background:radial-gradient(circle at 45% 4%,#8138babb 0%,#311e66 42%,#0c182f 100%);
+  box-shadow:0 0 115px #893ffe77,0 24px 85px #000c;
+}
+.recast-celebration::before{content:"";position:absolute;inset:12px;border:1px solid #eecbff55;border-radius:24px;pointer-events:none;z-index:0}
+.recast-celebration .eyebrow{color:#b7f5ff;font-size:15px;letter-spacing:.20em}
+.recast-celebration h2{font-size:clamp(39px,9.1vw,57px);line-height:1.04;letter-spacing:-.042em;max-width:450px;margin:14px 0 19px;text-wrap:balance}
+.recast-celebration-badge{width:114px;height:114px;font-size:59px;box-shadow:0 0 56px #6cd6ff9e,0 0 58px #dc4cfc9e;margin:8px auto 22px}
+.recast-celebration .celebration-order{font-size:17px;line-height:1.55;margin:4px 0}
+.recast-celebration .celebration-bonus{font-size:18px;padding:18px 19px;margin:27px 0 20px;border-radius:20px;line-height:1.45;width:100%;box-sizing:border-box}
+.recast-celebration .button{min-height:62px;border-radius:16px;font-size:17px;margin:7px auto;font-weight:850}
+.recast-confetti{z-index:1}
+.recast-celebration .eyebrow,.recast-celebration h2,.recast-celebration .celebration-order,
+.recast-celebration .celebration-bonus,.recast-celebration .button,.recast-celebration-badge,.celebration-close{position:relative;z-index:2}
+.order-tracking-pending{line-height:1.5;font-size:14px;color:#b7cee5;background:#17263b;border:1px solid #42617b;border-radius:12px;padding:12px 14px;margin:8px 0}
+.order-tracking-number{color:#c6dbea;line-height:1.5;overflow-wrap:anywhere}
+.order-shipment-pending{color:#bed5e8;font-size:14px;line-height:1.45}
+@media(max-width:480px){
+  .recast-celebration{padding:38px 19px 30px;border-radius:28px;gap:5px;min-height:min(735px,calc(100dvh - 18px))}
+  .recast-celebration-badge{width:105px;height:105px;font-size:56px;margin:6px auto 20px}
+  .recast-celebration h2{font-size:clamp(38px,10.1vw,48px)}
+  .recast-celebration .celebration-bonus{font-size:17px;margin:20px 0 16px;padding:16px 12px}
+  .recast-celebration .button{min-height:58px}
+}
+
+/* Keep the dismissal button above confetti, pinned to the card's top corner. */
+.recast-celebration .celebration-close{position:absolute;top:11px;right:13px;z-index:4;min-width:44px;min-height:44px}
+.recast-celebration .celebration-close:focus-visible{outline:3px solid #aaf2ff;outline-offset:2px;border-radius:50%}
+@media(max-width:480px){.recast-celebration{min-height:min(735px,calc(100dvh - 22px))}}
+
+/* A private artwork-management path remains for deleting unpaid artwork, but
+   does not duplicate the prominent Orders tab or carrier tracking actions. */
+.preview-more .recast-privacy-link{
+ display:flex;align-items:center;justify-content:center;min-height:44px;
+ font-size:14px;text-align:center;font-weight:750;text-decoration:underline;
+ text-underline-offset:3px;color:#a2eaff;padding:7px 10px;box-sizing:border-box
+}
+.preview-more .recast-privacy-link:focus-visible{outline:2px solid #a4edff;border-radius:9px}

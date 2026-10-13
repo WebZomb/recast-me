@@ -114,9 +114,11 @@ function celebrate(order, bonus) {
   layer.className = 'recast-celebration-layer';
   layer.innerHTML = '<div class="recast-celebration-backdrop"></div>' +
     '<section class="recast-celebration" role="dialog" aria-modal="true" aria-labelledby="recast-celebration-title">' +
-    '<div class="recast-confetti" aria-hidden="true">' + Array.from({length: 16}, () => '<i></i>').join('') + '</div>' +
-    '<span class="recast-celebration-badge" aria-hidden="true">✦</span>' +
-    '<div class="eyebrow">IT’S OFFICIAL!</div><h2 id="recast-celebration-title">🎉 Congrats! Your order is in!</h2>' +
+    '<div class="recast-confetti" aria-hidden="true">' + Array.from({length: 28}, (_, index) =>
+      '<i style="--x:' + (((index * 73) % 460) - 230) + 'px;--y:' + (130 + (index * 137) % 420) + 'px;animation-delay:' + ((index * 9) % 40) / 100 + 's"></i>'
+    ).join('') + '</div>' +
+    '<span class="recast-celebration-badge" aria-hidden="true">🎉</span>' +
+    '<div class="eyebrow">IT’S OFFICIAL!</div><h2 id="recast-celebration-title">Congratulations! Your order is in!</h2>' +
     '<p class="celebration-order"></p><p class="celebration-bonus"></p>' +
     '<a class="button primary celebration-track" href="' + escape(orderLink(order)) + '">See my order &amp; tracking →</a>' +
     '<button type="button" class="button ghost celebration-more">Make another picture</button>' +

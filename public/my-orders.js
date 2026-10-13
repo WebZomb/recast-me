@@ -1,4 +1,4 @@
-import {verifiedOrders,orderLink,confirmOrderBonus} from './order-experience.js?v=1';
+import {verifiedOrders,orderLink} from './order-experience.js?v=2';
 const list=document.querySelector('#orders-list');
 const status=document.querySelector('#orders-status');
 const button=document.querySelector('#orders-refresh');
@@ -38,21 +38,37 @@ async function refresh(force=false) {
       box.querySelector('.order-history-date').textContent=Number.isFinite(date) ? new Date(date).toLocaleDateString() : '';
       const stage=box.querySelector('.order-history-status');
       const actions=box.querySelector('.order-history-actions');
+      let hasLiveTracking=false;
       for (const job of order.jobs) {
         const row=document.createElement('div');
         row.className='order-history-progress';
         row.textContent=(job.product || 'Your product') + ' — ' + label(job);
         stage.append(row);
-        if (typeof job.trackingUrl === 'string') {
+        // Print partners sometimes create an unresolvable placeholder before
+        // dispatch. Only server-verified shipped statuses with a tracking
+        // number can become a clickable carrier link.
+        const shipped=['shipped','partially_shipped'].includes(String(job.status||'').toLowerCase());
+        if (shipped && job.trackingReady === true && job.trackingNumber && typeof job.trackingUrl === 'string') {
           try {
             const url=new URL(job.trackingUrl);
-            if (url.protocol==='https:') {
+            if (url.protocol==='https:' && !url.username && !url.password) {
               const track=document.createElement('a');
               track.href=url.href;track.target='_blank';track.rel='noopener noreferrer';
-              track.className='button ghost';track.textContent='Carrier tracking ↗';actions.append(track);
+              track.className='button ghost';track.textContent='Track with carrier ↗';
+              const number=document.createElement('small');number.className='order-tracking-number';
+              number.textContent=(job.carrier||'Carrier')+' · '+job.trackingNumber;
+              actions.append(track,number);hasLiveTracking=true;
             }
           } catch {}
         }
+      }
+      if (!hasLiveTracking) {
+        const waiting=document.createElement('p');
+        waiting.className='order-tracking-pending';
+        waiting.textContent=order.jobs.some(j=>['shipped','partially_shipped'].includes(j.status))
+          ?'Your shipment is being finalized. A verified carrier tracking link will appear here once available.'
+          :'Carrier tracking will appear here after your item ships. No action is needed.';
+        actions.append(waiting);
       }
       const link=document.createElement('a');
       link.className='button primary';link.href=orderLink(order);link.textContent='Order details & updates →';
