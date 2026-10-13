@@ -8,7 +8,7 @@ function runAt(pathname,native=false){
   const bodyClasses=new Set();
   function node(tag){
     return {
-      tagName:tag,className:'',children:[],attributes:{},style:{setProperty(){}},
+      tagName:tag,className:'',children:[],attributes:{},dataset:{},style:{setProperty(){}},
       classList:{
         add(v){bodyClasses.add(v)},remove(v){bodyClasses.delete(v)},
         toggle(v,on){if(on)bodyClasses.add(v);else bodyClasses.delete(v)}
