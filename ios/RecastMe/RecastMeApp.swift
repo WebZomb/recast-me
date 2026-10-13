@@ -5,14 +5,21 @@ private enum RecastTab: Hashable { case create, recasts, orders, guide }
 @main
 struct RecastMeApp: App {
     @State private var selectedTab: RecastTab = .create
+    @State private var selectedArtworkURL: URL?
+    @State private var creatorRevision = 0
     @StateObject private var gallery = PreviewGallery()
     var body: some Scene {
         WindowGroup {
             TabView(selection: $selectedTab) {
-                StudioView(gallery: gallery, initialURL: URL(string: "#start", relativeTo: StudioView.origin)!.absoluteURL)
+                StudioView(gallery: gallery, initialURL: selectedArtworkURL ?? URL(string: "#start", relativeTo: StudioView.origin)!.absoluteURL)
+                    .id(creatorRevision)
                     .tabItem { Label("Create", systemImage: "wand.and.stars") }
                     .tag(RecastTab.create)
-                GalleryView(gallery: gallery)
+                GalleryView(gallery: gallery) { link in
+                    selectedArtworkURL = link
+                    creatorRevision += 1
+                    selectedTab = .create
+                }
                     .tabItem { Label("My Recasts", systemImage: "photo.on.rectangle.angled") }
                     .tag(RecastTab.recasts)
                 StudioView(gallery: gallery, initialURL: StudioView.origin.appendingPathComponent("my-orders.html"))
@@ -26,8 +33,8 @@ struct RecastMeApp: App {
                             Label("Check likeness before choosing merchandise.", systemImage: "checkmark.seal")
                         }
                         Section("Your private collection") {
-                            Text("Save a finished watermarked preview from Create. My Recasts keeps up to 20 previews on this device for offline viewing and sharing.")
-                            Text("Deleting a local preview does not delete the artwork on Recast Me or cancel an order. Use the private order page to delete unpaid server artwork.")
+                            Text("My Recasts keeps up to 20 offline watermarked previews. Open a saved picture and tap Put on a product without using another render. Its private link is kept in this iPhone's Keychain.")
+                            Text("Deleting a local picture also removes its iPhone-only product link, but server artwork and paid orders remain. Keep private links safe; an Artwork ID alone does not unlock a picture.")
                             Link("Photo privacy & AI processing", destination: StudioView.origin.appendingPathComponent("privacy.html"))
                         }
                         Section("Testing this app") {
@@ -35,6 +42,7 @@ struct RecastMeApp: App {
                         }
                         Section("Orders & support") {
                             Link("Order help and shipping", destination: StudioView.origin.appendingPathComponent("support.html"))
+                            Link("Preview the celebration without buying", destination: StudioView.origin.appendingPathComponent("purchase-demo.html"))
                         }
                     }
                     .navigationTitle("Photo guide")
