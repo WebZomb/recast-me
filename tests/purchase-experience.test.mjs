@@ -65,7 +65,7 @@ test('bonus is requested only for a paid verified job, through the existing serv
   };
   const result=await confirmOrderBonus({...artwork,creditsEnabled:true,jobs:[{id:'job-a'}]});
   assert.equal(result.bonus,3);
-  assert.match(result.message,/3 bonus High Quality renders/);
+  assert.match(result.message,/\+3 High Quality renders added/);
   assert.equal(calls[1].url,'/api/order-bonus/job-a');
   assert.equal(calls[1].options.method,'POST');
   assert.equal(JSON.parse(calls[1].options.body).token,artwork.accessToken);
@@ -86,4 +86,13 @@ test('button feedback, tracking and art collage keep confirmation and a reduced-
   assert.equal((checkout.match(/leaveForCheckout\(req,(?:result|data).checkoutUrl\)/g)||[]).length,3);
   assert.match(style,/@media\(prefers-reduced-motion:reduce\)/);
   assert.match(orders,/robots" content="noindex,nofollow"/);
+});
+
+test('an already-claimed eligible order never falsely announces three new credits',async()=>{
+ browser();
+ globalThis.fetch=async url=>url==='/api/render-credits'?reply({ok:true,initialized:true,bonus:3}):reply({ok:true,bonus:3});
+ const result=await confirmOrderBonus({...artwork,creditsEnabled:true,jobs:[{id:'job-a'}]});
+ assert.equal(result.added,0);
+ assert.match(result.message,/already applied/);
+ assert.doesNotMatch(result.message,/\+3/);
 });
