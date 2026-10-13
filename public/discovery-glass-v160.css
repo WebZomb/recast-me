@@ -1,0 +1,249 @@
+/* RM160: original cinematic photoreal fantasy art meets luxury glass.
+   Same image/button family as the 4 featured adventures; custom action cards
+   stay below them on mobile and centered beneath them on desktop. */
+#recast-form [data-create-step="2"] .adventure-extra-actions {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  align-items: stretch;
+  gap: clamp(10px, 1.8vw, 18px) !important;
+  width: min(100%, 760px);
+  margin: clamp(15px, 2vw, 23px) auto 14px !important;
+}
+
+/* Use an outer refraction edge instead of a flat button rectangle. */
+#recast-form .adventure-extra-actions button.glass-discovery-card {
+  position: relative;
+  isolation: isolate;
+  display: flex !important;
+  flex-direction: column;
+  height: auto;
+  box-sizing: border-box;
+  min-height: 0 !important;
+  overflow: hidden;
+  padding: 0 !important;
+  margin: 0 !important;
+  width: 100%;
+  min-width: 0;
+  border: 1.5px solid transparent !important;
+  border-radius: 22px;
+  cursor: pointer;
+  color: #fff;
+  text-align: center;
+  background:
+    linear-gradient(140deg, #15132a, #0b1026) padding-box,
+    linear-gradient(122deg, rgba(122, 245, 252, .94), rgba(147, 85, 240, .70) 45%, rgba(255, 156, 230, .82)) border-box !important;
+  box-shadow:
+    0 13px 27px rgba(2, 4, 21, .46),
+    0 0 22px rgba(128, 64, 238, .17),
+    inset 0 1px 1px rgba(231, 246, 255, .22) !important;
+  transition: transform .18s ease, filter .18s ease, box-shadow .18s ease !important;
+}
+
+#recast-form .adventure-extra-actions #surprise-world.glass-discovery-card {
+  background:
+    linear-gradient(140deg, #101a35, #100b2e) padding-box,
+    linear-gradient(127deg, rgba(158, 235, 255, .97), rgba(72, 156, 253, .67) 39%, rgba(218, 92, 255, .91)) border-box !important;
+}
+
+#recast-form .adventure-extra-actions .glass-discovery-card .discovery-art-v160 {
+  display: block !important;
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  height: auto;
+  min-height: 0;
+  padding: 0;
+  overflow: hidden;
+  isolation: isolate;
+  background:
+    radial-gradient(ellipse at 40% 22%, #723da4, transparent 66%),
+    linear-gradient(140deg, #251341, #071a35 75%);
+}
+
+#recast-form .adventure-extra-actions .glass-discovery-card .discovery-art-v160::before {
+  content: '';
+  position: absolute;
+  z-index: 2;
+  pointer-events: none;
+  inset: 0;
+  border-radius: 17px 17px 0 0;
+  background:
+    linear-gradient(125deg, rgba(255, 255, 255, .35) 0%, rgba(246, 247, 255, .11) 11%, transparent 28%),
+    radial-gradient(ellipse at 13% 0%, rgba(158, 241, 255, .22), transparent 38%),
+    radial-gradient(ellipse at 95% -10%, rgba(247, 142, 255, .19), transparent 42%);
+  box-shadow:
+    inset 2px 2px 2px rgba(255, 255, 255, .25),
+    inset -2px 0 3px rgba(181, 99, 255, .21),
+    inset 0 -16px 21px rgba(2, 6, 22, .38);
+}
+#recast-form .adventure-extra-actions .glass-discovery-card .discovery-art-v160::after {
+  content: '';
+  position: absolute;
+  z-index: 2;
+  pointer-events: none;
+  width: 85%;
+  height: 38%;
+  top: -9%;
+  left: -29%;
+  transform: rotate(-29deg);
+  border-radius: 50%;
+  background: linear-gradient(180deg, rgba(255, 255, 255, .19), transparent 90%);
+  filter: blur(7px);
+}
+
+#recast-form .adventure-extra-actions .glass-discovery-card .discovery-art-v160 img.discovery-artwork {
+  display: block !important;
+  box-sizing: border-box;
+  width: 100% !important;
+  height: auto !important;
+  min-height: 0;
+  max-height: none;
+  aspect-ratio: 4 / 3 !important;
+  object-fit: cover !important;
+  object-position: center center !important;
+  border: 0;
+  border-radius: 0;
+  filter: saturate(1.13) contrast(1.035);
+  transition: transform .34s cubic-bezier(.2, .8, .25, 1), filter .28s ease;
+}
+
+/* Brand-lit glass chip: enough contrast for any generated scene. */
+#recast-form .adventure-extra-actions .glass-discovery-card .discovery-count {
+  position: absolute !important;
+  z-index: 5 !important;
+  inset: 9px auto auto 9px !important;
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  width: max-content !important;
+  max-width: calc(100% - 18px) !important;
+  min-height: 26px !important;
+  padding: 5px 8px !important;
+  margin: 0;
+  border: 1px solid rgba(183, 234, 255, .49) !important;
+  border-radius: 99px;
+  background:
+    linear-gradient(130deg, rgba(68, 48, 109, .63), rgba(13, 31, 68, .56)) !important;
+  -webkit-backdrop-filter: blur(12px) saturate(1.5);
+  backdrop-filter: blur(12px) saturate(1.5);
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, .19),
+    0 3px 15px rgba(0, 3, 16, .37),
+    0 0 12px rgba(145, 69, 229, .19);
+  font-size: clamp(10px, 1.2vw, 12px) !important;
+  line-height: 1.22 !important;
+  font-weight: 850;
+  letter-spacing: .005em;
+  color: #fff !important;
+  text-shadow: 0 2px 6px rgba(0, 0, 12, .92);
+  text-align: center;
+  white-space: nowrap;
+}
+
+/* Curved smoked glass footer visually matches the big featured style cards. */
+#recast-form .adventure-extra-actions .glass-discovery-card strong {
+  position: relative;
+  box-sizing: border-box;
+  z-index: 3;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  flex: 1 0 60px;
+  width: 100%;
+  min-height: 61px;
+  max-height: none;
+  padding: 12px 6px !important;
+  margin: 0 !important;
+  font-size: clamp(14px, 1.4vw, 18px) !important;
+  line-height: 1.25;
+  letter-spacing: -.02em;
+  font-weight: 850;
+  background:
+    radial-gradient(ellipse at 30% -30%, rgba(154, 121, 251, .27), transparent 67%),
+    linear-gradient(165deg, rgba(27, 25, 53, .94), rgba(11, 17, 39, .97)) !important;
+  box-shadow: inset 0 1px rgba(216, 199, 255, .26), inset 0 -8px 15px rgba(6, 11, 31, .25);
+  text-shadow: 0 2px 14px rgba(196, 174, 255, .18);
+}
+
+#recast-form .adventure-extra-actions #surprise-world.glass-discovery-card strong {
+  background:
+    radial-gradient(ellipse at 35% -35%, rgba(52, 184, 243, .27), transparent 67%),
+    linear-gradient(165deg, rgba(24, 27, 56, .94), rgba(9, 22, 45, .97)) !important;
+}
+
+#recast-form .adventure-extra-actions button.glass-discovery-card[aria-expanded="true"] {
+  box-shadow: 0 0 0 2px rgba(128, 240, 253, .88), 0 0 31px rgba(75, 213, 250, .43) !important;
+  border-color: rgba(126, 246, 255, .88) !important;
+}
+#recast-form .adventure-extra-actions button.glass-discovery-card:focus-visible {
+  outline: 3px solid #a4faff !important;
+  outline-offset: 4px;
+}
+#recast-form .adventure-extra-actions button.glass-discovery-card:active {
+  transform: scale(.965) translateY(1px);
+  filter: brightness(1.2);
+  box-shadow: 0 0 0 2px rgba(143, 240, 253, .65), 0 0 26px rgba(82, 228, 245, .40) !important;
+}
+
+/* Content width matters more than viewport width: desktop layout stays
+   centered below four standard scene cards, not awkwardly over to one side. */
+@media (min-width: 1060px) {
+  #recast-form [data-create-step="2"] .adventure-extra-actions {
+    width: min(100%, 720px);
+    gap: 18px !important;
+    margin: 25px auto 17px !important;
+  }
+  #recast-form .adventure-extra-actions button.glass-discovery-card strong {
+    min-height: 69px;
+    font-size: 18px !important;
+  }
+  #recast-form .adventure-extra-actions .glass-discovery-card .discovery-count {
+    top: 13px !important;
+    left: 13px !important;
+    font-size: 12px !important;
+    padding: 7px 11px !important;
+  }
+}
+@media (max-width: 540px) {
+  #recast-form [data-create-step="2"] .adventure-extra-actions {
+    gap: 12px !important;
+    margin-top: 13px !important;
+  }
+  #recast-form .adventure-extra-actions button.glass-discovery-card {
+    border-radius: 18px;
+  }
+  #recast-form .adventure-extra-actions .glass-discovery-card strong {
+    min-height: 59px;
+    flex-basis: 59px;
+    font-size: 15px !important;
+  }
+  #recast-form .adventure-extra-actions .glass-discovery-card .discovery-count {
+    inset: 7px auto auto 7px !important;
+    padding: 4px 6px !important;
+    font-size: clamp(9px, 2.5vw, 11px) !important;
+    max-width: calc(100% - 14px) !important;
+  }
+}
+@media (max-width: 359px) {
+  #recast-form .adventure-extra-actions .glass-discovery-card .discovery-count {
+    white-space: normal;
+    min-height: 28px !important;
+  }
+}
+@media (hover: hover) and (pointer: fine) {
+  #recast-form .adventure-extra-actions button.glass-discovery-card:hover {
+    transform: translateY(-3px);
+    border-color: rgba(158, 235, 255, .92) !important;
+    box-shadow: 0 16px 28px rgba(3, 5, 22, .50), 0 0 28px rgba(119, 107, 255, .38) !important;
+  }
+  #recast-form .adventure-extra-actions button.glass-discovery-card:hover .discovery-art-v160 img {
+    transform: scale(1.05);
+    filter: saturate(1.23) contrast(1.07) brightness(1.05);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  #recast-form .adventure-extra-actions button.glass-discovery-card,
+  #recast-form .adventure-extra-actions .discovery-art-v160 img {
+    transition: none !important;
+  }
+}
