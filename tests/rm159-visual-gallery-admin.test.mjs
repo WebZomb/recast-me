@@ -74,7 +74,7 @@ test('mobile navigation order is Create, My Recasts, My Orders, Guide, without o
  assert.doesNotMatch(nav,/document\.body\.append\(a\)/);
  assert.doesNotMatch(nav,/recast-legacy-orders-pill/);
  for(const file of ['index.html','my-recasts.html','my-orders.html','guide.html','order.html','purchase-demo.html']){
-  assert.match(text('public/'+file),/mobile-bottom-nav\.js\?v=160/,file);
+  assert.match(text('public/'+file),/mobile-bottom-nav\.js\?v=161/,file);
  }
 });
 test('saved Recasts show individual ID and reusable clean-image product link',()=>{

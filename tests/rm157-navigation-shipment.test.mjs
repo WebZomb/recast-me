@@ -50,7 +50,7 @@ test('four website destinations are accessible while the native app retains its 
  assert.match(nav,/window\.webkit\?\.messageHandlers\?\.recastPreview/);
  assert.doesNotMatch(nav,/recast-legacy-orders-pill/);
  for(const page of ['index.html','my-orders.html','my-recasts.html','order.html','purchase-demo.html']){
-  assert.match(read('public/'+page),/mobile-bottom-nav\.js\?v=160/,page);
+  assert.match(read('public/'+page),/mobile-bottom-nav\.js\?v=161/,page);
  }
  assert.ok(!html.includes('View saved Recasts (up to 20)'));
  const extras=html.match(/<details class="preview-more">([\s\S]*?)<\/details>/)?.[1] || '';
