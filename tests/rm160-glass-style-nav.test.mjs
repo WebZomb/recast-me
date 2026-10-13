@@ -53,10 +53,10 @@ test('native-style black website dock still overrides the old hidden-link rule',
   assert.match(css,/background:linear-gradient\(180deg,#171719/);
   assert.match(css,/background:linear-gradient\(180deg,#39393d/);
   assert.doesNotMatch(css,/blur\(24px\)|rgba\(135, 255, 249|rgba\(182, 86, 249/);
-  assert.match(css,/prefers-reduced-motion: reduce/);
+  assert.match(css,/prefers-reduced-motion:\s*reduce/);
   assert.doesNotMatch(js,/recast-legacy-orders-pill/);
 });
-test('web glass navigation is shared across phone and desktop pages, including help and gifts',()=>{
+test('black app-style website navigation is shared across phone and desktop pages',()=>{
   for(const page of ['index.html','my-recasts.html','my-orders.html','order.html','purchase-demo.html',
                      'guide.html','privacy.html','support.html','gift-ideas.html']){
     assert.match(read('public/'+page),/mobile-bottom-nav\.js\?v=161/,page);
