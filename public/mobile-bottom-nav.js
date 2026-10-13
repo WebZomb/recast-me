@@ -1,6 +1,6 @@
 /* RM160 — real website navigation. Native TestFlight owns its SwiftUI tab bar.
    The existing .site-header is the natural location on desktop; phones use a
-   fixed, illuminated glass dock. Never render an empty decorative shell. */
+   fixed, illuminated black dock. Never render an empty decorative shell. */
 (() => {
   if (window.webkit?.messageHandlers?.recastPreview) return;
   if (document.querySelector('nav.recast-mobile-nav')) return;
@@ -16,7 +16,7 @@
   const dock = document.createElement('nav');
   dock.className = 'recast-mobile-nav';
   dock.setAttribute('aria-label', 'Recast Me sections');
-  dock.setAttribute('data-recast-glass-nav', 'v160');
+  dock.setAttribute('data-recast-nav-style', 'v161');
 
   for (const page of pages) {
     const link = document.createElement('a');
@@ -58,12 +58,12 @@
   };
 
   const old = document.querySelector('link[data-recast-bottom-nav]');
-  if (old) old.href = '/mobile-bottom-nav.css?v=160';
+  if (old) old.href = '/mobile-bottom-nav.css?v=161';
   else {
     const css = document.createElement('link');
     css.rel = 'stylesheet';
-    css.href = '/mobile-bottom-nav.css?v=160';
-    css.dataset.recastBottomNav = 'v160';
+    css.href = '/mobile-bottom-nav.css?v=161';
+    css.dataset.recastBottomNav = 'v161';
     document.head.append(css);
   }
   document.body.classList.add('recast-web-mobile-nav');
