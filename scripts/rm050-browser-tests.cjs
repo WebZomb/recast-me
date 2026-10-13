@@ -50,6 +50,32 @@ const policy={highDaily:3,standardDaily:5,purchaseBonus:3,websiteCalls:70,social
   const page=await context.newPage();page.on('pageerror',e=>errors.push(e.message));page.setDefaultTimeout(12000);
   try{
    await page.goto('http://recast.test/',{waitUntil:'networkidle'});
+   // RM160: regression for the previously EMPTY mobile glass panel. An old
+   // site-wide !important rule hid every non-CTA nav link under 980px.
+   const visibleDock=await page.evaluate(()=>{
+     const dock=document.querySelector('nav.recast-mobile-nav');
+     if(!dock)return null;
+     const parent=dock.parentElement;
+     const links=[...dock.querySelectorAll('a')];
+     return {
+       inHeader:parent?.classList?.contains('site-header')||false,
+       dockStyle:getComputedStyle(dock).display,
+       children:links.map(a=>{
+         const s=getComputedStyle(a),r=a.getBoundingClientRect();
+         return {text:a.textContent.trim(),display:s.display,visible:s.visibility,opacity:s.opacity,
+                 area:r.width*r.height,withinViewport:r.left>=0&&r.right<=innerWidth+1}
+       }),
+       horizontalOverflow:document.documentElement.scrollWidth>innerWidth+2
+     };
+   });
+   assert.ok(visibleDock,'The website navigation dock must exist');
+   assert.equal(visibleDock.children.length,4,'There must be four real website buttons, not an empty glass shell');
+   assert.deepEqual(visibleDock.children.map(x=>x.text),['Create','My Recasts','My Orders','Guide']);
+   assert.ok(visibleDock.children.every(x=>x.display!=='none'&&x.visible==='visible'&&x.opacity!=='0'&&x.area>=500&&x.withinViewport),
+     'All four glass buttons must be visible and tappable '+JSON.stringify(visibleDock));
+   assert.equal(visibleDock.inHeader,width>=1060,'Desktop glass dock must live in the header, phone dock at the bottom');
+   assert.equal(visibleDock.horizontalOverflow,false,'The glass dock must not cause horizontal overflow');
+   await page.screenshot({path:path.join(out,`${engine.name()}-${width}-rm160-glass-nav.png`)});
    assert.equal(await page.locator('#product-grid').evaluate(e=>getComputedStyle(e).display),'grid','Checkout catalog must not inherit the block-style landing carousel');
    await page.locator('.site-header .nav-cta').click();
    // A customer unfamiliar with AI must see both paths immediately, not a
@@ -147,7 +173,7 @@ const policy={highDaily:3,standardDaily:5,purchaseBonus:3,websiteCalls:70,social
    assert.ok(await page.locator('#photo-thumbnails img').first().evaluate(img=>Math.max(img.naturalWidth,img.naturalHeight)<=480),'Upload display retains a small copy');
    await page.locator('.adventure-extra-actions').scrollIntoViewIfNeeded();
    await page.screenshot({path:path.join(out,`${engine.name()}-${width}-rm141-style-cards.png`)});
-   for(const [selector,asset] of [['#surprise-world','recast-surprise-prism-v159.svg'],['#more-adventures','recast-discover-portal-v159.svg']]){
+   for(const [selector,asset] of [['#surprise-world','recast-surprise-cinematic-v160.webp'],['#more-adventures','recast-discover-cinematic-v160.webp']]){
     assert.equal(await page.locator(selector+' img').count(),1,'Each discovery control has a unique illustrated scene');
     assert.match(await page.locator(selector+' img').first().getAttribute('src'),new RegExp(asset.replaceAll('.','\\.')));
     assert.ok(await page.locator(selector).evaluate(button=>{const a=button.getBoundingClientRect(),b=button.parentElement.getBoundingClientRect();return a.left>=b.left-1&&a.right<=b.right+1}),'Discovery card fits its container');
@@ -155,7 +181,7 @@ const policy={highDaily:3,standardDaily:5,purchaseBonus:3,websiteCalls:70,social
    }
    assert.match(await page.locator('[data-surprise-count]').textContent(),/Random pick · 47 styles/);
    assert.match(await page.locator('[data-style-count]').textContent(),/Explore 48 styles/);
-   assert.equal(await page.locator('.discovery-art-v159').count(),2,'Illustrated portal and mystery prism appear');
+   assert.equal(await page.locator('.discovery-art-v160').count(),2,'Cinematic illustrated portal and mystery scene appear');
    for(const img of await page.locator('#adventure-choices img').all()){
     assert.ok(await img.evaluate(el=>{const a=el.getBoundingClientRect(),b=el.parentElement.getBoundingClientRect();return Math.abs(a.top-b.top-2)<1&&Math.abs(a.width-(b.width-4))<1&&getComputedStyle(el).objectFit==='cover'}),'Featured images fill card edge to edge');
    }
@@ -344,7 +370,7 @@ const policy={highDaily:3,standardDaily:5,purchaseBonus:3,websiteCalls:70,social
    assert.equal(await page.locator('link[rel="canonical"]').getAttribute('href'),'https://recastmeai.com/gift-ideas');
    const giftWidth=await page.evaluate(()=>({scroll:document.documentElement.scrollWidth,width:innerWidth}));
    assert.ok(giftWidth.scroll<=giftWidth.width+1,'Gift guide horizontal overflow '+JSON.stringify(giftWidth));
-   assert.equal(await page.locator('a[href="/#start"]').count(),3);
+   assert.equal(await page.locator('a[href="/#start"]').count(),4,'Gift guide includes the new Create tab alongside the original CTAs');
    await page.screenshot({path:path.join(out,`${engine.name()}-${width}-rm150-gift-guide.png`),fullPage:true});
    assert.deepEqual(errors,[]);
    report.checks.push({engine:engine.name(),width,hqOnly:true,outageHidesStandard:true,exhaustionWarning:true,bonusReturnsToHQ:true,collapsedEditsAndReset:true,adminSettingsSave:true,higherBudgetConfirmed:true,modelLabDemoDog:true,pageErrors:errors});
