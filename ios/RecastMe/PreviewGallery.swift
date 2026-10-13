@@ -60,6 +60,7 @@ final class PreviewGallery: ObservableObject {
         }
         return SavedArtworkAccess.token(for: id) != nil
     }
+    func refreshAccess() { accessRevision += 1 }
     func reusableLink(_ item: SavedPreview) -> URL? {
         _ = accessRevision
         return SavedArtworkAccess.productURL(for: item.id)
