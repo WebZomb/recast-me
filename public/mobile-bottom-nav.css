@@ -186,3 +186,32 @@ body.recast-web-mobile-nav {
   }
   nav.recast-mobile-nav > a svg{height:22px;width:22px;flex:0 0 22px}
 }
+
+/* RM163: fifth seasonal Specials tab, keep Guide last on iPhone and web. */
+nav.recast-mobile-nav{grid-template-columns:repeat(5,minmax(0,1fr));width:min(calc(100vw - 20px),530px)}
+body.recast-web-mobile-nav nav.recast-mobile-nav > a:not(.nav-cta){
+  min-width:0;max-width:100%;font-size:clamp(9px,2.25vw,11px);letter-spacing:-.018em;
+  padding:5px 0;gap:3px;overflow:hidden
+}
+nav.recast-mobile-nav > a span{font-size:inherit;letter-spacing:inherit;line-height:1.13}
+nav.recast-mobile-nav > a svg{width:22px;height:22px;flex:0 0 22px}
+@media(min-width:1060px){
+  body.recast-desktop-header-nav .site-header > .brand{max-width:clamp(158px,18vw,235px)}
+  body.recast-desktop-header-nav .site-header > nav.recast-mobile-nav{
+    grid-template-columns:repeat(5,minmax(0,1fr))!important;
+    width:min(100%,595px);max-width:595px;min-width:440px;flex-basis:510px
+  }
+  body.recast-desktop-header-nav .site-header > nav.recast-mobile-nav > a:not(.nav-cta){
+    font-size:clamp(10px,.92vw,12.5px);padding:6px 3px;gap:5px
+  }
+  body.recast-desktop-floating-nav nav.recast-mobile-nav{
+    grid-template-columns:repeat(5,minmax(0,1fr));width:min(565px,calc(100vw - 380px))
+  }
+}
+@media(max-width:375px){
+  nav.recast-mobile-nav{width:min(calc(100vw - 15px),500px);gap:0;padding:3px}
+  body.recast-web-mobile-nav nav.recast-mobile-nav > a:not(.nav-cta){
+    font-size:clamp(8.4px,2.47vw,9.5px);padding:5px 0;gap:3px
+  }
+  nav.recast-mobile-nav > a svg{height:20px;width:20px;flex:0 0 20px}
+}
