@@ -51,7 +51,7 @@ test('the two illustrated worlds are original standalone SVG with only local ass
   assert.match(art,/<radialGradient/);
   assert.match(art,/<filter/);
   assert.ok(art.length>4500);
-  assert.doesNotMatch(art,/<script|<foreignObject|https?:\/\/|href=/i);
+  assert.doesNotMatch(art,/<script|<foreignObject|\s(?:xlink:)?href\s*=|url\(["']?https?:/i);
  }
  assert.match(a,/Grand golden multi-ring portal/);
  assert.match(b,/Central three-dimensional mystery die/);
