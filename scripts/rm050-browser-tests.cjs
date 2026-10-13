@@ -50,6 +50,32 @@ const policy={highDaily:3,standardDaily:5,purchaseBonus:3,websiteCalls:70,social
   const page=await context.newPage();page.on('pageerror',e=>errors.push(e.message));page.setDefaultTimeout(12000);
   try{
    await page.goto('http://recast.test/',{waitUntil:'networkidle'});
+   // RM160: regression for the previously EMPTY mobile glass panel. An old
+   // site-wide !important rule hid every non-CTA nav link under 980px.
+   const visibleDock=await page.evaluate(()=>{
+     const dock=document.querySelector('nav.recast-mobile-nav');
+     if(!dock)return null;
+     const parent=dock.parentElement;
+     const links=[...dock.querySelectorAll('a')];
+     return {
+       inHeader:parent?.classList?.contains('site-header')||false,
+       dockStyle:getComputedStyle(dock).display,
+       children:links.map(a=>{
+         const s=getComputedStyle(a),r=a.getBoundingClientRect();
+         return {text:a.textContent.trim(),display:s.display,visible:s.visibility,opacity:s.opacity,
+                 area:r.width*r.height,withinViewport:r.left>=0&&r.right<=innerWidth+1}
+       }),
+       horizontalOverflow:document.documentElement.scrollWidth>innerWidth+2
+     };
+   });
+   assert.ok(visibleDock,'The website navigation dock must exist');
+   assert.equal(visibleDock.children.length,4,'There must be four real website buttons, not an empty glass shell');
+   assert.deepEqual(visibleDock.children.map(x=>x.text),['Create','My Recasts','My Orders','Guide']);
+   assert.ok(visibleDock.children.every(x=>x.display!=='none'&&x.visible==='visible'&&x.opacity!=='0'&&x.area>=500&&x.withinViewport),
+     'All four glass buttons must be visible and tappable '+JSON.stringify(visibleDock));
+   assert.equal(visibleDock.inHeader,width>=1060,'Desktop glass dock must live in the header, phone dock at the bottom');
+   assert.equal(visibleDock.horizontalOverflow,false,'The glass dock must not cause horizontal overflow');
+   await page.screenshot({path:path.join(out,`${engine.name()}-${width}-rm160-glass-nav.png`)});
    assert.equal(await page.locator('#product-grid').evaluate(e=>getComputedStyle(e).display),'grid','Checkout catalog must not inherit the block-style landing carousel');
    await page.locator('.site-header .nav-cta').click();
    // A customer unfamiliar with AI must see both paths immediately, not a
@@ -344,7 +370,7 @@ const policy={highDaily:3,standardDaily:5,purchaseBonus:3,websiteCalls:70,social
    assert.equal(await page.locator('link[rel="canonical"]').getAttribute('href'),'https://recastmeai.com/gift-ideas');
    const giftWidth=await page.evaluate(()=>({scroll:document.documentElement.scrollWidth,width:innerWidth}));
    assert.ok(giftWidth.scroll<=giftWidth.width+1,'Gift guide horizontal overflow '+JSON.stringify(giftWidth));
-   assert.equal(await page.locator('a[href="/#start"]').count(),3);
+   assert.equal(await page.locator('a[href="/#start"]').count(),4,'Gift guide includes the new Create tab alongside the original CTAs');
    await page.screenshot({path:path.join(out,`${engine.name()}-${width}-rm150-gift-guide.png`),fullPage:true});
    assert.deepEqual(errors,[]);
    report.checks.push({engine:engine.name(),width,hqOnly:true,outageHidesStandard:true,exhaustionWarning:true,bonusReturnsToHQ:true,collapsedEditsAndReset:true,adminSettingsSave:true,higherBudgetConfirmed:true,modelLabDemoDog:true,pageErrors:errors});
