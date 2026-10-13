@@ -1142,7 +1142,10 @@ async function exportPreview(native=false){
     const result=await protectedPreviewFile(lastSuccessfulPreviewMeta);
     if(native){
       // Native replies after it has actually persisted the file.
-      const reply=await window.webkit.messageHandlers.recastPreview.postMessage({id:result.id,image:result.image,accessToken:lastSuccessfulPreviewMeta?.accessToken||''});
+      const reply=await window.webkit.messageHandlers.recastPreview.postMessage({
+        id:result.id,image:result.image,accessToken:lastSuccessfulPreviewMeta?.accessToken||'',
+        styleName:lastSuccessfulPreviewMeta?.title?.replace(/ preview ready\.$/,'')||'My Recast'
+      });
       exportStatus.textContent=reply?.reusable===false
         ?'✓ Saved offline. Reopen this version in Recent Recasts to restore its private product link.'
         :'✓ Saved to My Recasts on this iPhone. Open it to put it on a product.';
