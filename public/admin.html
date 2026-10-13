@@ -187,7 +187,7 @@
           <label class="pause-setting"><input name="newOrders" type="checkbox"> New order notifications</label>
           <label>Maximum messages per channel per day<input name="dailyLimit" type="number" min="1" max="50" step="1" required></label>
           <label class="pause-setting"><input name="consent" type="checkbox"> These destinations belong to me, or I have permission to send them alerts.</label>
-          <p>Checks run about every 10 minutes while order sync is enabled. Problems are grouped, with up to one reminder per problem per UTC day. Text/email provider charges may apply. Messages contain a general notice; private order details stay in this dashboard. A full site outage needs separate uptime monitoring.</p>
+          <p>Checks run about every 10 minutes while order sync is enabled. Problems are grouped, with up to one reminder per problem per UTC day. Text/email provider charges may apply. Messages include only the affected Shopify order number and a sanitized problem category; customer details and private links stay in this dashboard. A full site outage needs separate uptime monitoring.</p>
           <button type="submit">Save alert settings</button><p id="alert-settings-status" role="status"></p>
           <div class="glass op-card"><h3>What triggered the last alert?</h3><p id="alert-last-detail" role="status">Checking the most recent recorded alert…</p><p class="muted">This captures the issue at the time it was sent. If the order recovered, it may no longer show as an open problem. Earlier generic messages didn't save their cause.</p><button type="button" id="alert-open-orders">Open Orders &amp; recovery →</button></div>
         </form>
@@ -196,6 +196,12 @@
       </section>
 
       <section class="tab-panel" data-panel="system">
+        <div class="glass op-card"><h3>Brand &amp; packaging privacy — owner checklist</h3>
+          <p>Shopify still displays <strong>My Store</strong> on some customer checkout surfaces. Rename it to <strong>Recast Me Ai</strong> in Shopify Settings → General, and inspect the customer order-confirmation email.</p>
+          <p>Printful charges the store owner its manufacturing/shipping amount separately from the customer's retail receipt. Printful's packing slip normally hides prices and uses its own return address by default. Verify your Printful Settings → Store settings → Branding and Returns → Settings before public launch. Do not use a personal home address as the custom return address.</p>
+          <p>This checklist is advisory: it does not edit your Shopify or Printful account settings automatically.</p>
+          <p><a href="/purchase-demo.html" target="_blank" rel="noopener noreferrer">Preview post-purchase celebration without paying →</a></p>
+        </div>
         <p><a href="/print-finish.html">Compare print finishes →</a></p>
         <p><a href="/model-lab.html">Compare rendering engines →</a></p>
         <div id="render-readiness" class="glass launch-box"></div>
