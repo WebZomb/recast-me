@@ -60,7 +60,7 @@ test('accessible high-impact visuals respect iOS reduced motion and keep control
  assert.match(ui,/aria-labelledby="rg-grand-title"/);
  assert.match(ui,/aria-label="Close celebration"/);
  assert.match(ui,/event\.key==='Escape'/);
- assert.match(ui,/event\.key==='Tab'/);
+ assert.match(ui,/event\.key!=='Tab'/);
  assert.match(ui,/document\.body\.style\.overflow=beforeOverflow/);
  assert.match(css,/@media\(prefers-reduced-motion:reduce\)/);
  assert.match(css,/\.rg-overlay \.rg-particle.*display:none/);
