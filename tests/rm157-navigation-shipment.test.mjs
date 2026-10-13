@@ -45,17 +45,19 @@ test('customer API, order list and order details jointly refuse premature tracki
 });
 test('four website destinations are accessible while the native app retains its own tabs',()=>{
  const nav=read('public/mobile-bottom-nav.js'),html=read('public/index.html');
- const labels=['Create','My Recasts','My Orders','Guide'];
+ const labels=['Create','My Recasts','My Orders','Specials','Guide'];
  for(const label of labels)assert.match(nav,new RegExp("label:'"+label+"'"));
  assert.match(nav,/window\.webkit\?\.messageHandlers\?\.recastPreview/);
  assert.doesNotMatch(nav,/recast-legacy-orders-pill/);
  for(const page of ['index.html','my-orders.html','my-recasts.html','order.html','purchase-demo.html']){
-  assert.match(read('public/'+page),/mobile-bottom-nav\.js\?v=161/,page);
+  assert.match(read('public/'+page),/mobile-bottom-nav\.js\?v=163/,page);
  }
  assert.ok(!html.includes('View saved Recasts (up to 20)'));
- const extras=html.match(/<details class="preview-more">([\s\S]*?)<\/details>/)?.[1] || '';
- assert.ok(extras.includes('Save to My Recasts'));
- assert.doesNotMatch(extras,/Track this order|My orders &amp; tracking|View saved Recasts/);
+ assert.doesNotMatch(html,/class="preview-more"/);
+ assert.match(html,/id="save-native-preview"/);
+ assert.match(html,/id="share-preview"/);
+ assert.match(html,/class="preview-quick-actions"/);
+ assert.match(html,/href="#shop">Put It on a Product/);
 });
 test('verified celebration is larger, accessible and the demo remains no-charge',()=>{
  const css=read('public/order-experience.css'),demo=read('public/purchase-demo.html'),
