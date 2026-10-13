@@ -46,7 +46,7 @@ final class PreviewGallery: ObservableObject {
               let data = Data(base64Encoded: String(encoded)), data.prefix(3) == Data([255,216,255]),
               let image = UIImage(data: data), image.size.width <= 4096, image.size.height <= 4096 else { throw GalleryError.invalid }
         guard items.contains(where: {$0.id == id}) || items.count < 20 else { throw GalleryError.full }
-        let title = String((styleName?.trimmingCharacters(in: .whitespacesAndNewlines) ?? "") .prefix(70))
+        let title = String((styleName?.trimmingCharacters(in: .whitespacesAndNewlines) ?? "").prefix(70))
         let previous = items.first(where: { $0.id == id })?.styleName
         let item = SavedPreview(id: id, savedAt: Date(), styleName: title.isEmpty ? previous : title)
         let updated = [item] + items.filter { $0.id != id }
