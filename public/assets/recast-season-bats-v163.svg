@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 110" aria-hidden="true">
+<defs><linearGradient id="bat" x1="0" x2="1"><stop stop-color="#ebbcff"/><stop offset="1" stop-color="#72ddff"/></linearGradient></defs>
+<g fill="url(#bat)" opacity=".83">
+<path d="M30 37q18-17 33-10 8-15 14-5 5-14 11 5 15-7 33 10-21-2-26 18-15-13-26 7-12-20-27-7-6-20-22-18z"/>
+<path d="M146 61q10-12 21-7 6-11 10-4 4-10 8 4 11-5 23 7-14-1-18 13-10-9-13 6-8-15-16-6-4-14-15-13z" opacity=".73"/>
+<path d="M92 83q7-7 13-5 4-8 7-2 3-7 6 2 10-2 14 5-9-1-11 9-9-6-11 4-5-10-11-4-2-9-7-9z" opacity=".57"/>
+</g><g fill="#e8ecff" opacity=".7"><circle cx="15" cy="14" r="2"/><circle cx="128" cy="14" r="1"/><circle cx="225" cy="32" r="2"/><circle cx="215" cy="95" r="1"/></g></svg>

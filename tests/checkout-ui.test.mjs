@@ -24,7 +24,7 @@ function markPreviewReady(ui){
   ui.card.dataset.mockupSignature=JSON.stringify({sku:'RECAST-MUG-15OZ',design});
   return design;
 }
-test('homepage polish keeps alternates separate and preview utilities collapsed',()=>{
+test('homepage polish keeps alternates separate and preview actions compact',()=>{
   const html=readFileSync(new URL('../public/index.html',import.meta.url),'utf8');
   const aiPos=html.indexOf('MAKE A PICTURE WITH AI'),formPos=html.indexOf('<form id="recast-form">'),orPos=html.indexOf('class="alternate-divider"'),savedPos=html.indexOf('Open a saved picture');
   assert.ok(aiPos>=0&&formPos>aiPos&&orPos>formPos&&savedPos>orPos);
@@ -33,7 +33,10 @@ test('homepage polish keeps alternates separate and preview utilities collapsed'
   assert.match(html,/jack-russell-source-v18\.webp/);
   assert.match(html,/world-game-v18\.webp/);
   assert.match(html,/class="process-ribbon"/);
-  assert.match(html,/class="preview-more"/);
+  assert.match(html,/class="preview-quick-actions"/);
+  assert.match(html,/id="save-native-preview"/);
+  assert.match(html,/id="share-preview"/);
+  assert.doesNotMatch(html,/class="preview-more"|id="copy-recast-link"/);
   assert.match(html,/Put It on a Product →/);
   assert.match(html,/Pick another version/);
   assert.doesNotMatch(html,/Choose a product for your Recast →/);

@@ -69,10 +69,10 @@ const policy={highDaily:3,standardDaily:5,purchaseBonus:3,websiteCalls:70,social
      };
    });
    assert.ok(visibleDock,'The website navigation dock must exist');
-   assert.equal(visibleDock.children.length,4,'There must be four real website buttons, not an empty glass shell');
-   assert.deepEqual(visibleDock.children.map(x=>x.text),['Create','My Recasts','My Orders','Guide']);
+   assert.equal(visibleDock.children.length,5,'There must be five visible buttons including Specials');
+   assert.deepEqual(visibleDock.children.map(x=>x.text),['Create','My Recasts','My Orders','Specials','Guide']);
    assert.ok(visibleDock.children.every(x=>x.display!=='none'&&x.visible==='visible'&&x.opacity!=='0'&&x.area>=500&&x.withinViewport),
-     'All four glass buttons must be visible and tappable '+JSON.stringify(visibleDock));
+     'All five black buttons must be visible and tappable '+JSON.stringify(visibleDock));
    assert.equal(visibleDock.inHeader,width>=1060,'Desktop glass dock must live in the header, phone dock at the bottom');
    assert.equal(visibleDock.horizontalOverflow,false,'The glass dock must not cause horizontal overflow');
    await page.screenshot({path:path.join(out,`${engine.name()}-${width}-rm160-glass-nav.png`)});

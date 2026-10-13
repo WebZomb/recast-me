@@ -33,6 +33,46 @@ body{background:radial-gradient(circle at 40% 0%,#251948,#0b1025 55%,#080913);co
 .library-secondary-actions button:active{transform:scale(.96);color:#fff}
 @media(max-width:470px){.library-card{border-radius:17px}.library-copy{padding:10px}.library-copy h2{font-size:14px}.library-actions .button.primary{font-size:12px;padding:10px 6px}.library-secondary-actions button{font-size:11px}}
 @media(prefers-reduced-motion:reduce){.library-card{transition:none}}
+
+/* RM162 — single clean primary action, the rest on each saved picture. */
+.library-preview-link{display:grid;place-items:center;width:100%;height:100%;text-decoration:none;color:#bac8eb}
+.library-preview-link:focus-visible{outline:3px solid #80ebfc;outline-offset:-3px}
+.library-preview-link img{width:100%;height:100%;object-fit:contain}
+.library-more-options{margin:0;border:1px solid #525470;border-radius:12px;background:#121525;overflow:hidden}
+.library-more-options summary{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:11px 13px;min-height:42px;box-sizing:border-box;
+  font-size:13px;font-weight:800;cursor:pointer;color:#e8e7f4;list-style:none
+}
+.library-more-options summary::-webkit-details-marker{display:none}
+.library-more-options summary::after{content:"+";color:#87e9f5;font-size:18px;font-weight:500}
+.library-more-options[open] summary::after{content:"–"}
+.library-more-options summary:focus-visible{outline:2px solid #87e9f5;outline-offset:-2px}
+.library-more-panel{display:grid;gap:0;padding:2px 11px 9px;border-top:1px solid #373b58}
+.library-more-panel .library-more-action{
+  display:flex;align-items:center;justify-content:flex-start;text-align:left;
+  width:100%;min-height:38px;box-sizing:border-box;margin:0;padding:7px 4px;
+  border:0;border-bottom:1px solid #32354c;border-radius:0;
+  background:none;color:#d5e9fa;font-size:12px;font-weight:750;
+  text-decoration:none;cursor:pointer;white-space:normal;line-height:1.35
+}
+.library-more-panel .library-more-action:hover,
+.library-more-panel .library-more-action:focus-visible{color:#97f4ff}
+.library-more-panel .library-remove-button{color:#c3bbd0;border-bottom:0}
+.library-more-panel .library-action-status{
+  color:#91e5d7;font-size:11px;line-height:1.45;margin:5px 0 0;overflow-wrap:anywhere
+}
+.library-more-panel .library-action-status:empty{display:none}
+.library-copy-fallback{width:100%;box-sizing:border-box;min-height:40px;margin-top:6px;
+  background:#080d1c;color:#ecfcff;border:1px solid #6dd8ec;border-radius:8px;padding:8px}
+.library-copy .artwork-code{display:block;user-select:text;-webkit-user-select:text}
+@media(max-width:470px){
+  .library-copy{padding:10px}
+  .library-actions{gap:8px}
+  .library-more-options summary{font-size:12px;padding:10px 9px;min-height:41px}
+  .library-more-panel{padding:2px 8px 8px}
+  .library-more-panel .library-more-action{font-size:11px;min-height:37px}
+}
 </style></head><body>
 <main class="library-shell">
 <header class="library-header"><a href="/#start"><img src="https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recastmeai-approved-orbit-header-v2.png?v=1791314310&amp;width=800" alt="Recast Me Ai"></a><a href="/#start" class="button primary">Create another ✦</a></header>
@@ -41,4 +81,4 @@ body{background:radial-gradient(circle at 40% 0%,#251948,#0b1025 55%,#080913);co
 <section id="library-grid" class="library-grid" aria-label="Saved Recasts"></section>
 <p class="library-note">Artwork IDs help identify pictures, but <strong>an ID alone doesn't grant access</strong>. Private product links are needed to reopen an image. Removing a favorite here removes only this browser's shortcut, not an already placed order or the server artwork. Do not share private product links publicly.</p>
 <a class="button ghost" href="/my-orders.html">My Orders &amp; tracking →</a>
-</main><script type="module" src="/my-recasts.js?v=2"></script><script src="/mobile-bottom-nav.js?v=161" type="module"></script></body></html>
+</main><script type="module" src="/my-recasts.js?v=3"></script><script src="/mobile-bottom-nav.js?v=163" type="module"></script></body></html>

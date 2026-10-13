@@ -14,7 +14,9 @@ test('browser and iPhone both show a Save to My Recasts action and reuse private
  fresh();
  const page=fs.readFileSync('public/index.html','utf8');
  const app=fs.readFileSync('public/app.js','utf8');
- assert.match(page,/id="save-native-preview" class="button ghost">Save to My Recasts/);
+ assert.match(page,/id="save-native-preview" class="preview-quick-button preview-quick-save"/);
+ assert.match(page,/id="share-preview" class="preview-quick-button preview-quick-share"/);
+ assert.doesNotMatch(page,/class="preview-more"/);
  assert.match(page,/href="\/my-recasts.html"/);
  assert.match(app,/saveRecast/);
  assert.match(app,/accessToken:lastSuccessfulPreviewMeta\?\.accessToken/);
