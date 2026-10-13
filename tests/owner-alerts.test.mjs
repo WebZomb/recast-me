@@ -59,7 +59,7 @@ test('alerts specify exact operational order issue but never include customer or
   const result=await sendOwnerAlerts(env);
   assert.equal(calls.length,1);
   const body=JSON.parse(calls[0].body);
-  assert.match(body.subject,/issue to review/);
+  assert.match(body.subject,/Order #1003: order review/);
   assert.match(body.text,/Order #1003: order review/);
   assert.match(body.text,/recastmeai.com\/admin.html/);
   assert.doesNotMatch(body.text,/do-not-send|private artwork|XYZ|secret/);
