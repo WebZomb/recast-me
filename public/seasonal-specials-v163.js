@@ -1,5 +1,8 @@
-import {seasonalSpotlight,upcomingGiftEvents,daysToEvent,eventDateLabel} from './season-calendar.js?v=1';
-const now=new Date(),spot=seasonalSpotlight(now);
+import {renderSeasonalProducts} from './seasonal-products.js?v=166';
+import {seasonalSpotlight,upcomingGiftEvents,daysToEvent,eventDateLabel} from './season-calendar.js?v=166';
+let campaign={active:null,offer:null};
+try{const response=await fetch('/api/seasonal-campaign',{cache:'no-store'});if(response.ok)campaign=await response.json();}catch{}
+const now=new Date(),spot=seasonalSpotlight(now,campaign.active||null);
 const by=id=>document.getElementById(id);
 const put=(id,value)=>{const el=by(id);if(el)el.textContent=value};
 const src=(id,value)=>{const el=by(id);if(el)el.src=value};
@@ -32,12 +35,14 @@ function updateHero(){
   const mainLink='/?style='+encodeURIComponent(spot.style)+'#start';
   put('season-primary-cta',spot.id==='halloween'?'Make a Halloween Recast →':'Make a '+spot.name+' Recast →');
   href('season-primary-cta',mainLink);
-  const featured=upcomingGiftEvents(now,1)[0],days=featured?daysToEvent(featured,now):0;
+  const featured=campaign.active?{title:campaign.active.title,date:new Date(campaign.active.date+'T12:00:00')}:upcomingGiftEvents(now,1)[0],days=featured?daysToEvent(featured,now):0;
   const dayCopy=spot.id==='halloween'?
     'Halloween is October 31'+(days===0?' — today is the day!':'.'):
     (featured?.title||'Your next occasion')+' '+(featured?eventDateLabel(featured.date):'')+(days===0?' is here!':'.');
   put('season-date-note',dayCopy+' Personalized gifts are made to order; check estimated delivery at checkout.');
   if(spot.id==='halloween')return;
+  const shopLink=document.querySelector('a[href="#season-shop"]');if(shopLink)shopLink.textContent='Explore personalized gifts ✦';
+  for(const link of document.querySelectorAll('a[href="/?style=halloween#start"]'))link.href=mainLink;
   put('season-marquee','✦  YOUR FAVORITE PHOTO     ✦     A WHOLE NEW WORLD     ✦     PERSONAL GIFTS     ✦     MADE WITH MAGIC  ✦');
   put('season-styles-title','Give their favorite memory a new world.');
   put('season-styles-copy',spot.secondaryCopy);
@@ -107,3 +112,15 @@ function fillCalendar(){
 }
 updateHero();
 fillCalendar();
+
+if(campaign.offer){
+ for(const banner of document.querySelectorAll('[data-season-offer]')){
+  banner.hidden=false;
+  const headline=document.createElement('strong');headline.textContent=campaign.offer.label.toUpperCase();
+  const copy=document.createElement('span');copy.textContent='Halloween treats, made personal. Automatically added at checkout.';
+  banner.append(headline,copy);
+ }
+ const terms=document.getElementById('season-offer-terms');terms.textContent=campaign.offer.terms+' Code: '+campaign.offer.code+'.';terms.hidden=false;
+}
+
+renderSeasonalProducts(campaign);

@@ -1,3 +1,4 @@
+import {holidayRoutes} from './holiday-campaigns.js';
 import app from "./entry.js";
 import {subjectDetection} from "./subject-detection.js";
 import {printfulDiagnosticRoute} from "./printful-diagnostics.js";
@@ -14,6 +15,8 @@ import { printFinishRoutes } from './print-finish.js';
 const application = {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
+    const holiday=await holidayRoutes(request,env);
+    if(holiday)return holiday;
     if(url.pathname==='/api/subject-detection' && request.method==='POST')return subjectDetection(request,env);
     const traffic=await trafficRoutes(request,env);
     if(traffic)return traffic;

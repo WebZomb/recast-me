@@ -1,3 +1,4 @@
+import {applyHolidayDiscount} from './holiday-campaigns.js';
 import {checkStoredArtwork} from './content-safety.js';
 import core, { shopifyCatalog } from "./index.js";
 import {createMockup} from "./workflow.js";
@@ -336,7 +337,7 @@ async function checkoutLink(request, env, ctx) {
     }:{})
   };
   const encodedProperties = base64UrlUtf8(JSON.stringify(properties));
-  const checkoutUrl = `https://${shopDomain(env)}/cart/${numericId}:1?properties=${encodeURIComponent(encodedProperties)}&ref=recast-me`;
+  const checkoutUrl = await applyHolidayDiscount(`https://${shopDomain(env)}/cart/${numericId}:1?properties=${encodeURIComponent(encodedProperties)}&ref=recast-me`,env);
 
   return json({
     ok: true,
@@ -472,6 +473,19 @@ export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
 
+    if(url.pathname==='/api/seasonal-products'&&request.method==='GET'){
+      try{
+        const rows=flattenShopifyProducts(await shopifySnapshot(request,env,ctx)).filter(row=>row.status==='ACTIVE');
+        const products=new Map();
+        for(const row of rows){
+          const name=FULFILLMENT[row.sku].product;
+          const old=products.get(name),price=Number(row.price);
+          if(!Number.isFinite(price)||price<=0)continue;
+          if(!old||price<old.price)products.set(name,{name,price,sku:row.sku});
+        }
+        return json({ok:true,products:[...products.values()]});
+      }catch{return json({ok:false,error:'Products are temporarily unavailable.'},503);}
+    }
     const approvedImage=url.pathname.match(/^\/api\/approved-preview\/([a-f0-9]{48})(?:\/(\d))?$/);
     if(approvedImage&&request.method==="GET")return approvedPreviewImage(env,approvedImage[1],approvedImage[2]??null);
     const approvalPage=url.pathname.match(/^\/proof\/([a-f0-9]{48})\/approve$/);

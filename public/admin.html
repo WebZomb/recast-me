@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#060611">
   <meta name="robots" content="noindex,nofollow">
   <title>Recast Me — Control Center</title>
-  <link rel="stylesheet" href="/admin.css?v=291">
+  <link rel="stylesheet" href="/admin.css?v=166">
 </head>
 <body>
   <div class="aurora aurora-a"></div><div class="aurora aurora-b"></div>
@@ -176,6 +176,13 @@
           <pre id="provider-health-text" data-private-setting></pre>
           <div id="provider-jobs" data-private-setting role="status"></div>
         </details>
+        <details class="glass settings-details" id="holiday-schedule"><summary>Holiday Specials schedule</summary>
+          <p>Dates repeat every year, using Eastern time. Blank dates use the occasion’s date and lead days. When holidays overlap, the highest priority wins; ties use the earliest occasion. Only Halloween is enabled until you select more occasions.</p>
+          <p>These controls schedule the page, not Shopify discounts. The verified Halloween 10% offer ends October 31, 2026; it will not silently repeat next year.</p>
+          <p id="holiday-offer-status"></p>
+          <form id="holiday-schedule-form"><div id="holiday-schedule-fields" class="holiday-schedule-fields"></div><button type="submit">Save holiday schedule</button> <button type="button" id="reload-holiday-schedule">Reload</button></form>
+          <p id="holiday-schedule-status" role="status"></p>
+        </details>
         <details class="glass settings-details"><summary>Recent settings changes</summary><pre id="owner-settings-history" data-private-setting></pre></details>
       </section>
 
@@ -237,6 +244,6 @@
       <div id="toast" class="toast hidden"></div>
     </section>
   </main>
-  <script src="/admin.js?v=rm159" type="module"></script>
+  <script src="/admin.js?v=rm166" type="module"></script>
 </body>
 </html>
