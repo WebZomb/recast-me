@@ -63,7 +63,7 @@
   else {
     const css = document.createElement('link');
     css.rel = 'stylesheet';
-    css.href = '/mobile-bottom-nav.css?v=161';
+    css.href = '/mobile-bottom-nav.css?v=163';
     css.dataset.recastBottomNav = 'v163';
     document.head.append(css);
   }
