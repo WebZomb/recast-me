@@ -8,7 +8,7 @@ workflows:
     integrations:
       app_store_connect: Recast Me
     environment:
-      xcode: latest
+      xcode: 26.2
       ios_signing:
         distribution_type: app_store
         bundle_identifier: com.recastme.ios
@@ -33,10 +33,10 @@ workflows:
       - name: Set a unique build number
         script: |
           set -eu
-          # The existing source build is 2; this workflow starts above it.
+          # The source build is 3; this workflow starts above it.
           RECAST_COUNTER="${BUILD_NUMBER:?Missing Codemagic build number}"
           case "$RECAST_COUNTER" in *[!0-9]*|'') exit 1 ;; esac
-          RECAST_BUILD_NUMBER=$((RECAST_COUNTER + 3))
+          RECAST_BUILD_NUMBER=$((RECAST_COUNTER + 4))
           test "$RECAST_BUILD_NUMBER" -le 9999 || {
             echo 'Review the Apple build-number range before uploading.'
             exit 1

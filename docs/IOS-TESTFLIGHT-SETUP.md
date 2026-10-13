@@ -12,8 +12,8 @@ Prepared October 12, 2026. Configuration only: not connected, signed, uploaded o
 
 ## Finish before the first signed build
 
-- Package the approved RM icon as a 1024×1024 opaque app icon in `ios/RecastMe/Assets.xcassets/AppIcon.appiconset/`; set the AppIcon build setting. The existing public brand icon is only 400×400; it has been inspected but not changed or packaged in this session.
-- Review native required-reason APIs and all embedded web-service data collection, then package `PrivacyInfo.xcprivacy` and complete accurate App Store privacy disclosures. Do not declare the whole service collects no data.
+- RM153 packages a 1024×1024 opaque icon derived from the approved RM artwork and sets the AppIcon build setting. Original website brand assets are unchanged. Inspect the icon on the owner’s iPhone.
+- RM153 packages `PrivacyInfo.xcprivacy`; see `ios/PRIVACY-REVIEW.md`. Confirm provider/account settings and complete matching App Store privacy disclosures before distribution. Do not declare the whole service collects no data.
 - Confirm the Apple team, app record and bundle match. Select an Xcode version satisfying Apple's current upload requirements.
 - Review available Codemagic minutes/billing before starting the build. This configuration has no automatic triggers; it does not start itself.
 

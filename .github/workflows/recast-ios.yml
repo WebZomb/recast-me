@@ -16,6 +16,8 @@ jobs:
           git remote add origin "https://github.com/${GITHUB_REPOSITORY}.git"
           git fetch --depth=1 origin "$GITHUB_SHA"
           git checkout --detach FETCH_HEAD
+      - name: Select Xcode 26.2
+        run: sudo xcode-select -s /Applications/Xcode_26.2.app/Contents/Developer
       - name: Install XcodeGen
         run: brew install xcodegen
       - name: Generate project and compile for simulator (no signing or upload)
@@ -23,3 +25,9 @@ jobs:
           cd ios
           xcodegen generate
           xcodebuild -project RecastMe.xcodeproj -scheme RecastMe -configuration Debug -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' -derivedDataPath /tmp/recast-ios-build CODE_SIGNING_ALLOWED=NO build
+      - name: Verify packaged app resources
+        run: |
+          RECAST_APP=/tmp/recast-ios-build/Build/Products/Debug-iphonesimulator/RecastMe.app
+          test -s "$RECAST_APP/Assets.car"
+          plutil -lint "$RECAST_APP/PrivacyInfo.xcprivacy"
+          /usr/libexec/PlistBuddy -c 'Print :CFBundleIcons:CFBundlePrimaryIcon:CFBundleIconName' "$RECAST_APP/Info.plist" | grep -x AppIcon
