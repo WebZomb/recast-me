@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#060611">
   <meta name="robots" content="noindex,nofollow">
   <title>Recast Me — Control Center</title>
-  <link rel="stylesheet" href="/admin.css?v=290">
+  <link rel="stylesheet" href="/admin.css?v=291">
 </head>
 <body>
   <div class="aurora aurora-a"></div><div class="aurora aurora-b"></div>
@@ -78,8 +78,14 @@
       </section>
       <section class="tab-panel" data-panel="errors">
         <div class="panel-heading"><div><div class="eyebrow">AI DIAGNOSTICS</div><h2>Generation errors</h2><p>Private diagnostics for failed previews. Customer photos are not stored in this log; it only records model, stage, provider code, and failure reason.</p></div></div>
-        <label>Support reference <input id="diagnostic-reference" placeholder="GEN-…"></label><button type="button" id="find-diagnostic">Find this error</button><pre id="diagnostic-result" style="white-space:pre-wrap;overflow-wrap:anywhere"></pre>
+        <div class="diagnostic-lookup"><label>Support reference <input id="diagnostic-reference" placeholder="GEN-…"></label><button type="button" id="find-diagnostic">Find this error</button></div>
+        <pre id="diagnostic-result" style="white-space:pre-wrap;overflow-wrap:anywhere"></pre>
+        <div class="diagnostic-controls">
+          <label for="generation-filter">Filter recent errors<input type="search" id="generation-filter" placeholder="Reference, reason, quality…" autocomplete="off"></label>
+          <span id="generation-summary" role="status" aria-live="polite">Loading recent errors…</span>
+        </div>
         <div id="generation-errors-list" class="card-list"></div>
+        <button id="generation-show-more" class="diagnostic-load-more" type="button" hidden>Show 5 more errors ↓</button>
       </section>
 
       <section class="tab-panel" data-panel="traffic">
@@ -231,6 +237,6 @@
       <div id="toast" class="toast hidden"></div>
     </section>
   </main>
-  <script src="/admin.js?v=rm144" type="module"></script>
+  <script src="/admin.js?v=rm159" type="module"></script>
 </body>
 </html>
