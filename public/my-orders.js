@@ -1,4 +1,4 @@
-import {verifiedOrders,orderLink} from './order-experience.js?v=1';
+import {verifiedOrders,orderLink} from './order-experience.js?v=2';
 const list=document.querySelector('#orders-list');
 const status=document.querySelector('#orders-status');
 const button=document.querySelector('#orders-refresh');

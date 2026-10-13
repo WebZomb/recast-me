@@ -37,13 +37,26 @@ html{scroll-behavior:smooth}body{background:radial-gradient(circle at 50% 3%,#33
 .demo-review .button{width:100%;min-height:48px;margin-top:16px}
 .demo-note{font-size:13px;line-height:1.6;color:#c6d5e8;margin:22px 5px}
 @media(prefers-reduced-motion:reduce){.demo-sparkle i{animation:none}}
+
+/* RM157: the sample celebration fills the screen like the real success overlay. */
+.demo-hero{min-height:min(690px,calc(100dvh - 135px));display:flex;flex-direction:column;justify-content:center;box-sizing:border-box;padding:48px 26px 45px;border-color:#b899ff;box-shadow:0 0 68px #863be75e,0 20px 70px #0009;background:radial-gradient(circle at 50% 6%,#7233a4bb 0%,#271b53 48%,#101a37 100%);}
+.demo-hero::before{content:"";position:absolute;inset:14px;border:1px solid rgba(223,197,255,.26);border-radius:20px;pointer-events:none}
+.demo-hero .eyebrow{font-size:15px;letter-spacing:.18em;color:#aeefff}
+.demo-party{width:120px;height:120px;font-size:64px;margin-bottom:27px;box-shadow:0 0 65px #42d5ff80,0 0 65px #ed56ff66}
+.demo-hero h1{font-size:clamp(42px,9vw,60px);letter-spacing:-.05em;line-height:1.02;margin:10px 0 22px}
+.demo-hero>p{font-size:18px;line-height:1.5;max-width:400px;margin:0 auto}
+.demo-bonus{font-size:19px;line-height:1.5;padding:19px 16px;margin:30px 0 18px}
+.demo-actions{width:100%;gap:13px}
+.demo-actions .button{min-height:62px;font-size:17px;font-weight:800;border-radius:16px}
+.demo-sparkle{z-index:1}.demo-hero .demo-party,.demo-hero h1,.demo-hero p,.demo-hero .eyebrow,.demo-actions{position:relative;z-index:2}
+@media(max-width:470px){.demo-hero{min-height:min(720px,calc(100dvh - 110px));padding:36px 18px}.demo-party{width:110px;height:110px;font-size:58px}.demo-hero h1{font-size:clamp(39px,10vw,52px)}.demo-bonus{font-size:17px}}
 </style></head>
 <body><div class="demo-badge">INTERACTIVE DEMO · NO PURCHASE · NO REAL CREDITS</div>
 <main class="demo-shell">
 <img class="demo-logo" src="https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recastmeai-approved-orbit-header-v2.png?v=1791314310&amp;width=800" alt="Recast Me Ai">
 <section class="demo-hero" aria-labelledby="demo-title"><div class="demo-sparkle" id="demo-sparkle" aria-hidden="true"></div>
 <div class="demo-party" aria-hidden="true">🎉</div><div class="eyebrow">YOUR RECAST IS OFFICIAL!</div>
-<h1 id="demo-title">Congrats! Your order is in!</h1>
+<h1 id="demo-title">Congratulations! Your order is in!</h1>
 <p>Your custom gift is getting ready to become something real.</p>
 <div class="demo-bonus">✨ Example reward: +3 High Quality Recasts!</div>
 <div class="demo-actions"><button class="button primary" type="button" id="demo-tracking">See my order &amp; tracking →</button>
