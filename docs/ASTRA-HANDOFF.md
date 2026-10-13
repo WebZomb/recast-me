@@ -343,3 +343,6 @@ RM151 — Owner asks for simple own-photo gifts and discovery completion. Google
 RM152 — Prepared manual internal-only Codemagic TestFlight configuration and owner setup guide; syntax/guard checks PASS. Apple account/signing, app-icon/privacy packaging and actual build still pending. Website unchanged. See [RM152](ASTRA-SESSION-RM-152.md).
 
 RM153 — App icon/privacy packaging and Xcode26.2 compile preparation on draft PR71. Website unchanged; Apple registration/signing/upload still pending. See [RM153](ASTRA-SESSION-RM-153.md).
+
+
+RM154 — Apple bundle/app registered (6822107649); Codemagic app added and draft workflow loaded. Hosted unsigned compile/resource checks PASS. App-specific signing profile prepared, awaiting action-time approval before Generate. No signed build/upload. Receipt commit d09d2ea2713bb677aea3e611ce1333d9795c9f78. See [RM154](ASTRA-SESSION-RM-154.md).
