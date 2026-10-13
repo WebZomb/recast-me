@@ -25,7 +25,7 @@
   <link rel="stylesheet" href="/render-wait-v1.css?v=2">
   <link rel="stylesheet" href="/adventure-description-v1.css?v=1" />
   <link rel="stylesheet" href="/simple-creator-v115.css?v=1" />
-  <link rel="stylesheet" href="/simple-flow-v117.css?v=5" />
+  <link rel="stylesheet" href="/simple-flow-v117.css?v=6" />
   <meta name="recast-brand-version" content="orbit-approved-v1">
   <link rel="icon" type="image/png" href="https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recastmeai-approved-orbit-icon-v1.png?v=1791313742&amp;width=64">
   <link rel="apple-touch-icon" href="https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recastmeai-approved-orbit-icon-v1.png?v=1791313742&amp;width=180">
@@ -41,6 +41,7 @@
   <meta name="twitter:image" content="https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recastmeai-approved-orbit-stacked-v1.png?v=1791313709">
   <meta name="twitter:image:alt" content="Recast Me Ai — cyan and magenta swirling RM logo">
   <link rel="stylesheet" href="/product-preview-loading.css?v=2603">
+  <link rel="stylesheet" href="/order-experience.css?v=1">
 </head>
 <body data-launch-build="RM-150">
   <a class="skip-link" href="#start">Skip to create your Recast</a>
@@ -211,8 +212,8 @@
               <legend><span>02</span> Pick a Style</legend>
               <div id="adventure-choices" class="adventure-choices"></div>
               <div class="adventure-extra-actions">
-                <button type="button" class="button ghost" id="more-adventures" aria-expanded="false" aria-controls="all-worlds-group"><span class="discovery-art"><img src="/assets/discover-styles-v141.svg" alt="" width="320" height="180" loading="lazy"><span data-style-count class="discovery-count"></span></span><strong data-more-label>More Styles ↓</strong></button>
-                <button type="button" id="surprise-world" class="button ghost"><span class="discovery-art"><img src="/assets/surprise-styles-v141.svg" alt="" width="320" height="180" loading="lazy"><span data-surprise-count class="discovery-count"></span></span><strong>Surprise me ✦</strong></button>
+                <button type="button" class="button ghost" id="more-adventures" aria-expanded="false" aria-controls="all-worlds-group"><span class="discovery-art"><span class="discovery-photo-collage more-photo-collage" aria-hidden="true"><img src="/assets/world-royal-v18.webp" alt="" loading="lazy"><img src="/assets/world-game-card-v181.webp" alt="" loading="lazy"><img src="/assets/world-fantasy-v18.webp" alt="" loading="lazy"><img src="/assets/world-space-v18.webp" alt="" loading="lazy"></span><span data-style-count class="discovery-count"></span></span><strong data-more-label>More Styles ↓</strong></button>
+                <button type="button" id="surprise-world" class="button ghost"><span class="discovery-art"><span class="discovery-photo-collage surprise-photo-collage" aria-hidden="true"><img src="/assets/world-future-v18.webp" alt="" loading="lazy"><img src="/assets/world-royal-v18.webp" alt="" loading="lazy"><img src="/assets/world-game-card-v181.webp" alt="" loading="lazy"><span class="discovery-star">✦</span></span><span data-surprise-count class="discovery-count"></span></span><strong>Surprise me ✦</strong></button>
               </div>
               <p id="adventure-selection-status" class="adventure-choice-status" role="status" aria-live="polite" hidden>Selected: Royal</p>
               <div id="all-worlds-group" class="all-worlds-group" hidden>
@@ -325,7 +326,8 @@
               <button type="button" id="share-preview" class="button ghost">Save / share preview</button>
               <button type="button" id="save-native-preview" class="button ghost" hidden>Save to My Recasts</button>
               <button type="button" id="copy-recast-link" class="button ghost">Open in another browser</button>
-              <a id="order-status-link" class="button ghost order-status-link hidden" href="#">Track order / downloads</a>
+              <a id="order-status-link" class="button ghost order-status-link hidden" href="#">Track this order / downloads</a>
+              <a class="button ghost" href="/my-orders.html">My orders &amp; tracking</a>
             </div>
           </details>
           <p id="preview-export-status" role="status" aria-live="polite"></p>
@@ -382,7 +384,7 @@
   </footer>
   <script src="/analytics.js?v=1" defer></script>
   <script src="/simple-creator-v115.js?v=1" defer></script>
-  <script src="/app.js?v=294" type="module"></script>
-  <script src="/checkout.js?v=299" type="module"></script>
+  <script src="/app.js?v=295" type="module"></script>
+  <script src="/checkout.js?v=300" type="module"></script>
 </body>
 </html>

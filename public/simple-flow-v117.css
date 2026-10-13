@@ -85,3 +85,14 @@
 #recast-form .adventure-extra-actions strong{margin:auto 0;width:100%;box-sizing:border-box;padding:15px 5px;font-size:clamp(13px,3.6vw,17px)}
 #recast-form .adventure-choices button:focus-visible,#recast-form .adventure-extra-actions button:focus-visible{outline:3px solid #a4edff;outline-offset:4px}
 #recast-form [data-create-step="2"] .adventure-extra-actions .button{min-height:145px}
+
+/* RM156: discovery shows approved scene imagery, like the four featured world cards. */
+#recast-form .discovery-photo-collage{position:relative;display:grid;width:100%;aspect-ratio:4/3;overflow:hidden;background:#17152b;isolation:isolate}
+#recast-form .more-photo-collage{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,1fr))}
+#recast-form .discovery-photo-collage img{display:block;width:100%;height:100%;min-width:0;min-height:0;aspect-ratio:auto;object-fit:cover;object-position:center}
+#recast-form .more-photo-collage img{border:1px solid #2d2348}
+#recast-form .surprise-photo-collage{grid-template-columns:repeat(3,minmax(0,1fr))}
+#recast-form .surprise-photo-collage img{filter:saturate(1.15);border-inline:1px solid #a375cd77}
+#recast-form .discovery-count{position:absolute;bottom:0;left:0;right:0;z-index:2;min-height:29px;background:linear-gradient(0deg,#0d0929f7,#0d0929ad);color:#fff;font-size:clamp(10px,2.5vw,13px);font-weight:850;letter-spacing:.01em}
+#recast-form .discovery-star{position:absolute;z-index:1;top:31%;left:50%;transform:translate(-50%,-50%);display:grid;place-items:center;width:54px;height:54px;border-radius:50%;border:2px solid #e8edff;background:linear-gradient(140deg,#a025dd,#2bddfa);color:white;font-size:34px;box-shadow:0 0 26px #ea40f9cc}
+#recast-form .adventure-extra-actions button[aria-expanded="true"]{border-color:#84dcff;box-shadow:0 0 0 2px #6cc6eb66}
