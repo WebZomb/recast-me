@@ -77,8 +77,8 @@ test('button feedback, tracking and art collage keep confirmation and a reduced-
   const checkout=fs.readFileSync('public/checkout.js','utf8');
   const style=fs.readFileSync('public/order-experience.css','utf8');
   const orders=fs.readFileSync('public/my-orders.html','utf8');
-  assert.match(markup,/class="discovery-photo-collage more-photo-collage"/);
-  assert.match(markup,/class="discovery-photo-collage surprise-photo-collage"/);
+  assert.match(markup,/recast-discover-portal-v159\.svg/);
+  assert.match(markup,/recast-surprise-prism-v159\.svg/);
   assert.match(markup,/href="\/my-orders.html"/);
   assert.match(app,/Saved to My Recasts on this iPhone/);
   assert.match(app,/initCheckoutReturnExperience/);

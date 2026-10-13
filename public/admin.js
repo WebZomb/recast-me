@@ -3,6 +3,7 @@ import {initOwnerSettings} from './admin-settings.js?v=rm075-250';
 import {initOwnerCredits} from './admin-credits.js?v=rm111';
 import {initOwnerTraffic} from './admin-traffic.js?v=rm114';
 import {attachPrintfulDiagnostic} from './printful-diagnostics.js?v=rm0505';
+import {initGenerationDashboard} from './admin-generation-ui.js?v=1';
 const deploymentLabel=document.querySelector('#deployment-identity');
 if(deploymentLabel)deploymentLabel.textContent=`${['recastmeai.com','recast-me.sergz24.workers.dev'].includes(location.hostname)?'Production':'Preview / alternate host'} · ${location.hostname} · operations dashboard`;
 const $=s=>document.querySelector(s);const $$=s=>[...document.querySelectorAll(s)];
@@ -37,10 +38,13 @@ async function loadRenderReadiness(){
 }
 
 async function loadStatus(){const d=await api('/api/admin/status');$('#stat-jobs').textContent=d.jobs.total;$('#stat-awaiting').textContent=`${d.jobs.awaiting} jobs awaiting action · ${d.orderIssues?.openInSnapshot||0}${d.orderIssues?.more?'+':''} order issues`;$('#stat-trends').textContent=d.trends.review;$('#stat-x').textContent=d.xRequests;$('#stat-x-connection').textContent=d.connections.x?'X credentials connected':'Bot disabled until connected';$('#stat-printful').textContent=d.connections.printful?'Connected':'Not ready';$('#stat-generation').textContent=d.generationErrors?.total??0;$('#stat-generation-recent').textContent=`${d.generationErrors?.recent??0} in the last 24h`;$('#system-list').innerHTML=[`<article class="glass system-item"><div class="connection"><i class="dot ${d.contentModeration?.ready?'good':'off'}"></i><strong>Photo content screening</strong></div><span class="muted">${d.contentModeration?.ready?'Configured · live verification required':d.contentModeration?.enabled?'Enabled but missing credentials · requests stop':'Not enabled · public launch blocker'}</span></article>`,...Object.entries(d.connections).filter(([k])=>k!=='admin').map(([k,v])=>`<article class="glass system-item"><div class="connection"><i class="dot ${v?'good':'off'}"></i><strong>${k[0].toUpperCase()+k.slice(1)}</strong></div><span class="muted">${v?'Connection configured':'Not configured'}</span></article>`),...Object.entries(d.automation||{}).map(([k,v])=>`<article class="glass system-item"><div class="connection"><i class="dot ${v?'good':'off'}"></i><strong>${escapeText(({autoPrintPreapproved:"Approved-order auto-print",orderSync:"Paid-order sync",xBot:"X bot",trendScanner:"Trend scanner",retentionCleanup:"Photo retention cleanup"})[k]||k)}</strong></div><span class="muted">${v?'Enabled':'Safely off'}</span></article>`)].join('')}
+const generationUI=initGenerationDashboard({
+  list:$('#generation-errors-list'),summary:$('#generation-summary'),
+  filter:$('#generation-filter'),more:$('#generation-show-more')
+});
 async function loadGenerationErrors(){
- const d=await api('/api/admin/generation-errors'),list=$('#generation-errors-list');list.replaceChildren();
- if(!d.errors.length){list.textContent='No stored generation errors in this snapshot.';return;}
- for(const item of d.errors){const card=document.createElement('article');card.className='glass op-card';const h=document.createElement('h3');h.textContent=item.diagnosticId||item.reason||'Generation error';const pre=document.createElement('pre');pre.style.whiteSpace='pre-wrap';pre.style.overflowWrap='anywhere';pre.textContent=JSON.stringify(item,null,2);card.append(h,pre);list.append(card);}
+  const d=await api('/api/admin/generation-errors');
+  generationUI.render(d.errors||[]);
 }
 let jobsCursor=null,shownJobs=0;
 async function loadJobs(more=false){

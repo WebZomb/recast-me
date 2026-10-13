@@ -31,3 +31,31 @@
 
 /* RM138: reduce mobile compositing pressure on owner pages. */
 @media(max-width:700px){body{background-attachment:scroll}.aurora{display:none}.admin-header,.glass{backdrop-filter:none;-webkit-backdrop-filter:none}}
+
+/* RM159: compact owner-only generation diagnostics; technical JSON only on tap. */
+.diagnostic-controls{display:flex;align-items:flex-end;gap:13px;justify-content:space-between;flex-wrap:wrap;margin:18px 0 14px}
+.diagnostic-controls label{flex:1 1 230px;max-width:440px;font-size:13px;font-weight:800;color:#dae5fa}
+.diagnostic-controls input{display:block;width:100%;min-height:45px;margin-top:7px;border:1px solid #7479af;border-radius:12px;background:#0b0d21;color:#fff;padding:10px 13px;font-size:15px}
+.diagnostic-controls #generation-summary{font-size:13px;color:#91daeb;line-height:1.45}
+.diagnostic-lookup{display:flex;flex-wrap:wrap;align-items:flex-end;gap:10px}
+.diagnostic-lookup label{flex:1 1 210px}
+.diagnostic-lookup button{min-height:44px}
+#diagnostic-result:not(:empty){margin:11px 0;border-radius:12px;background:#0d102a;border:1px solid #544c7b;padding:13px;max-height:42dvh;overflow:auto;font-size:12px}
+#generation-errors-list{display:grid;gap:12px}
+#generation-errors-list .diagnostic-card{min-width:0;padding:18px;border-radius:19px;background:linear-gradient(135deg,#161a36,#0e142a 80%);border:1px solid #514f87;box-shadow:0 5px 16px #0003}
+.diagnostic-heading{display:flex;flex-wrap:wrap;align-items:flex-start;justify-content:space-between;gap:10px}
+.diagnostic-title{flex:1 1 170px;min-width:0}
+.diagnostic-code{display:block;color:#f4eeff;font-size:clamp(16px,4.3vw,20px);letter-spacing:.012em;overflow-wrap:anywhere}
+.diagnostic-reason{color:#b5eafb;font-size:15px;font-weight:800;line-height:1.45;margin-top:7px}
+.diagnostic-pill{display:inline-flex;min-width:72px;justify-content:center;background:linear-gradient(105deg,#4f2d90,#245f82);border:1px solid #8070c5;color:#fcf9ff;border-radius:99px;padding:7px 9px;font-size:11px;font-weight:850}
+.diagnostic-meta{font-size:12px;color:#c0c6da;line-height:1.55;margin:11px 0 4px;overflow-wrap:anywhere}
+.diagnostic-explanation{padding:10px 12px;background:#181f3f;color:#dee8f9;border-left:3px solid #56dbef;border-radius:7px;margin:11px 0;line-height:1.52;overflow-wrap:anywhere;font-size:13px}
+.diagnostic-actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:12px}
+.diagnostic-actions button{font-size:13px;min-height:39px;border-radius:11px}
+.diagnostic-technical{margin-top:12px;border:1px solid #434768;border-radius:13px;background:#090d23}
+.diagnostic-technical summary{padding:12px 13px;font-weight:750;color:#8ee9f4;cursor:pointer;font-size:13px}
+.diagnostic-technical[open] summary{border-bottom:1px solid #434768}
+.diagnostic-technical pre{white-space:pre-wrap;overflow-wrap:anywhere;padding:13px;font-size:12px;line-height:1.42;max-height:45dvh;overflow:auto;color:#cad4ef}
+.diagnostic-empty{padding:18px;background:#13192e;border:1px solid #605d92;border-radius:14px;color:#d5dbef}
+.diagnostic-load-more{margin:14px 0 0;min-height:48px;background:linear-gradient(115deg,#7738c4,#1e8ac4);border:1px solid #85bbef;border-radius:13px;color:white;font-weight:900;padding:10px 18px}
+.diagnostic-load-more[hidden]{display:none}

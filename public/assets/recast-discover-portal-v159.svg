@@ -1,0 +1,80 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 520" role="img" aria-label="A magical gateway to countless worlds, surrounded by miniature adventure paintings">
+<defs>
+ <radialGradient id="bg" cx=".5" cy=".2" r=".85"><stop stop-color="#513090"/><stop offset=".39" stop-color="#261c65"/><stop offset="1" stop-color="#090e2d"/></radialGradient>
+ <radialGradient id="aurora" cx=".50" cy=".54" r=".5"><stop stop-color="#53eafa" stop-opacity=".75"/><stop offset=".51" stop-color="#b951e8" stop-opacity=".33"/><stop offset="1" stop-color="#0d164a" stop-opacity="0"/></radialGradient>
+ <linearGradient id="gold" x1=".1" y1="0" x2=".96" y2="1"><stop stop-color="#fff7b0"/><stop offset=".23" stop-color="#eac4ff"/><stop offset=".55" stop-color="#8ceeff"/><stop offset=".8" stop-color="#eaa5e4"/><stop offset="1" stop-color="#b478f5"/></linearGradient>
+ <linearGradient id="edge" x1="0" x2="1" y1="0" y2="1"><stop stop-color="#28dffc"/><stop offset=".47" stop-color="#b73cfa"/><stop offset="1" stop-color="#fdadca"/></linearGradient>
+ <linearGradient id="night" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#221d59"/><stop offset=".5" stop-color="#8748a9"/><stop offset="1" stop-color="#e87b9e"/></linearGradient>
+ <linearGradient id="sunset" x1="0" y1="0" x2=".8" y2="1"><stop stop-color="#ffd78a"/><stop offset=".48" stop-color="#ed8bd8"/><stop offset="1" stop-color="#7953d7"/></linearGradient>
+ <linearGradient id="sea" x1=".4" y1="0" x2=".6" y2="1"><stop stop-color="#72fbf2"/><stop offset=".5" stop-color="#279aca"/><stop offset="1" stop-color="#183465"/></linearGradient>
+ <linearGradient id="copper" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#ffe4a1"/><stop offset=".45" stop-color="#bb84d9"/><stop offset="1" stop-color="#466be0"/></linearGradient>
+ <radialGradient id="light" cx=".5" cy=".49" r=".55"><stop stop-color="#fff7cc"/><stop offset=".25" stop-color="#94fafa"/><stop offset=".56" stop-color="#a269f5"/><stop offset="1" stop-color="#352162"/></radialGradient>
+ <clipPath id="arch"><path d="M309 385 V219 A91 91 0 0 1 491 219 V385 Z"/></clipPath>
+ <clipPath id="leftpaint"><rect x="57" y="145" width="194" height="236" rx="15"/></clipPath>
+ <clipPath id="rightpaint"><rect x="553" y="120" width="190" height="245" rx="15"/></clipPath>
+ <filter id="soft"><feGaussianBlur stdDeviation="23"/></filter>
+ <filter id="glow"><feGaussianBlur stdDeviation="7" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+ <filter id="shadow" x="-.35" y="-.4" width="1.7" height="1.9"><feDropShadow dx="0" dy="15" stdDeviation="17" flood-color="#08051e" flood-opacity=".85"/></filter>
+</defs>
+<rect width="800" height="520" fill="url(#bg)"/>
+<ellipse cx="391" cy="254" rx="402" ry="280" fill="url(#aurora)"/>
+<g fill="none" stroke="#a08cff" stroke-width="2" opacity=".25"><path d="M0 83 C200 20 490 33 800 104"/><path d="M0 446 C234 500 592 482 800 419"/><ellipse cx="400" cy="265" rx="343" ry="198"/></g>
+<g fill="#fffce8" opacity=".77"><circle cx="43" cy="79" r="2"/><circle cx="101" cy="64" r="2"/><circle cx="235" cy="73" r="2"/><circle cx="695" cy="38" r="3"/><circle cx="590" cy="65" r="2"/><circle cx="755" cy="88" r="2"/><circle cx="664" cy="468" r="3"/><circle cx="109" cy="443" r="2"/><circle cx="42" cy="395" r="2"/><circle cx="512" cy="38" r="2"/></g>
+<g stroke="#7cf6ff" stroke-linecap="round" filter="url(#glow)"><path d="M267 55v23M256 67h23" stroke-width="3"/><path d="M663 101v29m-15-15h30" stroke-width="4"/><path d="M87 389v18m-9-9h18" stroke-width="2"/><path d="M728 403v22m-11-11h22" stroke-width="3"/></g>
+<!-- Left hand-painted royal world card -->
+<g transform="rotate(-9 153 263)" filter="url(#shadow)">
+ <rect x="42" y="129" width="225" height="270" rx="28" fill="#141c4a" stroke="#5a46ac" stroke-width="6"/>
+ <rect x="57" y="145" width="194" height="236" rx="15" fill="url(#sunset)"/>
+ <g clip-path="url(#leftpaint)">
+  <circle cx="183" cy="197" r="52" fill="#fff6ba" opacity=".55"/>
+  <path d="M28 295q75-112 141-55t137-65v241H28Z" fill="#7249b5"/>
+  <path d="M28 327q92-54 156-17t141-36v140H28Z" fill="#573c90"/>
+  <path d="M68 344v-97l30-30 30 30v97m-20-83h75V192l27-28 27 28v152" fill="#f5c08b" stroke="#754880" stroke-width="5"/>
+  <path d="M100 256l19-33 19 33m31-46 39-48 40 48" fill="#864a95"/>
+  <path d="M93 308h21v-33H93Zm57-19h25v-40h-25Zm48 14h22v-35h-22Z" fill="#694d8f"/>
+  <path d="M39 377q83-28 216-8v50H39" fill="#d987c4"/>
+  <g fill="#fffbc4"><circle cx="78" cy="194" r="3"/><circle cx="233" cy="222" r="3"/></g>
+ </g>
+ <rect x="57" y="145" width="194" height="236" rx="15" fill="none" stroke="#eec5ff" stroke-opacity=".8" stroke-width="2"/>
+</g>
+<!-- Right exotic moon and skyline world -->
+<g transform="rotate(10 644 237)" filter="url(#shadow)">
+ <rect x="537" y="105" width="220" height="277" rx="27" fill="#111b4a" stroke="#5644ad" stroke-width="6"/>
+ <rect x="553" y="120" width="190" height="245" rx="15" fill="url(#night)"/>
+ <g clip-path="url(#rightpaint)">
+  <circle cx="656" cy="201" r="62" fill="#fbd4eb"/><circle cx="675" cy="193" r="57" fill="#ffedd6"/>
+  <path d="M515 276q67-75 139-51t137-64v223H515" fill="#8c5fca"/>
+  <path d="M520 306 556 272l25 13 38-58 42 70 18-23 70 10v150H520" fill="#463c93"/>
+  <path d="M548 363v-69l18-24 16 24v69m16 0v-90l22-33 27 34v89m20 0v-74l20-32 23 31v75" fill="#2e286c" stroke="#6d53b1" stroke-width="3"/>
+  <path d="M554 310h16m35-26h27m36 16h28" stroke="#f6b6da" stroke-width="4" stroke-dasharray="4 7"/>
+  <path d="M533 374q95-44 224-6v38H533" fill="#2f396f"/>
+  <path d="M552 362q95-17 184 0" fill="none" stroke="#5effe6" stroke-width="4"/>
+ </g>
+ <rect x="553" y="120" width="190" height="245" rx="15" fill="none" stroke="#b2e8ff" stroke-opacity=".8" stroke-width="2"/>
+</g>
+<!-- Tiny floating worlds in distance -->
+<g transform="rotate(17 259 423)" filter="url(#shadow)"><rect x="211" y="369" width="95" height="117" rx="18" fill="#161849" stroke="#8979ea" stroke-width="5"/><rect x="223" y="380" width="71" height="90" rx="9" fill="url(#sea)"/><circle cx="273" cy="406" r="13" fill="#ffebae"/><path d="M216 448l30-22 15 12 33-28v70h-80" fill="#1e568b"/></g>
+<g transform="rotate(-13 553 419)" filter="url(#shadow)"><rect x="506" y="365" width="99" height="127" rx="18" fill="#151849" stroke="#8a67d9" stroke-width="5"/><rect x="519" y="378" width="72" height="99" rx="9" fill="url(#copper)"/><circle cx="551" cy="404" r="20" fill="#f7d0b0"/><path d="M509 450l35-27 19 14 28-27v70h-82" fill="#4f579e"/></g>
+<!-- Grand golden multi-ring portal -->
+<g filter="url(#soft)"><ellipse cx="401" cy="375" rx="170" ry="74" fill="#17e5ff" opacity=".57"/></g>
+<g filter="url(#shadow)">
+ <path d="M266 404V218 A134 134 0 0 1 534 218V404Z" fill="#342a71" stroke="#9b6dff" stroke-width="11"/>
+ <path d="M284 393V218 A116 116 0 0 1 516 218V393Z" fill="#292865" stroke="url(#gold)" stroke-width="13"/>
+ <path d="M303 387V219 A97 97 0 0 1 497 219V387Z" fill="#161749" stroke="#79f7ff" stroke-width="7" filter="url(#glow)"/>
+ <g clip-path="url(#arch)">
+  <rect x="307" y="121" width="186" height="265" fill="url(#light)"/>
+  <path d="M302 336q74-91 110-34t96-70v174H302" fill="#7350b5" opacity=".75"/>
+  <path d="M303 363q70-49 131-16t80-47v107H303" fill="#493d9b"/>
+  <path d="M400 155v193m-78-143q70 42 157-6m-165 67q95 34 173-15" fill="none" stroke="#e7e1ff" stroke-width="2" opacity=".55"/>
+  <path d="M396 362l-38-47-29-12-22 75h193l-30-73-25 11-44 47" fill="#aadff6" opacity=".48"/>
+  <path d="M399 156 422 219 484 233 431 266 441 325 399 287 350 322 365 264 317 236 376 222Z" fill="#fff9c7" opacity=".8" filter="url(#glow)"/>
+ </g>
+ <path d="M312 386V218 A88 88 0 0 1 488 218V386" fill="none" stroke="#f9ecfb" stroke-width="4" opacity=".82"/>
+ <path d="M276 403h245" stroke="#fbd7e3" stroke-width="7" stroke-linecap="round"/>
+ <path d="M306 419h187" stroke="#2feafa" stroke-width="5" stroke-linecap="round" filter="url(#glow)"/>
+</g>
+<!-- Foreground floating sparkles and splashes -->
+<g fill="url(#gold)" filter="url(#glow)"><path d="M292 130l9-29 9 29 24 8-24 8-9 29-9-29-24-8Z"/><path d="M505 98l5-17 5 17 16 6-16 6-5 17-5-17-16-6Z"/><path d="M232 330l5-14 5 14 13 5-13 5-5 14-5-14-13-5Z"/><circle cx="503" cy="358" r="7"/></g>
+<ellipse cx="403" cy="454" rx="230" ry="14" fill="#95fbff" opacity=".38" filter="url(#soft)"/>
+<path d="M171 497Q404 456 633 498" stroke="#80deff" stroke-width="4" stroke-opacity=".63" fill="none"/>
+</svg>

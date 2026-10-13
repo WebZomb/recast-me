@@ -96,3 +96,42 @@
 #recast-form .discovery-count{position:absolute;bottom:0;left:0;right:0;z-index:2;min-height:29px;background:linear-gradient(0deg,#0d0929f7,#0d0929ad);color:#fff;font-size:clamp(10px,2.5vw,13px);font-weight:850;letter-spacing:.01em}
 #recast-form .discovery-star{position:absolute;z-index:1;top:31%;left:50%;transform:translate(-50%,-50%);display:grid;place-items:center;width:54px;height:54px;border-radius:50%;border:2px solid #e8edff;background:linear-gradient(140deg,#a025dd,#2bddfa);color:white;font-size:34px;box-shadow:0 0 26px #ea40f9cc}
 #recast-form .adventure-extra-actions button[aria-expanded="true"]{border-color:#84dcff;box-shadow:0 0 0 2px #6cc6eb66}
+
+/* RM159: two original, hand-illustrated illustrated portals replace the weak
+   old photo collages. Both remain regular accessible native/web tap targets. */
+#recast-form .adventure-extra-actions .discovery-art-v159{
+  aspect-ratio: 4/3;overflow:hidden;display:block;background:#17102f;
+  border-radius:15px 15px 0 0;isolation:isolate;
+}
+#recast-form .adventure-extra-actions .discovery-art-v159::before{
+  content:"";position:absolute;inset:0;z-index:2;pointer-events:none;
+  background:linear-gradient(125deg,transparent 18%,#efffff19 48%,transparent 65%);
+  opacity:.8;
+}
+#recast-form .adventure-extra-actions .discovery-art-v159 .discovery-artwork{
+  display:block;width:100%;height:100%;aspect-ratio:auto;object-fit:cover;
+  object-position:center;transition:transform .28s cubic-bezier(.21,.75,.3,1),filter .28s ease;
+  filter:saturate(1.12) contrast(1.04);
+}
+#recast-form .adventure-extra-actions .discovery-art-v159 .discovery-count{
+  bottom:0;left:0;right:0;z-index:3;min-height:31px;
+  border-top:1px solid #d1baf544;background:linear-gradient(0deg,#080824f4,#090b288c);
+  font-size:clamp(11px,2.8vw,13px);font-weight:850;letter-spacing:.02em;
+  text-shadow:0 1px 5px #01041c;box-shadow:0 -3px 18px #140f3380;
+}
+#recast-form #more-adventures{background:#111127;border:1px solid #7f5ed1;box-shadow:0 2px 18px #44219d25}
+#recast-form #surprise-world{background:#111127;border:1px solid #3977d4;box-shadow:0 2px 18px #1794d025}
+#recast-form #more-adventures strong,#recast-form #surprise-world strong{
+  letter-spacing:.01em;background:radial-gradient(ellipse at 50% 0%,#40366b,#111126 70%);
+  font-size:clamp(14px,3.6vw,17px);padding:14px 7px 16px;
+}
+#recast-form #surprise-world strong{background:radial-gradient(ellipse at 50% 0%,#1b4573,#111126 70%)}
+#recast-form #more-adventures:active,#recast-form #surprise-world:active{
+  transform:scale(.972);border-color:#9eecff;box-shadow:0 0 0 2px #8af5ff99,0 0 25px #5c34d370;
+}
+#recast-form #more-adventures[aria-expanded="true"]{border-color:#8ff5ff;box-shadow:0 0 0 2px #9aebff69,0 0 24px #28a7ed55}
+@media(hover:hover){
+  #recast-form .adventure-extra-actions button:hover .discovery-artwork{transform:scale(1.06);filter:saturate(1.3) contrast(1.09) brightness(1.07)}
+  #recast-form .adventure-extra-actions button:hover{border-color:#a8f1ff;box-shadow:0 0 20px #4e80e377}
+}
+@media(prefers-reduced-motion:reduce){#recast-form .adventure-extra-actions .discovery-artwork{transition:none}}
