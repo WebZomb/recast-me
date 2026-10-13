@@ -3,7 +3,7 @@ import WebKit
 import UIKit
 import SafariServices
 
-private struct SafariCheckout: Identifiable {
+struct SafariCheckout: Identifiable {
     let id = UUID()
     let url: URL
 }
@@ -78,6 +78,7 @@ struct StudioWebView: UIViewRepresentable {
         config.websiteDataStore = .default()
         config.userContentController.addScriptMessageHandler(context.coordinator, contentWorld: .page, name: "recastPreview")
         config.userContentController.addScriptMessageHandler(context.coordinator, contentWorld: .page, name: "recastHaptic")
+        config.userContentController.addScriptMessageHandler(context.coordinator, contentWorld: .page, name: "recastAccess")
         // Only the exact Recast main page can send tap feedback. No third-party frames.
         let touchScript = """
         (() => {
@@ -90,12 +91,31 @@ struct StudioWebView: UIViewRepresentable {
         })();
         """
         config.userContentController.addUserScript(WKUserScript(source: touchScript, injectionTime: .atDocumentEnd, forMainFrameOnly: true))
+        // Migrate access for existing offline pictures from trusted web history
+        // to native Keychain; never attach links to unsaved gallery entries.
+        let recoveryScript = """
+        (() => {
+          if (location.origin !== 'https://recastmeai.com') return;
+          try {
+            const recent = JSON.parse(localStorage.getItem('recast_recent_versions_v12') || '[]');
+            const last = JSON.parse(localStorage.getItem('recast_last_request') || 'null');
+            const rows = [...(Array.isArray(recent) ? recent : []), last]
+              .filter(v => v && /^RC-[A-Za-z0-9-]{1,100}$/.test(v.requestId||'') &&
+                           /^[a-fA-F0-9]{64}$/.test(v.accessToken||''))
+              .map(v => ({requestId:v.requestId, accessToken:v.accessToken})).slice(0,20);
+            if (rows.length) window.webkit?.messageHandlers?.recastAccess?.postMessage({versions:rows});
+          } catch {}
+        })();
+        """
+        config.userContentController.addUserScript(WKUserScript(source: recoveryScript, injectionTime: .atDocumentEnd, forMainFrameOnly: true))
         let view = WKWebView(frame: .zero, configuration: config)
         view.navigationDelegate = context.coordinator
         view.uiDelegate = context.coordinator
         context.coordinator.webView = view
         NotificationCenter.default.addObserver(context.coordinator, selector: #selector(Coordinator.appResumed(_:)),
                                                name: UIApplication.didBecomeActiveNotification, object: nil)
+        NotificationCenter.default.addObserver(context.coordinator, selector: #selector(Coordinator.appResumed(_:)),
+                                               name: .init("RecastCheckoutReturned"), object: nil)
         view.isOpaque = false
         view.backgroundColor = .black
         view.allowsBackForwardNavigationGestures = true
@@ -106,7 +126,9 @@ struct StudioWebView: UIViewRepresentable {
     static func dismantleUIView(_ view: WKWebView, coordinator: Coordinator) {
         view.configuration.userContentController.removeScriptMessageHandler(forName: "recastPreview", contentWorld: .page)
         view.configuration.userContentController.removeScriptMessageHandler(forName: "recastHaptic", contentWorld: .page)
+        view.configuration.userContentController.removeScriptMessageHandler(forName: "recastAccess", contentWorld: .page)
         NotificationCenter.default.removeObserver(coordinator, name: UIApplication.didBecomeActiveNotification, object: nil)
+        NotificationCenter.default.removeObserver(coordinator, name: .init("RecastCheckoutReturned"), object: nil)
         coordinator.webView = nil
         view.navigationDelegate = nil
         view.uiDelegate = nil
@@ -134,15 +156,24 @@ struct StudioWebView: UIViewRepresentable {
                 replyHandler(["ok": true], nil)
                 return
             }
+            if message.name == "recastAccess" {
+                guard let payload = message.body as? [String: Any],
+                      let rows = payload["versions"] as? [[String: String]] else {
+                    replyHandler(nil, "Invalid recent artwork."); return
+                }
+                let count = parent.gallery.importRecentAccess(rows)
+                replyHandler(["recovered": count], nil)
+                return
+            }
             guard message.name == "recastPreview",
                   let body = message.body as? [String: Any],
                   let id = body["id"] as? String, let image = body["image"] as? String else {
                 replyHandler(nil, "This preview source is not allowed."); return
             }
             do {
-                try parent.gallery.save(id: id, dataURL: image)
+                let reusable = try parent.gallery.save(id: id, dataURL: image, accessToken: body["accessToken"] as? String)
                 UINotificationFeedbackGenerator().notificationOccurred(.success)
-                replyHandler(["saved": true], nil)
+                replyHandler(["saved": true, "reusable": reusable], nil)
             } catch {
                 UINotificationFeedbackGenerator().notificationOccurred(.error)
                 replyHandler(nil, error.localizedDescription)
@@ -157,7 +188,14 @@ struct StudioWebView: UIViewRepresentable {
             }
             decisionHandler(.cancel)
             parent.isLoading = false
-            // Cross-origin HTTPS navigation requires an explicit native browser handoff.
+            // A trusted merchant checkout stays inside Recast Me. Safari supports
+            // Apple Pay, Shop Pay and card payment when Shopify offers them.
+            // Closing checkout is NOT evidence of payment; the backend verifies it.
+            if url.scheme == "https", url.host == "b2wnfu-7g.myshopify.com" {
+                parent.checkout = SafariCheckout(url: url)
+                return
+            }
+            // Other off-origin navigation requires an explicit visible handoff.
             if url.scheme == "https",
                !(URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems ?? []).contains(where: { $0.name.lowercased().contains("token") }) {
                 parent.externalURL = url
