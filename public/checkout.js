@@ -1,6 +1,30 @@
 const grid = document.querySelector("#product-grid");
 const requestLabel = document.querySelector("#request-id");
 
+// Keep checkout standalone for share pages and isolated purchase-policy tests.
+function rememberCheckoutStarted(req) {
+  if (!/^RC-[A-Za-z0-9-]{1,100}$/.test(String(req?.requestId||'')) ||
+      typeof req?.accessToken !== 'string' || req.accessToken.length < 16 ||
+      req.accessToken.length > 256 || /\\s/.test(req.accessToken)) return false;
+  try {
+    const key='recast_checkout_records_v1';
+    const previous=JSON.parse(localStorage.getItem(key)||'[]');
+    const clean=(Array.isArray(previous)?previous:[]).filter(item=>item?.requestId&&item.requestId!==req.requestId);
+    localStorage.setItem(key,JSON.stringify([{requestId:req.requestId,accessToken:req.accessToken,startedAt:Date.now()},...clean].slice(0,20)));
+    return true;
+  } catch { return false; }
+}
+let externalCheckoutStarted=false;
+function leaveForCheckout(req,url){
+  rememberCheckoutStarted(req);
+  externalCheckoutStarted=true;
+  location.href=url;
+}
+window.addEventListener?.('recast-app-resumed',()=>{
+  if(!externalCheckoutStarted)return;
+  externalCheckoutStarted=false;
+  closeFinalReview();
+});
 const PRODUCT_ART = {
   "Custom Recast Tough Phone Case":"https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-tough-case-royal-lifestyle-rm145.png?v=1791819635&width=1000",
   "Custom Recast Sticker Sheet":"https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-lifestyle-sticker-sheet-rm061.png?v=1791427937&width=1000",
@@ -324,7 +348,7 @@ async function confirmCheckout({req,sku,card,button,modal}){
     })});
     const result=await res.json().catch(()=>({}));
     if(!res.ok||!result.ok||!result.checkoutUrl)throw new Error(result.error||"Checkout link could not be created.");
-    location.href=result.checkoutUrl;
+    leaveForCheckout(req,result.checkoutUrl);
   }catch(error){
     confirm.disabled=false;confirm.textContent="Confirm design & checkout";
     errorCopy.textContent=error.message||"Checkout is temporarily unavailable. Please try again.";errorCopy.hidden=false;
@@ -376,7 +400,7 @@ function openRecommendedReview({req,sku,card,button}){
  confirm.addEventListener('click',async()=>{
   if(!activeArtworkMatches(req)||signature!==designSignature(card,card.querySelector('.recast-variant')?.value)){error.textContent='Your artwork or product changed. Close this review and check the new selection.';error.hidden=false;return;}
   confirm.disabled=true;confirm.textContent='Preparing secure checkout…';error.hidden=true;
-  try{const response=await fetch(checkoutEndpoint('/api/checkout-link',req),{method:'POST',headers:{'x-recast-request':'1','content-type':'application/json'},body:JSON.stringify({requestId:req.requestId,accessToken:req.accessToken,sku,design,confirmDesign:true,confirmArtwork:true,skipMockup:true})});const data=await response.json();if(!response.ok||!data.ok||!data.checkoutUrl)throw Error(data.error||'Checkout is temporarily unavailable.');if(!activeArtworkMatches(req))throw Error('Your selected artwork changed. Please review it again.');if(modal.isConnected)location.href=data.checkoutUrl;}
+  try{const response=await fetch(checkoutEndpoint('/api/checkout-link',req),{method:'POST',headers:{'x-recast-request':'1','content-type':'application/json'},body:JSON.stringify({requestId:req.requestId,accessToken:req.accessToken,sku,design,confirmDesign:true,confirmArtwork:true,skipMockup:true})});const data=await response.json();if(!response.ok||!data.ok||!data.checkoutUrl)throw Error(data.error||'Checkout is temporarily unavailable.');if(!activeArtworkMatches(req))throw Error('Your selected artwork changed. Please review it again.');if(modal.isConnected)leaveForCheckout(req,data.checkoutUrl);}
   catch(cause){confirm.disabled=false;confirm.textContent='Approve artwork & checkout';error.textContent=cause.message;error.hidden=false;}
  });
  reviewKeydown=event=>{if(event.key==='Escape'){event.preventDefault();close();}if(event.key==='Tab'){const focusable=[...modal.querySelectorAll('button:not([disabled])')];const first=focusable[0],last=focusable.at(-1);if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus();}else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus();}}};document.addEventListener('keydown',reviewKeydown);
@@ -631,7 +655,7 @@ async function loadCheckout(){
         const result=await res.json().catch(()=>({}));
         if(!res.ok||!result.ok||!result.checkoutUrl)throw new Error(result.error||"Checkout link could not be created.");
         window.recastTrack?.('checkout_clicked');
-     location.href=result.checkoutUrl;
+     leaveForCheckout(req,result.checkoutUrl);
       }catch(error){
         button.disabled=false;button.textContent=previous;
         errorCopy.textContent=error.message||"Checkout is temporarily unavailable. Please try again.";errorCopy.hidden=false;

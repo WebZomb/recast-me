@@ -1,6 +1,7 @@
 export function initOwnerAlerts(api,notify){
  const form=document.querySelector('#alert-settings-form');let current=null,dirty=false;
  const status=document.querySelector('#alert-settings-status');
+ document.querySelector('#alert-open-orders')?.addEventListener('click',()=>document.querySelector('[data-tab="orders"]')?.click());
  const message=r=>!r?'No attempts yet.':`${r.status==='accepted'?'Accepted by provider (delivery not confirmed)':r.status==='unknown'?'Result unknown — inspect the provider before retrying':r.status==='rejected'?'Provider rejected the message':r.status==='blocked'?'Sending blocked — check settings or daily limit':r.status} · ${r.at||''}`;
  form.addEventListener('input',()=>{dirty=true});
  async function load(force=false){
@@ -9,6 +10,15 @@ export function initOwnerAlerts(api,notify){
    document.querySelector('#alert-'+c+'-ready').textContent=(d.setup?.[c]||(d.readiness[c]?'Delivery service configured. Send a test to verify receipt.':'Delivery service not connected. You can save your destination now.'))+(!d.values[c==='email'?'emailEnabled':'smsEnabled']?' Enable this channel and save to use its test button.':'');
    document.querySelector('#alert-'+c+'-last').textContent=message(d.last?.[c]);
    document.querySelector('#test-alert-'+c).disabled=!d.readiness[c]||!d.values[c==='email'?'emailEnabled':'smsEnabled'];
+  }
+  const latest=[d.last?.email,d.last?.sms].filter(x=>x?.at&&!x.test).sort((a,b)=>Date.parse(b.at)-Date.parse(a.at))[0];
+  const lastSummary=document.querySelector('#alert-last-detail');
+  if(lastSummary){
+   if(!latest)lastSummary.textContent='No saved issue detail yet. Earlier generic alerts cannot be reconstructed; new alerts record the type and order number.';
+   else {
+    const details=Array.isArray(latest.summary)&&latest.summary.length?latest.summary.join(' • '):'Cause was not captured by the earlier alert format.';
+    lastSummary.textContent='Last email: '+new Date(latest.at).toLocaleString()+' · '+details+' The issue may already have recovered. Check Orders for its current status.';
+   }
   }
   if(!dirty||force){current=d;for(const [k,v] of Object.entries(d.values)){const input=form.elements.namedItem(k);if(typeof v==='boolean')input.checked=v;else input.value=v;}dirty=false;}
  }

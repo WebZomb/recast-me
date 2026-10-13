@@ -1,0 +1,58 @@
+/* Shared app-only feedback and private order history. Nothing changes checkout. */
+@media (hover: hover) {
+  .recast-celebration .button:hover,.order-history-page .button:hover {filter:brightness(1.13)}
+}
+button:not(:disabled):active,.button:not(:disabled):active,a.nav-cta:active,.adventure-choices button:active,
+#adventure-choices button:active,.adventure-extra-actions button:active {
+  transform:scale(.975);filter:brightness(1.28);box-shadow:inset 0 0 0 2px rgba(118,234,255,.68);
+}
+button,.button,.nav-cta{transition:transform .14s ease,filter .14s ease,box-shadow .14s ease}
+#save-native-preview.is-saving{opacity:.78;cursor:progress}
+#save-native-preview.is-saved{border:2px solid #73f9d5!important;background:linear-gradient(120deg,#175c51,#153c58)!important;color:#e6fff8!important}
+#preview-export-status:not(:empty){display:block;margin-top:12px;padding:12px 14px;border:1px solid #4b83a6;border-radius:12px;background:#0d2635;color:#d4f9ff;font-weight:700;line-height:1.4}
+.recast-save-toast{position:fixed;bottom:100px;left:50%;z-index:1100;transform:translateX(-50%);width:max-content;max-width:calc(100vw - 34px);padding:14px 18px;text-align:center;border-radius:16px;border:1px solid #80ffe0;background:linear-gradient(135deg,#134b42,#193b58);box-shadow:0 14px 50px #000c;color:#f1fffa;font-size:15px;font-weight:750;animation:recast-pop .23s ease-out}
+.recast-celebration-layer{position:fixed;inset:0;z-index:3000;display:flex;align-items:center;justify-content:center;padding:15px}
+.recast-celebration-backdrop{position:absolute;inset:0;background:rgba(4,4,18,.82);backdrop-filter:blur(9px)}
+.recast-celebration{isolation:isolate;position:relative;width:min(100%,450px);max-height:calc(100dvh - 45px);overflow-y:auto;padding:38px 26px 28px;text-align:center;border:2px solid #94c0ff;border-radius:28px;background:radial-gradient(circle at 20% 0%,#452486,#14162c 65%,#0d1728);box-shadow:0 0 75px rgba(121,89,255,.45),0 20px 60px #000b;color:white;animation:recast-pop .36s cubic-bezier(.2,1.2,.4,1)}
+.recast-celebration .eyebrow{color:#a4e8ff;font-size:13px;letter-spacing:.22em;font-weight:850}
+.recast-celebration h2{font-size:clamp(30px,7vw,40px);line-height:1.06;margin:12px 0 16px}
+.recast-celebration .celebration-order{line-height:1.55;color:#e1dffa;font-weight:650;margin:10px 0}
+.recast-celebration .celebration-bonus{border:1px solid #82ddff;background:linear-gradient(100deg,#3e2578,#173c65);border-radius:16px;padding:15px 12px;font-weight:850;color:white;margin:20px 0}
+.recast-celebration-badge{font-size:40px;display:grid;place-items:center;width:82px;height:82px;margin:0 auto 18px;border-radius:50%;background:linear-gradient(130deg,#b837ef,#25dcfa);box-shadow:0 0 40px #20bbfc88}
+.recast-celebration .button{display:flex;min-height:52px;margin:10px auto;align-items:center;justify-content:center;text-decoration:none;width:100%;box-sizing:border-box;font-weight:700}
+.celebration-close{position:absolute;top:9px;right:12px;background:none;border:0;color:#fff;font-size:30px;padding:8px 12px;cursor:pointer}
+.recast-confetti{position:absolute;inset:0;overflow:hidden;z-index:-1;pointer-events:none}
+.recast-confetti i{position:absolute;top:5%;left:50%;width:9px;height:14px;background:#ffb7f4;opacity:0;animation:recast-spark 1.8s ease-out both}
+.recast-confetti i:nth-child(4n){background:#20dbf5}
+.recast-confetti i:nth-child(3n){background:#ffe977}
+.recast-confetti i:nth-child(5n){background:#a4f9dc}
+.recast-confetti i:nth-child(1){--x:-160px;--y:155px;animation-delay:.03s}
+.recast-confetti i:nth-child(2){--x:145px;--y:180px;animation-delay:.12s}
+.recast-confetti i:nth-child(3){--x:-110px;--y:230px;animation-delay:.08s}
+.recast-confetti i:nth-child(4){--x:90px;--y:270px;animation-delay:.06s}
+.recast-confetti i:nth-child(5){--x:-180px;--y:330px;animation-delay:.16s}
+.recast-confetti i:nth-child(6){--x:175px;--y:350px;animation-delay:.02s}
+.recast-confetti i:nth-child(7){--x:35px;--y:200px;animation-delay:.14s}
+.recast-confetti i:nth-child(8){--x:-30px;--y:325px;animation-delay:.2s}
+.recast-confetti i:nth-child(9){--x:-125px;--y:380px;animation-delay:.13s}
+.recast-confetti i:nth-child(10){--x:125px;--y:120px;animation-delay:.17s}
+.recast-confetti i:nth-child(n+11){--x:65px;--y:350px;animation-delay:.22s}
+@keyframes recast-spark{0%{opacity:0;transform:translate(0,0) rotate(0)}10%{opacity:1}75%{opacity:1}100%{opacity:0;transform:translate(var(--x),var(--y)) rotate(580deg)}}
+@keyframes recast-pop{from{opacity:0;transform:scale(.89)}to{opacity:1;transform:scale(1)}}
+.my-orders-shell{width:min(100%,900px);margin:0 auto;box-sizing:border-box;padding:33px 22px 100px}
+.my-orders-shell h1{font-size:clamp(39px,8vw,58px);margin:12px 0}.my-orders-shell>p{line-height:1.6;color:#caccdf}
+.my-orders-panel{border:1px solid #4a436d;border-radius:22px;padding:18px;background:linear-gradient(145deg,#151129,#0c1428)}
+.orders-panel-head{display:flex;gap:14px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.orders-panel-head h2{font-size:21px;margin:5px 0}
+#orders-status{color:#bed6ec;line-height:1.55}
+.order-history-item{background:#0d1023;border:1px solid #5c537c;border-radius:18px;padding:20px;margin:16px 0}
+.order-history-top{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.order-history-top strong{font-size:22px}.order-history-kicker{font-size:12px;letter-spacing:.14em;font-weight:800;color:#95e5c9}
+.order-history-products{font-size:19px;font-weight:800;margin:14px 0 4px}
+.order-history-date{font-size:14px;color:#bac2d4}
+.order-history-progress{border-left:3px solid #68d7e9;padding:12px;margin:8px 0;background:#152138;border-radius:3px 10px 10px 3px;line-height:1.4}
+.order-history-actions{display:flex;flex-wrap:wrap;gap:9px;margin-top:16px}
+.order-history-actions .button{padding:12px 15px;min-height:44px;box-sizing:border-box;text-align:center}
+.orders-privacy-note{font-size:14px}
+@media(max-width:480px){.recast-celebration{padding:34px 19px 23px}.order-history-actions{flex-direction:column}.order-history-actions .button{width:100%}.my-orders-shell{padding:24px 15px 90px}}
+@media(prefers-reduced-motion:reduce){.recast-confetti i,.recast-celebration,.recast-save-toast{animation:none!important}.recast-confetti{display:none}button,.button,.nav-cta{transition:none}}

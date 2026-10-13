@@ -338,3 +338,5 @@ RM150 — Owner selects X support and confirms Apple membership. Public gift dis
 
 
 RM151 — Owner asks for simple own-photo gifts and discovery completion. Google Search Console property prepared; public verification tag and clearer gift CTA added, verification/submission pending deploy. Apple PC connection retry pending. See [RM151](ASTRA-SESSION-RM-151.md).
+
+RM156 web — Owner TestFlight acceptance and paid mug purchase prompted illustrated two-card style discovery, visible native save result, same-device private order history and a Shopify-payment-gated once-only celebration/3-HQ bonus reconciliation. PR72 security and mocked customer WebKit/Chromium gates PASS at `cfdc613f8`. Deployment and new real-device acceptance not yet proven; native Orders tab/haptics separately staged on PR71. See [RM156 web receipt](ASTRA-SESSION-RM-156-WEB.md).

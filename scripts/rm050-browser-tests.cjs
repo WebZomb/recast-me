@@ -147,15 +147,16 @@ const policy={highDaily:3,standardDaily:5,purchaseBonus:3,websiteCalls:70,social
    assert.ok(await page.locator('#photo-thumbnails img').first().evaluate(img=>Math.max(img.naturalWidth,img.naturalHeight)<=480),'Upload display retains a small copy');
    await page.locator('.adventure-extra-actions').scrollIntoViewIfNeeded();
    await page.screenshot({path:path.join(out,`${engine.name()}-${width}-rm141-style-cards.png`)});
-   for(const selector of ['#surprise-world','#more-adventures']){
-    assert.equal(await page.locator(selector+' img').count(),1);
+   for(const [selector,images] of [['#surprise-world',3],['#more-adventures',4]]){
+    assert.equal(await page.locator(selector+' img').count(),images,'Discovery artwork uses an intentional visual montage of existing approved world images');
     assert.ok(await page.locator(selector).evaluate(button=>{const a=button.getBoundingClientRect(),b=button.parentElement.getBoundingClientRect();return a.left>=b.left-1&&a.right<=b.right+1}),'Discovery card fits its container');
     assert.ok((await page.locator(selector).boundingBox()).height>=145,'Discovery card has a large tap target');
    }
    assert.match(await page.locator('[data-surprise-count]').textContent(),/Random pick · 47 styles/);
    assert.match(await page.locator('[data-style-count]').textContent(),/Explore 48 styles/);
-   assert.match(await page.locator('#more-adventures img').getAttribute('src'),/discover-styles-v141.svg/);
-   assert.match(await page.locator('#surprise-world img').getAttribute('src'),/surprise-styles-v141.svg/);
+   assert.match(await page.locator('#more-adventures img').first().getAttribute('src'),/world-royal-v18.webp/);
+   assert.match(await page.locator('#surprise-world img').first().getAttribute('src'),/world-future-v18.webp/);
+   assert.equal(await page.locator('.discovery-photo-collage').count(),2,'Both interactive visual cards match featured world imagery');
    for(const img of await page.locator('#adventure-choices img').all()){
     assert.ok(await img.evaluate(el=>{const a=el.getBoundingClientRect(),b=el.parentElement.getBoundingClientRect();return Math.abs(a.top-b.top-2)<1&&Math.abs(a.width-(b.width-4))<1&&getComputedStyle(el).objectFit==='cover'}),'Featured images fill card edge to edge');
    }
