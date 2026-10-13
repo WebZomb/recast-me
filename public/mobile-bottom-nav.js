@@ -13,19 +13,25 @@
     { path:'/guide.html',label:'Guide', icon:'<circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.6 2.6 0 0 1 5 1c0 1.8-2.5 2-2.5 4m0 3.5h.01"/>' }
   ];
 
-  const path = location.pathname.replace(/\/$/, '') || '/';
+  // Cloudflare serves both extensionless URLs and .html paths. They must
+  // highlight the same tab instead of leaving Specials or My Orders inactive.
+  const route = pathname => {
+    const compact = String(pathname || '/').replace(/\/$/, '').replace(/\.html$/, '') || '/';
+    return compact === '/index' ? '/' : compact;
+  };
+  const path = route(location.pathname);
   const dock = document.createElement('nav');
   dock.className = 'recast-mobile-nav';
   dock.setAttribute('aria-label', 'Recast Me sections');
-  dock.setAttribute('data-recast-nav-style', 'v163');
+  dock.setAttribute('data-recast-nav-style', 'v164');
 
   for (const page of pages) {
     const link = document.createElement('a');
     link.href = page.path;
     link.setAttribute('data-recast-tab', page.label.toLowerCase().replaceAll(' ', '-'));
     const selected = page.path === '/#start'
-      ? path === '/' || path === '/index.html'
-      : path === page.path;
+      ? path === '/'
+      : path === route(page.path);
     if (selected) link.setAttribute('aria-current', 'page');
     const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     svg.setAttribute('viewBox', '0 0 24 24');
@@ -64,7 +70,7 @@
     const css = document.createElement('link');
     css.rel = 'stylesheet';
     css.href = '/mobile-bottom-nav.css?v=163';
-    css.dataset.recastBottomNav = 'v163';
+    css.dataset.recastBottomNav = 'v164';
     document.head.append(css);
   }
   document.body.classList.add('recast-web-mobile-nav');
