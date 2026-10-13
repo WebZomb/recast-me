@@ -236,3 +236,17 @@ body.recast-web-mobile-nav {
     animation: none !important;
   }
 }
+/* Higher-specificity desktop override: the legacy site header forces all nav
+   tags to flex !important, which compresses these four links toward the left.
+   Keep the glass dock evenly divided without wasted glass at the right. */
+@media (min-width:1060px) {
+  body.recast-desktop-header-nav .site-header > nav.recast-mobile-nav {
+    display: grid !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: 4px !important;
+  }
+  body.recast-desktop-header-nav .site-header > nav.recast-mobile-nav > a:not(.nav-cta) {
+    justify-content: center !important;
+    min-width: 0;
+  }
+}
