@@ -13,11 +13,22 @@ function render(){
   const details=document.createElement('div');details.className='library-copy';
   const name=document.createElement('h2');name.textContent=item.styleName||'Saved Recast';
   const id=document.createElement('small');id.textContent=item.requestId;
+  id.className='artwork-code';id.title='Individual artwork reference';
   const actions=document.createElement('div');actions.className='library-actions';
-  const use=document.createElement('a');use.className='button primary';use.href=productLink(item);use.textContent='Put on a product →';
-  const remove=document.createElement('button');remove.type='button';remove.className='button ghost';remove.textContent='Remove from favorites';
-  remove.addEventListener('click',()=>{if(confirm('Remove this favorite shortcut from this browser? Existing paid orders remain.')){removeRecast(item.requestId);render()}});
-  actions.append(use,remove);details.append(name,id,actions);card.append(thumb,details);list.append(card);
+  const use=document.createElement('a');use.className='button primary';use.href=productLink(item);use.textContent='Use on a Product →';
+  use.setAttribute('aria-label','Use saved artwork '+item.requestId+' on a product without creating it again');
+  const secondary=document.createElement('div');secondary.className='library-secondary-actions';
+  const copy=document.createElement('button');copy.type='button';copy.className='library-code-button';
+  copy.textContent='Copy Artwork ID';
+  copy.addEventListener('click',async()=>{
+    try{await navigator.clipboard.writeText(item.requestId);copy.textContent='✓ Code copied';}
+    catch{copy.textContent='Select the ID above to copy it';}
+  });
+  const remove=document.createElement('button');remove.type='button';remove.className='library-remove-button';
+  remove.textContent='Remove';
+  remove.addEventListener('click',()=>{if(confirm('Remove this favorite from this browser? Paid orders are not affected.')){removeRecast(item.requestId);render()}});
+  secondary.append(copy,remove);
+  actions.append(use,secondary);details.append(name,id,actions);card.append(thumb,details);list.append(card);
   // Only the owner of the private link can retrieve the protected watermarked preview.
   const observer=new IntersectionObserver(entries=>{
    if(!entries[0]?.isIntersecting)return;

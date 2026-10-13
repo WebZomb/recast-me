@@ -16,6 +16,23 @@ body{background:radial-gradient(circle at 40% 0%,#251948,#0b1025 55%,#080913);co
 .library-empty{padding:26px;border-radius:19px;background:#171629;border:1px solid #534974}
 .library-note{color:#c9c8e2;line-height:1.6;font-size:14px}
 @media(max-width:470px){.library-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.library-copy{padding:10px}.library-card h2{font-size:15px}.library-actions .button{font-size:13px;padding:10px 6px;min-height:43px}}
+
+.library-card{position:relative;border:1px solid #6552ab;border-radius:22px;background:linear-gradient(160deg,#241838,#10162c 88%);box-shadow:0 7px 20px #0006,inset 0 1px #fff1;transition:transform .18s ease,border-color .18s ease;overflow:hidden}
+.library-card:hover{border-color:#58d9f0}
+.library-thumb{background:radial-gradient(circle at 45% 25%,#2c2b66,#151429);border-bottom:1px solid #7468af66}
+.library-thumb img{object-fit:contain;object-position:center;max-height:100%}
+.library-copy{padding:14px}
+.library-copy h2{font-size:16px;line-height:1.25;min-height:20px;color:#fff}
+.library-copy .artwork-code{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:11px;color:#9ed8eb;overflow-wrap:anywhere;display:block}
+.library-actions{gap:12px}
+.library-actions .button.primary{background:linear-gradient(100deg,#9e29f6,#695cff 51%,#04c7ed);box-shadow:0 0 18px #5955fe45;border:1px solid #c397ff6b;font-size:14px;font-weight:850}
+.library-secondary-actions{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px}
+.library-secondary-actions button{font-weight:700;font-size:12px;background:none;border:0;color:#8edfeb;cursor:pointer;padding:7px 1px;min-height:34px}
+.library-secondary-actions .library-remove-button{color:#cec4e1}
+.library-secondary-actions button:hover{color:#fff;text-decoration:underline}
+.library-secondary-actions button:active{transform:scale(.96);color:#fff}
+@media(max-width:470px){.library-card{border-radius:17px}.library-copy{padding:10px}.library-copy h2{font-size:14px}.library-actions .button.primary{font-size:12px;padding:10px 6px}.library-secondary-actions button{font-size:11px}}
+@media(prefers-reduced-motion:reduce){.library-card{transition:none}}
 </style></head><body>
 <main class="library-shell">
 <header class="library-header"><a href="/#start"><img src="https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recastmeai-approved-orbit-header-v2.png?v=1791314310&amp;width=800" alt="Recast Me Ai"></a><a href="/#start" class="button primary">Create another ✦</a></header>
@@ -24,4 +41,4 @@ body{background:radial-gradient(circle at 40% 0%,#251948,#0b1025 55%,#080913);co
 <section id="library-grid" class="library-grid" aria-label="Saved Recasts"></section>
 <p class="library-note">Artwork IDs help identify pictures, but <strong>an ID alone doesn't grant access</strong>. Private product links are needed to reopen an image. Removing a favorite here removes only this browser's shortcut, not an already placed order or the server artwork. Do not share private product links publicly.</p>
 <a class="button ghost" href="/my-orders.html">My Orders &amp; tracking →</a>
-</main><script type="module" src="/my-recasts.js?v=1"></script><script src="/mobile-bottom-nav.js?v=1" type="module"></script></body></html>
+</main><script type="module" src="/my-recasts.js?v=2"></script><script src="/mobile-bottom-nav.js?v=2" type="module"></script></body></html>

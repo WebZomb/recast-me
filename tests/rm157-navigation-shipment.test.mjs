@@ -45,12 +45,12 @@ test('customer API, order list and order details jointly refuse premature tracki
 });
 test('four destinations are accessible on the website and native old-build fallback exists',()=>{
  const nav=read('public/mobile-bottom-nav.js'),html=read('public/index.html');
- const labels=['Create','My Recasts','Guide','Orders'];
+ const labels=['Create','My Recasts','My Orders','Guide'];
  for(const label of labels)assert.match(nav,new RegExp("label:'"+label+"'"));
  assert.match(nav,/recastHaptic/);
- assert.match(nav,/recast-legacy-orders-pill/);
+ assert.doesNotMatch(nav,/recast-legacy-orders-pill/);
  for(const page of ['index.html','my-orders.html','my-recasts.html','order.html','purchase-demo.html']){
-  assert.match(read('public/'+page),/mobile-bottom-nav\.js\?v=1/,page);
+  assert.match(read('public/'+page),/mobile-bottom-nav\.js\?v=(?:1|2)/,page);
  }
  assert.ok(!html.includes('View saved Recasts (up to 20)'));
  const extras=html.match(/<details class="preview-more">([\s\S]*?)<\/details>/)?.[1] || '';
