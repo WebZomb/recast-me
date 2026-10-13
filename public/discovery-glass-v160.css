@@ -247,3 +247,15 @@
     transition: none !important;
   }
 }
+
+/* Tiny iPhones still need a full-size tap target, even when the 4:3 picture
+   and glass label become narrower. Do not shrink this to a small utility icon. */
+@media (max-width: 375px) {
+  #recast-form [data-create-step="2"] .adventure-extra-actions button.glass-discovery-card {
+    min-height: 152px !important;
+  }
+  #recast-form .adventure-extra-actions button.glass-discovery-card strong {
+    min-height: 67px !important;
+    flex: 1 0 67px;
+  }
+}
