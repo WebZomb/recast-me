@@ -1,4 +1,5 @@
 import {initSubjectFocus} from './subject-focus.js?v=283';
+import {bindStylesDismissal} from './styles-disclosure.js?v=165';
 export const surpriseChoices=(styles,current)=>styles.filter(([id])=>id!=='custom'&&id!==current);
 // Upload-time suggestions and manual choices share one visible selector.
 export function initCreationWizard({styles,photos,subject,style,updateWorld,hasBranch}){
@@ -18,7 +19,7 @@ export function initCreationWizard({styles,photos,subject,style,updateWorld,hasB
   if(type==='car')return ['car'];
   return [];
  }
- const roleName=value=>value==='together'?'Everyone together':value==='pet'?'Your pet':value==='car'?'Your car':'Person '+value.slice(6);
+ const roleName=value=>value==='together'?'Everyone together':value==='pet'?'Your pet':value==='car'?'My car':'Person '+value.slice(6);
  function refreshPhotos(){
   const selected=[...photos.files],choices=roles();
   focus.refresh();
@@ -94,6 +95,7 @@ export function initCreationWizard({styles,photos,subject,style,updateWorld,hasB
   if(!allWorlds.hidden)style.focus({preventScroll:true});
  });
  setAllWorldsOpen(style.value==='custom'||!['royal','fantasy','space','game'].includes(style.value));
+ bindStylesDismissal({panel:allWorlds,trigger:moreWorlds,select:style,setOpen:setAllWorldsOpen});
  // The single native summary toggles the optional inclusion controls.
  subject.addEventListener('change',refreshPhotos);$('#family-count').addEventListener('change',refreshPhotos);
  document.addEventListener('recast-photos-change',refreshPhotos);
