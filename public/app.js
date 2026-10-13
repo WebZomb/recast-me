@@ -654,11 +654,6 @@ async function activateRecentVersion(version,{scroll=true}={}){
     qualityMode:version.qualityMode||'high'
   };
   activeRequestFromVersion(version);
-  const orderLink=document.querySelector('#artwork-manage-link');
-  if(orderLink){
-    orderLink.href=`/order.html?requestId=${encodeURIComponent(version.requestId)}&token=${encodeURIComponent(version.accessToken)}`;
-    orderLink.classList.remove('hidden');
-  }
   renderRecentVersions().catch(console.warn);
   if(scroll)section?.scrollIntoView({behavior:'smooth',block:'start'});
 }
@@ -940,8 +935,6 @@ form.addEventListener('submit',async e=>{
     activeRequestFromVersion(successVersion);
     addRecentVersion(successVersion);
     clearBranchReference();
-    const orderLink=document.querySelector('#artwork-manage-link');
-    if(orderLink){orderLink.href=`/order.html?requestId=${encodeURIComponent(data.requestId)}&token=${encodeURIComponent(data.accessToken)}`;orderLink.classList.remove('hidden')}
     stopGenerationUI(true);
   }catch(err){
     window.recastTrack?.('render_failed');
@@ -1125,7 +1118,7 @@ async function exportPreview(native=false){
   if(!button||button.disabled)return;
   button.disabled=true;
   exportStatus.textContent=native?'Saving your preview to My Recasts…':'Preparing your watermarked preview…';
-  if(native){button.classList.add('is-saving');button.textContent='Saving to My Recasts…';}
+  if(native){button.classList.add('is-saving');button.querySelector('span').textContent='Saving…';}
   try{
     if(native&&!window.webkit?.messageHandlers?.recastPreview){
       const saved=saveRecast({
@@ -1134,9 +1127,9 @@ async function exportPreview(native=false){
       });
       if(!saved.ok)throw Error(saved.error);
       exportStatus.textContent='✓ Saved to My Recasts in this browser. Use it on a product any time while the private artwork is available.';
-      button.classList.add('is-saved');button.textContent='✓ Saved to My Recasts';
-      showNativeSavedToast('✓ Saved! Open My Recasts to use it on a product.');
-      setTimeout(()=>{button.classList.remove('is-saved');button.textContent='Save to My Recasts';},3200);
+      button.classList.add('is-saved');button.querySelector('span').textContent='✓ Saved';
+      showNativeSavedToast('✓ Saved to My Recasts!');
+      setTimeout(()=>{button.classList.remove('is-saved');button.querySelector('span').textContent='Save';},2500);
       return;
     }
     const result=await protectedPreviewFile(lastSuccessfulPreviewMeta);
@@ -1149,9 +1142,9 @@ async function exportPreview(native=false){
       exportStatus.textContent=reply?.reusable===false
         ?'✓ Saved offline. Reopen this version in Recent Recasts to restore its private product link.'
         :'✓ Saved to My Recasts on this iPhone. Open it to put it on a product.';
-      button.classList.add('is-saved');button.textContent='✓ Saved to My Recasts';
-      showNativeSavedToast('✓ Saved! Open My Recasts below to see your picture.');
-      setTimeout(()=>{button.classList.remove('is-saved');button.textContent='Save to My Recasts';},3200);
+      button.classList.add('is-saved');button.querySelector('span').textContent='✓ Saved';
+      showNativeSavedToast('✓ Saved to My Recasts!');
+      setTimeout(()=>{button.classList.remove('is-saved');button.querySelector('span').textContent='Save';},2500);
     }else if(navigator.canShare?.({files:[result.file]})){
       await navigator.share({files:[result.file],title:'My Recast',text:'Made with @RecastMeAi'});
       exportStatus.textContent='Your watermarked preview is ready to share.';
@@ -1163,7 +1156,7 @@ async function exportPreview(native=false){
     }
   }catch(error){
     exportStatus.textContent=error.name==='AbortError'?'Sharing canceled. Your preview is still here.':error.message||'Could not save this preview.';
-    if(native){button.classList.remove('is-saved');button.textContent='Try saving to My Recasts';}
+    if(native){button.classList.remove('is-saved');button.querySelector('span').textContent='Save';}
   }finally{button.disabled=false;button.classList.remove('is-saving');}
 }
 document.querySelector('#share-preview')?.addEventListener('click',()=>exportPreview());
@@ -1183,12 +1176,6 @@ async function restorePrivateLink(value){
   document.querySelector('#recover-status').textContent='Your saved Recast is restored. No new render was used.';
 }
 document.querySelector('#recover-recast').addEventListener('click',()=>restorePrivateLink(document.querySelector('#recover-recast-link').value).catch(e=>{document.querySelector('#recover-status').textContent=e.message;}));
-document.querySelector('#copy-recast-link').addEventListener('click',async()=>{
-  const v=window.__recastActiveRequest;if(!v)return;
-  const link=privateRecastLink(location.origin,v),field=document.querySelector('#private-recast-link');field.value=link;field.hidden=false;
-  let copied=false;try{await navigator.clipboard.writeText(link);copied=true;}catch{}
-  document.querySelector('#recast-link-status').textContent=(copied?'Private link copied. ':'Copy the private link below. ')+'Open it in Safari or save it somewhere private. Anyone with this link can access this Recast.';
-});
 document.querySelector('#original-photo-form').addEventListener('submit',async event=>{
   event.preventDefault();if(generationInFlight)return;
   const form=event.currentTarget,button=form.querySelector('button'),status=document.querySelector('#original-status'),file=document.querySelector('#original-photo').files[0];
