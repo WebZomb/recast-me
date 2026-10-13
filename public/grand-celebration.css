@@ -123,3 +123,8 @@
 
 /* Show a typographic orbit fallback while the approved logo loads. */
 .rg-logo-disc.rg-icon-loaded .rg-monogram{opacity:0}
+
+/* Keep the complete headline and exclamation mark together, even on SE/mini phones. */
+.rg-overlay .rg-title{font-size:clamp(27px,7.7vw,51px);white-space:nowrap;letter-spacing:-.07em}
+.rg-overlay .rg-brand-icon{border-radius:23%;box-shadow:0 0 16px #502dff85}
+@media(max-height:720px){.rg-overlay .rg-title{font-size:clamp(26px,7vw,44px)}}
