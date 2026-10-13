@@ -98,11 +98,21 @@ struct StudioWebView: UIViewRepresentable {
           if (location.origin !== 'https://recastmeai.com') return;
           try {
             const recent = JSON.parse(localStorage.getItem('recast_recent_versions_v12') || '[]');
+            const favorites = JSON.parse(localStorage.getItem('recast_saved_collection_v1') || '[]');
+            const checkouts = JSON.parse(localStorage.getItem('recast_checkout_records_v1') || '[]');
             const last = JSON.parse(localStorage.getItem('recast_last_request') || 'null');
-            const rows = [...(Array.isArray(recent) ? recent : []), last]
-              .filter(v => v && /^RC-[A-Za-z0-9-]{1,100}$/.test(v.requestId||'') &&
-                           /^[a-fA-F0-9]{64}$/.test(v.accessToken||''))
-              .map(v => ({requestId:v.requestId, accessToken:v.accessToken})).slice(0,20);
+            const possible = [last,
+              ...(Array.isArray(favorites) ? favorites : []),
+              ...(Array.isArray(checkouts) ? checkouts : []),
+              ...(Array.isArray(recent) ? recent : [])];
+            const seen = new Set();
+            const rows = possible.filter(v => {
+                if (!v || !/^RC-[A-Za-z0-9-]{1,100}$/.test(v.requestId||'') ||
+                    !/^[a-fA-F0-9]{64}$/.test(v.accessToken||'') ||
+                    seen.has(v.requestId)) return false;
+                seen.add(v.requestId);
+                return true;
+              }).map(v=>({requestId:v.requestId,accessToken:v.accessToken})).slice(0,40);
             if (rows.length) window.webkit?.messageHandlers?.recastAccess?.postMessage({versions:rows});
           } catch {}
         })();
@@ -171,7 +181,8 @@ struct StudioWebView: UIViewRepresentable {
                 replyHandler(nil, "This preview source is not allowed."); return
             }
             do {
-                let reusable = try parent.gallery.save(id: id, dataURL: image, accessToken: body["accessToken"] as? String)
+                let reusable = try parent.gallery.save(id: id, dataURL: image, accessToken: body["accessToken"] as? String,
+                    styleName: body["styleName"] as? String)
                 UINotificationFeedbackGenerator().notificationOccurred(.success)
                 replyHandler(["saved": true, "reusable": reusable], nil)
             } catch {

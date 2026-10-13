@@ -5,6 +5,7 @@ import Combine
 struct SavedPreview: Codable, Identifiable {
     var id: String
     var savedAt: Date
+    var styleName: String?
 }
 
 @MainActor
@@ -39,13 +40,15 @@ final class PreviewGallery: ObservableObject {
     }
     func imageURL(_ item: SavedPreview) -> URL { folder.appendingPathComponent(item.id + ".jpg") }
     func image(_ item: SavedPreview) -> UIImage? { UIImage(contentsOfFile: imageURL(item).path) }
-    func save(id: String, dataURL: String, accessToken: String? = nil) throws -> Bool {
+    func save(id: String, dataURL: String, accessToken: String? = nil, styleName: String? = nil) throws -> Bool {
         guard available, Self.validID(id), dataURL.hasPrefix("data:image/jpeg;base64,"), dataURL.count < 8_000_000,
               let encoded = dataURL.split(separator: ",", maxSplits: 1).last,
               let data = Data(base64Encoded: String(encoded)), data.prefix(3) == Data([255,216,255]),
               let image = UIImage(data: data), image.size.width <= 4096, image.size.height <= 4096 else { throw GalleryError.invalid }
         guard items.contains(where: {$0.id == id}) || items.count < 20 else { throw GalleryError.full }
-        let item = SavedPreview(id: id, savedAt: Date())
+        let title = String((styleName?.trimmingCharacters(in: .whitespacesAndNewlines) ?? "") .prefix(70))
+        let previous = items.first(where: { $0.id == id })?.styleName
+        let item = SavedPreview(id: id, savedAt: Date(), styleName: title.isEmpty ? previous : title)
         let updated = [item] + items.filter { $0.id != id }
         try data.write(to: imageURL(item), options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication])
         try JSONEncoder().encode(updated).write(to: index, options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication])
@@ -66,7 +69,7 @@ final class PreviewGallery: ObservableObject {
     func importRecentAccess(_ versions: [[String: String]]) -> Int {
         var count = 0
         let savedIDs = Set(items.map(\.id))
-        for version in versions.prefix(20) {
+        for version in versions.prefix(40) {
             guard let id = version["requestId"], let token = version["accessToken"],
                   savedIDs.contains(id), SavedArtworkAccess.validToken(token) else { continue }
             if SavedArtworkAccess.save(id: id, token: token) { count += 1 }

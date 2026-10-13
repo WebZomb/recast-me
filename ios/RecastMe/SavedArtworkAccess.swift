@@ -59,6 +59,26 @@ enum SavedArtworkAccess {
         ]
         SecItemDelete(query as CFDictionary)
     }
+    // Older saves may predate the protected-link Keychain entry.
+    // Accept a private link for the SAME artwork ID only, never a bare ID
+    // or another website. Reopening still requires server-side verification.
+    static func restorePrivateLink(_ input: String, for id: String) -> Bool {
+        guard validID(id), input.count < 2048,
+              let components = URLComponents(string: input.trimmingCharacters(in: .whitespacesAndNewlines)),
+              components.scheme?.lowercased() == "https",
+              ["recastmeai.com", "www.recastmeai.com", "recast-me.sergz24.workers.dev"].contains(components.host?.lowercased() ?? ""),
+              components.user == nil, components.password == nil,
+              components.port == nil || components.port == 443 else { return false }
+        let fragment = components.fragment ?? ""
+        let parts = URLComponents(string: "https://recastmeai.com/?" + fragment)?.queryItems ?? []
+        let linkID = parts.first(where: { $0.name == "recast" })?.value
+        let fragmentToken = parts.first(where: { $0.name == "key" })?.value
+        let orderID = components.queryItems?.first(where: { $0.name == "requestId" })?.value
+        let orderToken = components.queryItems?.first(where: { $0.name == "token" })?.value
+        guard (linkID == id && validToken(fragmentToken ?? "")) ||
+              (components.path == "/order.html" && orderID == id && validToken(orderToken ?? "")) else { return false }
+        return save(id: id, token: fragmentToken ?? orderToken ?? "")
+    }
     static func productURL(for id: String) -> URL? {
         guard let token = token(for: id),
               var components = URLComponents(string: "https://recastmeai.com/") else { return nil }

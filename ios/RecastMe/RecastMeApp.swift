@@ -22,6 +22,9 @@ struct RecastMeApp: App {
                 }
                     .tabItem { Label("My Recasts", systemImage: "photo.on.rectangle.angled") }
                     .tag(RecastTab.recasts)
+                StudioView(gallery: gallery, initialURL: StudioView.origin.appendingPathComponent("my-orders.html"))
+                    .tabItem { Label("My Orders", systemImage: "shippingbox.fill") }
+                    .tag(RecastTab.orders)
                 NavigationStack {
                     List {
                         Section("Make something worth keeping") {
@@ -35,7 +38,7 @@ struct RecastMeApp: App {
                             Link("Photo privacy & AI processing", destination: StudioView.origin.appendingPathComponent("privacy.html"))
                         }
                         Section("Testing this app") {
-                            Text("The fourth tab, Orders, shows your purchases, production progress, and carrier tracking once a shipment actually exists. Keep Create open while an image renders. Return from secure checkout to refresh order status.")
+                            Text("The My Orders tab shows your purchases, production progress, and carrier tracking once a shipment actually exists. Keep Create open while an image renders. Return from secure checkout to refresh order status.")
                         }
                         Section("Orders & support") {
                             Link("Order help and shipping", destination: StudioView.origin.appendingPathComponent("support.html"))
@@ -45,9 +48,6 @@ struct RecastMeApp: App {
                     .navigationTitle("Photo guide")
                 }.tabItem { Label("Guide", systemImage: "questionmark.circle") }
                     .tag(RecastTab.guide)
-                StudioView(gallery: gallery, initialURL: StudioView.origin.appendingPathComponent("my-orders.html"))
-                    .tabItem { Label("Orders", systemImage: "shippingbox") }
-                    .tag(RecastTab.orders)
             }
             .sensoryFeedback(.selection, trigger: selectedTab)
             .tint(.cyan)
