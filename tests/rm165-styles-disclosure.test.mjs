@@ -22,20 +22,26 @@ function fixture(open=true){
  return {doc,panel,trigger,select,calls,stop,observer};
 }
 const closed=x=>{assert.equal(x.panel.hidden,true);assert.equal(x.trigger.label.textContent,'More Styles ↓');assert.equal(x.trigger.attrs['aria-expanded'],'false');};
-test('outside pointer/touch and assistive click dismiss and reset both labels',()=>{
- for(const kind of ['pointerdown','click']){const x=fixture();x.doc.emit(kind,{target:{}});closed(x);assert.equal(x.select.value,'halloween');assert.equal(x.trigger.focused,undefined);}
+test('outside pointer/touch completes the tap before collapsing or moving its target',()=>{
+ const x=fixture(),target={};
+ x.doc.emit('pointerdown',{target});x.doc.emit('focusin',{target});
+ assert.equal(x.panel.hidden,false,'Do not shift the page under the pointer');
+ x.doc.emit('pointerup',{target});assert.equal(x.panel.hidden,false);
+ x.doc.emit('click',{target});closed(x);assert.equal(x.select.value,'halloween');assert.equal(x.trigger.focused,undefined);
 });
+test('assistive clicks dismiss without requiring pointer events',()=>{const x=fixture();x.doc.emit('click',{target:{}});closed(x);});
 test('clicks on the trigger, its image, the panel, and select stay inside',()=>{
  const x=fixture();const image={};x.trigger.nodes.add(image);
- for(const target of [x.trigger,image,x.panel,x.select])x.doc.emit('pointerdown',{target});
+ for(const target of [x.trigger,image,x.panel,x.select])x.doc.emit('click',{target});
  assert.equal(x.panel.hidden,false);assert.equal(x.trigger.attrs['aria-expanded'],'true');assert.equal(x.calls.length,0);
 });
 test('Escape closes the disclosure and returns keyboard focus',()=>{
  const x=fixture();let prevented=false;x.doc.emit('keydown',{key:'Escape',preventDefault(){prevented=true;}});
  closed(x);assert.equal(prevented,true);assert.equal(x.trigger.focused,true);
 });
-test('keyboard focus leaving the panel closes it without stealing focus',()=>{
+test('keyboard focus leaving closes without stealing focus, even after a cancelled touch',()=>{
  const x=fixture();x.doc.emit('focusin',{target:x.select});assert.equal(x.panel.hidden,false);
+ x.doc.emit('pointerdown',{target:x.select});x.doc.emit('pointercancel',{});
  x.doc.emit('focusin',{target:{}});closed(x);assert.equal(x.trigger.focused,undefined);
 });
 test('choosing any style including custom preserves it and closes the list',()=>{
@@ -48,7 +54,7 @@ test('externally hidden panels synchronize aria and copy without a mutation loop
 });
 test('closed panels and unrelated keys are unaffected; cleanup removes listeners',()=>{
  const x=fixture(false);x.doc.emit('keydown',{key:'Enter'});x.doc.emit('click',{target:{}});assert.equal(x.calls.length,0);
- x.stop();assert.equal(x.observer.closed,true);x.panel.hidden=false;x.doc.emit('pointerdown',{target:{}});assert.equal(x.panel.hidden,false);
+ x.stop();assert.equal(x.observer.closed,true);x.panel.hidden=false;x.doc.emit('click',{target:{}});assert.equal(x.panel.hidden,false);
 });
 test('wizard loads the dismissal helper; helper cannot render or change commerce',()=>{
  const source=readFileSync('public/styles-disclosure.js','utf8');
