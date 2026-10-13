@@ -43,6 +43,7 @@
   <meta name="twitter:image:alt" content="Recast Me Ai — cyan and magenta swirling RM logo">
   <link rel="stylesheet" href="/product-preview-loading.css?v=2603">
   <link rel="stylesheet" href="/order-experience.css?v=3">
+  <link rel="stylesheet" href="/preview-quick-actions-v162.css?v=1">
   <link rel="stylesheet" href="/grand-celebration.css?v=1">
 </head>
 <body data-launch-build="RM-150">
@@ -295,7 +296,8 @@
         <p id="request-id"></p>
       </div>
       <div class="preview-layout">
-        <div class="preview-frame">
+        <div class="preview-artwork-column">
+          <div class="preview-frame">
           <canvas id="preview-canvas" role="img" aria-label="Your watermarked Recast preview"></canvas>
           <div class="loading hidden" id="loading" aria-busy="true">
             <div class="loader-orbit"><i></i><i></i><i></i></div>
@@ -317,23 +319,17 @@
               <button type="button" id="adjust-generation" class="button ghost">Edit direction</button>
             </div>
           </div>
+          </div>
+          <div class="preview-quick-actions" role="group" aria-label="Preview actions">
+            <button type="button" id="save-native-preview" class="preview-quick-button preview-quick-save" aria-label="Save this picture to My Recasts"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5.5A2.5 2.5 0 0 1 7.5 3h9A2.5 2.5 0 0 1 19 5.5V21l-7-4.5L5 21V5.5Z"/></svg><span>Save</span></button>
+            <button type="button" id="share-preview" class="preview-quick-button preview-quick-share" aria-label="Share this watermarked picture"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V3m0 0L7 8m5-5 5 5"/><path d="M5 13v5a3 3 0 0 0 3 3h8a3 3 0 0 0 3-3v-5"/></svg><span>Share</span></button>
+          </div>
+          <p id="preview-export-status" role="status" aria-live="polite"></p>
         </div>
         <div class="preview-info preview-info-simple">
           <div class="preview-protection"><strong>Preview only</strong><span>The watermark does not print.</span></div>
           <a class="button primary preview-product-cta" href="#shop">Put It on a Product →</a>
           <a class="button ghost preview-version-cta" href="#recent-versions-shell">Pick another version</a>
-          <details class="preview-more">
-            <summary>More options</summary>
-            <div class="preview-more-actions">
-              <button type="button" id="share-preview" class="button ghost">Save / share preview</button>
-              <button type="button" id="save-native-preview" class="button ghost">Save to My Recasts</button>
-              <button type="button" id="copy-recast-link" class="button ghost">Open in another browser</button>
-              <a id="artwork-manage-link" class="recast-privacy-link hidden" href="#">Artwork &amp; privacy options →</a>
-            </div>
-          </details>
-          <p id="preview-export-status" role="status" aria-live="polite"></p>
-          <p id="recast-link-status" role="status"></p>
-          <input id="private-recast-link" aria-label="Private Recast link" readonly hidden>
         </div>
       </div>
       <section id="recent-versions-shell" class="recent-versions-shell hidden" aria-live="polite">
@@ -385,7 +381,7 @@
   </footer>
   <script src="/analytics.js?v=1" defer></script>
   <script src="/simple-creator-v115.js?v=1" defer></script>
-  <script src="/app.js?v=299" type="module"></script>
+  <script src="/app.js?v=300" type="module"></script>
   <script src="/checkout.js?v=300" type="module"></script>
   <script src="/mobile-bottom-nav.js?v=161" type="module"></script>
 </body>
