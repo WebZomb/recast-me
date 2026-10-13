@@ -43,11 +43,11 @@ test('customer API, order list and order details jointly refuse premature tracki
  assert.match(detail,/j\.trackingReady===true/);
  assert.match(detail,/Tracking will appear after your order ships/);
 });
-test('four destinations are accessible on the website and native old-build fallback exists',()=>{
+test('four website destinations are accessible while the native app retains its own tabs',()=>{
  const nav=read('public/mobile-bottom-nav.js'),html=read('public/index.html');
  const labels=['Create','My Recasts','My Orders','Guide'];
  for(const label of labels)assert.match(nav,new RegExp("label:'"+label+"'"));
- assert.match(nav,/recastHaptic/);
+ assert.match(nav,/window\.webkit\?\.messageHandlers\?\.recastPreview/);
  assert.doesNotMatch(nav,/recast-legacy-orders-pill/);
  for(const page of ['index.html','my-orders.html','my-recasts.html','order.html','purchase-demo.html']){
   assert.match(read('public/'+page),/mobile-bottom-nav\.js\?v=160/,page);
