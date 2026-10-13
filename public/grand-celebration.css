@@ -120,3 +120,6 @@
   .rg-sunburst{opacity:.09!important}
   .rg-overlay .rg-card{opacity:1!important;transform:none!important}
 }
+
+/* Show a typographic orbit fallback while the approved logo loads. */
+.rg-logo-disc.rg-icon-loaded .rg-monogram{opacity:0}
