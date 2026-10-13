@@ -1,6 +1,22 @@
 import SwiftUI
 import WebKit
 import UIKit
+import SafariServices
+
+private struct SafariCheckout: Identifiable {
+    let id = UUID()
+    let url: URL
+}
+
+private struct EmbeddedSafari: UIViewControllerRepresentable {
+    let url: URL
+    func makeUIViewController(context: Context) -> SFSafariViewController {
+        let controller = SFSafariViewController(url: url)
+        controller.preferredControlTintColor = .systemCyan
+        return controller
+    }
+    func updateUIViewController(_ controller: SFSafariViewController, context: Context) {}
+}
 
 struct StudioView: View {
     // Production service for owner testing; App Store release remains gated.
@@ -10,10 +26,11 @@ struct StudioView: View {
     @State private var loadError: String?
     @State private var isLoading = true
     @State private var externalURL: URL?
+    @State private var checkout: SafariCheckout?
     @State private var reloadID = UUID()
     var body: some View {
         ZStack {
-            StudioWebView(gallery: gallery, initialURL: initialURL, loadError: $loadError, isLoading: $isLoading, externalURL: $externalURL).id(reloadID)
+            StudioWebView(gallery: gallery, initialURL: initialURL, loadError: $loadError, isLoading: $isLoading, externalURL: $externalURL, checkout: $checkout).id(reloadID)
             if isLoading && loadError == nil {
                 ProgressView("Opening your studio…").padding().background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
             }
@@ -27,13 +44,23 @@ struct StudioView: View {
                 }.padding(30).frame(maxWidth: .infinity, maxHeight: .infinity).background(Color(.systemBackground))
             }
         }
-        .confirmationDialog("Continue in your browser?", isPresented: Binding(get: { externalURL != nil }, set: { if !$0 { externalURL = nil } })) {
+        .sheet(item: $checkout, onDismiss: {
+            NotificationCenter.default.post(name: .init("RecastCheckoutReturned"), object: nil)
+        }) { page in
+            EmbeddedSafari(url: page.url)
+                .ignoresSafeArea()
+        }
+        .confirmationDialog("Continue to website?", isPresented: Binding(get: { externalURL != nil }, set: { if !$0 { externalURL = nil } })) {
             if let destination = externalURL {
-                Button("Open browser") { UIApplication.shared.open(destination); externalURL = nil }
+                Button("Open securely in Recast Me") {
+                    checkout = SafariCheckout(url: destination)
+                    externalURL = nil
+                }
+                Button("Open in Safari") { UIApplication.shared.open(destination); externalURL = nil }
             }
             Button("Stay here", role: .cancel) { externalURL = nil }
         } message: {
-            Text("Open \(externalURL?.host ?? "the website") outside Recast Me. Your studio and saved previews stay here.")
+            Text("Continue in a secure browser. Your saved Recasts stay here.")
         }
     }
 }
@@ -44,6 +71,7 @@ struct StudioWebView: UIViewRepresentable {
     @Binding var loadError: String?
     @Binding var isLoading: Bool
     @Binding var externalURL: URL?
+    @Binding var checkout: SafariCheckout?
     func makeCoordinator() -> Coordinator { Coordinator(self) }
     func makeUIView(context: Context) -> WKWebView {
         let config = WKWebViewConfiguration()
