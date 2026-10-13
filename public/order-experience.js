@@ -1,3 +1,4 @@
+import {showGrandCelebration} from './grand-celebration.js?v=1';
 // Local, private purchase pointers. Only the Recast server can confirm Shopify payments.
 const KEY = 'recast_checkout_records_v1';
 const SEEN = 'recast_celebrated_orders_v1';
@@ -108,37 +109,15 @@ export async function confirmOrderBonus(order) {
 }
 const escape = value => String(value || '').replace(/[&<>"']/g, character =>
   ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[character]));
+// Visual celebration only: payment and the idempotent HQ bonus were verified above.
 function celebrate(order, bonus) {
-  document.querySelector('.recast-celebration-layer')?.remove();
-  const layer = document.createElement('div');
-  layer.className = 'recast-celebration-layer';
-  layer.innerHTML = '<div class="recast-celebration-backdrop"></div>' +
-    '<section class="recast-celebration" role="dialog" aria-modal="true" aria-labelledby="recast-celebration-title">' +
-    '<div class="recast-confetti" aria-hidden="true">' + Array.from({length: 28}, (_, index) =>
-      '<i style="--x:' + (((index * 73) % 460) - 230) + 'px;--y:' + (130 + (index * 137) % 420) + 'px;animation-delay:' + ((index * 9) % 40) / 100 + 's"></i>'
-    ).join('') + '</div>' +
-    '<span class="recast-celebration-badge" aria-hidden="true">🎉</span>' +
-    '<div class="eyebrow">IT’S OFFICIAL!</div><h2 id="recast-celebration-title">Congratulations! Your order is in!</h2>' +
-    '<p class="celebration-order"></p><p class="celebration-bonus"></p>' +
-    '<a class="button primary celebration-track" href="' + escape(orderLink(order)) + '">See my order &amp; tracking →</a>' +
-    '<button type="button" class="button ghost celebration-more">Make another picture</button>' +
-    '<button type="button" class="celebration-close" aria-label="Close celebration">×</button>' +
-    '</section>';
-  layer.querySelector('.celebration-order').textContent = order.orderName + ' confirmed · ' +
-    (order.jobs.map(job => job.product).filter(Boolean).join(', ') || 'Personalized gift');
-  layer.querySelector('.celebration-bonus').textContent = bonus.message;
-  const close = () => { layer.remove(); document.removeEventListener('keydown', onKey); };
-  const onKey = event => {if (event.key === 'Escape') close();};
-  layer.querySelector('.celebration-close').addEventListener('click',close);
-  layer.querySelector('.recast-celebration-backdrop').addEventListener('click',close);
-  layer.querySelector('.celebration-more').addEventListener('click',() => {
-    close();
-    document.querySelector('#start')?.scrollIntoView({behavior:'smooth',block:'start'});
+  showGrandCelebration({
+    orderName:order.orderName,
+    products:order.jobs?.map(job=>job.product).filter(Boolean).join(', ')||'personalized gift',
+    orderHref:orderLink(order),
+    added:Math.max(0,Number(bonus?.added)||0),
+    bonusMessage:bonus?.message||'Your order is confirmed. Check My Orders for status.'
   });
-  document.addEventListener('keydown',onKey);
-  document.body.append(layer);
-  layer.querySelector('.celebration-close').focus({preventScroll:true});
-  window.webkit?.messageHandlers?.recastHaptic?.postMessage('success');
 }
 export function initCheckoutReturnExperience(onCreditRefresh = () => {}) {
   let checking = false, lastCheck = 0;

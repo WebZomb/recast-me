@@ -59,12 +59,17 @@ test('four destinations are accessible on the website and native old-build fallb
 });
 test('verified celebration is larger, accessible and the demo remains no-charge',()=>{
  const css=read('public/order-experience.css'),demo=read('public/purchase-demo.html'),
-  experience=read('public/order-experience.js');
+  experience=read('public/order-experience.js'),
+  grand=read('public/grand-celebration.js'),
+  grandCSS=read('public/grand-celebration.css');
  assert.match(css,/width:min\(100%,560px\)/);
  assert.match(css,/min-height:min\(690px/);
  assert.match(css,/\.celebration-close\{position:absolute/);
- assert.match(experience,/Array\.from\(\{length: 28\}/);
- assert.match(experience,/aria-modal="true"/);
+ assert.match(experience,/showGrandCelebration/);
+ assert.match(grand,/for\(let i=0;i<44;i\+\+\)/);
+ assert.match(grand,/aria-modal="true"/);
+ assert.match(grand,/rg-replay/);
+ assert.match(grandCSS,/prefers-reduced-motion:reduce/);
  assert.match(demo,/NO PURCHASE · NO REAL CREDITS/);
  assert.match(demo,/min-height:min\(690px/);
  assert.doesNotMatch(demo,/\/api\/checkout-link|\/api\/order-bonus/);

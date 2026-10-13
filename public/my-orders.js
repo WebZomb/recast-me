@@ -1,4 +1,5 @@
-import {verifiedOrders,orderLink} from './order-experience.js?v=2';
+import {verifiedOrders,orderLink} from './order-experience.js?v=3';
+import {showGrandCelebration} from './grand-celebration.js?v=1';
 const list=document.querySelector('#orders-list');
 const status=document.querySelector('#orders-status');
 const button=document.querySelector('#orders-refresh');
@@ -73,6 +74,22 @@ async function refresh(force=false) {
       const link=document.createElement('a');
       link.className='button primary';link.href=orderLink(order);link.textContent='Order details & updates →';
       actions.prepend(link);
+      const replay=document.createElement('button');
+      replay.type='button';replay.className='button ghost order-replay';
+      replay.textContent='✦ Replay celebration';
+      replay.setAttribute('aria-label','Replay the Recast Me celebration for '+order.orderName);
+      replay.addEventListener('click',()=>{
+        // No checkout call, no new bonus claim. This order was already verified
+        // by the authenticated order-status response when the list loaded.
+        showGrandCelebration({
+          orderName:order.orderName,
+          products:order.jobs.map(job=>job.product).filter(Boolean).join(', ')||'personalized gift',
+          orderHref:orderLink(order),
+          added:0,
+          bonusMessage:'Relive your purchase moment. Replaying does not add credits.'
+        });
+      });
+      actions.append(replay);
       list.append(box);
     }
   } catch {
