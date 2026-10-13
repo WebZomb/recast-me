@@ -654,7 +654,7 @@ async function activateRecentVersion(version,{scroll=true}={}){
     qualityMode:version.qualityMode||'high'
   };
   activeRequestFromVersion(version);
-  const orderLink=document.querySelector('#order-status-link');
+  const orderLink=document.querySelector('#artwork-manage-link');
   if(orderLink){
     orderLink.href=`/order.html?requestId=${encodeURIComponent(version.requestId)}&token=${encodeURIComponent(version.accessToken)}`;
     orderLink.classList.remove('hidden');
@@ -940,7 +940,7 @@ form.addEventListener('submit',async e=>{
     activeRequestFromVersion(successVersion);
     addRecentVersion(successVersion);
     clearBranchReference();
-    const orderLink=document.querySelector('#order-status-link');
+    const orderLink=document.querySelector('#artwork-manage-link');
     if(orderLink){orderLink.href=`/order.html?requestId=${encodeURIComponent(data.requestId)}&token=${encodeURIComponent(data.accessToken)}`;orderLink.classList.remove('hidden')}
     stopGenerationUI(true);
   }catch(err){

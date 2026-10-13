@@ -92,3 +92,12 @@ button,.button,.nav-cta{transition:transform .14s ease,filter .14s ease,box-shad
 .recast-celebration .celebration-close{position:absolute;top:11px;right:13px;z-index:4;min-width:44px;min-height:44px}
 .recast-celebration .celebration-close:focus-visible{outline:3px solid #aaf2ff;outline-offset:2px;border-radius:50%}
 @media(max-width:480px){.recast-celebration{min-height:min(735px,calc(100dvh - 22px))}}
+
+/* A private artwork-management path remains for deleting unpaid artwork, but
+   does not duplicate the prominent Orders tab or carrier tracking actions. */
+.preview-more .recast-privacy-link{
+ display:flex;align-items:center;justify-content:center;min-height:44px;
+ font-size:14px;text-align:center;font-weight:750;text-decoration:underline;
+ text-underline-offset:3px;color:#a2eaff;padding:7px 10px;box-sizing:border-box
+}
+.preview-more .recast-privacy-link:focus-visible{outline:2px solid #a4edff;border-radius:9px}
