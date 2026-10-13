@@ -16,7 +16,7 @@
   const dock = document.createElement('nav');
   dock.className = 'recast-mobile-nav';
   dock.setAttribute('aria-label', 'Recast Me sections');
-  dock.setAttribute('data-recast-nav-style', 'v161');
+  dock.setAttribute('data-recast-nav-style', 'v162');
 
   for (const page of pages) {
     const link = document.createElement('a');
@@ -63,7 +63,7 @@
     const css = document.createElement('link');
     css.rel = 'stylesheet';
     css.href = '/mobile-bottom-nav.css?v=161';
-    css.dataset.recastBottomNav = 'v161';
+    css.dataset.recastBottomNav = 'v162';
     document.head.append(css);
   }
   document.body.classList.add('recast-web-mobile-nav');
