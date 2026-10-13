@@ -50,7 +50,7 @@ test('four destinations are accessible on the website and native old-build fallb
  assert.match(nav,/recastHaptic/);
  assert.doesNotMatch(nav,/recast-legacy-orders-pill/);
  for(const page of ['index.html','my-orders.html','my-recasts.html','order.html','purchase-demo.html']){
-  assert.match(read('public/'+page),/mobile-bottom-nav\.js\?v=(?:1|2)/,page);
+  assert.match(read('public/'+page),/mobile-bottom-nav\.js\?v=160/,page);
  }
  assert.ok(!html.includes('View saved Recasts (up to 20)'));
  const extras=html.match(/<details class="preview-more">([\s\S]*?)<\/details>/)?.[1] || '';
