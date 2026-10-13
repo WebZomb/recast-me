@@ -1,3 +1,4 @@
+try{const seasonalGift=new URLSearchParams(location.search).get('gift');if(/^RECAST-[A-Z0-9-]{1,60}$/.test(seasonalGift||''))sessionStorage.setItem('recast_preferred_gift',seasonalGift);}catch{}
 const grid = document.querySelector("#product-grid");
 const requestLabel = document.querySelector("#request-id");
 
@@ -597,6 +598,14 @@ async function loadCheckout(){
       </div>
     </div>`;
   }).join("")+roadmapMarkup()+`<button type="button" class="catalog-more-toggle">See more products</button>`;
+  try{
+    const gift=sessionStorage.getItem('recast_preferred_gift');
+    if(gift){
+      const selectors=[...grid.querySelectorAll('.recast-variant')];
+      const selector=selectors.find(select=>[...select.options].some(option=>option.value===gift));
+      if(selector){selector.value=gift;const card=selector.closest('.product');grid.classList.add('show-all-products');card.style.order='-1';card.classList.add('season-selected-product');}
+    }
+  }catch{}
   grid.querySelectorAll(".product[data-product-index]").forEach(card=>applyCatalogExample(card,card.querySelector(".recast-variant")?.value));
   const moreToggle=grid.querySelector?.(".catalog-more-toggle");
   moreToggle?.addEventListener("click",()=>{grid.classList.add("show-all-products");moreToggle.remove();});

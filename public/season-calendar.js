@@ -39,16 +39,17 @@ export function upcomingGiftEvents(now=new Date(),count=6){
  const today=yearDate(now.getFullYear(),now.getMonth()+1,now.getDate());
  return near.filter(x=>x.date>=today).sort((a,b)=>a.date-b.date).slice(0,count);
 }
-export function seasonalSpotlight(now=new Date()){
+export function seasonalSpotlight(now=new Date(),selected=undefined){
+ if(selected===null)return {id:"everyday",name:"Personal Gifts",theme:"everyday",badge:"YOUR PHOTO. YOUR GIFT.",title:"Make a memory worth keeping.",intro:"Turn a favorite photo into a personalized gift.",hero:"/assets/world-royal-v18.webp",style:"royal",secondaryTitle:"Make it uniquely theirs.",secondaryCopy:"Choose a favorite face, pick an adventure and preview your gift."};
  const today=yearDate(now.getFullYear(),now.getMonth()+1,now.getDate());
  const y=now.getFullYear(),october=yearDate(y,10,1),halloween=yearDate(y,11,1);
- if(today>=october&&today<halloween)return {
+ if(selected?.id==='halloween'||(selected===undefined&&today>=october&&today<halloween))return {
    id:'halloween',name:'Halloween',theme:'halloween',badge:'HALLOWEEN MAGIC',
    title:'Make Halloween unforgettable.',intro:'From spooky-cute pet portraits to magical family adventures, bring your favorite photo to a whole new world.',
    hero:'/assets/recast-halloween-hero-v163.webp',style:'halloween',
    secondaryTitle:'A little spooky. A lot of you.',secondaryCopy:'Turn your best friend into a tiny vampire, a magical wizard or a moonlit legend. Pick your favorite, then preview it on a gift.'
  };
- const next=upcomingGiftEvents(now,1)[0];
+ const next=selected?annualGiftEvents(Number(selected.date.slice(0,4))).find(x=>x.id===selected.id):upcomingGiftEvents(now,1)[0];
  if(!next)return null;
  const winter=['christmas','black-friday','cyber-monday','new-year'].includes(next.id);
  const autumn=next.id==='thanksgiving';
