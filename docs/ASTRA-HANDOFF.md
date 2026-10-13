@@ -346,3 +346,6 @@ RM153 — App icon/privacy packaging and Xcode26.2 compile preparation on draft 
 
 
 RM154 — Apple bundle/app registered (6822107649); Codemagic app added and draft workflow loaded. Hosted unsigned compile/resource checks PASS. App-specific signing profile prepared, awaiting action-time approval before Generate. No signed build/upload. Receipt commit d09d2ea2713bb677aea3e611ce1333d9795c9f78. See [RM154](ASTRA-SESSION-RM-154.md).
+
+
+RM155 — Owner approved signing profile; created and fetched into Codemagic, matching existing certificate. Workflow integration aligned in 440da6d. First internal signed build started using free allowance; archive/upload result pending. See [RM155](ASTRA-SESSION-RM-155.md).
