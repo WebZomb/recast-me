@@ -22,7 +22,8 @@ function ownerAlertCopy(events, count, test=false){
  if(test)return {subject:'Recast Me test alert',text:'Recast Me test alert. Open your Control Center to manage alerts.'};
  const lines=events.slice(0,6).map((event,index)=>String(index+1)+'. '+describeOwnerAlert(event));
  const more=count>lines.length?'\n+'+String(count-lines.length)+' additional check(s) in Control Center.':'';
- return {subject:count===1?'Recast Me: 1 issue to review':'Recast Me: '+count+' issues to review',
+ const title=events[0]?describeOwnerAlert(events[0]).split(' — ')[0].slice(0,90):'issue to review';
+ return {subject:count===1?'Recast Me: '+title:'Recast Me: '+count+' issues to review',
   text:'Recast Me: '+count+' alert(s) need review.\n\n'+(lines.length?lines.join('\n'):'Open Control Center to inspect your latest operations.')+more+'\n\nControl Center: https://recastmeai.com/admin.html\n\nThis is the issue at alert time, and it may have recovered. Do not reorder purchases or submit production twice. Recheck the original order.'};
 }
 
