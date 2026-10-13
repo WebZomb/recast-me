@@ -1,0 +1,23 @@
+# RM164 — Signed fifth-tab TestFlight and seasonal navigation acceptance
+
+October 13, 2026 (US/Eastern). Authorized connections verified LIVE before actions: both user PCs connected via Remote Desktop Commander (DESKTOP-GFOHB7M / DESKTOP-96HLGJF); authenticated Codemagic and Apple App Store Connect in existing Brave session on DESKTOP-GFOHB7M; GitHub source and CI available. Do not persist or expose secrets. No public App Store submission.
+
+## State inherited (RM162–RM163)
+Website RM163 was already merged, guarded-deployed and independently verified before this session. It has compact **Save** and **Share** directly below the finished watermarked image, gallery More options (share, copy private link, copy individual Artwork ID, privacy, remove), and five black mobile tabs **Create / My Recasts / My Orders / Specials / Guide**. Seasonal page `/specials.html` is Halloween-themed from top to footer, includes original approved illustrations, creator deeplinks, upcoming-gift calendar with auto-rotation to subsequent holidays. No additional paid renders or product orders were initiated.
+
+Read-only 320px / 393px / 1280px headless Chrome verified homepage and Specials HTML: all five nav anchors visible with accessible tap areas, no horizontal overflow, exactly Save/Share directly under preview, no old More options under preview, Halloween hero loaded, 5 Halloween art assets loaded, zero client script errors.
+
+## New signed TestFlight build COMPLETED
+- Opened the owner's authenticated **Codemagic Personal Account → recast-me** in Brave. Started exactly one manual internal workflow **Recast Me — internal TestFlight** on branch `rm152-ios-testflight`, head **`6839ad74a95ae9054c89cedd3c0af8c8f373a75d`**. Build page: `https://codemagic.io/app/6acd782d2442f441f5fc7d30/build/6ace5583546ce6236cee35e3`. Green CI pipeline: archive and Publishing both complete. Publishing log explicitly **“UPLOAD SUCCEEDED with no errors.”**
+- Opened authenticated App Store Connect → Recast Me → TestFlight. Apple shows new **iOS Recast Me 1.0 (Build 10)** with green **Ready to Test**. Inside existing **Owner Testing** internal group, confirmed **ONE tester** and **THREE assigned builds**: Build 10 **Testing**, Build 9 Testing, Build 6 Testing. No new tester account, external beta group, public submission or receipt of private information.
+- **Not yet confirmed installed on actual iPhone**. Owner can now update in TestFlight to Build 10. This signed binary contains new fifth native **Specials** tab before **Guide**; website updates do not by themselves add a native tab. Do not claim on-device acceptance until owner checks.
+
+## Live navigation polish
+- Found live Cloudflare extensionless routing: visiting `/specials.html` leads to browser pathname `/specials`, so the five-tab website nav initially failed to show Specials as active, despite displaying the button. Added canonical normalization for `.html`, extensionless URLs and trailing slash, retaining original destinations and native web-dock suppression.
+- PR **#79**, source head `d4894cc8ef882af8b9280f4901e3df8cf2828241`, merged to main `5a65d35d96963c0825f7fe655336137461578659`. Both focused security and Chromium/WebKit customer-policy CI PASS. Guarded Cloudflare deployment Actions `38429264380` PASS with **569 mocked Node tests / 0 failures**, Worker version `f6de8a2b-1c49-41e7-bf1b-1026858ed926`, production read-only smoke PASS; independent post-merge public audit `38429264378` PASS. Zero purchases, credit ledger updates or Printful actions.
+- Separate **read-only LIVE Chrome** smoke at `https://recast-me.sergz24.workers.dev/` and `/specials.html`, `/my-orders.html`, `/my-recasts.html`, `/guide.html`: active nav correctly highlights its canonical destination on 393px and 1280px, five links visible, no horizontal overflow, zero JS errors. Direct 1280px Specials load confirms black dock integrated in site header. Earlier mobile→desktop quick-resize test sometimes reported interim body placement; actual desktop direct load correct.
+
+## Remaining acceptance
+User must install **Build 10** using TestFlight on iPhone, test all five tabs, Halloween full-page visuals, Save/Share and My Recasts product reuse, and show screenshots of any issues. Existing order #1003 is separate and was NOT reordered, refunded, shipped or changed during these actions. When Apple internal distribution is ready, do not submit external/public version without further review (payment policy, app privacy, physical sample quality, etc.).
+
+Rollback web by reviewed PR revert + guarded Cloudflare deployment, without touching artworks, orders, existing credits. Native remains in independent draft PR71; old internal builds remain visible for rollback.
