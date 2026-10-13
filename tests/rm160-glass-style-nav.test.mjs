@@ -48,7 +48,7 @@ test('native-style black website dock still overrides the old hidden-link rule',
   assert.match(css,/display:\s*flex !important/);
   assert.match(css,/visibility:\s*visible !important/);
   assert.match(css,/body\.recast-desktop-header-nav/);
-  assert.match(css,/display: grid !important/);
+  assert.match(css,/display:\s*grid\s*!important/);
   assert.match(css,/backdrop-filter:none/);
   assert.match(css,/background:linear-gradient\(180deg,#171719/);
   assert.match(css,/background:linear-gradient\(180deg,#39393d/);
