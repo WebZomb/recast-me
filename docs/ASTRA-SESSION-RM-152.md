@@ -1,0 +1,11 @@
+# RM152 — internal TestFlight setup preparation
+
+October 12, 2026. Baseline main a8cc764acef9483e6d7479c771091ae50fdbb79c (tree 6b68c7b57cfc1b9a49cd98814f23fec3cdeee0f9). Website runtime remains c3a082935d0f8a5ab76a174c178aecade6d27a82.
+
+Owner authorizes Apple app setup and will sign in. Remote Desktop Commander recovered: ping and read-only CMD Windows version command succeeded. Native PC browser control is unavailable through the tools in this session; no browser cookies or credentials were read. Earlier cloud Apple sign-in reached verification, but the secure verification request and recovery navigation timed out. Authentication remains unknown; no signed-in Apple account was verified and no app record/signing access was created.
+
+Prepared root codemagic.yaml for manually started internal-only TestFlight archives using proposed com.recastme.ios and integration name Recast Me. No automatic triggers; no external beta or public App Store review submission. Packaging preflight deliberately fails until the icon and privacy manifest exist. Current approved public icon inspected:400x400 RGB, not yet a packaged1024px app icon. Added explicit owner account/setup/acceptance guide. Configuration is preparation, not a connected or executed pipeline. Existing website, print layouts, prompts, checkout and automation unchanged.
+
+Validation: Python PyYAML parse PASS; bash -n for all five script bodies PASS; assertions for manual-only workflow and review switches PASS; actual preflight correctly rejected missing icon; git diff --check PASS. No Mac compile, signed archive, Codemagic validation/build, TestFlight upload or device acceptance performed in this session. The previous RM149 unsigned compile remains the latest native compilation evidence. No paid actions, account grants, messages, invites, orders or new service activation.
+
+Remaining: Apple app/team/bundle verification; icon packaging and privacy review; existing Codemagic signing integration/certificate/profile selection with explicit authorization for new sensitive grants; billing review before a build; owner iPhone acceptance; digital purchase policy before public submission. Do not revoke shared certificates used by other apps. Rollback: delete/revert this isolated build config and setup docs; no data migration or live service change.

@@ -338,3 +338,16 @@ RM150 — Owner selects X support and confirms Apple membership. Public gift dis
 
 
 RM151 — Owner asks for simple own-photo gifts and discovery completion. Google Search Console property prepared; public verification tag and clearer gift CTA added, verification/submission pending deploy. Apple PC connection retry pending. See [RM151](ASTRA-SESSION-RM-151.md).
+
+
+RM152 — Prepared manual internal-only Codemagic TestFlight configuration and owner setup guide; syntax/guard checks PASS. Apple account/signing, app-icon/privacy packaging and actual build still pending. Website unchanged. See [RM152](ASTRA-SESSION-RM-152.md).
+
+RM153 — App icon/privacy packaging and Xcode26.2 compile preparation on draft PR71. Website unchanged; Apple registration/signing/upload still pending. See [RM153](ASTRA-SESSION-RM-153.md).
+
+
+RM154 — Apple bundle/app registered (6822107649); Codemagic app added and draft workflow loaded. Hosted unsigned compile/resource checks PASS. App-specific signing profile prepared, awaiting action-time approval before Generate. No signed build/upload. Receipt commit d09d2ea2713bb677aea3e611ce1333d9795c9f78. See [RM154](ASTRA-SESSION-RM-154.md).
+
+
+RM155 — Owner approved signing profile; created and fetched into Codemagic, matching existing certificate. Workflow integration aligned in 440da6d. First internal signed build started using free allowance; archive/upload result pending. See [RM155](ASTRA-SESSION-RM-155.md).
+
+RM156 iOS — Owner completed private TestFlight app testing and a paid physical product checkout independently. Native four-tab Orders/haptic/return bridge source on draft PR71 commit `0d4b44d`, Xcode simulator compile `38332974968` PASS, **not** signed/uploaded into a new TestFlight build. Web order history/celebration is a separate draft PR72 prerequisite. See [RM156 native session](ASTRA-SESSION-RM-156-IOS.md).

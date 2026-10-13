@@ -1,0 +1,60 @@
+# Start manually after completing docs/IOS-TESTFLIGHT-SETUP.md.
+# No push/PR trigger and no public App Store submission.
+workflows:
+  recast-internal-testflight:
+    name: Recast Me — internal TestFlight
+    instance_type: mac_mini_m2
+    max_build_duration: 30
+    integrations:
+      app_store_connect: Starveil Codemagic
+    environment:
+      xcode: 26.2
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.recastme.ios
+    scripts:
+      - name: Validate release prerequisites
+        script: |
+          set -eu
+          test -f ios/RecastMe/Assets.xcassets/AppIcon.appiconset/Contents.json || {
+            echo 'App icon is not packaged yet. Finish the release prerequisites before signing.'
+            exit 1
+          }
+          test -f ios/RecastMe/PrivacyInfo.xcprivacy || {
+            echo 'Privacy manifest review and packaging are still required.'
+            exit 1
+          }
+      - name: Generate the Xcode project
+        script: |
+          set -eu
+          command -v xcodegen >/dev/null || brew install xcodegen
+          cd ios
+          xcodegen generate
+      - name: Set a unique build number
+        script: |
+          set -eu
+          # The source build is 3; this workflow starts above it.
+          RECAST_COUNTER="${BUILD_NUMBER:?Missing Codemagic build number}"
+          case "$RECAST_COUNTER" in *[!0-9]*|'') exit 1 ;; esac
+          RECAST_BUILD_NUMBER=$((RECAST_COUNTER + 4))
+          test "$RECAST_BUILD_NUMBER" -le 9999 || {
+            echo 'Review the Apple build-number range before uploading.'
+            exit 1
+          }
+          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $RECAST_BUILD_NUMBER" ios/RecastMe/Info.plist
+      - name: Apply signing for internal testing only
+        script: |
+          set -eu
+          xcode-project use-profiles --custom-export-options='{"testFlightInternalTestingOnly": true}'
+      - name: Archive the iPhone app
+        script: |
+          set -eu
+          xcode-project build-ipa --project ios/RecastMe.xcodeproj --scheme RecastMe
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: false
+        submit_to_app_store: false
