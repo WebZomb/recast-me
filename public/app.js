@@ -4,6 +4,7 @@ import {mergeHistory,privateRecastLink,readRecastLink} from './recast-history.js
 import {initCreationWizard,surpriseChoices} from './creation-wizard.js?v=292';
 import {fallbackState,creditSummary,creditHeadline,recoveryUnverified} from './quality-policy.js?v=267';
 import {protectedPreviewFile} from './preview-export.js';
+import {initCheckoutReturnExperience} from './order-experience.js?v=1';
 let creditInfo=null;
 async function refreshCredits(initialize=false){
   const display=document.querySelector('#render-credits');
@@ -1110,16 +1111,29 @@ setInterval(()=>{if(!generationInFlight)refreshRenderAvailability()},30000);
 // Sharing never includes the private access token, source photo or order link.
 const exportStatus=document.querySelector('#preview-export-status');
 const nativeSave=document.querySelector('#save-native-preview');
+let savedToastTimer;
+function showNativeSavedToast(text){
+  document.querySelector('.recast-save-toast')?.remove();
+  const toast=document.createElement('div');toast.className='recast-save-toast';
+  toast.setAttribute('role','status');toast.textContent=text;document.body.append(toast);
+  clearTimeout(savedToastTimer);savedToastTimer=setTimeout(()=>toast.remove(),3600);
+}
 if(window.webkit?.messageHandlers?.recastPreview)nativeSave.hidden=false;
 async function exportPreview(native=false){
   const button=document.querySelector(native?'#save-native-preview':'#share-preview');
-  button.disabled=true;exportStatus.textContent='Preparing your watermarked preview…';
+  if(!button||button.disabled)return;
+  button.disabled=true;
+  exportStatus.textContent=native?'Saving your preview to My Recasts…':'Preparing your watermarked preview…';
+  if(native){button.classList.add('is-saving');button.textContent='Saving to My Recasts…';}
   try{
     const result=await protectedPreviewFile(lastSuccessfulPreviewMeta);
     if(native){
       // Native replies after it has actually persisted the file.
       await window.webkit.messageHandlers.recastPreview.postMessage({id:result.id,image:result.image});
-      exportStatus.textContent='Saved to My Recasts on this iPhone.';
+      exportStatus.textContent='✓ Saved to My Recasts on this iPhone.';
+      button.classList.add('is-saved');button.textContent='✓ Saved to My Recasts';
+      showNativeSavedToast('✓ Saved! Open My Recasts below to see your picture.');
+      setTimeout(()=>{button.classList.remove('is-saved');button.textContent='Save to My Recasts';},3200);
     }else if(navigator.canShare?.({files:[result.file]})){
       await navigator.share({files:[result.file],title:'My Recast',text:'Made with @RecastMeAi'});
       exportStatus.textContent='Your watermarked preview is ready to share.';
@@ -1129,8 +1143,10 @@ async function exportPreview(native=false){
       setTimeout(()=>URL.revokeObjectURL(url),60000);
       exportStatus.textContent='Your watermarked preview download has started.';
     }
-  }catch(error){exportStatus.textContent=error.name==='AbortError'?'Sharing canceled. Your preview is still here.':error.message||'Could not save this preview.'}
-  finally{button.disabled=false}
+  }catch(error){
+    exportStatus.textContent=error.name==='AbortError'?'Sharing canceled. Your preview is still here.':error.message||'Could not save this preview.';
+    if(native){button.classList.remove('is-saved');button.textContent='Try saving to My Recasts';}
+  }finally{button.disabled=false;button.classList.remove('is-saving');}
 }
 document.querySelector('#share-preview')?.addEventListener('click',()=>exportPreview());
 nativeSave?.addEventListener('click',()=>exportPreview(true));
@@ -1179,3 +1195,6 @@ function refreshVisibleBalance(){
 window.addEventListener('focus',refreshVisibleBalance);
 document.addEventListener('visibilitychange',refreshVisibleBalance);
 setInterval(refreshVisibleBalance,60000);
+
+// Celebrate only backend-verified paid orders; bonus claims remain server-checked and idempotent.
+initCheckoutReturnExperience(()=>refreshCredits().catch(()=>{}));
