@@ -1,0 +1,30 @@
+/* RM157: four clear bottom destinations, only for standalone web browsers. */
+.recast-mobile-nav {
+  position:fixed;z-index:1200;left:50%;bottom:max(10px,env(safe-area-inset-bottom));
+  transform:translateX(-50%);display:grid;grid-template-columns:repeat(4,minmax(0,1fr));
+  width:min(calc(100% - 20px),480px);min-height:70px;box-sizing:border-box;padding:6px;
+  background:rgba(13,14,25,.97);border:1px solid rgba(174,165,202,.45);
+  border-radius:29px;box-shadow:0 14px 50px #000b, inset 0 1px #fff2;
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)
+}
+.recast-mobile-nav a{
+ display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+ text-decoration:none;color:#e5e3ef!important;font-size:clamp(10px,2.8vw,12px);
+ font-weight:750;line-height:1.2;min-height:58px;border-radius:23px;min-width:0;
+ transition:background .14s ease,transform .14s ease,color .14s ease
+}
+.recast-mobile-nav svg{width:23px;height:23px;fill:none;stroke:currentColor;stroke-width:2.1;stroke-linecap:round;stroke-linejoin:round}
+.recast-mobile-nav a:active{transform:scale(.93);background:#303050}
+.recast-mobile-nav a[aria-current="page"]{background:linear-gradient(130deg,#2b2c46,#1f3646);color:#6ee6f4!important}
+.recast-mobile-nav a:focus-visible{outline:2px solid #92f3ff;outline-offset:2px}
+.recast-mobile-nav a span{white-space:nowrap}
+body.recast-web-mobile-nav{padding-bottom:max(90px,calc(env(safe-area-inset-bottom) + 80px))!important}
+.recast-legacy-orders-pill {
+ position:fixed;z-index:1300;right:15px;bottom:calc(90px + env(safe-area-inset-bottom));
+ padding:11px 17px;border:1px solid #7fe4f5;border-radius:28px;
+ background:linear-gradient(110deg,#6835b6,#12aace);color:white!important;
+ box-shadow:0 7px 25px #0009;text-decoration:none;font-size:14px;font-weight:850
+}
+.recast-legacy-orders-pill:active{transform:scale(.96);filter:brightness(1.15)}
+@media(min-width:850px){.recast-mobile-nav{display:none}body.recast-web-mobile-nav{padding-bottom:0!important}}
+@media(prefers-reduced-motion:reduce){.recast-mobile-nav a,.recast-legacy-orders-pill{transition:none}}
