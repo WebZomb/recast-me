@@ -2,7 +2,7 @@
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#09091b"><meta name="robots" content="noindex,nofollow">
 <title>Post-purchase preview · Recast Me</title><link rel="stylesheet" href="/styles.css?v=130"><link rel="stylesheet" href="/site-v10.css?v=233">
-<link rel="stylesheet" href="/brand-orbit-v1.css?v=1"><link rel="stylesheet" href="/order-experience.css?v=1">
+<link rel="stylesheet" href="/brand-orbit-v1.css?v=1"><link rel="stylesheet" href="/order-experience.css?v=2">
 <style>
 html{scroll-behavior:smooth}body{background:radial-gradient(circle at 50% 3%,#33215f 0%,#111429 45%,#080c1b 100%);color:white;min-height:100dvh}
 .demo-badge{position:sticky;top:0;z-index:40;padding:11px 12px;text-align:center;background:#fff4b2;color:#302200;font-weight:900;letter-spacing:.02em;font-size:13px}
@@ -66,4 +66,4 @@ html{scroll-behavior:smooth}body{background:radial-gradient(circle at 50% 3%,#33
 const sel=document.querySelector('#demo-step'),timeline=document.querySelector('#demo-timeline');
 function render(){const step=Number(sel.value);timeline.replaceChildren();titles.forEach((title,i)=>{const li=document.createElement('li');li.className=i<step?'done':i===step?'current':'';const dot=document.createElement('span');dot.className='dot';dot.textContent=i<step?'✓':String(i+1);const copy=document.createElement('div');copy.className='copy';copy.textContent=title;const small=document.createElement('small');small.textContent=details[i];copy.append(small);li.append(dot,copy);timeline.append(li);});}
 function burst(){const box=document.querySelector('#demo-sparkle');box.replaceChildren();for(let i=0;i<8;i++){let s=document.createElement('i');box.append(s)}}sel.addEventListener('change',render);document.querySelector('#demo-tracking').addEventListener('click',()=>document.querySelector('#demo-order').scrollIntoView({behavior:'smooth',block:'start'}));document.querySelector('#replay').addEventListener('click',()=>{burst();document.querySelector('.demo-hero').scrollIntoView({behavior:'smooth'})});render();burst()})();
-</script></body></html>
+</script><script src="/mobile-bottom-nav.js?v=1" type="module"></script></body></html>
