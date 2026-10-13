@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {setup} from './security-helpers.mjs';
 import {read} from '../src/commerce-store.js';
 import {requireAdmin} from '../src/workflow.js';
-import {ownerAlertRoute,alertSettings,validateAlertSettings,sendOwnerAlerts,deliverOwnerAlert} from '../src/owner-alerts.js';
+import {ownerAlertRoute,alertSettings,validateAlertSettings,sendOwnerAlerts,deliverOwnerAlert,describeOwnerAlert} from '../src/owner-alerts.js';
 const key='system/owner-alert-settings.json';
 function req(path='/api/admin/alert-settings',body,auth=true){return new Request('https://recast.test'+path,{method:body?'POST':'GET',headers:{'x-recast-request':'1',...(auth?{authorization:'Bearer owner-test-secret'}:{})},...(body?{body:JSON.stringify(body)}:{})})}
 async function configure(env,extra={}){const s=await alertSettings(env);const values={...s.values,email:'owner@example.com',emailEnabled:true,consent:true,...extra};const r=await ownerAlertRoute(req(undefined,{revision:s.revision,values}),env,requireAdmin);assert.equal(r.status,200);return alertSettings(env)}
@@ -49,4 +49,26 @@ test('provider rejection is visible and missing services do not send',async()=>{
  await mock(async()=>{assert.equal((await deliverOwnerAlert(env,state,'email',['one'])).status,'rejected')},()=>Response.json({message:'bad sender'},{status:403}));
  const env2=await setup();await configure(env2);await env2.ARTWORK.put('jobs/1.json',JSON.stringify({id:'one',status:'payment_hold'}));
  await mock(async calls=>{const r=await sendOwnerAlerts(env2);assert.equal(r.outcomes[0].status,'not_configured');assert.equal(calls.length,0)});
+});
+
+test('alerts specify exact operational order issue but never include customer or internal secrets',async()=>{
+ const env=await base();await configure(env);
+ const issue={id:'safe-issue',code:'order_review',orderName:'#1003',status:'open',email:'do-not-send@example.com',message:'private artwork token XYZ'};
+ await env.ARTWORK.put('commerce/order-issues/safe-issue.json',JSON.stringify(issue));
+ await mock(async calls=>{
+  const result=await sendOwnerAlerts(env);
+  assert.equal(calls.length,1);
+  const body=JSON.parse(calls[0].body);
+  assert.match(body.subject,/issue to review/);
+  assert.match(body.text,/Order #1003: order review/);
+  assert.match(body.text,/recastmeai.com\/admin.html/);
+  assert.doesNotMatch(body.text,/do-not-send|private artwork|XYZ|secret/);
+  const last=await read(env,'system/alert-last-email.json');
+  assert.match(last.summary[0],/Order #1003/);
+  assert.equal(result.outcomes[0].status,'accepted');
+ });
+ const admin=await ownerAlertRoute(req(),env,requireAdmin);
+ assert.match((await admin.json()).last.email.summary[0],/order review/);
+ const untrusted=describeOwnerAlert({type:'order issue',orderName:'#1003\nX:',code:'<script>'});
+ assert.doesNotMatch(untrusted,/<script>|X:/);
 });
