@@ -16,8 +16,9 @@ function own(row) { return {requestId: row.requestId, accessToken: row.accessTok
 export function checkoutCandidates() {
   const stored = read(KEY, []);
   const recent = read('recast_recent_versions_v12', []);
+  const favorite = read('recast_saved_collection_v1', []);
   const current = read('recast_last_request', null);
-  const all = [...(Array.isArray(stored) ? stored : []), current, ...(Array.isArray(recent) ? recent : [])];
+  const all = [...(Array.isArray(stored) ? stored : []), ...(Array.isArray(favorite) ? favorite : []), current, ...(Array.isArray(recent) ? recent : [])];
   const seen = new Set();
   return all.filter(valid).filter(row => {
     if (seen.has(row.requestId)) return false;
