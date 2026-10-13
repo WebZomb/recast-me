@@ -5,6 +5,7 @@ import {initCreationWizard,surpriseChoices} from './creation-wizard.js?v=292';
 import {fallbackState,creditSummary,creditHeadline,recoveryUnverified} from './quality-policy.js?v=267';
 import {protectedPreviewFile} from './preview-export.js';
 import {initCheckoutReturnExperience} from './order-experience.js?v=1';
+import {saveRecast} from './recast-collection.js?v=1';
 let creditInfo=null;
 async function refreshCredits(initialize=false){
   const display=document.querySelector('#render-credits');
@@ -1118,7 +1119,7 @@ function showNativeSavedToast(text){
   toast.setAttribute('role','status');toast.textContent=text;document.body.append(toast);
   clearTimeout(savedToastTimer);savedToastTimer=setTimeout(()=>toast.remove(),3600);
 }
-if(window.webkit?.messageHandlers?.recastPreview)nativeSave.hidden=false;
+if(nativeSave)nativeSave.hidden=false;
 async function exportPreview(native=false){
   const button=document.querySelector(native?'#save-native-preview':'#share-preview');
   if(!button||button.disabled)return;
@@ -1126,11 +1127,25 @@ async function exportPreview(native=false){
   exportStatus.textContent=native?'Saving your preview to My Recasts…':'Preparing your watermarked preview…';
   if(native){button.classList.add('is-saving');button.textContent='Saving to My Recasts…';}
   try{
+    if(native&&!window.webkit?.messageHandlers?.recastPreview){
+      const saved=saveRecast({
+        ...lastSuccessfulPreviewMeta,
+        styleName:lastSuccessfulPreviewMeta?.title?.replace(/ preview ready\.$/,'') || 'Recast'
+      });
+      if(!saved.ok)throw Error(saved.error);
+      exportStatus.textContent='✓ Saved to My Recasts in this browser. Use it on a product any time while the private artwork is available.';
+      button.classList.add('is-saved');button.textContent='✓ Saved to My Recasts';
+      showNativeSavedToast('✓ Saved! Open My Recasts to use it on a product.');
+      setTimeout(()=>{button.classList.remove('is-saved');button.textContent='Save to My Recasts';},3200);
+      return;
+    }
     const result=await protectedPreviewFile(lastSuccessfulPreviewMeta);
     if(native){
       // Native replies after it has actually persisted the file.
-      await window.webkit.messageHandlers.recastPreview.postMessage({id:result.id,image:result.image,accessToken:lastSuccessfulPreviewMeta?.accessToken||''});
-      exportStatus.textContent='✓ Saved to My Recasts on this iPhone.';
+      const reply=await window.webkit.messageHandlers.recastPreview.postMessage({id:result.id,image:result.image,accessToken:lastSuccessfulPreviewMeta?.accessToken||''});
+      exportStatus.textContent=reply?.reusable===false
+        ?'✓ Saved offline. Reopen this version in Recent Recasts to restore its private product link.'
+        :'✓ Saved to My Recasts on this iPhone. Open it to put it on a product.';
       button.classList.add('is-saved');button.textContent='✓ Saved to My Recasts';
       showNativeSavedToast('✓ Saved! Open My Recasts below to see your picture.');
       setTimeout(()=>{button.classList.remove('is-saved');button.textContent='Save to My Recasts';},3200);
