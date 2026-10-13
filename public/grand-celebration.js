@@ -79,7 +79,9 @@ export function showGrandCelebration(options={}){
   const panel=root.querySelector('.rg-card');
   const background=panel.querySelector('.rg-cosmos');
   background.append(particles());
-  panel.querySelector('.rg-brand-icon').src=ICON;
+  const logo=panel.querySelector('.rg-brand-icon');
+  logo.addEventListener('load',()=>panel.querySelector('.rg-logo-disc')?.classList.add('rg-icon-loaded'),{once:true});
+  logo.src=ICON;
   const orderText=String(orderName||'').trim().slice(0,60);
   const productText=String(products||'Personalized gift').trim().slice(0,130);
   panel.querySelector('.rg-subtitle').textContent=demo
