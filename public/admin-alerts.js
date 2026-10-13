@@ -1,6 +1,7 @@
 export function initOwnerAlerts(api,notify){
  const form=document.querySelector('#alert-settings-form');let current=null,dirty=false;
  const status=document.querySelector('#alert-settings-status');
+ document.querySelector('#alert-open-orders')?.addEventListener('click',()=>document.querySelector('[data-tab="orders"]')?.click());
  const message=r=>!r?'No attempts yet.':`${r.status==='accepted'?'Accepted by provider (delivery not confirmed)':r.status==='unknown'?'Result unknown — inspect the provider before retrying':r.status==='rejected'?'Provider rejected the message':r.status==='blocked'?'Sending blocked — check settings or daily limit':r.status} · ${r.at||''}`;
  form.addEventListener('input',()=>{dirty=true});
  async function load(force=false){
