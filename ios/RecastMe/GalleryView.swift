@@ -22,7 +22,10 @@ struct GalleryView: View {
                                         Text("@RecastMeAi · Watermarked preview").font(.caption).foregroundStyle(.secondary)
                                         ShareLink(item: gallery.imageURL(item)) { Label("Share preview", systemImage: "square.and.arrow.up") }
                                             .buttonStyle(.borderedProminent)
-                                        Button("Remove from this device", role: .destructive) { pendingDelete = item }
+                                        Button("Remove from this device", role: .destructive) {
+                                            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                                            pendingDelete = item
+                                        }
                                         Spacer(minLength: 0)
                                     }.padding().navigationTitle("Your Recast").navigationBarTitleDisplayMode(.inline)
                                 } label: {
@@ -40,7 +43,11 @@ struct GalleryView: View {
             }
             .navigationTitle("My Recasts")
             .confirmationDialog("Remove this preview from this device?", isPresented: Binding(get: {pendingDelete != nil}, set: {if !$0 {pendingDelete = nil}})) {
-                Button("Remove local preview", role: .destructive) { if let item = pendingDelete {gallery.remove(item)}; pendingDelete = nil }
+                Button("Remove local preview", role: .destructive) {
+                    UINotificationFeedbackGenerator().notificationOccurred(.warning)
+                    if let item = pendingDelete { gallery.remove(item) }
+                    pendingDelete = nil
+                }
             } message: { Text("Your server artwork and orders are kept. You can save this preview again from Create while you still have its private link.") }
             .alert("My Recasts", isPresented: Binding(get: {gallery.errorMessage != nil}, set: {if !$0 {gallery.errorMessage = nil}})) {
                 Button("OK") {gallery.errorMessage = nil}

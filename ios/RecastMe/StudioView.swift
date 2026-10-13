@@ -1,17 +1,19 @@
 import SwiftUI
 import WebKit
+import UIKit
 
 struct StudioView: View {
     // Production service for owner testing; App Store release remains gated.
     static let origin = URL(string: "https://recastmeai.com")!
     @ObservedObject var gallery: PreviewGallery
+    let initialURL: URL
     @State private var loadError: String?
     @State private var isLoading = true
     @State private var externalURL: URL?
     @State private var reloadID = UUID()
     var body: some View {
         ZStack {
-            StudioWebView(gallery: gallery, loadError: $loadError, isLoading: $isLoading, externalURL: $externalURL).id(reloadID)
+            StudioWebView(gallery: gallery, initialURL: initialURL, loadError: $loadError, isLoading: $isLoading, externalURL: $externalURL).id(reloadID)
             if isLoading && loadError == nil {
                 ProgressView("Opening your studio…").padding().background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
             }
@@ -38,6 +40,7 @@ struct StudioView: View {
 
 struct StudioWebView: UIViewRepresentable {
     let gallery: PreviewGallery
+    let initialURL: URL
     @Binding var loadError: String?
     @Binding var isLoading: Bool
     @Binding var externalURL: URL?
@@ -46,34 +49,76 @@ struct StudioWebView: UIViewRepresentable {
         let config = WKWebViewConfiguration()
         config.websiteDataStore = .default()
         config.userContentController.addScriptMessageHandler(context.coordinator, contentWorld: .page, name: "recastPreview")
+        config.userContentController.addScriptMessageHandler(context.coordinator, contentWorld: .page, name: "recastHaptic")
+        // Only the exact Recast main page can send tap feedback. No third-party frames.
+        let touchScript = """
+        (() => {
+          if (location.origin !== 'https://recastmeai.com') return;
+          document.addEventListener('click', event => {
+            const control = event.target?.closest?.('button, a[href], summary, select, input[type=submit]');
+            if (!control || control.disabled || control.getAttribute('aria-disabled') === 'true') return;
+            window.webkit?.messageHandlers?.recastHaptic?.postMessage('tap');
+          }, true);
+        })();
+        """
+        config.userContentController.addUserScript(WKUserScript(source: touchScript, injectionTime: .atDocumentEnd, forMainFrameOnly: true))
         let view = WKWebView(frame: .zero, configuration: config)
         view.navigationDelegate = context.coordinator
         view.uiDelegate = context.coordinator
+        context.coordinator.webView = view
+        NotificationCenter.default.addObserver(context.coordinator, selector: #selector(Coordinator.appResumed(_:)),
+                                               name: UIApplication.didBecomeActiveNotification, object: nil)
         view.isOpaque = false
         view.backgroundColor = .black
         view.allowsBackForwardNavigationGestures = true
-        view.load(URLRequest(url: URL(string: "#start", relativeTo: StudioView.origin)!.absoluteURL))
+        view.load(URLRequest(url: initialURL))
         return view
     }
     func updateUIView(_ uiView: WKWebView, context: Context) { context.coordinator.parent = self }
     static func dismantleUIView(_ view: WKWebView, coordinator: Coordinator) {
         view.configuration.userContentController.removeScriptMessageHandler(forName: "recastPreview", contentWorld: .page)
+        view.configuration.userContentController.removeScriptMessageHandler(forName: "recastHaptic", contentWorld: .page)
+        NotificationCenter.default.removeObserver(coordinator, name: UIApplication.didBecomeActiveNotification, object: nil)
+        coordinator.webView = nil
         view.navigationDelegate = nil
         view.uiDelegate = nil
     }
     @MainActor
     final class Coordinator: NSObject, WKNavigationDelegate, WKUIDelegate, WKScriptMessageHandlerWithReply {
         var parent: StudioWebView
+        weak var webView: WKWebView?
         init(_ parent: StudioWebView) { self.parent = parent }
+        @objc func appResumed(_ notification: Notification) {
+            webView?.evaluateJavaScript("window.dispatchEvent(new Event('recast-app-resumed'))", completionHandler: nil)
+        }
         func userContentController(_ controller: WKUserContentController, didReceive message: WKScriptMessage, replyHandler: @escaping (Any?, String?) -> Void) {
             let origin = message.frameInfo.securityOrigin
-            guard message.name == "recastPreview", message.frameInfo.isMainFrame,
-                  origin.protocol == "https", origin.host == StudioView.origin.host, origin.port == 0 || origin.port == 443,
-                  let body = message.body as? [String: Any], let id = body["id"] as? String, let image = body["image"] as? String else {
+            guard message.frameInfo.isMainFrame,
+                  origin.protocol == "https", origin.host == StudioView.origin.host, origin.port == 0 || origin.port == 443 else {
+                replyHandler(nil, "This action is not allowed."); return
+            }
+            if message.name == "recastHaptic" {
+                guard let kind = message.body as? String, kind == "tap" || kind == "success" else {
+                    replyHandler(nil, "Unknown feedback."); return
+                }
+                if kind == "tap" { UIImpactFeedbackGenerator(style: .light).impactOccurred() }
+                else { UINotificationFeedbackGenerator().notificationOccurred(.success) }
+                replyHandler(["ok": true], nil)
+                return
+            }
+            guard message.name == "recastPreview",
+                  let body = message.body as? [String: Any],
+                  let id = body["id"] as? String, let image = body["image"] as? String else {
                 replyHandler(nil, "This preview source is not allowed."); return
             }
-            do { try parent.gallery.save(id: id, dataURL: image); replyHandler(["saved": true], nil) }
-            catch { replyHandler(nil, error.localizedDescription) }
+            do {
+                try parent.gallery.save(id: id, dataURL: image)
+                UINotificationFeedbackGenerator().notificationOccurred(.success)
+                replyHandler(["saved": true], nil)
+            } catch {
+                UINotificationFeedbackGenerator().notificationOccurred(.error)
+                replyHandler(nil, error.localizedDescription)
+            }
         }
         func webView(_ webView: WKWebView, decidePolicyFor action: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
             guard let url = action.request.url else { decisionHandler(.cancel); return }

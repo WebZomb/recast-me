@@ -1,15 +1,23 @@
 import SwiftUI
 
+private enum RecastTab: Hashable { case create, recasts, orders, guide }
+
 @main
 struct RecastMeApp: App {
+    @State private var selectedTab: RecastTab = .create
     @StateObject private var gallery = PreviewGallery()
     var body: some Scene {
         WindowGroup {
-            TabView {
-                StudioView(gallery: gallery)
+            TabView(selection: $selectedTab) {
+                StudioView(gallery: gallery, initialURL: URL(string: "#start", relativeTo: StudioView.origin)!.absoluteURL)
                     .tabItem { Label("Create", systemImage: "wand.and.stars") }
+                    .tag(RecastTab.create)
                 GalleryView(gallery: gallery)
                     .tabItem { Label("My Recasts", systemImage: "photo.on.rectangle.angled") }
+                    .tag(RecastTab.recasts)
+                StudioView(gallery: gallery, initialURL: StudioView.origin.appendingPathComponent("my-orders.html"))
+                    .tabItem { Label("Orders", systemImage: "shippingbox") }
+                    .tag(RecastTab.orders)
                 NavigationStack {
                     List {
                         Section("Make something worth keeping") {
@@ -23,7 +31,7 @@ struct RecastMeApp: App {
                             Link("Photo privacy & AI processing", destination: StudioView.origin.appendingPathComponent("privacy.html"))
                         }
                         Section("Testing this app") {
-                            Text("This build connects to Recast Me. App checkout and return still need device testing before release. Keep Create open while an image renders; background completion is not supported yet.")
+                            Text("This test build uses Recast Me. After Shopify checkout, return here and open Orders for verified status, print updates and shipping links. App return still needs device acceptance before release. Keep Create open during rendering.")
                         }
                         Section("Orders & support") {
                             Link("Order help and shipping", destination: StudioView.origin.appendingPathComponent("support.html"))
@@ -31,7 +39,9 @@ struct RecastMeApp: App {
                     }
                     .navigationTitle("Photo guide")
                 }.tabItem { Label("Guide", systemImage: "questionmark.circle") }
+                    .tag(RecastTab.guide)
             }
+            .sensoryFeedback(.selection, trigger: selectedTab)
             .tint(.cyan)
             .preferredColorScheme(.dark)
         }
