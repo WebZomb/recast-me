@@ -96,10 +96,12 @@ export async function confirmOrderBonus(order) {
     });
     const data = await response.json().catch(() => null);
     if (!response.ok || !data?.ok) return {message:'Your order is confirmed. Bonus credits can be checked from your private order page.'};
-    const count = Number(data.bonus) || 0;
-    return {message:count > 0
-      ? count + ' bonus High Quality ' + (count === 1 ? 'render' : 'renders') + ' ready to use!'
-      : 'Your bonus renders have been applied. Check your High Quality balance.', bonus:count};
+    const count = Math.max(0, Number(data.bonus) || 0);
+    const before = Math.max(0, Number(wallet.bonus) || 0);
+    const added = Math.max(0, count - before);
+    return {message:added > 0
+      ? '+' + added + ' High Quality ' + (added === 1 ? 'render' : 'renders') + ' added! ' + count + ' bonus left.'
+      : 'Your purchase bonus was already applied. ' + count + ' bonus High Quality ' + (count === 1 ? 'render' : 'renders') + ' left.', bonus:count, added};
   } catch {
     return {message:'Order confirmed. Bonus credit status will be available from your private order page.'};
   }
