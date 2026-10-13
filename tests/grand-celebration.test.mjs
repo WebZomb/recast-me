@@ -1,0 +1,88 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import {showGrandCelebration} from '../public/grand-celebration.js';
+const get=p=>fs.readFileSync(p,'utf8');
+
+test('grand animation is branded with the approved orbit icon and high-contrast cyan/purple lights',()=>{
+ const ui=get('public/grand-celebration.js'),css=get('public/grand-celebration.css');
+ assert.equal(typeof showGrandCelebration,'function');
+ assert.match(ui,/recastmeai-approved-orbit-icon-v1.png/);
+ assert.match(ui,/RECAST ME MAGIC/);
+ assert.match(ui,/CONGRATULATIONS!/);
+ assert.match(ui,/BONUS UNLOCKED/);
+ assert.match(ui,/rg-orbit-one/);
+ assert.match(css,/#33eaf7|#23eaf7/i);
+ assert.match(css,/#be49ff|#c529fc/i);
+ assert.match(css,/@keyframes rg-logo-spin-pop/);
+ assert.match(css,/@keyframes rg-ring-first/);
+ assert.match(css,/@keyframes rg-firework/);
+ assert.match(css,/@keyframes rg-edge-sweep/);
+ assert.match(css,/\.rg-playing \.rg-reward\{animation:rg-reward-pop/);
+ assert.match(css,/1\.42s/);
+ assert.match(ui,/i<44/);
+});
+test('replay is strictly cosmetic and never reorders or issues render credits',()=>{
+ const ui=get('public/grand-celebration.js'),history=get('public/my-orders.js');
+ assert.doesNotMatch(ui,/fetch\s*\(|\/api\/checkout|\/api\/order-bonus|\/api\/render-credits|localStorage\.|sessionStorage\./);
+ assert.match(ui,/root\.classList\.remove\('rg-playing'\)/);
+ assert.match(ui,/root\.classList\.add\('rg-playing'\)/);
+ assert.match(ui,/panel\.querySelector\('\.rg-replay'\)\.addEventListener\('click',replay\)/);
+ assert.match(history,/verifiedOrders\(\)/);
+ assert.match(history,/showGrandCelebration\(/);
+ assert.match(history,/added:0/);
+ assert.match(history,/Replay celebration/);
+ assert.doesNotMatch(history,/\/api\/order-bonus/);
+});
+test('payment-gated entry and replay use the exact same designer component',()=>{
+ const experience=get('public/order-experience.js');
+ assert.match(experience,/if \(!data\?\.ok \|\| data\.request\?\.paid !== true/);
+ assert.match(experience,/function celebrate\(order, bonus\)/);
+ assert.match(experience,/showGrandCelebration\(/);
+ assert.match(experience,/orderHref:orderLink\(order\)/);
+ assert.match(experience,/added:Math\.max\(0,Number\(bonus\?\.added\)\|\|0\)/);
+ const history=get('public/my-orders.js');
+ assert.match(history,/orderHref:orderLink\(order\)/);
+});
+test('the show repeats visuals, but only displays a bonus number when real credits were added',()=>{
+ const ui=get('public/grand-celebration.js');
+ assert.match(ui,/if\(demo\)\{/);
+ assert.match(ui,/else if\(count>0\)/);
+ assert.match(ui,/headline\.textContent='\+'\+count/);
+ assert.match(ui,/rg-reward-quiet/);
+ assert.match(ui,/Replaying does not add credits|check My Orders|order is confirmed/i);
+ assert.match(ui,/no credits are added/i);
+ assert.match(ui,/\+3 HQ RECASTS/);
+});
+test('accessible high-impact visuals respect iOS reduced motion and keep controls actionable',()=>{
+ const ui=get('public/grand-celebration.js'),css=get('public/grand-celebration.css');
+ assert.match(ui,/role="dialog" aria-modal="true"/);
+ assert.match(ui,/aria-labelledby="rg-grand-title"/);
+ assert.match(ui,/aria-label="Close celebration"/);
+ assert.match(ui,/event\.key==='Escape'/);
+ assert.match(ui,/event\.key!=='Tab'/);
+ assert.match(ui,/document\.body\.style\.overflow=beforeOverflow/);
+ assert.match(css,/@media\(prefers-reduced-motion:reduce\)/);
+ assert.match(css,/\.rg-overlay \.rg-particle.*display:none/);
+ assert.match(css,/max-height:calc\(100dvh - 16px\)/);
+ assert.match(css,/@media\(max-height:720px\)/);
+ assert.match(ui,/rg-reduced/);
+ assert.match(ui,/rewardBeat=setTimeout/);
+ assert.match(ui,/haptic\('success'\)/);
+ assert.match(ui,/haptic\('tap'\)/);
+ assert.match(ui,/clearTimeout\(rewardBeat\)/);
+});
+test('the no-charge demo and My Orders load one consistent live design',()=>{
+ const demo=get('public/purchase-demo.html');
+ const home=get('public/index.html');
+ const history=get('public/my-orders.html');
+ assert.match(home,/grand-celebration\.css\?v=1/);
+ assert.match(history,/grand-celebration\.css\?v=1/);
+ assert.match(demo,/grand-celebration\.css\?v=1/);
+ assert.match(demo,/NO PURCHASE · NO REAL CREDITS/);
+ assert.match(demo,/import \{showGrandCelebration\} from '\/grand-celebration\.js\?v=1'/);
+ assert.match(demo,/demo:true/);
+ assert.match(demo,/demoMoment\(\);/);
+ assert.match(demo,/Replay celebration/);
+ assert.doesNotMatch(demo,/\/api\/order-bonus|\/api\/checkout-link/);
+});

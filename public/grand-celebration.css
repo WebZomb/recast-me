@@ -1,0 +1,130 @@
+/* RM158. Brand-color neon success spectacle, shared by the website and native WKWebView.
+   One composited entrance, one limited confetti flight, then calm controls. */
+.rg-overlay{position:fixed;inset:0;z-index:4200;display:grid;place-items:center;isolation:isolate;overflow:hidden;padding:10px;box-sizing:border-box;font-family:inherit;color:#fff}
+.rg-backdrop{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 45%,#281254ee 0%,#070615f7 66%,#05050c 100%);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+.rg-card{position:relative;isolation:isolate;box-sizing:border-box;width:min(100%,590px);height:min(95dvh,825px);max-height:calc(100dvh - 16px);border-radius:32px;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;border:1px solid rgba(175,134,255,.8);background:radial-gradient(ellipse at 45% 0%,#50337a 0%,#191b3c 45%,#090f28 83%,#080b1d 100%);box-shadow:0 0 65px #971ff67a,0 0 125px #00dbff29,0 25px 80px #000c;scrollbar-width:thin;scrollbar-color:#6f60a5 transparent}
+.rg-card::before{content:"";position:absolute;inset:7px;border:1px solid rgba(138,244,255,.32);border-radius:26px;pointer-events:none;z-index:3}
+.rg-cosmos{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:0;border-radius:inherit;contain:paint}
+.rg-aurora{position:absolute;inset:-35%;border-radius:50%;mix-blend-mode:screen;filter:blur(35px);opacity:.6}
+.rg-aurora-one{background:conic-gradient(from 20deg,transparent 0 17%,#9f24fc80 22%,transparent 29%,#09e6ef65 41%,transparent 49% 75%,#d954ff75 84%,transparent 90%)}
+.rg-aurora-two{background:radial-gradient(ellipse at 50% 12%,#c929ff99,transparent 43%),radial-gradient(ellipse at 18% 61%,#00e1ec88,transparent 42%),radial-gradient(ellipse at 89% 45%,#522affaa,transparent 32%)}
+.rg-sunburst{position:absolute;top:-115px;left:50%;width:800px;height:800px;transform:translateX(-50%);opacity:.15;background:repeating-conic-gradient(from -2deg,#a77aff 0deg 1deg,transparent 2deg 20deg,#48caff 22deg 23deg,transparent 24deg 40deg);-webkit-mask-image:radial-gradient(circle,#000 0 18%,transparent 64%);mask-image:radial-gradient(circle,#000 0 18%,transparent 64%)}
+.rg-lightbeam{position:absolute;top:-31%;left:50%;width:8px;height:75%;transform-origin:bottom center;border-radius:999px;filter:blur(4px);opacity:0;mix-blend-mode:screen;background:linear-gradient(0deg,transparent,#93ecffe6 31%,#c643ff99 63%,transparent)}
+.rg-beam-a{--angle:-58deg}.rg-beam-b{--angle:-28deg}.rg-beam-c{--angle:22deg}.rg-beam-d{--angle:62deg}
+.rg-edge-shine{position:absolute;inset:0;background:linear-gradient(120deg,transparent 0 35%,#ffffff08 45%,#9deaff27 50%,transparent 59%);transform:translateX(-140%)}
+.rg-content{position:relative;z-index:2;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;min-height:100%;width:100%;padding:38px 28px 36px}
+.rg-close{position:absolute;z-index:6;top:15px;right:16px;display:grid;place-items:center;min-width:46px;min-height:46px;border:1px solid #ffffff55;border-radius:50%;font:500 30px/1 system-ui,sans-serif;color:#fff;background:#0b102cbb;cursor:pointer}
+.rg-close:hover{background:#443b77}.rg-close:focus-visible,.rg-replay:focus-visible,.rg-action:focus-visible{outline:3px solid #a0ffff;outline-offset:3px}
+.rg-emblem{position:relative;display:grid;place-items:center;width:183px;height:183px;flex:none;margin:12px auto 20px;filter:drop-shadow(0 4px 17px #0ff7)}
+.rg-orbit{position:absolute;border-radius:50%;border:3px solid transparent;box-sizing:border-box;inset:0;opacity:0;will-change:transform}
+.rg-orbit-one{border-top-color:#1cfff0;border-bottom-color:#c529fc;box-shadow:0 0 18px #00cfff92,inset 0 0 12px #ae39f858;transform:rotate(-70deg)}
+.rg-orbit-two{inset:12px;border-left-color:#ff64fa;border-right-color:#3ce6ff;box-shadow:0 0 20px #ca55ffa3;transform:rotate(75deg)}
+.rg-orbit-three{inset:-14px;border-width:2px;border-right-color:#ffdcff;border-top-color:#60f2ff;box-shadow:0 0 32px #19dcff8a;transform:rotate(20deg)}
+.rg-logo-disc{display:grid;place-items:center;position:relative;z-index:2;width:133px;height:133px;border-radius:50%;border:2px solid #ab99ffcc;background:radial-gradient(circle at 20% 15%,#7233d9,#1e1c54 53%,#0b2244 100%);box-shadow:0 0 26px #23eaf7bb,inset 0 0 20px #ad44ffb8}
+.rg-brand-icon{position:absolute;inset:16%;width:68%;height:68%;object-fit:contain;filter:drop-shadow(0 0 12px #c038ec);z-index:1}
+.rg-monogram{font-weight:950;font-size:46px;letter-spacing:-.14em;padding-right:.10em;background:linear-gradient(140deg,#87fcff,#9b77ff 55%,#fa66da);-webkit-background-clip:text;background-clip:text;color:transparent}
+.rg-flare{position:absolute;width:10px;height:10px;background:#fff;z-index:3;box-shadow:0 0 12px 6px #d1a3ff;transform:rotate(45deg);opacity:0}
+.rg-flare-one{top:28px;right:10px}.rg-flare-two{bottom:26px;left:8px;background:#89ffff;box-shadow:0 0 12px 7px #25eafa}
+.rg-kicker{font-weight:900;font-size:13px;letter-spacing:.27em;color:#8eecff;margin:5px 0 12px;text-shadow:0 0 12px #3d9aff;opacity:0}
+.rg-title{font-weight:950;font-size:clamp(38px,8.8vw,59px);line-height:.99;letter-spacing:-.055em;overflow-wrap:break-word;max-width:100%;margin:2px 0 18px;background:linear-gradient(108deg,#ffffff 0%,#cfffff 24%,#bc7aff 53%,#ffb0ff 77%,#ffffff 100%);-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:none;filter:drop-shadow(0 0 14px #b752ff85);opacity:0}
+.rg-subtitle{color:#f1ecff;font-size:clamp(16px,4vw,19px);line-height:1.5;max-width:390px;margin:0 auto 14px;opacity:0}
+.rg-order-pill{display:inline-flex;align-items:center;justify-content:center;min-height:35px;max-width:100%;box-sizing:border-box;padding:7px 17px;background:#111a3ecb;border:1px solid #6ff0df99;border-radius:80px;color:#c4fbf8;font-size:clamp(12px,3vw,14px);font-weight:850;letter-spacing:.03em;margin:4px auto 12px;opacity:0}
+.rg-reward{position:relative;isolation:isolate;overflow:hidden;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;justify-content:center;width:min(100%,450px);min-height:132px;margin:6px auto 18px;padding:19px 15px 16px;border:1px solid #4af6ffcb;border-radius:22px;background:radial-gradient(circle at 20% -30%,#a328ff8c,transparent 55%),linear-gradient(125deg,#3c2471,#144c78 55%,#1e215b);box-shadow:0 0 27px #1fe5ff42,inset 0 0 25px #a54eff43;opacity:0}
+.rg-reward::before{content:"";position:absolute;inset:0;border-radius:inherit;background:linear-gradient(115deg,transparent 30%,#e7feff3d 45%,transparent 60%);transform:translateX(-140%);z-index:-1}
+.rg-reward-label{font-size:12px;font-weight:950;letter-spacing:.18em;color:#a8fff6;margin-bottom:6px}
+.rg-reward-headline{font-weight:950;font-size:clamp(23px,6.3vw,34px);letter-spacing:-.025em;line-height:1.13;color:#fff;text-shadow:0 0 18px #d765ffa8;max-width:100%}
+.rg-reward-details{font-size:clamp(12px,3.1vw,14px);font-weight:600;line-height:1.4;color:#e9e0ff;margin-top:7px}
+.rg-reward-quiet{border-color:#7960d2}
+.rg-reward-sparkle{position:absolute;top:10px;right:16px;font-size:26px;color:#fff4a5;text-shadow:0 0 19px #ffec8e;opacity:0}
+.rg-reward-shimmer{position:absolute;inset:-30%;background:conic-gradient(from 0deg,transparent 0deg,transparent 290deg,#e7ffff33 320deg,transparent 355deg);pointer-events:none;z-index:-1}
+.rg-actions{display:flex;flex-direction:column;width:min(100%,450px);gap:11px;margin:0 auto;opacity:0}
+.rg-action{display:flex;align-items:center;justify-content:center;gap:12px;min-height:59px;box-sizing:border-box;border-radius:16px;text-decoration:none!important;font-weight:900;font-size:16px;line-height:1.25;padding:11px 14px;border:1px solid #b9a0ff6b}
+.rg-action-primary{color:#fff!important;background:linear-gradient(100deg,#ad30ed 0%,#6959ff 48%,#02c1ed 100%);box-shadow:0 0 24px #9833ff62,0 6px 20px #0004}
+.rg-action-secondary{color:#f5f3ff!important;background:#19162cd9;border-color:#9783d78c}
+.rg-action:active{filter:brightness(1.16);transform:scale(.985)}
+.rg-replay{width:100%;min-height:44px;box-sizing:border-box;background:transparent;border:0;border-radius:13px;color:#90e8f9;font-size:14px;font-weight:850;cursor:pointer}
+.rg-replay:hover{color:#fff;background:#8f81e11c}
+.rg-replay span{font-size:21px;vertical-align:middle;margin-right:4px}
+.rg-footnote{font-size:12px;line-height:1.5;color:#b4bfd4;margin:13px 0 0;max-width:365px;opacity:0}
+.rg-particles{position:absolute;inset:0;overflow:hidden;pointer-events:none}
+.rg-particle{position:absolute;left:50%;top:37%;width:8px;height:17px;border-radius:2px;background:var(--spark-color,#7cecfb);box-shadow:0 0 10px var(--spark-color,#7cecfb);opacity:0;transform:translate(-50%,-50%);will-change:transform,opacity}
+.rg-particle-star{width:10px;height:10px;clip-path:polygon(50% 0%,63% 36%,100% 50%,63% 64%,50% 100%,37% 64%,0% 50%,37% 36%)}
+.rg-playing .rg-card{animation:rg-card-enter .48s cubic-bezier(.12,.85,.26,1.07) both}
+.rg-playing .rg-aurora-one{animation:rg-nebula-spin 3.1s cubic-bezier(.22,.8,.3,1) both}
+.rg-playing .rg-aurora-two{animation:rg-nebula-bloom 2.2s ease-out both}
+.rg-playing .rg-sunburst{animation:rg-rays 3s ease-out both}
+.rg-playing .rg-edge-shine{animation:rg-edge-sweep 1.1s 1.1s ease-out both}
+.rg-playing .rg-lightbeam{animation:rg-light-swipe 1.3s .24s ease-out both}
+.rg-playing .rg-beam-b{animation-delay:.36s}.rg-playing .rg-beam-c{animation-delay:.44s}.rg-playing .rg-beam-d{animation-delay:.31s}
+.rg-playing .rg-logo-disc{animation:rg-logo-spin-pop 1.05s .2s cubic-bezier(.19,1.16,.37,1) both}
+.rg-playing .rg-orbit-one{animation:rg-ring-first 2.35s .22s cubic-bezier(.2,.7,.24,1) both}
+.rg-playing .rg-orbit-two{animation:rg-ring-second 2.1s .25s cubic-bezier(.2,.7,.24,1) both}
+.rg-playing .rg-orbit-three{animation:rg-ring-third 2.6s .14s cubic-bezier(.2,.7,.24,1) both}
+.rg-playing .rg-flare{animation:rg-flare-pop 1.1s .82s ease-out both}
+.rg-playing .rg-flare-two{animation-delay:1.05s}
+.rg-playing .rg-particle{animation:rg-firework 2.75s var(--delay,0s) cubic-bezier(.14,.62,.31,1) both}
+.rg-playing .rg-kicker{animation:rg-reveal .55s .70s cubic-bezier(.19,1,.24,1) both}
+.rg-playing .rg-title{animation:rg-title-pop .76s .83s cubic-bezier(.18,1.12,.34,1) both}
+.rg-playing .rg-subtitle{animation:rg-reveal .55s 1.13s ease-out both}
+.rg-playing .rg-order-pill{animation:rg-reveal .50s 1.24s ease-out both}
+.rg-playing .rg-reward{animation:rg-reward-pop .78s 1.42s cubic-bezier(.2,1.13,.29,1) both}
+.rg-playing .rg-reward::before{animation:rg-edge-sweep 1.3s 1.8s ease-in-out both}
+.rg-playing .rg-reward-sparkle{animation:rg-flare-pop 1.1s 1.9s ease-out both}
+.rg-playing .rg-actions{animation:rg-reveal .48s 1.79s ease-out both}
+.rg-playing .rg-footnote{animation:rg-reveal .42s 2.04s ease-out both}
+@keyframes rg-card-enter{from{opacity:0;transform:scale(.84) translateY(35px)}65%{opacity:1}85%{transform:scale(1.018) translateY(-4px)}to{opacity:1;transform:none}}
+@keyframes rg-nebula-spin{from{transform:rotate(-65deg) scale(.67);opacity:.1}to{transform:rotate(92deg) scale(1.03);opacity:.55}}
+@keyframes rg-nebula-bloom{from{opacity:.05;transform:scale(.6)}to{opacity:.68;transform:scale(1)}}
+@keyframes rg-rays{from{opacity:0;transform:translateX(-50%) rotate(-30deg) scale(.55)}40%{opacity:.38}to{opacity:.13;transform:translateX(-50%) rotate(85deg) scale(1.03)}}
+@keyframes rg-edge-sweep{0%{transform:translateX(-140%);opacity:0}35%{opacity:1}100%{transform:translateX(140%);opacity:0}}
+@keyframes rg-light-swipe{0%{opacity:0;transform:translateX(-50%) rotate(var(--angle)) scaleY(.32)}35%{opacity:.85}100%{opacity:0;transform:translateX(-50%) rotate(var(--angle)) scaleY(1)}}
+@keyframes rg-logo-spin-pop{from{opacity:0;transform:rotate(-165deg) scale(.12)}67%{opacity:1;transform:rotate(12deg) scale(1.16)}86%{transform:rotate(-4deg) scale(.96)}to{opacity:1;transform:none}}
+@keyframes rg-ring-first{from{opacity:0;transform:rotate(-240deg) scale(.3)}30%{opacity:1}to{opacity:.9;transform:rotate(325deg) scale(1)}}
+@keyframes rg-ring-second{from{opacity:0;transform:rotate(240deg) scale(.5)}35%{opacity:1}to{opacity:.9;transform:rotate(-310deg) scale(1)}}
+@keyframes rg-ring-third{from{opacity:0;transform:rotate(-290deg) scale(.65)}40%{opacity:1}to{opacity:.78;transform:rotate(220deg) scale(1)}}
+@keyframes rg-flare-pop{0%,100%{opacity:0;transform:scale(.3) rotate(45deg)}40%{opacity:1;transform:scale(1.45) rotate(45deg)}}
+@keyframes rg-firework{0%{opacity:0;transform:translate(-50%,-50%) scale(.2) rotate(0)}13%{opacity:1}75%{opacity:1}100%{opacity:0;transform:translate(calc(-50% + var(--tx)),calc(-50% + var(--ty))) scale(.45) rotate(var(--twist))}}
+@keyframes rg-reveal{from{opacity:0;transform:translateY(21px) scale(.97)}to{opacity:1;transform:none}}
+@keyframes rg-title-pop{from{opacity:0;transform:translateY(20px) scale(.78);filter:blur(8px)}70%{opacity:1;transform:translateY(-3px) scale(1.035);filter:blur(0)}to{opacity:1;transform:none;filter:drop-shadow(0 0 11px #b752ff62)}}
+@keyframes rg-reward-pop{from{opacity:0;transform:translateY(40px) scale(.68) rotateX(40deg)}75%{opacity:1;transform:translateY(-5px) scale(1.04) rotateX(0deg)}to{opacity:1;transform:none}}
+@media(max-width:540px){
+  .rg-overlay{padding:5px}
+  .rg-card{width:100%;height:calc(100dvh - 10px);max-height:calc(100dvh - 10px);border-radius:26px}
+  .rg-card::before{border-radius:21px}
+  .rg-content{padding:50px 20px 34px}
+  .rg-emblem{width:161px;height:161px;margin:7px 0 17px}
+  .rg-logo-disc{width:117px;height:117px}
+  .rg-title{font-size:clamp(36px,9vw,49px);margin-bottom:14px}
+  .rg-reward{min-height:125px;margin-bottom:16px}
+  .rg-actions{gap:9px}
+  .rg-action{min-height:56px}
+}
+@media(max-height:720px){
+  .rg-card{height:calc(100dvh - 10px)}
+  .rg-content{justify-content:flex-start;padding-top:37px}
+  .rg-emblem{width:135px;height:135px;margin:4px 0 12px}
+  .rg-logo-disc{width:99px;height:99px}
+  .rg-monogram{font-size:37px}
+  .rg-kicker{margin:1px 0 7px}
+  .rg-title{font-size:clamp(34px,7.5vw,48px);margin-bottom:11px}
+  .rg-subtitle{margin-bottom:6px;font-size:15px}
+  .rg-order-pill{margin-bottom:8px}
+  .rg-reward{min-height:110px;margin-bottom:12px;padding:14px}
+  .rg-action{min-height:49px}
+  .rg-footnote{margin-top:5px}
+}
+@media(prefers-reduced-motion:reduce){
+  .rg-overlay *, .rg-overlay *::before, .rg-overlay *::after{animation:none!important;transition:none!important}
+  .rg-overlay .rg-particle,.rg-overlay .rg-lightbeam,.rg-overlay .rg-flare{display:none!important}
+  .rg-kicker,.rg-title,.rg-subtitle,.rg-order-pill,.rg-reward,.rg-actions,.rg-footnote,.rg-orbit{opacity:1!important}
+  .rg-sunburst{opacity:.09!important}
+  .rg-overlay .rg-card{opacity:1!important;transform:none!important}
+}
+
+/* Show a typographic orbit fallback while the approved logo loads. */
+.rg-logo-disc.rg-icon-loaded .rg-monogram{opacity:0}
+
+/* Keep the complete headline and exclamation mark together, even on SE/mini phones. */
+.rg-overlay .rg-title{font-size:clamp(27px,7.7vw,51px);white-space:nowrap;letter-spacing:-.07em}
+.rg-overlay .rg-brand-icon{border-radius:23%;box-shadow:0 0 16px #502dff85}
+@media(max-height:720px){.rg-overlay .rg-title{font-size:clamp(26px,7vw,44px)}}

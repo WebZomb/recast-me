@@ -4,7 +4,7 @@ import {mergeHistory,privateRecastLink,readRecastLink} from './recast-history.js
 import {initCreationWizard,surpriseChoices} from './creation-wizard.js?v=292';
 import {fallbackState,creditSummary,creditHeadline,recoveryUnverified} from './quality-policy.js?v=267';
 import {protectedPreviewFile} from './preview-export.js';
-import {initCheckoutReturnExperience} from './order-experience.js?v=2';
+import {initCheckoutReturnExperience} from './order-experience.js?v=3';
 import {saveRecast} from './recast-collection.js?v=1';
 let creditInfo=null;
 async function refreshCredits(initialize=false){
