@@ -2,8 +2,11 @@
    Call only with server-verified paid order data or explicitly with demo=true. */
 const ICON = 'https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recastmeai-approved-orbit-icon-v1.png?v=1791313742&width=300';
 let active = null;
-function haptic(){
-  try { window.webkit?.messageHandlers?.recastHaptic?.postMessage('success'); } catch {}
+function haptic(kind='success'){
+  try {
+    const response=window.webkit?.messageHandlers?.recastHaptic?.postMessage(kind);
+    if(response?.catch)response.catch(()=>{});
+  } catch {}
 }
 function element(tag, className, textValue){
   const node=document.createElement(tag);
@@ -115,14 +118,20 @@ export function showGrandCelebration(options={}){
   let reduced=false;
   try{reduced=window.matchMedia('(prefers-reduced-motion: reduce)').matches}catch{}
   if(reduced)root.classList.add('rg-reduced');
+  let rewardBeat=0;
   const replay=()=>{
+    clearTimeout(rewardBeat);
     root.classList.remove('rg-playing');
     void panel.offsetWidth;
     root.classList.add('rg-playing');
-    if(!reduced)haptic();
+    if(!reduced){
+      haptic('success'); // entrance pop
+      rewardBeat=setTimeout(()=>{if(root.isConnected)haptic('tap');},1480); // reward reveal
+    }
   };
   const close=()=>{
     if(active?.root!==root)return;
+    clearTimeout(rewardBeat);
     active=null;
     root.remove();
     document.body.style.overflow=beforeOverflow;
