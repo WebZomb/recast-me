@@ -1,14 +1,26 @@
 const grid = document.querySelector("#product-grid");
 const requestLabel = document.querySelector("#request-id");
 
-import {rememberCheckoutStarted} from './order-experience.js?v=1';
+// Keep checkout standalone for share pages and isolated purchase-policy tests.
+function rememberCheckoutStarted(req) {
+  if (!/^RC-[A-Za-z0-9-]{1,100}$/.test(String(req?.requestId||'')) ||
+      typeof req?.accessToken !== 'string' || req.accessToken.length < 16 ||
+      req.accessToken.length > 256 || /\\s/.test(req.accessToken)) return false;
+  try {
+    const key='recast_checkout_records_v1';
+    const previous=JSON.parse(localStorage.getItem(key)||'[]');
+    const clean=(Array.isArray(previous)?previous:[]).filter(item=>item?.requestId&&item.requestId!==req.requestId);
+    localStorage.setItem(key,JSON.stringify([{requestId:req.requestId,accessToken:req.accessToken,startedAt:Date.now()},...clean].slice(0,20)));
+    return true;
+  } catch { return false; }
+}
 let externalCheckoutStarted=false;
 function leaveForCheckout(req,url){
   rememberCheckoutStarted(req);
   externalCheckoutStarted=true;
   location.href=url;
 }
-window.addEventListener('recast-app-resumed',()=>{
+window.addEventListener?.('recast-app-resumed',()=>{
   if(!externalCheckoutStarted)return;
   externalCheckoutStarted=false;
   closeFinalReview();
