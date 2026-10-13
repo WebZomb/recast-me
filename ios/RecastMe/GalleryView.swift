@@ -3,6 +3,7 @@ import UIKit
 
 struct GalleryView: View {
     @ObservedObject var gallery: PreviewGallery
+    let useOnProduct: (URL) -> Void
     @State private var pendingDelete: SavedPreview?
     var body: some View {
         NavigationStack {
@@ -20,6 +21,28 @@ struct GalleryView: View {
                                                 .accessibilityLabel("Watermarked Recast preview")
                                         }
                                         Text("@RecastMeAi · Watermarked preview").font(.caption).foregroundStyle(.secondary)
+                                        Text(item.id).font(.caption.monospaced()).textSelection(.enabled)
+                                            .foregroundStyle(.secondary)
+                                        if let link = gallery.reusableLink(item) {
+                                            Button {
+                                                UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                                                useOnProduct(link)
+                                            } label: {
+                                                Label("Put on a product", systemImage: "bag.fill")
+                                                    .frame(maxWidth: .infinity)
+                                            }.buttonStyle(.borderedProminent).tint(.cyan)
+                                            Button {
+                                                UIPasteboard.general.url = link
+                                                UINotificationFeedbackGenerator().notificationOccurred(.success)
+                                            } label: {
+                                                Label("Copy private product link", systemImage: "link")
+                                            }.buttonStyle(.bordered)
+                                            Text("Anyone with this private link can open your artwork. Keep it safe.")
+                                                .font(.caption2).foregroundStyle(.secondary)
+                                        } else {
+                                            Text("Want this picture on a product? Open this version in Recent Recasts on Create, then save it again to link it securely.")
+                                                .font(.caption).foregroundStyle(.secondary)
+                                        }
                                         ShareLink(item: gallery.imageURL(item)) { Label("Share preview", systemImage: "square.and.arrow.up") }
                                             .buttonStyle(.borderedProminent)
                                         Button("Remove from this device", role: .destructive) {
@@ -34,6 +57,7 @@ struct GalleryView: View {
                                             Image(uiImage: image).resizable().scaledToFit().clipShape(RoundedRectangle(cornerRadius: 16))
                                         }
                                         Text(item.savedAt, style: .date).font(.caption).foregroundStyle(.secondary)
+                                        Text(item.id).font(.caption2.monospaced()).foregroundStyle(.secondary)
                                     }
                                 }.buttonStyle(.plain)
                             }
