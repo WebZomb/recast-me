@@ -10,6 +10,15 @@ export function initOwnerAlerts(api,notify){
    document.querySelector('#alert-'+c+'-last').textContent=message(d.last?.[c]);
    document.querySelector('#test-alert-'+c).disabled=!d.readiness[c]||!d.values[c==='email'?'emailEnabled':'smsEnabled'];
   }
+  const latest=[d.last?.email,d.last?.sms].filter(x=>x?.at&&!x.test).sort((a,b)=>Date.parse(b.at)-Date.parse(a.at))[0];
+  const lastSummary=document.querySelector('#alert-last-detail');
+  if(lastSummary){
+   if(!latest)lastSummary.textContent='No saved issue detail yet. Earlier generic alerts cannot be reconstructed; new alerts record the type and order number.';
+   else {
+    const details=Array.isArray(latest.summary)&&latest.summary.length?latest.summary.join(' • '):'Cause was not captured by the earlier alert format.';
+    lastSummary.textContent='Last email: '+new Date(latest.at).toLocaleString()+' · '+details+' The issue may already have recovered. Check Orders for its current status.';
+   }
+  }
   if(!dirty||force){current=d;for(const [k,v] of Object.entries(d.values)){const input=form.elements.namedItem(k);if(typeof v==='boolean')input.checked=v;else input.value=v;}dirty=false;}
  }
  form.addEventListener('submit',async e=>{e.preventDefault();if(!current)return;const button=form.querySelector('[type=submit]');button.disabled=true;

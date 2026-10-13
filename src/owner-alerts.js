@@ -3,6 +3,29 @@ import {change,read,hash,fault,sameOrigin,privateJson} from './commerce-store.js
 import {gmailReady,sendGmailAlert} from './gmail-alerts.js';
 const SETTINGS='system/owner-alert-settings.json';
 const defaults={email:'',phone:'',emailEnabled:false,smsEnabled:false,orderErrors:true,systemErrors:true,newOrders:false,dailyLimit:10,consent:false};
+// Alerts never include customers, addresses, artwork links, raw exceptions or tokens.
+
+const safeOrderName=value=>/^#[A-Za-z0-9-]{1,28}$/.test(String(value||''))?value:'an order';
+const safeCode=value=>/^[a-z][a-z0-9_-]{0,42}$/.test(String(value||''))?value:'needs_review';
+export function describeOwnerAlert(event){
+ if(event.type==='order issue')return 'Order '+safeOrderName(event.orderName)+': '+safeCode(event.code).replaceAll('_',' ')+' — check Orders > Order alerts & recovery.';
+ if(event.type==='order needs attention'){
+  const reason=/^(on_hold|payment_hold|owner_release_review|auto_print_review|printful_failed|product_layout_review)$/.test(event.status||'')
+   ? String(event.status).replaceAll('_',' '):event.shopifyFulfillmentError?'Shopify fulfillment update failed':event.shopifyTagError?'Shopify status tag update failed':event.lastPrintfulSyncError?'Printful status could not be checked':'order requires review';
+  return 'Order '+safeOrderName(event.orderName)+': '+reason+' — inspect its existing production job.';
+ }
+ if(event.type==='sync connection problem')return 'Sync check: '+safeCode(event.phase).replaceAll('_',' ')+' — open Control Center > Orders.';
+ if(event.type==='new order')return 'New order '+safeOrderName(event.orderName)+' — check Orders.';
+ return 'An operational check needs review in Control Center.';
+}
+function ownerAlertCopy(events, count, test=false){
+ if(test)return {subject:'Recast Me test alert',text:'Recast Me test alert. Open your Control Center to manage alerts.'};
+ const lines=events.slice(0,6).map((event,index)=>String(index+1)+'. '+describeOwnerAlert(event));
+ const more=count>lines.length?'\n+'+String(count-lines.length)+' additional check(s) in Control Center.':'';
+ return {subject:count===1?'Recast Me: 1 issue to review':'Recast Me: '+count+' issues to review',
+  text:'Recast Me: '+count+' alert(s) need review.\n\n'+(lines.length?lines.join('\n'):'Open Control Center to inspect your latest operations.')+more+'\n\nControl Center: https://recastmeai.com/admin.html\n\nThis is the issue at alert time, and it may have recovered. Do not reorder purchases or submit production twice. Recheck the original order.'};
+}
+
 export function validateAlertSettings(raw){
   if(!raw||typeof raw!=='object'||Array.isArray(raw)||Object.keys(raw).some(k=>!Object.hasOwn(defaults,k)))throw fault('alert_settings','Reload the alert settings form.',400);
   const values={...defaults,...raw};
@@ -29,11 +52,11 @@ async function collect(env,values){
  const [issues,jobs,sync]=await Promise.all([page(env,'commerce/order-issues/',old.issues),page(env,'jobs/',old.jobs),read(env,'system/commerce-sync.json')]);
  const events=[];
  if(values.orderErrors){
-  for(const i of issues.rows)if(i.status==='open')events.push({id:'issue:'+i.id+':'+i.code,type:'order issue'});
-  for(const j of jobs.rows)if(/hold|review|failed|product_layout/.test(j.status||'')||j.shopifyFulfillmentError||j.shopifyTagError||j.lastPrintfulSyncError)events.push({id:'job:'+j.id+':'+j.status+':'+Boolean(j.shopifyFulfillmentError)+':'+Boolean(j.shopifyTagError)+':'+Boolean(j.lastPrintfulSyncError),type:'order needs attention'});
+  for(const i of issues.rows)if(i.status==='open')events.push({id:'issue:'+i.id+':'+i.code,type:'order issue',orderName:i.orderName,code:i.code});
+  for(const j of jobs.rows)if(/hold|review|failed|product_layout/.test(j.status||'')||j.shopifyFulfillmentError||j.shopifyTagError||j.lastPrintfulSyncError)events.push({id:'job:'+j.id+':'+j.status+':'+Boolean(j.shopifyFulfillmentError)+':'+Boolean(j.shopifyTagError)+':'+Boolean(j.lastPrintfulSyncError),type:'order needs attention',orderName:j.orderName,status:j.status,shopifyFulfillmentError:Boolean(j.shopifyFulfillmentError),shopifyTagError:Boolean(j.shopifyTagError),lastPrintfulSyncError:Boolean(j.lastPrintfulSyncError)});
  }
- if(values.newOrders)for(const j of jobs.rows)if(Date.now()-Date.parse(j.createdAt)<86400000)events.push({id:'new:'+j.id,type:'new order'});
- if(values.systemErrors)for(const [phase,result] of Object.entries(sync||{}))if(phase!=='lastRun'&&phase!=='alerts'&&result?.ok===false)events.push({id:'sync:'+phase,type:'sync connection problem'});
+ if(values.newOrders)for(const j of jobs.rows)if(Date.now()-Date.parse(j.createdAt)<86400000)events.push({id:'new:'+j.id,type:'new order',orderName:j.orderName});
+ if(values.systemErrors)for(const [phase,result] of Object.entries(sync||{}))if(phase!=='lastRun'&&phase!=='alerts'&&result?.ok===false)events.push({id:'sync:'+phase,type:'sync connection problem',phase});
  // An outage of this Worker itself needs independent uptime monitoring.
  return {events,cursors:{issues:issues.cursor,jobs:jobs.cursor}};
 }
@@ -41,7 +64,7 @@ async function reserveMessage(env,channel,limit){
  const key=`commerce/alerts/budgets/${new Date().toISOString().slice(0,10)}-${channel}.json`;
  await change(env,key,{used:0},row=>{if(row.used>=limit)throw fault('alert_limit','Daily alert limit reached.',429);return {used:row.used+1}});
 }
-export async function deliverOwnerAlert(env,state,channel,eventIds,{test=false}={}){
+export async function deliverOwnerAlert(env,state,channel,eventIds,{test=false,events=[]}={}){
  const v=state.values,ready=alertReadiness(env),destination=channel==='email'?v.email:v.phone;
  if(!['email','sms'].includes(channel)||!ready[channel])throw fault('alert_provider','Delivery service is not connected for this channel.',503);
  if(!v.consent||!destination||!v[channel==='email'?'emailEnabled':'smsEnabled'])throw fault('alert_disabled','Save and enable this channel with recipient permission first.',409);
@@ -50,17 +73,18 @@ export async function deliverOwnerAlert(env,state,channel,eventIds,{test=false}=
  const key=`commerce/alerts/deliveries/${identity}.json`,stamp=new Date().toISOString();
  const claim=await env.ARTWORK.put(key,JSON.stringify({channel,status:'attempting',at:stamp,test}),{onlyIf:new Headers({'If-None-Match':'*'})});
  if(!claim)return {channel,status:'already_attempted'};
- let result={channel,status:'unknown',at:stamp,test};
+ const brief=test?[]:events.slice(0,10).map(e=>describeOwnerAlert(e));
+ let result={channel,status:'unknown',at:stamp,test,summary:brief,alertCount:eventIds.length};
  try{
   await reserveMessage(env,channel,v.dailyLimit);
   const fresh=await alertSettings(env);
   if(fresh.revision!==state.revision)throw fault('alert_changed','Settings changed before sending; refresh and try again.',409);
   // No customer details, artwork IDs, private tokens or raw exception text leave Recast.
-  const text=test?'Recast Me test alert. Open your Control Center to manage alerts.':`Recast Me: ${eventIds.length} alert(s) need review. Open your Control Center. Do not reorder affected purchases.`;
+  const {text,subject}=ownerAlertCopy(events,eventIds.length,test);
   let response;
   if(channel==='email'&&emailProvider(env)==='gmail'){
-   result={...result,...await sendGmailAlert(env,{to:destination,subject:test?'Recast Me test alert':'Recast Me needs your attention',text,identity})};
-  }else if(channel==='email')response=await fetch('https://api.resend.com/emails',{method:'POST',headers:{Authorization:`Bearer ${env.ALERT_RESEND_API_KEY}`,'Content-Type':'application/json','Idempotency-Key':identity},body:JSON.stringify({from:env.ALERT_EMAIL_FROM,to:[destination],subject:test?'Recast Me test alert':'Recast Me needs your attention',text}),signal:AbortSignal.timeout(15000)});
+   result={...result,...await sendGmailAlert(env,{to:destination,subject,text,identity})};
+  }else if(channel==='email')response=await fetch('https://api.resend.com/emails',{method:'POST',headers:{Authorization:`Bearer ${env.ALERT_RESEND_API_KEY}`,'Content-Type':'application/json','Idempotency-Key':identity},body:JSON.stringify({from:env.ALERT_EMAIL_FROM,to:[destination],subject,text}),signal:AbortSignal.timeout(15000)});
   else response=await fetch(`https://api.twilio.com/2010-04-01/Accounts/${env.ALERT_TWILIO_ACCOUNT_SID}/Messages.json`,{method:'POST',headers:{Authorization:'Basic '+btoa(env.ALERT_TWILIO_ACCOUNT_SID+':'+env.ALERT_TWILIO_AUTH_TOKEN),'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({From:env.ALERT_SMS_FROM,To:destination,Body:text}),signal:AbortSignal.timeout(15000)});
   if(response&&!response.ok){result={...result,status:'rejected',httpStatus:response.status};}
   else if(response){const data=await response.json();result={...result,status:channel==='sms'&&['failed','undelivered'].includes(data.status)?'rejected':data.id||data.sid?'accepted':'unknown',providerId:data.id||data.sid||null};}
@@ -79,7 +103,7 @@ export async function sendOwnerAlerts(env){
   // Per-event daily acknowledgements avoid resending the same issue when the batch changes.
   const destination=channel==='email'?v.email:v.phone,day=new Date().toISOString().slice(0,10),pending=[];
   for(const event of events){const key=`commerce/alerts/seen/${await hash(channel+'|'+destination+'|'+day+'|'+event.id)}.json`;if(!await env.ARTWORK.head(key))pending.push({...event,key});}
-  if(pending.length){const result=await deliverOwnerAlert(env,state,channel,pending.map(e=>e.id));outcomes.push(result);if(['accepted','unknown','already_attempted'].includes(result.status))for(const e of pending)await env.ARTWORK.put(e.key,JSON.stringify({at:new Date().toISOString(),status:result.status}));}
+  if(pending.length){const result=await deliverOwnerAlert(env,state,channel,pending.map(e=>e.id),{events:pending});outcomes.push(result);if(['accepted','unknown','already_attempted'].includes(result.status))for(const e of pending)await env.ARTWORK.put(e.key,JSON.stringify({at:new Date().toISOString(),status:result.status}));}
  }
  await env.ARTWORK.put('system/alert-scan-cursors.json',JSON.stringify(cursors));
  const result={ok:outcomes.every(o=>['accepted','already_attempted'].includes(o.status)),checkedAt:new Date().toISOString(),outcomes};

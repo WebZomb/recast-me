@@ -1129,7 +1129,7 @@ async function exportPreview(native=false){
     const result=await protectedPreviewFile(lastSuccessfulPreviewMeta);
     if(native){
       // Native replies after it has actually persisted the file.
-      await window.webkit.messageHandlers.recastPreview.postMessage({id:result.id,image:result.image});
+      await window.webkit.messageHandlers.recastPreview.postMessage({id:result.id,image:result.image,accessToken:lastSuccessfulPreviewMeta?.accessToken||''});
       exportStatus.textContent='✓ Saved to My Recasts on this iPhone.';
       button.classList.add('is-saved');button.textContent='✓ Saved to My Recasts';
       showNativeSavedToast('✓ Saved! Open My Recasts below to see your picture.');
