@@ -1,6 +1,6 @@
 import SwiftUI
 
-private enum RecastTab: Hashable { case create, recasts, orders, guide }
+private enum RecastTab: Hashable { case create, recasts, orders, specials, guide }
 
 @main
 struct RecastMeApp: App {
@@ -25,6 +25,9 @@ struct RecastMeApp: App {
                 StudioView(gallery: gallery, initialURL: StudioView.origin.appendingPathComponent("my-orders.html"))
                     .tabItem { Label("My Orders", systemImage: "shippingbox.fill") }
                     .tag(RecastTab.orders)
+                StudioView(gallery: gallery, initialURL: StudioView.origin.appendingPathComponent("specials.html"))
+                    .tabItem { Label("Specials", systemImage: "gift.fill") }
+                    .tag(RecastTab.specials)
                 NavigationStack {
                     List {
                         Section("Make something worth keeping") {
@@ -39,6 +42,11 @@ struct RecastMeApp: App {
                         }
                         Section("Testing this app") {
                             Text("The My Orders tab shows your purchases, production progress, and carrier tracking once a shipment actually exists. Keep Create open while an image renders. Return from secure checkout to refresh order status.")
+                        }
+                        Section("Special occasions & gifts") {
+                            Link("Halloween and upcoming holiday specials",
+                                 destination: StudioView.origin.appendingPathComponent("specials.html"))
+                            Text("Explore seasonal Recasts and personalized gift ideas. Choose a look and preview the result before you order.")
                         }
                         Section("Orders & support") {
                             Link("Order help and shipping", destination: StudioView.origin.appendingPathComponent("support.html"))
