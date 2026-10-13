@@ -67,6 +67,10 @@ test('accessible high-impact visuals respect iOS reduced motion and keep control
  assert.match(css,/max-height:calc\(100dvh - 16px\)/);
  assert.match(css,/@media\(max-height:720px\)/);
  assert.match(ui,/rg-reduced/);
+ assert.match(ui,/rewardBeat=setTimeout/);
+ assert.match(ui,/haptic\('success'\)/);
+ assert.match(ui,/haptic\('tap'\)/);
+ assert.match(ui,/clearTimeout\(rewardBeat\)/);
 });
 test('the no-charge demo and My Orders load one consistent live design',()=>{
  const demo=get('public/purchase-demo.html');
