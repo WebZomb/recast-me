@@ -2,7 +2,10 @@
 import {shopifyGraphQL} from './index.js';
 import {read,hash,fault} from './commerce-store.js';
 const cache=new WeakMap();
+// Owner paused promotions. Missing configuration must never enable a discount.
+export function seasonalDiscountsEnabled(env){return env.SEASONAL_DISCOUNTS_ENABLED==='true';}
 export async function seasonalCheckoutReady(env){
+ if(!seasonalDiscountsEnabled(env))return false;
  if(!env.SHOPIFY_CLIENT_ID||!env.SHOPIFY_CLIENT_SECRET)return false;
  const prior=cache.get(env);if(prior&&prior.until>Date.now())return prior.ready;
  try{const data=await shopifyGraphQL(env,'query RecastPromotionScopes { currentAppInstallation { accessScopes { handle } } }');
@@ -11,6 +14,7 @@ export async function seasonalCheckoutReady(env){
  }catch{return false}
 }
 export async function createSeasonalCheckout(env,{offer,variantId,properties,requestId,now=new Date()}){
+ if(!seasonalDiscountsEnabled(env))throw fault('offer_paused','Seasonal discounts are paused. Refresh to continue at the regular price.',409);
  if(!offer||+now>=Date.parse(offer.endsAt))throw fault('offer_expired','This seasonal offer has ended. Refresh before checkout.',409);
  const key='commerce/seasonal-checkouts/'+await hash(JSON.stringify([requestId,variantId,properties,offer.id,offer.endsAt]))+'.json';
  const prior=await read(env,key);if(prior?.url&&Date.parse(prior.expiresAt)>+now)return prior.url;

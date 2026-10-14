@@ -1,4 +1,4 @@
-import {seasonalCheckoutReady,createSeasonalCheckout} from './seasonal-checkout.js';
+import {seasonalDiscountsEnabled,seasonalCheckoutReady,createSeasonalCheckout} from './seasonal-checkout.js';
 import {holidayDefaults,activeHoliday,mergeHolidayRows,easternDay} from '../public/holiday-schedule.js';
 import {read,change,equal,fault,sameOrigin,privateJson} from './commerce-store.js';
 export const HOLIDAY_KEY='system/holiday-campaigns-v1.json';
@@ -41,7 +41,7 @@ export function eligibleSeasonalArtwork(artwork,offer){return Boolean(offer&&art
 export async function currentCampaign(env,now=new Date()){
  const settings=await holidaySettings(env),active=activeHoliday(settings.rows,now),plannedOffer=holidayOffer(active,now);
  const checkoutReady=plannedOffer?await seasonalCheckoutReady(env):false;
- return {active,offer:checkoutReady?plannedOffer:null,checkoutReady};
+ return {active,offer:checkoutReady?plannedOffer:null,checkoutReady,promotionsEnabled:seasonalDiscountsEnabled(env)};
 }
 export async function applyHolidayDiscount(url,env,now=new Date(),checkout={}){
  let offer;try{({offer}=await currentCampaign(env,now))}catch{return url;}

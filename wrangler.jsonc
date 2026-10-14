@@ -11,6 +11,7 @@
     "binding": "CF_VERSION_METADATA"
   },
   "vars": {
+    "SEASONAL_DISCOUNTS_ENABLED": "false",
     "SHOPIFY_CLIENT_ID": "34095311ef89068f873eb42bfba8e597",
     "SHOPIFY_SHOP": "b2wnfu-7g",
     "PRINTFUL_STORE_ID": "18798877",
