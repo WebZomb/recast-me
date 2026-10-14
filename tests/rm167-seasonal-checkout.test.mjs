@@ -6,7 +6,7 @@ import {createSeasonalCheckout,expireSeasonalCheckouts} from '../src/seasonal-ch
 import {activeHoliday,holidayDefaults} from '../public/holiday-schedule.js';
 const at=s=>new Date(s),clock=at('2026-10-15T12:00:00Z');
 const offer=holidayOffer({id:'halloween'},clock);
-const envFor=()=>({ARTWORK:new Bucket(),SHOPIFY_SHOP:'recast-test',SHOPIFY_CLIENT_ID:'test-only',SHOPIFY_CLIENT_SECRET:'test-only'});
+const envFor=()=>({SEASONAL_DISCOUNTS_ENABLED:'true',ARTWORK:new Bucket(),SHOPIFY_SHOP:'recast-test',SHOPIFY_CLIENT_ID:'test-only',SHOPIFY_CLIENT_SECRET:'test-only'});
 test('only saved matching style qualifies, no code appears in offer metadata',()=>{
  assert.equal(eligibleSeasonalArtwork({styleId:'halloween'},offer),true);
  for(const art of [{styleId:'christmas'},{styleId:'original'},{styleName:'Halloween'},{style:'halloween'},null])assert.equal(eligibleSeasonalArtwork(art,offer),false);
