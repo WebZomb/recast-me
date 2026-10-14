@@ -19,3 +19,8 @@ Shopify store name and branded receipt logo were observed in the signed-in brows
 
 ## Rollback and activation
 Revert this runtime/config change only if required for a defect; preserve discounts off. Any future promotion activation requires an explicit owner decision, exact enabled flag, provider permissions and unpaid-invoice validation. Never reactivate the expired broad coupon as a shortcut. Release commit and workflow receipts will be appended after deployment.
+
+## Live release receipt — 2026-10-13 Eastern
+PR83 head `1bf0cc10a27040583cc2e50de73b520b2f7368e9`, tree `95410208a881a10c3098f820784943336f59d751`; merged runtime `f628a7577529d4df74f0e35c10a7737fedb0a0cd`. Security run38500537940 and customer-policy/browser run38500537954 both passed. Guarded deployment38500834279 passed, including production smoke; Cloudflare Worker `a69584b9-b36a-4565-b4db-13b3de158104`.
+
+Independent public GET /api/seasonal-campaign HTTP200 confirms active Halloween, offer:null, checkoutReady:false, promotionsEnabled:false. Initial urllib requests received HTTP errors; a normal browser-user-agent curl request succeeded. No credentials or private browser sessions were used for that request. Public launch audit38500834221 has passed the public production browser step; remaining product/social checks were still running at receipt time. No paid operation or customer notification.
