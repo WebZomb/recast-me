@@ -1,4 +1,5 @@
-import {holidayDefaults,activeHoliday} from '../public/holiday-schedule.js';
+import {seasonalCheckoutReady,createSeasonalCheckout} from './seasonal-checkout.js';
+import {holidayDefaults,activeHoliday,mergeHolidayRows,easternDay} from '../public/holiday-schedule.js';
 import {read,change,equal,fault,sameOrigin,privateJson} from './commerce-store.js';
 export const HOLIDAY_KEY='system/holiday-campaigns-v1.json';
 export function validateHolidays(rows){
@@ -20,22 +21,32 @@ export function validateHolidays(rows){
 }
 export async function holidaySettings(env){
  const saved=await read(env,HOLIDAY_KEY);
- return saved?{...saved,rows:validateHolidays(saved.rows)}:{revision:0,rows:holidayDefaults()};
+ return saved?{...saved,rows:validateHolidays(mergeHolidayRows(saved.rows))}:{revision:0,rows:holidayDefaults()};
 }
-// Shopify readback on 2026-10-13 verified all buyers/items, no minimum or usage limit.
-// Marketing dates recur yearly; this verified commerce offer deliberately does not.
+// Public offer metadata never contains a redeemable code. Eligibility is based
+// on the private saved artwork, never the request body or its storefront URL.
 export function holidayOffer(active,now=new Date()){
- if(active?.id!=='halloween'||+now<Date.parse('2026-10-10T04:00:00Z')||+now>=Date.parse('2026-11-01T04:00:00Z'))return null;
- return {code:'RECASTHALLOWEEN10',percent:10,endsAt:'2026-11-01T04:00:00Z',label:'10% off all products',terms:'Through October 31, 2026 (Eastern). Discount applies to products; shipping and taxes are calculated at checkout.'};
+ if(!active||!['halloween','christmas','new-year','valentine'].includes(active.id))return null;
+ const today=easternDay(now),year=Number(today.slice(0,4));
+ const bounds={halloween:['10-10','11-01',4],christmas:['11-01','12-26',5],valentine:['01-08','02-15',5]};
+ let start,end,hour;
+ if(active.id==='new-year'){start=today.slice(5)>='12-26'?`${year}-12-26`:`${year-1}-12-26`;end=today.slice(5)>='12-26'?`${year+1}-01-08`:`${year}-01-08`;hour=5;}
+ else {const dates=bounds[active.id];start=`${year}-${dates[0]}`;end=`${year}-${dates[1]}`;hour=dates[2];}
+ if(today<start||today>=end)return null;
+ const name={halloween:'Halloween',christmas:'Christmas','new-year':'New Year',valentine:'Valentine'}[active.id];
+ const style={halloween:'halloween',christmas:'christmas','new-year':'birthday',valentine:'valentine'}[active.id];
+ return {id:active.id,name,style,percent:10,endsAt:`${end}T0${hour}:00:00Z`,label:`10% off ${name} photo gifts`,terms:`Use the ${style==='birthday'?'Birthday / celebration':name} filter. Applied automatically to eligible products at checkout. Offer ends ${end} at 12:00 a.m. Eastern. Shipping and taxes are extra.`};
 }
+export function eligibleSeasonalArtwork(artwork,offer){return Boolean(offer&&artwork?.styleId===offer.style&&artwork?.source!=='original'&&artwork?.styleId!=='original');}
 export async function currentCampaign(env,now=new Date()){
- const settings=await holidaySettings(env),active=activeHoliday(settings.rows,now);
- return {active,offer:holidayOffer(active,now)};
+ const settings=await holidaySettings(env),active=activeHoliday(settings.rows,now),plannedOffer=holidayOffer(active,now);
+ const checkoutReady=plannedOffer?await seasonalCheckoutReady(env):false;
+ return {active,offer:checkoutReady?plannedOffer:null,checkoutReady};
 }
-export async function applyHolidayDiscount(url,env,now=new Date()){
- // Promotion storage failure must never break a valid approved checkout.
- try{const {offer}=await currentCampaign(env,now);if(offer){const link=new URL(url);link.searchParams.set('discount',offer.code);return link.href;}}catch{}
- return url;
+export async function applyHolidayDiscount(url,env,now=new Date(),checkout={}){
+ let offer;try{({offer}=await currentCampaign(env,now))}catch{return url;}
+ if(!eligibleSeasonalArtwork(checkout.artwork,offer))return url;
+ return createSeasonalCheckout(env,{...checkout,offer,now});
 }
 export async function holidayRoutes(request,env){
  const path=new URL(request.url).pathname;

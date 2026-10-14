@@ -1,3 +1,4 @@
+import {expireSeasonalCheckouts} from './seasonal-checkout.js';
 import {holidayRoutes} from './holiday-campaigns.js';
 import app from "./entry.js";
 import {subjectDetection} from "./subject-detection.js";
@@ -61,6 +62,7 @@ const application = {
   },
 
   async scheduled(controller, env, ctx) {
+    ctx.waitUntil(expireSeasonalCheckouts(env).catch(error=>console.error("Seasonal invoice expiry failed:",error.message)));
     return scheduledWorkflow(controller, env, ctx);
   }
 };

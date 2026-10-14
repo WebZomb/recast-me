@@ -116,11 +116,14 @@ fillCalendar();
 if(campaign.offer){
  for(const banner of document.querySelectorAll('[data-season-offer]')){
   banner.hidden=false;
-  const headline=document.createElement('strong');headline.textContent=campaign.offer.label.toUpperCase();
-  const copy=document.createElement('span');copy.textContent='Halloween treats, made personal. Automatically added at checkout.';
-  banner.append(headline,copy);
+  const headline=document.createElement('strong');headline.textContent='10%';headline.className='season-offer-number';
+  const copy=document.createElement('span');copy.className='season-offer-copy';
+  const eyebrow=document.createElement('small');eyebrow.textContent='A LITTLE SEASONAL MAGIC';
+  const title=document.createElement('b');title.textContent='OFF YOUR '+campaign.offer.name.toUpperCase()+' GIFTS';
+  const detail=document.createElement('span');detail.textContent='Choose the '+(campaign.offer.style==='birthday'?'Birthday / celebration':campaign.offer.name)+' filter. Your saving appears automatically at checkout.';
+  copy.append(eyebrow,title,detail);banner.append(headline,copy);
  }
- const terms=document.getElementById('season-offer-terms');terms.textContent=campaign.offer.terms+' Code: '+campaign.offer.code+'.';terms.hidden=false;
+ const terms=document.getElementById('season-offer-terms');terms.textContent=campaign.offer.terms;terms.hidden=false;
 }
 
 renderSeasonalProducts(campaign);

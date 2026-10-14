@@ -39,7 +39,7 @@ export async function renderSeasonalProducts(campaign){
    const body=node('div','season-shop-body');body.append(node('small','',item.tier==='digital'?'DIGITAL ART':'MADE WITH YOUR PHOTO'),node('h3','',item.name),node('p','',item.pitch));
    const price=node('div','season-shop-price');
    const dollars=value=>new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(value);
-   if(campaign.offer){price.append(node('del','',dollars(item.live.price)),node('strong','',dollars(Math.round(item.live.price*100*(1-campaign.offer.percent/100))/100)),node('small','','from · 10% off'));}
+   if(campaign.offer){price.append(node('del','',dollars(item.live.price)),node('strong','',dollars(Math.round(item.live.price*100*(1-campaign.offer.percent/100))/100)),node('small','','with '+campaign.offer.name+' filter'));}
    else price.append(node('strong','','from '+dollars(item.live.price)));
    const cta=node('a','season-button season-button-primary','Create yours →');cta.href=link.href;
    body.append(price,cta);card.append(link,body);grid.append(card);

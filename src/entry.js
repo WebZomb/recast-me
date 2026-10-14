@@ -337,7 +337,7 @@ async function checkoutLink(request, env, ctx) {
     }:{})
   };
   const encodedProperties = base64UrlUtf8(JSON.stringify(properties));
-  const checkoutUrl = await applyHolidayDiscount(`https://${shopDomain(env)}/cart/${numericId}:1?properties=${encodeURIComponent(encodedProperties)}&ref=recast-me`,env);
+  const checkoutUrl = await applyHolidayDiscount(`https://${shopDomain(env)}/cart/${numericId}:1?properties=${encodeURIComponent(encodedProperties)}&ref=recast-me`,env,new Date(),{artwork:recast,variantId:row.variantId,properties,requestId});
 
   return json({
     ok: true,

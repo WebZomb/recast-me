@@ -1,5 +1,18 @@
 import {annualGiftEvents} from './season-calendar.js';
-export const holidayDefaults=()=>annualGiftEvents(2026).map(event=>({id:event.id,enabled:event.id==='halloween',leadDays:21,start:'',end:'',priority:event.id==='halloween'?100:50}));
+const windows={
+ halloween:{start:'10-10',end:'10-31',priority:100},
+ christmas:{start:'11-01',end:'12-25',priority:120},
+ 'new-year':{start:'12-26',end:'01-07',priority:120},
+ valentine:{start:'01-08',end:'02-14',priority:110},
+ easter:{priority:100},'mothers-day':{priority:105},'fathers-day':{priority:105},
+ graduation:{priority:70},'pet-day':{leadDays:7,priority:90},
+ summer:{start:'06-01',end:'07-04',priority:60},
+ 'beach-days':{start:'07-05',end:'08-31',priority:60},
+ 'dog-day':{leadDays:14,priority:90}
+};
+export const holidayDefaults=()=>annualGiftEvents(2026).map(event=>({id:event.id,enabled:Boolean(windows[event.id]),leadDays:21,start:'',end:'',priority:50,...windows[event.id]}));
+// Extend older saved schedules without dropping owner-selected overrides.
+export function mergeHolidayRows(rows=[]){return holidayDefaults().map(row=>({...row,...rows.find(x=>x.id===row.id)}));}
 export function easternDay(now=new Date()){
  const parts=new Intl.DateTimeFormat('en-US',{timeZone:'America/New_York',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(now);
  const value=key=>parts.find(x=>x.type===key).value;

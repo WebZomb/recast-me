@@ -244,3 +244,21 @@ body.seasonal-page[data-season="everyday"]{--season-accent:#a5ecff;--season-seco
 .season-shop-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px}.season-shop-card{min-width:0;border:1px solid #ffffff20;border-radius:22px;background:linear-gradient(145deg,#20152c,#110e1a);overflow:hidden;box-shadow:0 14px 40px #0003}.season-shop-image{position:relative;display:block;aspect-ratio:1;overflow:hidden}.season-shop-image img{display:block;width:100%;height:100%;object-fit:contain}.season-shop-sale{position:absolute;left:12px;top:12px;color:#28122d;background:#ffc15b;font-size:12px;font-weight:900;padding:8px 11px;border-radius:100px}.season-shop-body{padding:22px;display:flex;flex-direction:column;gap:12px}.season-shop-body>small{color:#f2bd74;letter-spacing:.12em;font-size:10px;font-weight:800}.season-shop-body h3{margin:0;font-size:25px}.season-shop-body p{margin:0;color:#c4b8ce;line-height:1.55;font-size:14px;min-height:66px}.season-shop-price{display:flex;flex-wrap:wrap;gap:9px;align-items:center}.season-shop-price strong{font-size:24px;color:#ffd08a}.season-shop-price del{color:#a499ad;font-size:15px}.season-shop-price small{font-size:11px;color:#c4b8ce}.season-shop-body .season-button{width:100%;min-height:48px;text-align:center;box-sizing:border-box}.season-shop-card:hover{border-color:#f7b75080}.season-shop-image:focus-visible{outline:3px solid #ffc15b;outline-offset:-4px}
 @media(max-width:850px){.season-shop-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.season-shop-body{padding:16px}.season-shop-body h3{font-size:22px}}
 @media(max-width:520px){.season-shop-grid{grid-template-columns:1fr;gap:24px}.season-shop-body p{min-height:0}.season-shop-body{padding:20px}.season-sale-banner:not([hidden]){border-radius:0}.season-sale-inline:not([hidden]){border-radius:16px}}
+
+/* RM167: open artwork on phones; layered seasonal offer rather than a flat strip. */
+.season-sale-banner:not([hidden]){position:relative;isolation:isolate;overflow:hidden;display:flex;align-items:center;justify-content:center;gap:28px;padding:26px 35px;border:1px solid #f5c77999;border-radius:24px;color:#fff4df;background:radial-gradient(ellipse at 0% 0%,#b9512480,transparent 55%),radial-gradient(ellipse at 100% 100%,#a142d066,transparent 55%),linear-gradient(115deg,#23112e,#100d26 55%,#25143d);box-shadow:inset 0 1px #ffe4ac80,0 12px 38px #0006,0 0 30px #ec924922;text-align:left}
+.season-sale-banner::before{content:'✦';position:absolute;right:12px;top:-36px;color:#f9bc6c19;font-size:180px;z-index:-1;transform:rotate(15deg)}
+.season-sale-banner .season-offer-number{font-size:clamp(58px,8vw,104px);line-height:1;letter-spacing:-.075em;color:#ffd68c;text-shadow:0 0 28px #ff99334d;flex:none}
+.season-offer-copy{display:grid;gap:7px;max-width:470px}.season-offer-copy small{color:#f2bdec;font-size:10px;letter-spacing:.2em;font-weight:850}.season-offer-copy b{font-size:clamp(18px,2.5vw,28px);line-height:1.1;letter-spacing:-.025em}.season-offer-copy>span{font-size:13px;line-height:1.5;color:#e0cee8}
+.season-sale-inline:not([hidden]){padding:20px;gap:15px}.season-sale-inline .season-offer-number{font-size:58px}.season-sale-inline .season-offer-copy b{font-size:18px}
+@media(max-width:700px){
+ .season-hero{display:flex;flex-direction:column;min-height:0;border-radius:24px;margin-top:16px;background:#100d26}
+ .season-hero-image{position:relative;inset:auto;z-index:1;order:0;width:100%;height:auto;aspect-ratio:3/2;object-fit:cover;filter:none}
+ .season-hero::before{display:none}
+ .season-hero-content{order:1;padding:27px 23px 28px;max-width:none;background:linear-gradient(180deg,#17102f,#0d0c21)}
+ .season-hero h1{font-size:clamp(34px,8vw,53px);margin-top:13px}
+ .season-hero-copy{font-size:15px;line-height:1.55}.season-hero-actions{margin:23px 0 15px}
+ .season-sale-banner:not([hidden]){margin:18px auto 0;padding:20px 18px;border-radius:22px;gap:17px}
+ .season-sale-banner .season-offer-number{font-size:64px}.season-offer-copy b{font-size:17px}.season-offer-copy>span{font-size:12px}.season-offer-copy small{font-size:8px;letter-spacing:.13em}
+}
+@media(max-width:350px){.season-sale-banner:not([hidden]){gap:12px;padding:18px 14px}.season-sale-banner .season-offer-number{font-size:53px}.season-offer-copy b{font-size:15px}}
