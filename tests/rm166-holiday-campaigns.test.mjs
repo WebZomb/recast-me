@@ -10,18 +10,18 @@ test('campaign uses Eastern boundaries and recurs with a 21-day lead',()=>{
  assert.equal(activeHoliday(rows,at('2026-10-10T03:59:59Z')),null);
  assert.equal(activeHoliday(rows,at('2026-10-10T04:00:00Z')).id,'halloween');
  assert.equal(activeHoliday(rows,at('2026-11-01T03:59:59Z')).id,'halloween');
- assert.equal(activeHoliday(rows,at('2026-11-01T04:00:00Z')),null);
+ assert.equal(activeHoliday(rows,at('2026-11-01T04:00:00Z')).id,'christmas');
  assert.equal(activeHoliday(rows,at('2027-10-15T12:00:00Z')).id,'halloween');
 });
-test('verified discount never repeats beyond its real Shopify expiration',()=>{
+test('style-qualified invoice offers recur annually and enforce campaign cutoffs',()=>{
  const active={id:'halloween'};
  assert.equal(holidayOffer(active,at('2026-10-13T20:00:00Z')).percent,10);
  assert.equal(holidayOffer(active,at('2026-11-01T04:00:00Z')),null);
- assert.equal(holidayOffer(active,at('2027-10-15T12:00:00Z')),null);
+ assert.equal(holidayOffer(active,at('2027-10-15T12:00:00Z')).percent,10);
  assert.equal(holidayOffer(null,at('2026-10-15T12:00:00Z')),null);
 });
 test('annual overrides cross New Year and deterministic priority resolves overlaps',()=>{
- const edited=structuredClone(rows);
+ const edited=structuredClone(rows).map(x=>({...x,enabled:false}));
  Object.assign(edited.find(x=>x.id==='christmas'),{enabled:true,start:'10-01',end:'12-25',priority:101});
  assert.equal(activeHoliday(edited,at('2026-10-15T12:00:00Z')).id,'christmas');
  Object.assign(edited.find(x=>x.id==='new-year'),{enabled:true,start:'12-10',end:'01-03',priority:200});
@@ -32,7 +32,7 @@ test('annual overrides cross New Year and deterministic priority resolves overla
 test('checkout discount preserves product, quantity, private proof and attribution',async()=>{
  const original='https://shop.test/cart/123:1?properties=private-proof&ref=recast-me';
  const url=new URL(await applyHolidayDiscount(original,envFor(),at('2026-10-15T12:00:00Z')));
- assert.equal(url.pathname,'/cart/123:1');assert.equal(url.searchParams.get('properties'),'private-proof');assert.equal(url.searchParams.get('ref'),'recast-me');assert.equal(url.searchParams.get('discount'),'RECASTHALLOWEEN10');
+ assert.equal(url.pathname,'/cart/123:1');assert.equal(url.searchParams.get('properties'),'private-proof');assert.equal(url.searchParams.get('ref'),'recast-me');assert.equal(url.searchParams.get('discount'),null);
  assert.equal(await applyHolidayDiscount(original,envFor(),at('2026-11-01T04:00:00Z')),original);
  const unavailable={ARTWORK:{get(){throw Error('unavailable')}}};assert.equal(await applyHolidayDiscount(original,unavailable),original);
 });

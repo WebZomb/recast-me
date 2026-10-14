@@ -1,5 +1,6 @@
 /* Recast Me seasonal discovery. US gift-shopping calendar, local browser dates,
    no promotional discount promises or automatic commerce/credit changes. */
+const dayKey=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 const yearDate=(year,month,day)=>new Date(year,month-1,day,12);
 const nthWeekday=(year,month,weekday,n)=>{
   const first=yearDate(year,month,1);
@@ -11,12 +12,20 @@ const lastMonday=(year,month)=>{
   const last=endOfMonth(year,month);
   return yearDate(year,month,last.getDate()-(last.getDay()+6)%7);
 };
+// Gregorian Easter (Meeus/Jones/Butcher), calculated for each campaign year.
+function easter(year){
+ const a=year%19,b=Math.floor(year/100),c=year%100,d=Math.floor(b/4),e=b%4,f=Math.floor((b+8)/25),g=Math.floor((b-f+1)/3),h=(19*a+b-d-g+15)%30,i=Math.floor(c/4),k=c%4,l=(32+2*e+2*i-h-k)%7,m=Math.floor((a+11*h+22*l)/451),n=h+l-7*m+114;
+ return yearDate(year,Math.floor(n/31),n%31+1);
+}
 export function annualGiftEvents(year){
  const thanks=nthWeekday(year,11,4,4);
  const blackFriday=yearDate(year,11,thanks.getDate()+1);
  const cyberMonday=yearDate(year,11,thanks.getDate()+4);
  const events=[
   {id:'valentine',title:"Valentine’s Day",date:yearDate(year,2,14),icon:'♡',kind:'heart',style:'valentine',lead:'A portrait of your favorite person, couple, or furry Valentine.',gift:'Framed portraits · Mugs · Keepsakes'},
+  {id:'easter',title:'Easter & Spring',date:easter(year),icon:'✿',kind:'family',style:'storybook',lead:'Fresh spring color and storybook portraits for the people and pets you love.',gift:'Mugs · Family portraits · Keepsakes'},
+  {id:'summer',title:'Hello, Summer',date:yearDate(year,6,21),icon:'☀',kind:'summer',style:'beach',lead:'Sunshine, vacation memories and personalized gifts for summer adventures.',gift:'Totes · Tumblers · T-shirts'},
+  {id:'beach-days',title:'Beach Days',date:yearDate(year,7,31),icon:'☀',kind:'summer',style:'beach',lead:'Bring your favorite face to a golden-hour coastal escape.',gift:'Totes · T-shirts · Tumblers'},
   {id:'pet-day',title:'National Pet Day',date:yearDate(year,4,11),icon:'✦',kind:'pets',style:'storybook',lead:'Celebrate the pet who makes your everyday brighter.',gift:'Pet portraits · Blankets · Mugs'},
   {id:'mothers-day',title:"Mother’s Day",date:nthWeekday(year,5,0,2),icon:'♡',kind:'family',style:'royal',lead:'Turn a family moment into something she can keep.',gift:'Framed art · Personalized blankets'},
   {id:'graduation',title:'Graduation Season',date:yearDate(year,5,15),icon:'✧',kind:'family',style:'royal',lead:'Make a once-in-a-lifetime milestone into keepsake art.',gift:'Framed posters · Journals · Mugs'},
@@ -46,10 +55,10 @@ export function seasonalSpotlight(now=new Date(),selected=undefined){
  if(selected?.id==='halloween'||(selected===undefined&&today>=october&&today<halloween))return {
    id:'halloween',name:'Halloween',theme:'halloween',badge:'HALLOWEEN MAGIC',
    title:'Make Halloween unforgettable.',intro:'From spooky-cute pet portraits to magical family adventures, bring your favorite photo to a whole new world.',
-   hero:'/assets/recast-halloween-hero-v163.webp',style:'halloween',
+   hero:'/assets/recast-halloween-hero-v167.webp',style:'halloween',
    secondaryTitle:'A little spooky. A lot of you.',secondaryCopy:'Turn your best friend into a tiny vampire, a magical wizard or a moonlit legend. Pick your favorite, then preview it on a gift.'
  };
- const next=selected?annualGiftEvents(Number(selected.date.slice(0,4))).find(x=>x.id===selected.id):upcomingGiftEvents(now,1)[0];
+ const next=selected?[...annualGiftEvents(Number(selected.date.slice(0,4))-1),...annualGiftEvents(Number(selected.date.slice(0,4)))].find(x=>x.id===selected.id&&dayKey(x.date)===selected.date):upcomingGiftEvents(now,1)[0];
  if(!next)return null;
  const winter=['christmas','black-friday','cyber-monday','new-year'].includes(next.id);
  const autumn=next.id==='thanksgiving';

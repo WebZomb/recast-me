@@ -10,7 +10,7 @@ test('Halloween spotlight is selected automatically in October, with a real Hall
  assert.equal(active.id,'halloween');
  assert.equal(active.theme,'halloween');
  assert.equal(active.style,'halloween');
- assert.equal(active.hero,'/assets/recast-halloween-hero-v163.webp');
+ assert.equal(active.hero,'/assets/recast-halloween-hero-v167.webp');
  const first=upcomingGiftEvents(now,2);
  assert.deepEqual(first.map(x=>x.id),['halloween','thanksgiving']);
  assert.equal(eventDateLabel(first[0].date),'Oct 31');

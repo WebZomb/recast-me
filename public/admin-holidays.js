@@ -19,7 +19,7 @@ export function initHolidaySchedule(api,notify){
   }
   current=data;dirty=false;
   status.textContent=data.active?`Showing ${data.active.title}: ${data.active.start} through ${data.active.end}.`:'No holiday is active. Specials shows everyday gift inspiration.';
-  document.getElementById('holiday-offer-status').textContent=data.offer?`${data.offer.label}. ${data.offer.terms}`:'No verified checkout offer is active.';
+  document.getElementById('holiday-offer-status').textContent=data.offer?`${data.offer.label}. ${data.offer.terms}`:(data.active&&!data.checkoutReady?'Seasonal discount paused: the Recast Me Fulfillment Shopify app needs write_draft_orders permission for fixed, style-qualified checkouts.':'No seasonal checkout offer is active.');
  }
  async function load(force=false){if(!force&&!form.closest('details').open)return;const data=await api('/api/admin/holiday-schedule');if(!dirty||force)fill(data);return data;}
  form.closest('details').addEventListener('toggle',()=>{if(form.closest('details').open)load().catch(error=>{status.textContent=error.message});});

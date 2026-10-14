@@ -18,7 +18,7 @@ export function productFromMention(text=''){
   if(product==='Sticker Sheet')return {sku,product,design:{version:8,product,layout:'six-pictures',fill:'transparent',x:'center',scale:100,spacing:'safe'}};
   const drink=['Mug','Tumbler'].includes(product),apparel=['Hoodie','T-Shirt'].includes(product),safe=product==='Hardcover Journal';
   const cover=['Phone Case','Poster','Framed Poster','Sticker','Puzzle','Magnet 3-Pack','Coaster 4-Pack'].includes(product);
-  return {sku,product,design:{version:product==='Mug'?12:safe?7:6,product,layout:drink?'two-sided':cover?'cover':'fit',fill:apparel?'transparent':cover?'full-bleed':['Blanket','Pillow','Tote Bag'].includes(product)?'dark':'ambient',x:'center',scale:product==='Canvas'?90:product==='Mug'?110:drink?108:100,spacing:product==='Mug'?'close':'standard',...(apparel?{finish:'soft'}:{}),...(['Canvas','Puzzle'].includes(product)?{orientation:'portrait'}:{})}};
+  return {sku,product,design:{version:product==='Mug'?13:safe?7:6,product,layout:drink?'two-sided':cover?'cover':'fit',fill:apparel?'transparent':cover?'full-bleed':['Blanket','Pillow','Tote Bag'].includes(product)?'dark':'ambient',x:'center',scale:product==='Canvas'?90:product==='Mug'?110:drink?108:100,spacing:product==='Mug'?'close':'standard',...(apparel?{finish:'soft'}:{}),...(['Canvas','Puzzle'].includes(product)?{orientation:'portrait'}:{})}};
 }
 export function socialIntent(text=''){
   const product=productFromMention(text);

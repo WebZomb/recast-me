@@ -339,7 +339,7 @@ async function getShopifyToken(env) {
   return data.access_token;
 }
 
-async function shopifyGraphQL(env, query, variables = {}) {
+export async function shopifyGraphQL(env, query, variables = {}) {
   const domain = shopifyDomain(env);
   const token = await getShopifyToken(env);
   const response = await fetch(`https://${domain}/admin/api/2026-07/graphql.json`, {
