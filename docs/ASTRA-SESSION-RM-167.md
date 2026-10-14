@@ -13,7 +13,9 @@ Baseline: `61649e14b37497f1d89b5bba49b10333c2d57bf8` (RM166).
 ## Validation / status
 - 590 Node tests passed, including matching-style/forged-style cases, exact invoice lines/proof, draft reuse, annual boundaries, expiry and paid-order preservation.
 - Chromium at 320/393/768/1280px: all 18 products, offer fixture, owner form save, no overflow/page errors; hero screenshot inspected. This fixture shows the intended enabled promotion, not current live permission status.
-- Worker dry-run passed. Hosted checks/deployment pending.
+- Worker dry-run passed. Hosted security run 38489900596 and full browser/policy run 38489900526 passed at source `26a7f6a4c17019665e9d40048891722d2e6cb484`. PR82 merged as `2f90c82f440b32380a1caff4620d8af5c5ff994c`. Guarded deployment 38490297037 passed; Cloudflare Worker `2a44a6c3-b47e-4fdf-b23e-b1779d8642ac`. Public launch audit 38490297013 passed.
+- Live Chromium at 393/1280px passed with all 18 products/images, no overflow or page errors, and zero sale banners/badges while permission is missing. Live campaign returned offer:null and checkoutReady:false, without a code.
+- Old broad Halloween coupon was deactivated through Shopify; readback status EXPIRED. This intentionally pauses the promotion rather than allowing an unrelated-style redemption. New hero, mug default and annual calendar are deployed; secure offer activation remains blocked on the app permission and unpaid invoice verification.
 - No real order, payment, paid app render, supplier request or customer-photo publication performed. No live fixed invoice created yet.
 - Initial test failures were assertions for superseded v12 crop, old hero filename, Halloween-only schedule and public coupon behavior; updated to the new requirements and supplemented with checkout behavior tests.
 - Remaining activation: grant draft-order permission to the production app, verify a disposable unpaid invoice including shipping/tax behavior, then confirm live banners/checkout. Pending ambiguous Shopify creation remains on hold instead of silently creating a duplicate; owner recovery is manual. Existing draft inventory is not reserved.
