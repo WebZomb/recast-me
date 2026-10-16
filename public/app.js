@@ -86,7 +86,7 @@ for(const entry of STYLES){
 
 const PRODUCT_CATALOG = [
   {name:"Poster",price:"from $29.99",asset:"poster",image:"https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-lifestyle-poster-rm059.png?v=1791422885&width=1000",badge:"MOST POPULAR",pitch:"The easiest way to turn your Recast into wall art.",tier:"featured"},
-  {name:"Hoodie",price:"from $59.99",asset:"hoodie",image:"https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-lifestyle-hoodie-rm059.png?v=1791422966&width=1000",badge:"FAN FAVORITE",pitch:"Wear your Recast as a premium statement piece.",tier:"featured"},
+  {name:"Hoodie",price:"from $59.99",asset:"hoodie",image:"https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-hoodie-black-s-verified-rm055.jpg?v=1791357294&width=1000",badge:"FAN FAVORITE",pitch:"Wear your Recast as a premium statement piece.",tier:"featured"},
   {name:"Framed Poster",price:"from $44.99",asset:"framed-poster",image:"https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-lifestyle-frame-rm059.png?v=1791422870&width=1000",badge:"DESK + WALL",pitch:"8×10 desk size or larger framed wall art — ready to display and gift.",tier:"featured"},
   {name:"Canvas",price:"from $69.99",asset:"canvas",image:"https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-lifestyle-canvas-rm059.png?v=1791422862&width=1000",badge:"GALLERY PICK",pitch:"A bold upgrade for artwork that deserves more presence.",tier:"featured"},
 
@@ -144,7 +144,7 @@ const EXAMPLE_SKUS={"Tote Bag":"RECAST-TOTE-BLACK","Puzzle":"RECAST-PUZZLE-252",
 function merchCard(item,{featured=false}={}){
   const classes=['product',featured?'featured-product':'secondary-product'].filter(Boolean).join(' ');
   return `<div class="${classes}" ${EXAMPLE_SKUS[item.name]?`data-example-sku="${EXAMPLE_SKUS[item.name]}"`:""}>
-    <div class="product-art"><img src="${item.image || `/assets/product-${item.asset}-v09.jpg`}" alt="Style illustration for ${item.name}" loading="lazy" decoding="async">${EXAMPLE_SKUS[item.name]?'<span class="example-design-label">Lifestyle example · preview your selected size</span>':""}</div>
+    <div class="product-art"><img src="${item.image || `/assets/product-${item.asset}-v09.jpg`}" alt="${item.name==='Hoodie'?'Printful preview: black hoodie size S with soft-edge chest artwork':`Style illustration for ${item.name}`}" loading="lazy" decoding="async">${EXAMPLE_SKUS[item.name]?`<span class="example-design-label">${item.name==='Hoodie'?'Printful example · size S':'Lifestyle example · preview your selected size'}</span>`:""}</div>
     <div class="product-body">
       <span class="product-badge">${item.badge}</span>
       <strong>${item.name}</strong>
