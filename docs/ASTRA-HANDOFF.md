@@ -359,3 +359,6 @@ RM167 UI/CALENDAR/MUG LIVE, DISCOUNT PAUSED — PR82 merged `2f90c82f440b32380a1
 RM168 — Owner deferred 10% discounts. Explicit default-off server gate and deployment flag added; calendar remains active. 592 Node tests and Worker dry-run pass; release pending. This supersedes RM167 permission-only activation instructions. Receipt logo/name observed; Shop button and supplier branding work pending. See [RM168](ASTRA-SESSION-RM-168.md).
 
 RM168 LIVE — PR83 merged runtime `f628a7577529d4df74f0e35c10a7737fedb0a0cd`; 592 tests, security/customer browser CI and guarded deployment38500834279 PASS. Worker `a69584b9-b36a-4565-b4db-13b3de158104`. Live campaign explicitly confirms promotionsEnabled:false, offer:null, checkoutReady:false while Halloween remains active. Future Shopify permission grants alone cannot enable the promotion. See RM168 release receipt.
+
+
+October16 hoodie marketing correction — owner retains actual print size; replace misleading lifestyle imagery with verified size-S supplier example. Shopify media corrected and verified; website release pending. See [session](ASTRA-SESSION-HOODIE-2026-10-16.md).

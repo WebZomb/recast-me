@@ -1,6 +1,6 @@
 export const seasonalProducts = [
   {name:"Poster",price:"from $29.99",asset:"poster",image:"https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-lifestyle-poster-rm059.png?v=1791422885&width=1000",badge:"MOST POPULAR",pitch:"The easiest way to turn your Recast into wall art.",tier:"featured"},
-  {name:"Hoodie",price:"from $59.99",asset:"hoodie",image:"https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-lifestyle-hoodie-rm059.png?v=1791422966&width=1000",badge:"FAN FAVORITE",pitch:"Wear your Recast as a premium statement piece.",tier:"featured"},
+  {name:"Hoodie",price:"from $59.99",asset:"hoodie",image:"https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-hoodie-black-s-verified-rm055.jpg?v=1791357294&width=1000",badge:"FAN FAVORITE",pitch:"Wear your Recast as a premium statement piece.",tier:"featured"},
   {name:"Framed Poster",price:"from $44.99",asset:"framed-poster",image:"https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-lifestyle-frame-rm059.png?v=1791422870&width=1000",badge:"DESK + WALL",pitch:"8×10 desk size or larger framed wall art — ready to display and gift.",tier:"featured"},
   {name:"Canvas",price:"from $69.99",asset:"canvas",image:"https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-lifestyle-canvas-rm059.png?v=1791422862&width=1000",badge:"GALLERY PICK",pitch:"A bold upgrade for artwork that deserves more presence.",tier:"featured"},
 
@@ -33,8 +33,8 @@ export async function renderSeasonalProducts(campaign){
    const card=node('article','season-shop-card');
    const link=node('a','season-shop-image');link.href='/?style='+encodeURIComponent(campaign.active?.style||'royal')+'&gift='+encodeURIComponent(item.live.sku)+'#start';link.setAttribute('aria-label','Create your '+item.name);
    const img=node('img');img.width=1000;img.height=1000;img.loading='lazy';img.decoding='async';
-   img.src=halloween?(item.name==='Mug'?'/assets/recast-halloween-mug-approved.jpg':artKeys[item.name]?'/assets/halloween-'+artKeys[item.name]+'-v166.webp':'/assets/recast-halloween-hero-v163.webp'):item.image;
-   img.alt=(halloween?'Halloween ':'')+item.name+' lifestyle example';link.append(img);
+   img.src=item.name==='Hoodie'?item.image:halloween?(item.name==='Mug'?'/assets/recast-halloween-mug-approved.jpg':artKeys[item.name]?'/assets/halloween-'+artKeys[item.name]+'-v166.webp':'/assets/recast-halloween-hero-v163.webp'):item.image;
+   img.alt=item.name==='Hoodie'?'Printful preview: black hoodie size S with soft-edge chest artwork':(halloween?'Halloween ':'')+item.name+' lifestyle example';link.append(img);
    if(campaign.offer)link.append(node('span','season-shop-sale','10% OFF'));
    const body=node('div','season-shop-body');body.append(node('small','',item.tier==='digital'?'DIGITAL ART':'MADE WITH YOUR PHOTO'),node('h3','',item.name),node('p','',item.pitch));
    const price=node('div','season-shop-price');
