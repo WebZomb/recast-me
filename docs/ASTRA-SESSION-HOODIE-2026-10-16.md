@@ -13,3 +13,9 @@ Validation: three changed JS syntax checks and git diff whitespace passed; 25 fo
 Advertising corrections are tracked in the private marketing notebook. Do not treat newly generated creatives as published replacements until platform readback confirms. Keep October18 hoodie draft held until reviewed replacement is attached.
 
 Rollback: revert only these merchandising URLs/labels over current main; previous illustration URL remains in docs/rm059-lifestyle-images.json. Do not alter historical approved orders.
+
+## Release receipt and audit correction
+
+PR84 source fba8d13aa2474ca49f8a5c275fdc6ab30894a279 merged as d4f6cb4f41cf5c63425db4d0b366578533682075. All three PR checks passed; guarded main deployment and Workers Build succeeded. Public launch audit passed with no layout/image failures, but the subsequent published-example audit failed because it still required the old “Lifestyle example” caption for the hoodie. Updated that single assertion to require the precise Printful size-S label and supplier filename; other product checks remain. This follow-up changes audit code and documentation only. Hosted browser audit is required for the final verification; no local browser automation executed.
+
+Shopify replacement is live. Published Facebook corgi photo was replaced in place and visually confirmed; the scheduled Fantasy Warrior hoodie now carries the corrected modest upper-chest print at the original October18 6PM Eastern slot. No actual hoodie artwork dimensions or paid-ad budget changed.
