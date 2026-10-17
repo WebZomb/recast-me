@@ -32,8 +32,26 @@ targets:
         UISupportedInterfaceOrientations~ipad: [UIInterfaceOrientationPortrait, UIInterfaceOrientationPortraitUpsideDown, UIInterfaceOrientationLandscapeLeft, UIInterfaceOrientationLandscapeRight]
         NSCameraUsageDescription: Take a photo you choose to transform into a Recast.
         ITSAppUsesNonExemptEncryption: false
+  RecastStoreScreenshots:
+    type: bundle.ui-testing
+    platform: iOS
+    sources: [RecastStoreScreenshots]
+    dependencies:
+      - target: RecastMe
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.recastme.ios.screenshots
+        GENERATE_INFOPLIST_FILE: YES
+        TEST_TARGET_NAME: RecastMe
 schemes:
   RecastMe:
     build:
       targets:
         RecastMe: all
+  RecastStoreScreenshots:
+    build:
+      targets:
+        RecastMe: all
+        RecastStoreScreenshots: [test]
+    test:
+      targets: [RecastStoreScreenshots]

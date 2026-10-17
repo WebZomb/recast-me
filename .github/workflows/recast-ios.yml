@@ -31,3 +31,71 @@ jobs:
           test -s "$RECAST_APP/Assets.car"
           plutil -lint "$RECAST_APP/PrivacyInfo.xcprivacy"
           /usr/libexec/PlistBuddy -c 'Print :CFBundleIcons:CFBundlePrimaryIcon:CFBundleIconName' "$RECAST_APP/Info.plist" | grep -x AppIcon
+      - name: Capture real app screens on iPhone and iPad
+        run: |
+          set -eu
+          mkdir -p /tmp/recast-store-shots
+          xcrun simctl list devices available -j > /tmp/recast-devices.json
+          python3 - <<'PY'
+          import json
+          devices = [d for ds in json.load(open('/tmp/recast-devices.json'))['devices'].values() for d in ds]
+          wanted = [('iphone', 'iPhone 17 Pro Max'), ('ipad', 'iPad Pro 13-inch (M5)')]
+          with open('/tmp/recast-screenshot-devices.txt', 'w') as output:
+              for label, name in wanted:
+                  matches = [d for d in devices if d['name'] == name]
+                  if not matches and label == 'ipad':
+                      matches = [d for d in devices if d['name'].startswith('iPad Pro 13-inch')]
+                  if not matches:
+                      raise SystemExit('Required screenshot simulator unavailable: ' + name)
+                  output.write(label + ' ' + matches[-1]['udid'] + '\n')
+          PY
+          while read -r RECAST_DEVICE_KIND RECAST_DEVICE_ID; do
+            xcrun simctl boot "$RECAST_DEVICE_ID" || true
+            xcrun simctl bootstatus "$RECAST_DEVICE_ID" -b
+            xcrun simctl status_bar "$RECAST_DEVICE_ID" override --time '9:41' --dataNetwork wifi --wifiMode active --wifiBars 3 --batteryState charged --batteryLevel 100
+            xcodebuild -project ios/RecastMe.xcodeproj -scheme RecastStoreScreenshots -destination "platform=iOS Simulator,id=$RECAST_DEVICE_ID" -derivedDataPath /tmp/recast-ios-build -resultBundlePath "/tmp/recast-store-shots/$RECAST_DEVICE_KIND.xcresult" CODE_SIGNING_ALLOWED=NO test
+            xcrun xcresulttool export attachments --path "/tmp/recast-store-shots/$RECAST_DEVICE_KIND.xcresult" --output-path "/tmp/recast-store-shots/$RECAST_DEVICE_KIND"
+            xcrun simctl shutdown "$RECAST_DEVICE_ID"
+          done < /tmp/recast-screenshot-devices.txt
+      - name: Preserve screenshots and test evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: recast-store-screenshots
+          path: /tmp/recast-store-shots
+          retention-days: 14
+  preserve-reviewed-source-captures:
+    needs: simulator-build
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: recast-store-screenshots
+          path: /tmp/recast-store-captures
+      - name: Preserve only public app screenshots in an isolated asset branch
+        run: |
+          set -eu
+          python3 - <<'PY'
+          import json, pathlib, shutil
+          root = pathlib.Path('/tmp/recast-store-captures')
+          for device in ['iphone', 'ipad']:
+              destination = pathlib.Path('docs/app-store/screenshots') / device
+              destination.mkdir(parents=True, exist_ok=True)
+              for test in json.loads((root / device / 'manifest.json').read_text()):
+                  for entry in test['attachments']:
+                      name = entry['suggestedHumanReadableName'].split('_')[0]
+                      if name in ['store-home', 'store-specials', 'store-guide']:
+                          shutil.copyfile(root / device / entry['exportedFileName'], destination / (name + '.png'))
+              if len(list(destination.glob('*.png'))) != 3:
+                  raise SystemExit('Missing required screenshots for ' + device)
+          PY
+          git switch -c "codex/store-assets-${GITHUB_RUN_ID}"
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add docs/app-store/screenshots
+          git commit -m 'Preserve real simulator captures for App Store visual review'
+          git push origin HEAD
