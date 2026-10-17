@@ -16,3 +16,11 @@ Rollback: revert this presentation change; supplier proof paths/physical artwork
 
 
 Owner immediately rejected use of his dog. Replaced both provisional Shopify images with fictional illustrated fantasy adventurer / sci-fi heroine, same lifestyle scene. Dog examples were never deployed to website. Final CDN filenames recast-hoodie-illustrated-20261017.png / recast-tshirt-illustrated-20261017.png; original prompts above superseded. CDN-hosted files used for site. Final 593 tests and Worker dry-run passed before artwork-only swap; rerun follows. Local git push had no credentials, so release uses supported GitHub connector. No dog media to be used in future marketing.
+
+## Owner-approved subject variety follow-up
+
+Baseline e66154633d03437bb3c3e0c79a4daf8941dfaa4a (PR86) deployed successfully; 593 tests, hosted security/browser gates, guarded deployment39002633541 and public audit39002633615 passed. Earlier pending-release statements above are superseded. Assets are hosted on Shopify CDN, not the provisional local WEBP paths above. The prohibition is the owner's personal dog, not fictional sample dogs.
+
+At 00:35–00:38 Eastern owner explicitly approved the new models, garments, print sizes and locations but requested recognizable subject/filter examples and variety. Reviewed all18 live Shopify products and their current images, plus48 source-listed styles. Royal dogs/family already repeat; other examples cover forest cat, future-city car, Halloween dog, retro couple, romantic couple, magical-library woman, space family, tropical dog, aurora husky, watercolor horse and wizard-cat stickers.
+
+Owner approved child with fictional golden retriever / Dinosaur Adventure on hoodie and fictional male musician / Rock Star on tee. Built-in image-edit prompts change only printed artwork inside approved footprints, retain model identity/pose/garment/background, soft edges and placement, and require subjects' faces prominent over scenery. No production geometry or provider-model changes. Rollback: restore PR86 merchandising CDN URLs only.

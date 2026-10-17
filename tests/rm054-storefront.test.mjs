@@ -6,8 +6,8 @@ const html=readFileSync(new URL('../public/index.html',import.meta.url),'utf8');
 test('RM055 supersedes the withdrawn global raw-art example and restores product-specific illustrations',()=>{
  assert.doesNotMatch(checkout,/STORE_EXAMPLE_ART|world-comic-v18/);
  for(const asset of ['poster','canvas','mug','blanket'])assert.ok(checkout.includes(`recast-lifestyle-${asset}-rm059.png`));
- assert.match(checkout,/hoodie-illustrated-20261017/);
- assert.match(checkout,/tshirt-illustrated-20261017/);
+ assert.match(checkout,/hoodie-variety-20261017/);
+ assert.match(checkout,/tshirt-variety-20261017/);
  assert.doesNotMatch(checkout,/recast-lifestyle-hoodie-rm059/);
  assert.match(checkout,/Lifestyle example · preview your selected size/);
 });
