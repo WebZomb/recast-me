@@ -8,6 +8,7 @@ struct RecastMeApp: App {
     @State private var selectedArtworkURL: URL?
     @State private var creatorRevision = 0
     @StateObject private var gallery = PreviewGallery()
+    @StateObject private var photoConsent = PhotoProcessingConsent()
     var body: some Scene {
         WindowGroup {
             TabView(selection: $selectedTab) {
@@ -40,17 +41,17 @@ struct RecastMeApp: App {
                             Text("Deleting a local picture also removes its iPhone-only product link, but server artwork and paid orders remain. Keep private links safe; an Artwork ID alone does not unlock a picture.")
                             Link("Photo privacy & AI processing", destination: StudioView.origin.appendingPathComponent("privacy.html"))
                         }
-                        Section("Testing this app") {
+                        Section("Creating and ordering") {
                             Text("The My Orders tab shows your purchases, production progress, and carrier tracking once a shipment actually exists. Keep Create open while an image renders. Return from secure checkout to refresh order status.")
                         }
                         Section("Special occasions & gifts") {
-                            Link("Halloween and upcoming holiday specials",
+                            Link("Seasonal gifts and special occasions",
                                  destination: StudioView.origin.appendingPathComponent("specials.html"))
                             Text("Explore seasonal Recasts and personalized gift ideas. Choose a look and preview the result before you order.")
                         }
                         Section("Orders & support") {
                             Link("Order help and shipping", destination: StudioView.origin.appendingPathComponent("support.html"))
-                            Link("Preview the celebration without buying", destination: StudioView.origin.appendingPathComponent("purchase-demo.html"))
+                            Link("Report a problem or content concern", destination: StudioView.origin.appendingPathComponent("support.html"))
                         }
                     }
                     .navigationTitle("Photo guide")
@@ -60,6 +61,7 @@ struct RecastMeApp: App {
             .sensoryFeedback(.selection, trigger: selectedTab)
             .tint(.cyan)
             .preferredColorScheme(.dark)
+            .environmentObject(photoConsent)
         }
     }
 }

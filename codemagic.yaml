@@ -58,3 +58,54 @@ workflows:
         auth: integration
         submit_to_testflight: false
         submit_to_app_store: false
+
+  recast-app-store-release:
+    name: Recast Me — App Store distribution
+    instance_type: mac_mini_m2
+    max_build_duration: 30
+    integrations:
+      app_store_connect: Starveil Codemagic
+    environment:
+      xcode: 26.2
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.recastme.ios
+    scripts:
+      - name: Validate release source
+        script: |
+          set -eu
+          test -s ios/RecastMe/Assets.xcassets/AppIcon.appiconset/AppIcon.png
+          test -s ios/RecastMe/PrivacyInfo.xcprivacy
+          test -s ios/RecastMe/PhotoConsentView.swift
+      - name: Generate the release project
+        script: |
+          set -eu
+          command -v xcodegen >/dev/null || brew install xcodegen
+          cd ios
+          xcodegen generate
+      - name: Set distribution build number
+        script: |
+          set -eu
+          RECAST_COUNTER="${BUILD_NUMBER:?Missing Codemagic build number}"
+          case "$RECAST_COUNTER" in *[!0-9]*|'') exit 1 ;; esac
+          RECAST_RELEASE_BUILD=$((RECAST_COUNTER + 1000))
+          test "$RECAST_RELEASE_BUILD" -le 9999
+          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $RECAST_RELEASE_BUILD" ios/RecastMe/Info.plist
+      - name: Apply App Store signing
+        script: |
+          set -eu
+          xcode-project use-profiles
+      - name: Archive for App Store Connect
+        script: |
+          set -eu
+          xcode-project build-ipa --project ios/RecastMe.xcodeproj --scheme RecastMe
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+    publishing:
+      app_store_connect:
+        auth: integration
+        # Upload the eligible binary; submit in App Store Connect after metadata,
+        # actual screenshots, privacy labels and storefront checks are complete.
+        submit_to_testflight: false
+        submit_to_app_store: false
