@@ -354,3 +354,6 @@ RM156 iOS — Owner completed private TestFlight app testing and a paid physical
 
 
 2026-10-17 App Store preparation — distribution workflow, upfront native photo-processing consent and listing/review dossier; signing/upload/submission blocked on authenticated access and final commerce/listing checks. See [session](ASTRA-SESSION-APPSTORE-2026-10-17.md) and [submission package](APP-STORE-SUBMISSION-2026-10-17.md).
+
+
+2026-10-17 screenshot capture — separate UI-test scheme and hosted iPhone/iPad screenshots of actual app screens. Release code unchanged. See [screenshot session](ASTRA-SESSION-STORE-SCREENSHOTS.md). Visual review required before Apple upload.

@@ -1,0 +1,42 @@
+name: Preserve reviewed App Store screenshots
+on:
+  pull_request:
+    paths: ['.github/workflows/recast-store-assets.yml']
+permissions:
+  contents: write
+  actions: read
+jobs:
+  preserve:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: recast-store-screenshots
+          run-id: 39046083518
+          github-token: ${{ github.token }}
+          path: /tmp/recast-store-captures
+      - name: Preserve visually reviewed public app captures
+        run: |
+          set -eu
+          python3 - <<'PY'
+          import json, pathlib, shutil
+          root = pathlib.Path('/tmp/recast-store-captures')
+          for device in ['iphone', 'ipad']:
+              destination = pathlib.Path('docs/app-store/screenshots') / device
+              destination.mkdir(parents=True, exist_ok=True)
+              for test in json.loads((root / device / 'manifest.json').read_text()):
+                  for entry in test['attachments']:
+                      name = entry['suggestedHumanReadableName'].split('_')[0]
+                      if name in ['store-specials', 'store-guide']:
+                          shutil.copyfile(root / device / entry['exportedFileName'], destination / (name + '.png'))
+              for name in ['store-specials', 'store-guide']:
+                  assert (destination / (name + '.png')).stat().st_size > 0
+          PY
+          git switch -c "codex/reviewed-store-assets-${GITHUB_RUN_ID}"
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add docs/app-store/screenshots
+          git commit -m 'Preserve visually reviewed iPhone and iPad App Store captures'
+          git push origin HEAD
