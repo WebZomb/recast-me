@@ -1,4 +1,5 @@
 import {change} from './commerce-store.js';
+import {screeningCapacity} from './capacity-policy.js';
 // Keyword screening is a first layer, never a claim that pixels were screened.
 export const CONTENT_POLICY_VERSION='baseline-moderation-3';
 export const CONTENT_MESSAGE='Please choose a family-friendly photo and description. Nudity, sexual content, graphic violence, hate, harassment and explicit profanity are not supported.';
@@ -32,8 +33,7 @@ export async function moderateContent(env,{text='',images=[],required=false}={})
   if(!input.length)throw failure('content_screening_unavailable','There is no content to check.',400);
   // Abuse cap, not a paid inference allowance. No generation/Responses calls.
   if(!env.ARTWORK)throw failure('content_screening_unavailable','Photo screening storage is unavailable. Please try again later.',503);
-  const configuredLimit=Number(env.CONTENT_SCREENING_DAILY_LIMIT||200);
-  const limit=Number.isInteger(configuredLimit)&&configuredLimit>=1&&configuredLimit<=1000?configuredLimit:200;
+  const {limit}=screeningCapacity(env);
   await change(env,`security/free-screening-budget/${new Date().toISOString().slice(0,10)}.json`,{count:0},state=>{
     if(!Number.isInteger(state.count)||state.count<0||state.count>=limit)throw failure('content_screening_unavailable','Photo screening has reached its daily limit. Please try again tomorrow.',503);
     return {count:state.count+1};

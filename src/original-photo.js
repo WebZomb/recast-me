@@ -1,6 +1,7 @@
 import {moderateContent} from './content-safety.js';
 import {sameOrigin,change,hash,randomToken,fault} from './commerce-store.js';
 import {verifyTurnstile} from './highquality.js';
+import {ORIGINAL_PHOTO_DAILY_LIMIT} from './capacity-policy.js';
 export async function saveOriginalPhoto(request,env,{trustedSocialJob=false}={}){
   sameOrigin(request);
   if(!env.ARTWORK||!env.IMAGES?.input||!env.IMAGES?.info)throw fault('photo_unavailable','Photo storage is temporarily unavailable.',503);
@@ -13,7 +14,7 @@ export async function saveOriginalPhoto(request,env,{trustedSocialJob=false}={})
   const salt=env.CREDIT_IP_SALT||env.ADMIN_TOKEN;
   if(!salt)throw fault('photo_unavailable','Photo uploads are not configured yet.',503);
   const day=new Date().toISOString().slice(0,10),network=await hash(`${salt}:photo:${request.headers.get('CF-Connecting-IP')||'unknown'}`);
-  await change(env,`security/photo-uploads/${day}/${network}.json`,{count:0},state=>{if(state.count>=10)throw fault('photo_limit','Today’s photo-upload limit has been reached. Try again tomorrow.',429);return{count:state.count+1}});
+  await change(env,`security/photo-uploads/${day}/${network}.json`,{count:0},state=>{if(state.count>=ORIGINAL_PHOTO_DAILY_LIMIT)throw fault('photo_limit','Today’s photo-upload limit has been reached. Try again tomorrow.',429);return{count:state.count+1}});
   const bytes=await file.arrayBuffer(),info=await env.IMAGES.info(new Blob([bytes]).stream());
   if(!(info.width>0&&info.height>0&&info.width<=8000&&info.height<=8000&&info.width*info.height<=40000000))throw fault('photo_dimensions','Choose a photo up to 8,000 pixels per side and 40 megapixels.',400);
   const contentSafety=await moderateContent(env,{images:[file],required:trustedSocialJob});

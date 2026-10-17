@@ -1,4 +1,5 @@
 import {change,read,hash,randomToken,sameOrigin,privateJson,fault} from './commerce-store.js';
+import {subjectDetectionLimit as limit} from './capacity-policy.js';
 
 export const SUBJECT_MODEL='@cf/meta/llama-3.2-11b-vision-instruct';
 export const SUBJECT_VERSION='subjects-v3';
@@ -31,7 +32,6 @@ function imageDataUrl(bytes){
  return 'data:image/jpeg;base64,'+btoa(binary);
 }
 
-function limit(env,key,fallback){const n=Number(env[key]??fallback);if(!Number.isSafeInteger(n)||n<0||n>1000)throw fault('detection_config','Photo check unavailable.',503);return n;}
 async function reserve(env,key,max){
  await change(env,key,{used:0},v=>{if(v.used>=max)throw fault('detection_limit','Photo check limit reached.',429);return {used:v.used+1};});
 }

@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#060611">
   <meta name="robots" content="noindex,nofollow">
   <title>Recast Me — Control Center</title>
-  <link rel="stylesheet" href="/admin.css?v=166">
+  <link rel="stylesheet" href="/admin.css?v=capacity1">
 </head>
 <body>
   <div class="aurora aurora-a"></div><div class="aurora aurora-b"></div>
@@ -157,6 +157,12 @@
         </div>
         <button type="button" id="reset-my-renders">Reset my daily HQ renders</button><p id="reset-my-renders-status" role="status" data-private-setting></p><p class="muted">Owner testing only. Use the same browser as your previews. Restores this network’s daily allowance; leaves site spending limits unchanged.</p>
         <p id="usage-day" class="muted" data-private-setting></p>
+        <section class="capacity-panel" aria-labelledby="capacity-title">
+          <div class="panel-heading"><div><h3 id="capacity-title">Upload &amp; screening capacity</h3><p>Read-only checks for limits that are separate from image rendering.</p></div><button id="refresh-capacity" type="button">Refresh capacity</button></div>
+          <p id="capacity-status" role="status" aria-live="polite" data-private-setting></p>
+          <div id="capacity-rows" class="capacity-grid" data-private-setting></div>
+          <p id="capacity-note" class="muted" data-private-setting></p>
+        </section>
         <form id="owner-settings-form" class="glass settings-form">
           <label>High Quality previews per 24 hours<input name="highDaily" type="number" min="0" max="20" step="1" required></label>
           <label>Standard previews after High Quality runs out<input name="standardDaily" type="number" min="0" max="25" step="1" required></label>
@@ -244,6 +250,6 @@
       <div id="toast" class="toast hidden"></div>
     </section>
   </main>
-  <script src="/admin.js?v=rm166" type="module"></script>
+  <script src="/admin.js?v=capacity1" type="module"></script>
 </body>
 </html>
