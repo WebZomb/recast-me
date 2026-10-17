@@ -442,6 +442,30 @@ export async function verifyPaidOrder(env,job,{forProduction=false}={}){
   return order;
 }
 
+async function reconciliationJobId(env,order,line,requestId){
+  const canonical=sanitizeId(`${order.id.split('/').pop()}-${line.id.split('/').pop()}`);
+  const legacy=sanitizeId(`${order.name}-${requestId}-${line.sku}`);
+  // A malformed record is occupied, not absent. Never replace an uncertain
+  // supplier attempt with a fresh job, or silently share it across paid lines.
+  const existing=async id=>{
+    const object=await env.ARTWORK.get(jobKey(id));if(!object)return null;
+    try{return (await object.json())||{}}catch{return {}}
+  };
+  const current=await existing(canonical),old=legacy===canonical?null:await existing(legacy);
+  const identity=(job,id)=>job.id===id&&job.orderId===order.id&&job.requestId===requestId&&job.sku===line.sku;
+  if(current&&(!identity(current,canonical)||current.lineId!==line.id))return null;
+  if(!old)return canonical;
+  if(!identity(old,legacy))return null;
+  if(old.lineId&&old.lineId!==line.id)return canonical;
+  if(!old.lineId){
+    const candidates=(order.lineItems?.nodes||[]).filter(l=>l.sku===line.sku&&artworkFromLine(l)===requestId);
+    if(candidates.length!==1)return null;
+  }
+  // Two occupied keys for the same line need reconciliation, not a preference
+  // that could conceal an accepted supplier order under the other key.
+  return current?null:legacy;
+}
+
 export async function reconcileShopifyOrder(env,order,{allowAutomation=true,holdNewJobs=false}={}){
   if(order.lineItems?.pageInfo?.hasNextPage){await recordOrderIssue(env,order,null,'order_review','This order has more than 250 lines. Review the complete order in Shopify before fulfillment.');return {created:0,seen:0,issues:1};}
   let created=0,seen=0,issues=0,walletId=null;
@@ -460,8 +484,11 @@ export async function reconcileShopifyOrder(env,order,{allowAutomation=true,hold
     if(!issue&&!meta)issue=['artwork_missing','The purchased artwork record is unavailable. Recover the original saved artwork before rechecking; do not regenerate a replacement.'];
     if(issue){if(eligible){await recordOrderIssue(env,order,line,...issue);issues++;}continue;}
     walletId ||= meta.creditWalletId||null;seen++;
-    const legacy=sanitizeId(`${order.name}-${requestId}-${line.sku}`);
-    const id=await env.ARTWORK.head(jobKey(legacy))?legacy:sanitizeId(`${order.id.split('/').pop()}-${line.id.split('/').pop()}`);
+    const id=await reconciliationJobId(env,order,line,requestId);
+    if(!id){
+      await recordOrderIssue(env,order,line,'job_identity_review','Existing fulfillment records cannot be matched safely to this exact order line. Inspect the saved jobs and supplier references before recovery; do not create a replacement order.');
+      issues++;continue;
+    }
     const map=FULFILLMENT[line.sku];
     const productDesign=map.digital?null:purchasedDesign(line,map);
     const productProofHash=map.digital?null:attrFromLine(line,"_Recast Proof");
