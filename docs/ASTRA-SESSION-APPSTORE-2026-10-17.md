@@ -9,3 +9,9 @@ Validation: git diff --check passed before publication. Hosted Xcode compile req
 Risks: digital downloads/render credits in embedded live site require regional compliance resolution; final privacy/rating/contact/screenshot fields need authenticated review. Release counter starts above1000; verify highest account build and coordinate later internal numbering. Consent is intentionally once per app session and affects all embedded tabs; Guide/offline gallery remain accessible.
 
 Rollback: revert this native change or keep using prior tested internal build. Public website is unaffected. Result commit and CI receipts to be appended after publication.
+
+
+## 2026-10-17 morning receipt
+PR89 final head a18903b7a512a5d286b62a8514aadddd27080300: simulator-build and Workers Builds checks PASS. Earlier simulator run39008669429 also passed compile, icon and privacy packaging. PR89 merged into native branch only as 68bd5d7b349058b36f27fb55b6a54053640dd594. Production website main unchanged; Cloudflare automatically produced a branch preview.
+
+Opera connected and authenticated Apple page inspected. Recast Me1.0 remains Prepare for Submission; no build selected, description/keywords/support URL/review-contact fields blank. App Information subtitle and content-rights setup unfinished. Apple initially required updated developer agreement; owner reports acceptance. No new binary uploaded or submitted. Opera exposes read/navigation/screenshot but no form action/upload capability, and Desktop Commander has no native UI controls in this session. Available interactive-browser option TinyFish suggested, not connected. No credentials extracted, paid operations or private contact details committed. Final privacy, storefront digital-commerce decision, screenshots, signed build and submission remain pending.
