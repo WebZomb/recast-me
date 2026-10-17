@@ -30,10 +30,10 @@ const PRODUCT_ART = {
   "Custom Recast Tough Phone Case":"https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-tough-case-royal-lifestyle-rm145.png?v=1791819635&width=1000",
   "Custom Recast Sticker Sheet":"https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-lifestyle-sticker-sheet-rm061.png?v=1791427937&width=1000",
   "Custom Recast Poster":"https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-lifestyle-poster-rm059.png?v=1791422885&width=1000",
-  "Custom Recast Hoodie":"https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-hoodie-black-s-verified-rm055.jpg?v=1791357294&width=1000",
+  "Custom Recast Hoodie":"https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-hoodie-illustrated-20261017.png?v=1792210943&width=1000",
   "Custom Recast Framed Poster":"https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-lifestyle-frame-rm059.png?v=1791422870&width=1000",
   "Custom Recast Canvas":"https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-lifestyle-canvas-rm059.png?v=1791422862&width=1000",
-  "Custom Recast T-Shirt":"https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-lifestyle-tshirt-rm059.png?v=1791422934&width=1000",
+  "Custom Recast T-Shirt":"https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-tshirt-illustrated-20261017.png?v=1792210951&width=1000",
   "Custom Recast Blanket":"https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-lifestyle-blanket-rm059.png?v=1791422915&width=1000",
   "Custom Recast Mug":"https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-lifestyle-mug-rm059.png?v=1791422827&width=1000",
   "Custom Recast Tumbler":"https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-lifestyle-tumbler-rm059.png?v=1791422982&width=1000",
@@ -139,7 +139,7 @@ async function applyCatalogExample(card,sku,{staticCard=false}={}){
     if(caption)caption.textContent=`${row.viewType==='Room'?'Room example':'Example'} · ${row.variantLabel} · supplier mockup`;
     card.dataset.exampleSku=sku;card.dataset.exampleVerified='true';
   }else{
-    if(caption)caption.textContent=card.dataset.productTitle==='Custom Recast Hoodie'?'Printful example · size S':'Lifestyle example · preview your selected size';
+    if(caption)caption.textContent=card.dataset.productTitle==='Custom Recast Hoodie'?'Lifestyle example · preview your selected size':'Lifestyle example · preview your selected size';
     delete card.dataset.exampleVerified;
   }
 }
@@ -275,8 +275,8 @@ function resetProductPreview(card,{invalidate=true}={}){
   card.classList?.remove("real-mockup-ready","preview-room-close");
   card.querySelector?.(".mockup-views")?.remove?.();
   delete card.dataset.mockupSignature;delete card.dataset.mockupId;productReviewState.delete(card);
-  const example=card.querySelector?.(".product-art img");if(example){example.src=PRODUCT_ART[card.dataset.productTitle];example.alt=card.dataset.productTitle==="Custom Recast Hoodie"?"Printful example: black hoodie size S":"Style illustration; preview your selected size";}
-  const caption=card.querySelector?.(".example-design-label");if(caption)caption.textContent=card.dataset.productTitle==="Custom Recast Hoodie"?"Printful example · size S":"Lifestyle example · preview your selected size";
+  const example=card.querySelector?.(".product-art img");if(example){example.src=PRODUCT_ART[card.dataset.productTitle];example.alt=card.dataset.productTitle==="Custom Recast Hoodie"?"Illustrative black hoodie lifestyle example":"Style illustration; preview your selected size";}
+  const caption=card.querySelector?.(".example-design-label");if(caption)caption.textContent=card.dataset.productTitle==="Custom Recast Hoodie"?"Lifestyle example · preview your selected size":"Lifestyle example · preview your selected size";
   const error=card.querySelector?.(".mockup-error");if(error){error.hidden=true;error.textContent="";}
   const preview=card.querySelector?.(".product-preview-action");
   if(preview){preview.disabled=state.busy;preview.textContent=state.busy?"Waiting for current preview…":"Preview my product";}
@@ -309,7 +309,10 @@ function uniqueMockupViews(input=[],productTitle=""){
     if(labels.has(key))continue;labels.add(key);
     const label=casePreview?(output.length===0?"Case":`View ${output.length+1}`):isScene?(++scenes===1?"In a room":`Room view ${scenes}`):viewLabel(view.title,output.length);
     const apparel=["Custom Recast Hoodie","Custom Recast T-Shirt"].includes(productTitle);
-    const displayLabel=apparel&&isScene?(scenes===1?"On a model":`Model view ${scenes}`):label;
+    // The first supplier apparel scene overstates the visible print size.
+    // Keep the front proof and the owner's preferred second placement.
+    if(apparel&&isScene&&scenes===1)continue;
+    const displayLabel=apparel&&isScene?"Model view":label;
     output.push({...view,label:displayLabel,isScene});if(output.length===4)break;
   }
   return output;
@@ -580,7 +583,7 @@ async function loadCheckout(){
     const realPreview=digital?"":`<button class="product-preview-action" data-product="${index}" type="button">Preview on product</button><button type="button" class="recast-buy-now button primary" data-product="${index}" ${active?"":"disabled"}>Buy now</button><p class="product-mockup-note" data-buy-now-note>Skip the mockup · use recommended placement</p><p class="mockup-error" role="alert" hidden></p>`;
 
     return `<div class="${classes}" data-product-index="${index}" data-product-title="${product.title}" data-active="${active}" data-digital="${digital}">
-      <div class="product-art"><img src="${PRODUCT_ART[product.title]}" alt="Style illustration for ${product.title}; generate the selected-size preview before buying" loading="lazy"><span class="example-design-label">${preset.product==="Hoodie"?"Printful example · size S":preset.caseType==="tough"?"Lifestyle example · preview your photo wrap":"Lifestyle example · preview your selected size"}</span></div>
+      <div class="product-art"><img src="${PRODUCT_ART[product.title]}" alt="Style illustration for ${product.title}; generate the selected-size preview before buying" loading="lazy"><span class="example-design-label">${preset.product==="Hoodie"?"Lifestyle example · preview your selected size":preset.caseType==="tough"?"Lifestyle example · preview your photo wrap":"Lifestyle example · preview your selected size"}</span></div>
       <div class="product-body">
         <span class="product-badge">${meta.badge}</span>
         <strong>${product.title.replace(/^Custom Recast /,"")}</strong>

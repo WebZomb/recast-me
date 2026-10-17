@@ -52,3 +52,14 @@ test('RM0511 storefront errors do not expose deployment stage or worker IDs',()=
   const publicThrow=source.slice(source.indexOf('const customer='),source.indexOf('const mockupId='));
   assert.doesNotMatch(publicThrow,/throw new Error\(internal\)/);
 });
+
+test('apparel omits oversized first scene while preserving front and second supplier proof',()=>{
+ const source=readFileSync(new URL('../public/checkout.js',import.meta.url),'utf8');
+ const context={document:{querySelector:()=>null,querySelectorAll:()=>[],addEventListener(){}},window:{},localStorage:{getItem:()=>null},location:{origin:'https://recast.test'},URL,console,setTimeout,fetch:async()=>({ok:false,json:async()=>({})})};
+ vm.runInNewContext(source,context);
+ for(const title of ['Custom Recast Hoodie','Custom Recast T-Shirt']){
+  context.title=title;
+  const views=vm.runInNewContext(`uniqueMockupViews([{title:'Front',group:'Flat',url:'front'},{title:'Front',group:'Lifestyle',url:'oversized'},{title:'Front',group:'Lifestyle 2',url:'second'}],title)`,context);
+  assert.deepEqual(Array.from(views,v=>[v.url,v.label]),[['front','Front'],['second','Model view']]);
+ }
+});
