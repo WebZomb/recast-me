@@ -64,3 +64,38 @@ jobs:
           name: recast-store-screenshots
           path: /tmp/recast-store-shots
           retention-days: 14
+  preserve-reviewed-source-captures:
+    needs: simulator-build
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: recast-store-screenshots
+          path: /tmp/recast-store-captures
+      - name: Preserve only public app screenshots in an isolated asset branch
+        run: |
+          set -eu
+          python3 - <<'PY'
+          import json, pathlib, shutil
+          root = pathlib.Path('/tmp/recast-store-captures')
+          for device in ['iphone', 'ipad']:
+              destination = pathlib.Path('docs/app-store/screenshots') / device
+              destination.mkdir(parents=True, exist_ok=True)
+              for test in json.loads((root / device / 'manifest.json').read_text()):
+                  for entry in test['attachments']:
+                      name = entry['suggestedHumanReadableName'].split('_')[0]
+                      if name in ['store-home', 'store-specials', 'store-guide']:
+                          shutil.copyfile(root / device / entry['exportedFileName'], destination / (name + '.png'))
+              if len(list(destination.glob('*.png'))) != 3:
+                  raise SystemExit('Missing required screenshots for ' + device)
+          PY
+          git switch -c "codex/store-assets-${GITHUB_RUN_ID}"
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add docs/app-store/screenshots
+          git commit -m 'Preserve real simulator captures for App Store visual review'
+          git push origin HEAD

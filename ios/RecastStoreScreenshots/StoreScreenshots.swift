@@ -28,7 +28,9 @@ final class StoreScreenshots: XCTestCase {
         expectation(for: finished, evaluatedWith: loading)
         waitForExpectations(timeout: 60)
         XCTAssertFalse(app.staticTexts["We couldn’t open the studio"].exists)
-        capture("store-create", app: app)
+        capture("qa-create", app: app)
+        for _ in 0..<7 { app.webViews.firstMatch.swipeDown() }
+        capture("store-home", app: app)
 
         app.buttons["Specials"].firstMatch.tap()
         XCTAssertTrue(app.webViews.firstMatch.waitForExistence(timeout: 30))
