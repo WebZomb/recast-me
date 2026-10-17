@@ -364,3 +364,5 @@ RM168 LIVE — PR83 merged runtime `f628a7577529d4df74f0e35c10a7737fedb0a0cd`; 5
 October16 hoodie marketing correction — owner retains actual print size; replace misleading lifestyle imagery with verified size-S supplier example. Shopify media corrected and verified; website release pending. See [session](ASTRA-SESSION-HOODIE-2026-10-16.md).
 
 October17 apparel correction — owner wants coordinated lifestyle merchandising with accurate chest proportions, not white-background default hoodie. Two new illustrative assets/site references and Shopify images; oversized first apparel scene hidden. Second supplier models not replaced. Direct reassuring fee replies requested. See [session](ASTRA-SESSION-APPAREL-2026-10-17.md). Release pending.
+
+October17 subject-variety follow-up — owner approved apparel models/print geometry; swap only illustrated subjects to child+fictional golden retriever Dinosaur Adventure and male Rock Star after catalog audit. See apparel session record. PR86 production release and public audit passed; this follow-up release pending.
