@@ -26,5 +26,9 @@
   }
   ai.addEventListener('click',()=>switchTo(false));
   photo.addEventListener('click',()=>switchTo(true,{focus:true}));
+  document.querySelectorAll('[data-use-original]').forEach(link=>link.addEventListener('click',()=>{
+    switchTo(true,{focus:true});
+    document.querySelector('#start')?.scrollIntoView({block:'start'});
+  }));
   switchTo(false);
 })();

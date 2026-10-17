@@ -1,3 +1,4 @@
+import {photoShoppingNotice} from './photo-shopping.js?v=1';
 import {initSubjectDetection} from './subject-detection.js?v=291';
 import {ADVENTURE_GUIDES} from './adventure-guides.js?v=2';
 import {mergeHistory,privateRecastLink,readRecastLink} from './recast-history.js?v=290';
@@ -438,6 +439,12 @@ for(const [id,mode] of [['choose-standard','quick'],['choose-high','high']])docu
   updateQualityUI();applyReadiness();
 });
 function applyReadiness(){
+  const photoNotice=document.querySelector('#photo-shopping-outage');
+  if(photoNotice){
+    const message=photoShoppingNotice(readinessSnapshot);
+    photoNotice.hidden=!message;
+    photoNotice.textContent=message;
+  }
   if(currentFallback().returnToHigh&&!generationInFlight){
     const high=document.querySelector('input[name="qualityMode"][value="high"]');if(high)high.checked=true;
     updateQualityUI();

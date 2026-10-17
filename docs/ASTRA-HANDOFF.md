@@ -366,3 +366,5 @@ October16 hoodie marketing correction — owner retains actual print size; repla
 October17 apparel correction — owner wants coordinated lifestyle merchandising with accurate chest proportions, not white-background default hoodie. Two new illustrative assets/site references and Shopify images; oversized first apparel scene hidden. Second supplier models not replaced. Direct reassuring fee replies requested. See [session](ASTRA-SESSION-APPAREL-2026-10-17.md). Release pending.
 
 October17 subject-variety follow-up — owner approved apparel models/print geometry; swap only illustrated subjects to child+fictional golden retriever Dinosaur Adventure and male Rock Star after catalog audit. See apparel session record. PR86 production release and public audit passed; this follow-up release pending.
+
+October17 original-photo shopping — prominent no-AI gift path and observed engine-outage notices; multi-item basket confirmed absent, not implemented. See [session](ASTRA-SESSION-PHOTO-SHOPPING-2026-10-17.md). Release pending.
