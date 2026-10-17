@@ -351,3 +351,6 @@ RM154 — Apple bundle/app registered (6822107649); Codemagic app added and draf
 RM155 — Owner approved signing profile; created and fetched into Codemagic, matching existing certificate. Workflow integration aligned in 440da6d. First internal signed build started using free allowance; archive/upload result pending. See [RM155](ASTRA-SESSION-RM-155.md).
 
 RM156 iOS — Owner completed private TestFlight app testing and a paid physical product checkout independently. Native four-tab Orders/haptic/return bridge source on draft PR71 commit `0d4b44d`, Xcode simulator compile `38332974968` PASS, **not** signed/uploaded into a new TestFlight build. Web order history/celebration is a separate draft PR72 prerequisite. See [RM156 native session](ASTRA-SESSION-RM-156-IOS.md).
+
+
+2026-10-17 App Store preparation — distribution workflow, upfront native photo-processing consent and listing/review dossier; signing/upload/submission blocked on authenticated access and final commerce/listing checks. See [session](ASTRA-SESSION-APPSTORE-2026-10-17.md) and [submission package](APP-STORE-SUBMISSION-2026-10-17.md).

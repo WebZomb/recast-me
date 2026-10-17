@@ -19,9 +19,10 @@ private struct EmbeddedSafari: UIViewControllerRepresentable {
 }
 
 struct StudioView: View {
-    // Production service for owner testing; App Store release remains gated.
+    // Production service. App Store submission also requires listing and commerce review.
     static let origin = URL(string: "https://recastmeai.com")!
     @ObservedObject var gallery: PreviewGallery
+    @EnvironmentObject private var photoConsent: PhotoProcessingConsent
     let initialURL: URL
     @State private var loadError: String?
     @State private var isLoading = true
@@ -30,6 +31,7 @@ struct StudioView: View {
     @State private var reloadID = UUID()
     var body: some View {
         ZStack {
+          if photoConsent.accepted {
             StudioWebView(gallery: gallery, initialURL: initialURL, loadError: $loadError, isLoading: $isLoading, externalURL: $externalURL, checkout: $checkout).id(reloadID)
             if isLoading && loadError == nil {
                 ProgressView("Opening your studio…").padding().background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
@@ -43,6 +45,9 @@ struct StudioView: View {
                     Button("Try again") { self.loadError = nil; isLoading = true; reloadID = UUID() }.buttonStyle(.borderedProminent)
                 }.padding(30).frame(maxWidth: .infinity, maxHeight: .infinity).background(Color(.systemBackground))
             }
+          } else {
+            PhotoConsentView { photoConsent.accepted = true }
+          }
         }
         .sheet(item: $checkout, onDismiss: {
             NotificationCenter.default.post(name: .init("RecastCheckoutReturned"), object: nil)
