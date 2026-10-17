@@ -40,6 +40,7 @@ const policy={highDaily:3,standardDaily:5,purchaseBonus:3,websiteCalls:70,social
    else if(p==='/api/admin/trends')d.trends=[];
    else if(p==='/api/admin/generation-errors')d.errors=[];
    else if(p==='/api/admin/render-readiness')Object.assign(d,{render:{lastResult:'not tested',checkedAt:null},social:{}});
+   else if(p==='/api/admin/capacity')d={ok:true,checkedAt:'2026-10-17T12:00:00Z',resetAt:'2026-10-18T00:00:00Z',rows:[{id:'screening',label:'Photo screening',used:200,limit:200,remaining:0,source:'default',usageStatus:'recorded',scope:'Site-wide',enabled:true,configured:true,note:'Shared screening budget.'},{id:'original-network',label:'Original-photo uploads on this network',used:null,limit:10,remaining:null,source:'code',usageStatus:'not_recorded',scope:'Current request network only',note:'No AI rendering.'}],note:'Read-only snapshot.'};
    else if(p==='/api/admin/owner-settings'){
     if(request.method()==='POST'){const body=request.postDataJSON();state.settings=body.values;state.revision++;state.saved.push(body);}
     Object.assign(d,{revision:state.revision,values:state.settings,history:[],usage:{day:'2026-10-06',websiteCalls:0,highCalls:0,standardCalls:0,socialCalls:0,reservedCents:0},connections:{creditsEnabled:true,socialEnabled:false,botProtection:false},engines:{high:'dev',standard:'klein9',social:'klein4'},note:'Test fixture'});
@@ -280,6 +281,11 @@ const policy={highDaily:3,standardDaily:5,purchaseBonus:3,websiteCalls:70,social
    await tapAdminTab('traffic');
    assert.equal(await page.locator('[data-panel="traffic"]').isVisible(),true);
    await tapAdminTab('limits');assert.equal(await page.locator('[name="purchaseBonus"]').inputValue(),'3');
+   await page.locator('#capacity-rows .capacity-card').first().waitFor();
+   assert.match(await page.locator('#capacity-rows').textContent(),/0 remaining/);
+   assert.match(await page.locator('#capacity-rows').textContent(),/Unknown \/ 10/);
+   assert.equal(await page.locator('#capacity-rows input').count(),0);
+   assert.ok(await page.locator('#capacity-rows').evaluate(el=>el.scrollWidth<=el.clientWidth+1),'Capacity cards fit the phone viewport');
    await page.locator('[name="highDaily"]').fill('2');
    const saveOwner=page.locator('#owner-settings-form [type="submit"]');
    // WebKit intermittently never considers this button "stable" after a long

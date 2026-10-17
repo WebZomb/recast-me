@@ -1,4 +1,5 @@
 import {walletFor} from './render-credits.js';
+import {ownerCapacitySnapshot} from './owner-capacity.js';
 // Owner-only, versioned policy controls. No credentials or arbitrary env keys are editable.
 import {change,read,equal,fault,sameOrigin,privateJson} from './commerce-store.js';
 export const SETTINGS_KEY='system/owner-settings-v1.json';
@@ -43,9 +44,13 @@ function owner(request,env){
   if(!equal(token,env.ADMIN_TOKEN))throw fault('admin_required','Admin authorization required.',401);
 }
 export async function ownerSettingsRoute(request,env){
-  const url=new URL(request.url);if(!['/api/admin/owner-settings','/api/admin/reset-my-renders'].includes(url.pathname))return null;
+  const url=new URL(request.url);if(!['/api/admin/owner-settings','/api/admin/reset-my-renders','/api/admin/capacity'].includes(url.pathname))return null;
   try{
     owner(request,env);
+    if(url.pathname==='/api/admin/capacity'){
+      if(request.method!=='GET')return privateJson({ok:false,error:'Read-only endpoint'},405);
+      return privateJson(await ownerCapacitySnapshot(request,env));
+    }
     if(url.pathname==='/api/admin/reset-my-renders'){
       if(request.method!=='POST')return privateJson({ok:false},405);
       sameOrigin(request);
