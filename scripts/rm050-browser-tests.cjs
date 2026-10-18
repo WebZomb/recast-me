@@ -3,7 +3,7 @@ const {chromium,webkit}=require('playwright');
 const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
 const root=path.resolve('public'),out=path.resolve('rm050-browser-results');fs.mkdirSync(out,{recursive:true});
 const ready={ok:true,local:{ready:true},modes:{high:{ready:true,state:'ready'},quick:{ready:true,state:'ready'}}};
-const policy={highDaily:3,standardDaily:5,purchaseBonus:3,websiteCalls:70,socialCalls:100,budgetCents:500,paused:false};
+const policy={highDaily:3,standardDaily:5,purchaseBonus:3,websiteCalls:70,socialCalls:100,budgetCents:500,screeningDaily:200,subjectDaily:200,subjectNetwork:20,paused:false};
 (async()=>{
  const report={type:'Mocked APIs and image placeholders; not a live provider or visual-art acceptance test',checks:[],failures:[]};
  for(const [engine,width] of (process.env.RECAST_CHROMIUM_ONLY==='1'?[[chromium,320],[chromium,1440]]:[[webkit,393],[chromium,320],[chromium,1440]])){
@@ -287,6 +287,8 @@ const policy={highDaily:3,standardDaily:5,purchaseBonus:3,websiteCalls:70,social
    assert.equal(await page.locator('#capacity-rows input').count(),0);
    assert.ok(await page.locator('#capacity-rows').evaluate(el=>el.scrollWidth<=el.clientWidth+1),'Capacity cards fit the phone viewport');
    await page.locator('[name="highDaily"]').fill('2');
+   assert.equal(await page.locator('[name="screeningDaily"]').inputValue(),'200');
+   await page.locator('[name="subjectNetwork"]').fill('10');
    const saveOwner=page.locator('#owner-settings-form [type="submit"]');
    // WebKit intermittently never considers this button "stable" after a long
    // mobile scroll. Verify the pointer hit target, then send a real mouse click
@@ -303,7 +305,11 @@ const policy={highDaily:3,standardDaily:5,purchaseBonus:3,websiteCalls:70,social
    }
    await saveByPointer();
    assert.equal(state.saved.at(-1).values.highDaily,2);
+   assert.equal(state.saved.at(-1).values.subjectNetwork,10);
    page.on('dialog',d=>d.accept());await page.locator('[name="budgetCents"]').fill('6.00');await saveByPointer();
+   assert.equal(state.saved.at(-1).confirm,'INCREASE_LIMITS');
+   await page.locator('[name="screeningDaily"]').fill('300');await saveByPointer();
+   assert.equal(state.saved.at(-1).values.screeningDaily,300);
    assert.equal(state.saved.at(-1).confirm,'INCREASE_LIMITS');
    await page.screenshot({path:path.join(out,`${engine.name()}-${width}-admin.png`)});
    const adminOverflow=await page.evaluate(()=>{
