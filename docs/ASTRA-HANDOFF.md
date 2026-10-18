@@ -368,3 +368,5 @@ October17 apparel correction — owner wants coordinated lifestyle merchandising
 October17 subject-variety follow-up — owner approved apparel models/print geometry; swap only illustrated subjects to child+fictional golden retriever Dinosaur Adventure and male Rock Star after catalog audit. See apparel session record. PR86 production release and public audit passed; this follow-up release pending.
 
 October17 original-photo shopping — prominent no-AI gift path and observed engine-outage notices; multi-item basket confirmed absent, not implemented. See [session](ASTRA-SESSION-PHOTO-SHOPPING-2026-10-17.md). Release pending.
+
+October18 UTC / October17 Eastern basket foundation — isolated immutable add/quantity/remove state core with per-line approval references, revision checks and retained idempotency receipts; 21 new cases, 616 total offline tests passed. Not imported by any runtime route/UI; authentication, atomic persistence, server approval resolution, Shopify line transport and real checkout remain unfinished. No live basket, deployment or paid action. See [session and integration gates](ASTRA-SESSION-BASKET-STATE-2026-10-18.md).
