@@ -215,3 +215,64 @@ handoff. Resulting commit is recorded in PR93 and the Christmas notebook. No liv
 routes, limits, credits, discounts, photos, orders, providers, ads or spending
 changed; PR93 remains draft/not deployed. Rollback: revert just this extension;
 there is no new production data or migration. Keep all existing customer data.
+
+## October18, late morning Eastern — owner-requested cart and quick recovery
+
+Baseline PR93 ef58948aa3ec25d3e65759738abf666c3db87a74, tree
+a84ec3ca2b12f0ef26741f7c39089885374ce8b4; main remains849282875b4eba428bd5f3f6b7a05974f5c230c7.
+Both baseline hosted checks39125093367/39125093302 passed. Owner explicitly asks
+to finish the cart and provide quick fixes in the command center. Work extends
+this existing draft; no other branch, production configuration or order changed.
+
+Implemented a default-off integration: shared existing checkout preparation,
+private owner-bound immutable approval checks, active variant revalidation and
+frozen-source integrity check; per-line Shopify attributes; same-origin routes;
+separate HttpOnly basket sessions initialized only with a valid artwork capability,
+independent of render credits. The earlier wallet identity adapter remains inert.
+Same-browser basket UI adds approved physical products, quantity/remove, continue
+shopping, save reconciliation and retained pending action IDs. Digital/shared-link
+shopping keeps individual checkout. This is not account-based/cross-device recovery.
+
+Storefront cart creation uses a durable conditional claim before the remote call,
+one request maximum per attempt, exact returned line/quantity/attribute verification,
+and saved checkout reuse. Pending/ambiguous results block further checkout even
+after edits; there is deliberately no blind reset/retry. The basket is retained on
+failure/navigation. No discount code is enabled or sent. Requires BASKET_ENABLED=true
+and a privately configured SHOPIFY_STOREFRONT_TOKEN; neither is enabled/configured by
+this work. Current production credentials/publication permissions are unverified.
+
+Command-center System panel adds quick read-only checks, public navigation-response
+checks, direct links to actual order/artwork/alert/limit controls and an explicitly
+confirmed pause-new-AI action preserving caps. Owner-only saved-checkout diagnostics
+redact capabilities and expose uncertain-attempt references. Capacity detail depends
+on separate PR90; absent endpoint is shown unavailable. No guaranteed automated fix
+for provider outages, billing, uncertain remote carts or broken deployment is claimed.
+
+Tests: 9 new routed integration tests PASS; full652/652 Node suite PASS; all4local
+R2 concurrency checks PASS; bundle dry-run PASS. First integration run exposed that
+the security boundary stripped the new session cookie; fixed with route-specific
+cookie preservation while retaining JSON redaction. Next run exposed fixture parsing
+OAuth form bodies as JSON; corrected fixture, reran all tests. Storefront2026-10
+cartCreate schema validation PASS through installed Shopify validator. Connector's
+earlier validation call explicitly skipped validation and is not evidence.
+
+Added hosted 320/393/1280 browser checks for lost-response add recovery, quantity,
+remove, checkout failure persistence and width fit. Local execution could not launch
+because Chromium runtime is absent; no local browser/visual pass claimed. New hosted
+results and exact uploaded commit belong in PR93 receipts.
+
+Release blockers: actual Storefront token/channel/product access, real unpaid cart
+handoff/line propagation and paid fulfillment acceptance; PR92 reconciliation review;
+hosted browser checks; session loss and expired checkout support; bounded receipt
+renewal after128actions; actual mobile acceptance; private capacity and delivered
+alerts. Feature must remain disabled until these pass. Customer prices are confirmed
+by Shopify; current basket UI does not quote totals. Unknown carts have read-only
+diagnostics, not an implemented remote reconciliation/reset tool. No live provider,
+cart, production order, payment, alert, discount, spending or cap mutation performed.
+
+Rollback: keep flag off; revert integration files and shared-preparation extraction
+as one unit. Preserve immutable approvals, all orders and any future attempt locks.
+Changed files: entry/router/preview-security; basket-routes/session/checkout/admin;
+public basket/checkout/admin/admin-recovery; integration/browser tests and policy CI;
+this handoff and cumulative index. Reviewed source record confirms prior TestFlight
+Build10 exists; earlier chat statement implying no mobile build was corrected.

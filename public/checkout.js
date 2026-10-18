@@ -1,6 +1,8 @@
 try{const seasonalGift=new URLSearchParams(location.search).get('gift');if(/^RECAST-[A-Z0-9-]{1,60}$/.test(seasonalGift||''))sessionStorage.setItem('recast_preferred_gift',seasonalGift);}catch{}
 const grid = document.querySelector("#product-grid");
 const requestLabel = document.querySelector("#request-id");
+let basketClient=null;
+import('/basket.js?v=1').then(async module=>{await module.initialize();basketClient=module;}).catch(()=>{});
 
 // Keep checkout standalone for share pages and isolated purchase-policy tests.
 function rememberCheckoutStarted(req) {
@@ -382,6 +384,10 @@ function openFinalReview({req,sku,card,button}){
   modal.querySelectorAll("[data-final-close],[data-final-edit]").forEach(el=>el.addEventListener("click",()=>{closeFinalReview();card.scrollIntoView({behavior:"smooth",block:"center"});}));
   modal.querySelector("[data-final-image]")?.addEventListener("click",()=>{closeFinalReview();if(req.shareId){location.href="/#start";return;}document.querySelector("#recent-versions-shell")?.scrollIntoView({behavior:"smooth",block:"start"});});
   modal.querySelector("[data-final-confirm]").addEventListener("click",()=>confirmCheckout({req,sku,card,button,modal}));
+  basketClient?.addReviewAction(modal,req,()=>{
+    if(!activeArtworkMatches(req)||card.dataset.mockupSignature!==state.signature||card.dataset.mockupId!==state.mockupId)throw Error('Your product changed. Review it again before adding it.');
+    return {requestId:req.requestId,accessToken:req.accessToken,sku,mockupId:state.mockupId,design:state.design,confirmDesign:true};
+  },closeFinalReview);
   modal.querySelector("[data-final-confirm]").focus();
 }
 
@@ -401,6 +407,10 @@ function openRecommendedReview({req,sku,card,button}){
  const close=()=>{closeFinalReview();button.focus();};modal.querySelectorAll('[data-final-close]').forEach(el=>el.addEventListener('click',close));
  modal.querySelector('[data-fast-preview]').addEventListener('click',()=>{close();card.querySelector('.product-preview-action')?.click();});
  const confirm=modal.querySelector('[data-fast-confirm]'),error=modal.querySelector('.final-review-error');
+ basketClient?.addReviewAction(modal,req,()=>{
+  if(!activeArtworkMatches(req)||signature!==designSignature(card,card.querySelector('.recast-variant')?.value))throw Error('Your product changed. Review it again before adding it.');
+  return {requestId:req.requestId,accessToken:req.accessToken,sku,design,confirmDesign:true,confirmArtwork:true,skipMockup:true};
+ },closeFinalReview);
  confirm.addEventListener('click',async()=>{
   if(!activeArtworkMatches(req)||signature!==designSignature(card,card.querySelector('.recast-variant')?.value)){error.textContent='Your artwork or product changed. Close this review and check the new selection.';error.hidden=false;return;}
   confirm.disabled=true;confirm.textContent='Preparing secure checkout…';error.hidden=true;
