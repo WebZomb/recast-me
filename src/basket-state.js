@@ -39,7 +39,7 @@ export function createBasket({ basketId, ownerId }) {
   return { schemaVersion: 1, basketId, ownerId, revision: 0, lines: [], actions: [] };
 }
 
-function checkState(state) {
+export function validateBasketState(state) {
   exact(state, ['schemaVersion', 'basketId', 'ownerId', 'revision', 'lines', 'actions'], 'invalid_state');
   if (state.schemaVersion !== 1) fail('invalid_state');
   id(state.basketId); id(state.ownerId); revision(state.revision);
@@ -70,7 +70,7 @@ function checkState(state) {
  * Duplicate responses return CURRENT state, never resurrecting a removed line.
  */
 export function applyBasketCommand(state, command, context) {
-  checkState(state);
+  validateBasketState(state);
   if (!plain(context) || context.ownerId !== state.ownerId) fail('owner_mismatch');
   if (!plain(command)) fail('invalid_command');
   const fields = ['type', 'actionId', 'expectedRevision', 'lineId'];

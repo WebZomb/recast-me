@@ -90,3 +90,64 @@ production submissions or spending changed. No checkout availability claim.
 Rollback: remove/revert this unreferenced module, tests and documentation entry.
 There is no migration or live basket data to delete. Preserve all existing saved
 artwork, immutable approvals, order records and supplier locks.
+
+## October 18, 03:50 Eastern — conditional persistence follow-up
+
+Prior head `f92eec3bd092d23d62eef9b696301aa5a2d44067` passed hosted security
+39094989026 and customer-policy39094989006. Main remains at the original baseline;
+PR93 remains draft. This follow-up extends that same review, not a new release.
+
+Added `src/basket-storage.js`: private-binding-only persistence adapter with
+owner/basket-scoped SHA-256 keys, state and action receipt in one JSON object,
+conditional create (`If-None-Match:*`) and read-ETag conditional update. Each call
+makes at most one PUT; a conflict or uncertain result triggers one readback, never
+a blind retry. A matching receipt confirms the already-applied operation and
+returns current state. If a timed-out operation has no confirmed receipt, return
+`basket_commit_unknown`, even after a negative read: the original write might
+still complete. Retry must preserve the same action ID, payload and revision.
+There is no delete operation or deletion of replay receipts.
+
+Exported the existing basket-state validator for stored-state reads. Reject bad
+JSON, unsupported shape, oversized data, missing ETag and mismatched owner/basket
+identity without overwriting. Snapshot inputs before awaiting storage. Hashing
+keys avoids embedding raw identifiers in paths; it is not authorization or a
+replacement for private bucket access. Metadata is private/no-store. The
+authentication and approval-resolution contracts are STILL unimplemented.
+
+Authoritative storage semantics checked October18:
+[Cloudflare R2 Workers API](https://developers.cloudflare.com/r2/api/workers/workers-api-reference/)
+specifies conditional PUT rejection as null and supports ETag/Headers conditions.
+[R2 consistency](https://developers.cloudflare.com/r2/reference/consistency/)
+documents atomic conditional writes and the important negative-read/in-flight-write
+caveat. Implementation uses the private binding, not a cached public bucket URL.
+
+Validation executed:
+
+- 16 new persistence tests plus21state tests: **37/37** passed. Includes forced
+  simultaneous readers, create/update collisions, same-action replay, changed
+  payload conflict, committed-but-lost response, negative read before late commit,
+  read failure, invalid record, scope isolation and caller mutation during await.
+- Full repository: **632/632** Node tests passed, zero failures/skips/cancellations.
+- `scripts/basket-r2-smoke.mjs` tested **four cases against local Miniflare R2**:
+  distinct concurrent creates, identical concurrent creates, ETag quantity-update
+  race and committed-write/lost-response recovery. All passed, exit0. No remote
+  bucket or credentials, no production request. The first invocation failed before
+  emulation because installed Miniflare5 rejects v4 constructor options; corrected
+  using its exported `convertV4MiniflareOptions` adapter, retaining v4 compatibility.
+  Local installed version was5.20260921.1-alpha; hosted locked dependency results
+  must be checked separately. `cf:false` disables automatic remote CF metadata.
+- Added the local R2 smoke to existing read-only security CI and its path trigger.
+  Node syntax/diff checks passed. Follow-up bundle/hosted results go in PR receipts.
+
+These tests verify offline persistence semantics, NOT authenticated public basket
+access, remote R2 acceptance, supplier/payment behavior or a mobile shopping UI.
+No UI changed; original navigation/print geometry stay intact. Next: resolve and
+revalidate exact per-line immutable approval records under authenticated identity,
+then checkout-attempt locks/transport and customer controls. Preserve digital
+product and receipt-renewal gates. Production basket remains absent.
+
+Additional changed files: `src/basket-storage.js`, `tests/basket-storage.test.mjs`,
+`scripts/basket-r2-smoke.mjs`, `.github/workflows/recast-security.yml`, plus small
+validator export, this record and handoff. No live writes, renders, orders,
+discounts, limits or spending. Rollback this follow-up only; no production data
+exists for it to migrate/delete. Resulting commit and final CI are recorded in PR93.
