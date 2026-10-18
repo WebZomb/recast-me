@@ -151,3 +151,67 @@ Additional changed files: `src/basket-storage.js`, `tests/basket-storage.test.mj
 validator export, this record and handoff. No live writes, renders, orders,
 discounts, limits or spending. Rollback this follow-up only; no production data
 exists for it to migrate/delete. Resulting commit and final CI are recorded in PR93.
+
+## October 18, 07:55 Eastern — browser identity boundary
+
+Baseline for this extension is PR93 head `c8af7719c276096e7930b4bbab68a72e1bb0f200`
+(tree `b43a880bafc02a81b25a9386d467d19c3a205989`). Main remains
+`849282875b4eba428bd5f3f6b7a05974f5c230c7`. Both baseline hosted gates are now
+verified successful: security39109230504 and customer-policy39109230479.
+Customer job117621557377 includes successful customer/owner browser, mobile Model
+Lab and seasonal checks. These are fixture gates, not live checkout acceptance.
+
+Added an unreferenced `src/basket-identity.js` adapter. It resolves the existing
+HttpOnly wallet cookie through `walletFor`, derives owner ID server-side, requires
+the established same-origin/custom-header guard for reads and writes, rejects
+ambiguous duplicate cookies, missing/revoked sessions and corrupt storage, and
+returns only an immutable server context. It never creates a wallet, writes R2,
+uses a network hash as ownership, or accepts a caller-supplied owner ID. Errors
+do not expose storage details. This identifies a browser session, NOT a verified
+person/account, ownership of an image, or a cross-device recovery identity.
+
+11 new identity tests passed, including cookie separation through the real basket
+storage adapter, revocation, malformed records, cross-origin requests and no-write
+failure paths. Full Node suite **643/643 PASS**, no skipped/failed tests. All four
+local Miniflare R2 smoke cases passed again. Bundle-only dry-run exit0; diff check
+passed. Initial test file did not parse because a fixture await was inside a
+non-async callback; moved fixture creation before the callback and reran all tests.
+No UI changed or new visual acceptance claimed. New-head hosted results must be
+checked separately from the successful baseline.
+
+### Approval and checkout source audit — next bounded implementation
+
+- `entry.js:validateRecast` verifies private artwork capability independently of
+  wallet identity. Never treat the basket cookie or a preapproval token alone as
+  permission to read/add arbitrary artwork. Reuse the existing access path, which
+  also supports shared artwork; do not invent an account-only restriction.
+- `checkoutLink` performs stored-artwork screening, active catalog SKU lookup,
+  normalized design/proof matching and frozen preview/source creation. Extract a
+  shared server approval service without bypassing any of those gates. Do not
+  blindly call this checkout endpoint for cart add: it also creates checkout data.
+- Existing preapproval schema contains request/SKU/proof/mockup/preview/source and
+  design, but no wallet ID or variant ID. Resolve current active SKU/variant mapping
+  server-side and compare with the basket's stored variant at checkout. A variant
+  change needs explicit re-review; never silently switch the purchased item.
+- Retain every required per-line attribute: Artwork ID, `_Recast Design`,
+  `_Recast Proof`, `_Recast Mockup`, `_Recast Preview Token`, `_Recast Preapproval`.
+  Build from the checked private record; include an opaque basket-line identity to
+  preserve separate same-variant designs. Validate compatibility with
+  `workflow.js:validatedPreapproval` and paid-order verification.
+- Session initialization/recovery, artwork authorization, token-safe customer
+  projection, route wiring, checkout-attempt locks and immutable checkout snapshots
+  are still absent. Existing credits-disabled/original-photo paths must not become
+  dependent on purchasing render credits. No new cookie is issued in this patch.
+- Proposed transport only: Shopify Storefront Cart API supports individual line
+  attributes and returns a checkout URL. Official docs checked October18:
+  https://shopify.dev/docs/api/storefront/latest/input-objects/CartLineInput and
+  https://shopify.dev/docs/api/storefront/latest/mutations/cartCreate . Store access,
+  selected API version, propagation to paid-order custom attributes, error/warning
+  handling and unknown-result recovery are NOT verified here. No GraphQL code,
+  remote cart or order was generated/executed. Do not assume remote idempotency.
+
+Files changed in this extension: new identity module/test plus this session and
+handoff. Resulting commit is recorded in PR93 and the Christmas notebook. No live
+routes, limits, credits, discounts, photos, orders, providers, ads or spending
+changed; PR93 remains draft/not deployed. Rollback: revert just this extension;
+there is no new production data or migration. Keep all existing customer data.
