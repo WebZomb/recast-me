@@ -7,7 +7,7 @@ import {guardedEnvironment,guardedSocialEnvironment} from '../src/render-control
 import {secureApplication} from '../src/preview-security.js';
 const envFor=()=>({ARTWORK:new Bucket(),ADMIN_TOKEN:'test-owner-key',AI_DAILY_BUDGET_CENTS:'500',AI_CALL_RESERVE_CENTS:'7'});
 const request=(method='GET',body=null,headers={})=>new Request('https://recast.test/api/admin/owner-settings',{method,headers:{authorization:'Bearer test-owner-key','x-recast-request':'1',...headers},...(body?{body:JSON.stringify(body)}:{})});
-const values={highDaily:3,standardDaily:5,purchaseBonus:3,websiteCalls:70,socialCalls:100,budgetCents:500,paused:false};
+const values={highDaily:3,standardDaily:5,purchaseBonus:3,websiteCalls:70,socialCalls:100,budgetCents:500,screeningDaily:200,subjectDaily:200,subjectNetwork:20,paused:false};
 async function wallet(env){const response=await creditRoute(new Request('https://recast.test/api/render-credits',{method:'POST',headers:{'x-recast-request':'1','cf-connecting-ip':'192.0.2.15'}}),env);const cookie=response.headers.get('set-cookie').split(';')[0];return {cookie,wallet:await walletFor(new Request('https://recast.test/',{headers:{cookie}}),env)};}
 test('owner settings are authenticated and private, including direct route calls',async()=>{
  const env=envFor();assert.equal((await ownerSettingsRoute(request('GET',null,{authorization:'Bearer wrong'}),env)).status,401);
@@ -113,4 +113,26 @@ test('owner reset restores only same-browser network allowance and refuses in-fl
  assert.equal((await reset()).status,200);
  assert.equal((await creditBalance(env,a.wallet)).remaining,3);
  assert.equal((await settingsSnapshot(env)).revision,0);
+});
+
+test('legacy settings inherit configured screening caps and old clients preserve new values',async()=>{
+ const env={...envFor(),CONTENT_SCREENING_DAILY_LIMIT:'350',SUBJECT_DETECTION_NETWORK_LIMIT:'12'};
+ const legacy={...values};delete legacy.screeningDaily;delete legacy.subjectDaily;delete legacy.subjectNetwork;
+ await env.ARTWORK.put(SETTINGS_KEY,JSON.stringify({revision:1,values:legacy,history:[]}));
+ assert.equal((await settingsSnapshot(env)).values.screeningDaily,350);
+ assert.equal((await withOwnerSettings(env)).SUBJECT_DETECTION_NETWORK_LIMIT,'12');
+ const saved=await ownerSettingsRoute(request('POST',{revision:1,values:{...legacy,paused:true}}),env);
+ assert.equal(saved.status,200);assert.equal((await saved.json()).values.screeningDaily,350);
+});
+test('screening increases require confirmation, cannot disable safety, and retain counters',async()=>{
+ const env=envFor(),day=new Date().toISOString().slice(0,10),key=`security/free-screening-budget/${day}.json`;
+ await env.ARTWORK.put(key,JSON.stringify({count:199}));
+ for(const field of ['screeningDaily','subjectDaily','subjectNetwork']){
+  assert.equal((await ownerSettingsRoute(request('POST',{revision:0,values:{...values,[field]:values[field]+1}}),env)).status,409);
+ }
+ for(const n of [0,-1,1001,1.2,null])assert.equal((await ownerSettingsRoute(request('POST',{revision:0,values:{...values,screeningDaily:n},confirm:'INCREASE_LIMITS'}),env)).status,400);
+ const result=await ownerSettingsRoute(request('POST',{revision:0,values:{...values,screeningDaily:300,subjectNetwork:10},confirm:'INCREASE_LIMITS'}),env);
+ assert.equal(result.status,200);assert.equal((await withOwnerSettings(env)).CONTENT_SCREENING_DAILY_LIMIT,'300');
+ assert.equal((await read(env,key)).count,199);
+ assert.equal((await ownerSettingsRoute(request('POST',{revision:0,values}),env)).status,409);
 });

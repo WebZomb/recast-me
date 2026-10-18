@@ -370,3 +370,7 @@ October17 subject-variety follow-up — owner approved apparel models/print geom
 October17 original-photo shopping — prominent no-AI gift path and observed engine-outage notices; multi-item basket confirmed absent, not implemented. See [session](ASTRA-SESSION-PHOTO-SHOPPING-2026-10-17.md). Release pending.
 
 October17 capacity visibility — read-only authenticated screening/subject/original-upload inventory and responsive owner panel implemented on isolated branch. 601 Node tests and Worker dry-run pass; local browser install blocked by invalid archives, hosted visual checks pending. Not deployed; no caps or production operations changed. See [capacity session](ASTRA-SESSION-CAPACITY-2026-10-17.md).
+
+### October 18: owner capacity quick fixes (PR90 follow-up)
+
+Expanded owner command-center limits with authenticated/revisioned screening and subject-check controls; increases require explicit confirmation, legacy values migrate without counter resets, screening cannot be disabled, original-photo network limit stays 10. Parent PR90 975c9e0, production baseline 8492828 unchanged. 603 local Node tests and diff check pass; new-head hosted validation/deployment not yet established. No live limits, paid requests or orders changed. Details and release/rollback boundaries: [capacity session](ASTRA-SESSION-CAPACITY-2026-10-17.md). Coordinate with gated cart/recovery PR93; merge is not deployment and defaults are not verified live values.

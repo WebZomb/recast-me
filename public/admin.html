@@ -169,9 +169,12 @@
           <label>Bonus High Quality previews per new paid order<input name="purchaseBonus" type="number" min="0" max="20" step="1" required></label>
           <label>Website AI calls per UTC day<input name="websiteCalls" type="number" min="0" max="10000" step="1" required></label>
           <label>X AI calls per UTC day<input name="socialCalls" type="number" min="0" max="10000" step="1" required></label>
+          <label>Safety screenings per UTC day<input name="screeningDaily" type="number" min="1" max="1000" step="1" required></label>
+          <label>Subject checks per UTC day<input name="subjectDaily" type="number" min="0" max="1000" step="1" required></label>
+          <label>Subject checks per network / UTC day<input name="subjectNetwork" type="number" min="0" max="1000" step="1" required></label>
           <label>Shared AI reservation budget ($ / UTC day)<input name="budgetCents" type="number" min="0" max="1000" step="0.01" required></label>
           <label class="pause-setting"><input name="paused" type="checkbox"> Pause new image creation. Saved artwork and checkout stay available.</label>
-          <p>Raising spending or call limits asks for confirmation. A zero limit blocks new calls in that pool. This does not enable X, change print automation, or reset usage already counted.</p>
+          <p>Raising spending or check limits asks for confirmation. Safety screening stays on and has a minimum of one check. Zero blocks new calls in other pools. Original-photo uploads remain limited to 10 per network per UTC day. Saving does not reset counted usage or change print automation.</p>
           <button type="submit">Save settings</button><p id="owner-settings-save-status" role="status" data-private-setting></p>
         </form>
         <details class="glass settings-details"><summary>Engine configuration &amp; policy details</summary><pre id="owner-engines" data-private-setting></pre><p id="owner-settings-note" data-private-setting></p></details>
