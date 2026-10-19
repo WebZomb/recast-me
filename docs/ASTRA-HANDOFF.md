@@ -368,3 +368,5 @@ October17 apparel correction — owner wants coordinated lifestyle merchandising
 October17 subject-variety follow-up — owner approved apparel models/print geometry; swap only illustrated subjects to child+fictional golden retriever Dinosaur Adventure and male Rock Star after catalog audit. See apparel session record. PR86 production release and public audit passed; this follow-up release pending.
 
 October17 original-photo shopping — prominent no-AI gift path and observed engine-outage notices; multi-item basket confirmed absent, not implemented. See [session](ASTRA-SESSION-PHOTO-SHOPPING-2026-10-17.md). Release pending.
+
+October19 owner clarification — redundant permanent own-photo card becomes outage/capacity-only; normal chooser preserved. See [session](ASTRA-SESSION-OUTAGE-ONLY-2026-10-19.md). Focused checks pass; release pending.
