@@ -151,3 +151,34 @@ test('routed basket order with unbound legacy supplier state holds both lines wi
  assert.ok(issues.every(issue=>issue.code==='job_identity_review'&&issue.status==='open'));
  assert.equal(f.calls.length,before);
 });
+
+test('edit-limit rejection preserves saved items, replay receipts and checkout without extending capacity',async t=>{
+ const f=await fixture(t);await f.add();
+ for(let i=1;i<128;i++){
+  const result=await f.call('/api/basket/action',{basketId:'basket',command:{type:'quantity',actionId:'q-'+i,expectedRevision:i,lineId:'one',quantity:2}});
+  assert.equal(result.response.status,200);
+ }
+ const before=(await f.call('/api/basket?id=basket')).data.basket;
+ assert.equal(before.canEdit,false);assert.equal(before.revision,128);assert.equal(before.lines[0].quantity,2);
+ const rejected=await f.call('/api/basket/action',{basketId:'basket',command:{type:'remove',actionId:'overflow',expectedRevision:128,lineId:'one'}});
+ assert.equal(rejected.response.status,409);assert.equal(rejected.data.code,'action_limit');
+ assert.match(rejected.data.error,/check out as shown/);
+ assert.deepEqual((await f.call('/api/basket?id=basket')).data.basket,before);
+ const replay=await f.call('/api/basket/action',{basketId:'basket',command:{type:'quantity',actionId:'q-127',expectedRevision:127,lineId:'one',quantity:2}});
+ assert.equal(replay.data.replayed,true);assert.deepEqual(replay.data.basket,before);
+ const checkout=await f.call('/api/basket/checkout',{basketId:'basket',revision:128});
+ assert.equal(checkout.response.status,200,JSON.stringify(checkout.data));
+ const cart=f.calls.find(c=>c.body.query?.includes('mutation RecastBasket(')).body.variables.input;
+ assert.equal(cart.lines.length,1);assert.equal(cart.lines[0].quantity,2);
+});
+test('line-limit rejection preserves twenty approved items and permits removal',async t=>{
+ const f=await fixture(t);
+ for(let i=0;i<20;i++)assert.equal((await f.add('line-'+i,i)).response.status,200);
+ const before=(await f.call('/api/basket?id=basket')).data.basket;
+ assert.equal(before.canEdit,true);
+ const rejected=await f.add('overflow',20);
+ assert.equal(rejected.data.code,'line_limit');assert.match(rejected.data.error,/Remove an item/);
+ assert.deepEqual((await f.call('/api/basket?id=basket')).data.basket,before);
+ const remove=await f.call('/api/basket/action',{basketId:'basket',command:{type:'remove',lineId:'line-0',actionId:'remove-one',expectedRevision:20}});
+ assert.equal(remove.response.status,200);assert.equal(remove.data.basket.lines.length,19);
+});

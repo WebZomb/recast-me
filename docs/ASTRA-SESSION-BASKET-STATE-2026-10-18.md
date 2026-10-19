@@ -502,3 +502,52 @@ Rollback only this six-file integration delta; preserve all private approvals,
 checkout histories, jobs, supplier IDs and uncertain locks. Do not delete or
 resubmit records to clear a review issue.
 
+## 2026-10-19 afternoon Eastern — definitive limit rejection recovery
+
+Exact baseline PR93 head8613fd9dddd873fea63af7af6ec15472e07d9e96,
+tree49da9ad8659f3b0ae3e31c8e68feba038b695af3. Current main849282875b4e.
+Prior-head Workers Build118154505672 is success. PR93 still reports
+mergeable:false/dirty; do not assume the earlier ancestry comparison proves
+mergeability. Resulting commit is recorded in both operational Pages after
+branch readback. No separate duplicate PR or speculative rebase.
+
+Found a customer-facing dead end: a definitively rejected action_limit or
+line_limit stayed in browser pending storage and disabled checkout. Changed
+public/basket.js to clear only those definitive rejections and refresh saved
+state; uncertain writes remain retained. src/basket-routes.js now projects
+canEdit and returns calm, actionable limit messages. At receipt exhaustion,
+quantity/removal controls are disabled with persistent guidance, new approval
+creation is prevented in the UI, and checkout of saved valid lines remains
+available. Existing responsive dialog and 44px touch targets are preserved.
+This is NOT receipt compaction, basket/session renewal, a larger capacity
+limit, or a workaround that discards idempotency history.
+
+Two new tests in tests/basket-integration.test.mjs validate all128 receipts
+survive a rejected edit, prior-action replay still succeeds, checkout keeps
+the saved quantity, and a full20-line basket still permits removal. Fourteen
+focused routed tests PASS; full727/727 Node tests PASS (0 failed/skipped).
+Wrangler deploy --dry-run PASS and JavaScript syntax checks PASS. No code-test
+failure. Initial diff check found a pre-existing blank EOF line in the prior
+handoff; removed while appending this session, with final check recorded.
+
+scripts/basket-browser-tests.cjs adds intercepted-only limit rejection checks
+at320/393/1280px: pending cleared, saved quantities preserved, checkout
+enabled, exhausted-edit controls disabled, warning visible and no horizontal
+overflow. These browser assertions have NOT run locally. Initial local CLI
+path was absent; module subpath resolution was not exported. Located the
+installed runtime CLI, but its Chromium download retries all failed with
+truncated/invalid ZIP files (exit1). No new screenshot or visual pass claimed.
+Hosted final-head checks must execute these assertions before release.
+
+Changed four code/test files plus this session and cumulative handoff.
+Remaining gates: safe128-action/session renewal, expired/completed remote
+checkout reconciliation, authenticated Storefront/private configuration,
+hosted final-head security/mobile evidence, actual unpaid checkout and
+payment-to-fulfillment acceptance, and mergeability resolution. Cart remains
+default-off, unmerged and undeployed. No production order, paid render,
+supplier submission, spending/cap increase, discount, ad or alert action.
+
+Rollback only this six-file limit-recovery delta. Preserve every approval,
+action receipt, checkout history, supplier identity and uncertain lock; never
+clear storage or resubmit orders as a shortcut to recovery.
+

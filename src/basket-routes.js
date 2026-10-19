@@ -5,6 +5,7 @@ import {checkStoredArtwork} from './content-safety.js';
 import {basketSessionIdentity,initializeBasketSession} from './basket-session.js';
 import {readStoredBasket,mutateStoredBasket} from './basket-storage.js';
 import {basketConfigured,beginBasketCheckout} from './basket-checkout.js';
+import {BASKET_LIMITS} from './basket-state.js';
 const validToken=token=>typeof token==='string'&&/^[a-f0-9]{48}$/.test(token);
 const bindingKey=async(identity,token)=>'commerce/basket-approvals/v1/'+await hash(JSON.stringify([identity.ownerId,token]))+'.json';
 async function read(env,key){const object=await env.ARTWORK.get(key);return object?await object.json():null;}
@@ -24,7 +25,7 @@ export async function resolveBasketApproval(env,identity,token,catalog){
  return {...bound,row};
 }
 export function basketProjection(state){
- return {basketId:state.basketId,revision:state.revision,appliedActions:state.actions.map(a=>a.actionId),lines:state.lines.map(line=>({lineId:line.lineId,quantity:line.quantity,
+ return {basketId:state.basketId,revision:state.revision,canEdit:state.actions.length<BASKET_LIMITS.actions,appliedActions:state.actions.map(a=>a.actionId),lines:state.lines.map(line=>({lineId:line.lineId,quantity:line.quantity,
   artworkId:line.approval.artworkId,sku:line.approval.sku,product:FULFILLMENT[line.approval.sku]?.product||'Product'}))};
 }
 async function bodyOf(request){
@@ -76,7 +77,7 @@ export async function basketRoutes(request,env,ctx){
   }
   return privateJson({ok:false,error:'Not found'},404);
  }catch(error){
-  const messages={revision_conflict:'Your basket changed in another tab. Refresh it before trying again.',basket_commit_unknown:'Your items may already be saved. Refresh the basket before trying again.',action_conflict:'This action changed. Refresh your basket.',basket_storage_conflict:'Your basket changed in another tab. Refresh it.'};
+  const messages={revision_conflict:'Your basket changed in another tab. Refresh it before trying again.',basket_commit_unknown:'Your items may already be saved. Refresh the basket before trying again.',action_conflict:'This action changed. Refresh your basket.',basket_storage_conflict:'Your basket changed in another tab. Refresh it.',action_limit:'Your basket has reached its edit limit. Your items are saved. You can check out as shown or contact support to change them.',line_limit:'Your basket is full. Remove an item before adding another, or check out with the items already saved.'};
   return privateJson({ok:false,error:messages[error.code]||(error.status?error.message:'Your basket is temporarily unavailable. Your saved artwork is unchanged.'),code:error.code||'basket_unavailable'},error.status||409);
  }
 }
