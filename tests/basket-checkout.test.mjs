@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {beginBasketCheckout,basketShop} from '../src/basket-checkout.js';
+import {beginBasketCheckout,basketShop,checkoutAttemptKey} from '../src/basket-checkout.js';
 
 test('shop configuration accepts the production short name and exact Shopify domain',()=>{
  for(const shop of ['b2wnfu-7g','b2wnfu-7g.myshopify.com','https://b2wnfu-7g.myshopify.com/'])
@@ -89,4 +89,75 @@ test('valid snapshot is unchanged by caller edits during storage read',async()=>
  f.env.ARTWORK.get=async()=>{input[0].quantity=9;return get();};
  assert.equal((await f.run(input)).reused,true);
  assert.equal(f.calls.writes,0);assert.equal(f.calls.remote,0);
+});
+
+async function historyFixture(){
+ const key=await checkoutAttemptKey(identity),prior=ready();prior.revision=1;
+ const objects=new Map([[key,{body:JSON.stringify(prior),etag:'prior'}]]),events=[];
+ let serial=0,remote=0;
+ const control={archiveFailure:false,loseArchiveResponse:false};
+ const bucket={
+  async get(k){const o=objects.get(k);return o?{etag:o.etag,json:async()=>JSON.parse(o.body)}:null;},
+  async put(k,body,options){
+   const history=k.includes('/basket-checkout-history/');
+   events.push(history?'archive':'current');
+   if(history&&control.archiveFailure)throw Error('unavailable');
+   const old=objects.get(k),condition=options.onlyIf;
+   if(condition instanceof Headers){assert.equal(condition.get('If-None-Match'),'*');if(old)return null;}
+   else if(old?.etag!==condition.etagMatches)return null;
+   assert.equal(options.httpMetadata.cacheControl,'private, no-store');
+   const o={body,etag:'version-'+(++serial)};objects.set(k,o);
+   if(history&&control.loseArchiveResponse){control.loseArchiveResponse=false;throw Error('lost acknowledgement');}
+   return {etag:o.etag};
+  }
+ };
+ const env={BASKET_ENABLED:'true',SHOPIFY_SHOP:'fixture',SHOPIFY_STOREFRONT_TOKEN:'fixture-only',ARTWORK:bucket};
+ const run=()=>beginBasketCheckout(env,identity,state,lines,{fetcher:async()=>{
+  remote++;events.push('remote');
+  return Response.json({data:{cartCreate:{cart:{id:'gid://shopify/Cart/new?key=private-new',checkoutUrl:'https://fixture.myshopify.com/checkouts/new',lines:{nodes:lines.map(l=>({quantity:l.quantity,attributes:l.attributes,merchandise:{id:l.merchandiseId}}))}},userErrors:[],warnings:[]}}});
+ }});
+ const historyKey=key.replace('/basket-checkouts/','/basket-checkout-history/').replace(/\.json$/,'/1.json');
+ return {key,historyKey,prior,objects,events,control,bucket,run,get remote(){return remote;}};
+}
+test('changed revision archives the full prior checkout before claiming or contacting Shopify',async()=>{
+ const f=await historyFixture();assert.equal((await f.run()).reused,false);
+ assert.deepEqual(JSON.parse(f.objects.get(f.historyKey).body),f.prior);
+ assert.deepEqual(f.events,['archive','current','remote','current']);
+ assert.equal(JSON.parse(f.objects.get(f.key).body).revision,2);
+});
+test('archive outage leaves current checkout untouched with no remote create',async()=>{
+ const f=await historyFixture();f.control.archiveFailure=true;
+ await assert.rejects(f.run(),e=>e.code==='basket_checkout_unknown');
+ assert.deepEqual(JSON.parse(f.objects.get(f.key).body),f.prior);
+ assert.equal(f.remote,0);assert.deepEqual(f.events,['archive']);
+});
+test('lost archive acknowledgement stops safely; explicit retry confirms immutable history',async()=>{
+ const f=await historyFixture();f.control.loseArchiveResponse=true;
+ await assert.rejects(f.run(),e=>e.code==='basket_checkout_unknown');
+ assert.equal(f.remote,0);assert.equal(f.objects.get(f.key).etag,'prior');
+ const archived=f.objects.get(f.historyKey);
+ assert.equal((await f.run()).reused,false);assert.equal(f.remote,1);
+ assert.deepEqual(f.objects.get(f.historyKey),archived);
+});
+for(const [name,body] of [['conflicting',JSON.stringify({...ready(),cartId:'gid://shopify/Cart/other?key=other'})],['corrupt','not json']]){
+ test(name+' history cannot be overwritten or followed by another checkout',async()=>{
+  const f=await historyFixture();const archived={body,etag:'existing'};f.objects.set(f.historyKey,archived);
+  await assert.rejects(f.run(),e=>e.code==='basket_checkout_unknown');
+  assert.deepEqual(f.objects.get(f.historyKey),archived);assert.equal(f.objects.get(f.key).etag,'prior');assert.equal(f.remote,0);
+ });
+}
+test('unreadable existing archive prevents a changed-revision claim',async()=>{
+ const f=await historyFixture();f.objects.set(f.historyKey,{body:JSON.stringify(f.prior),etag:'existing'});
+ const get=f.bucket.get;f.bucket.get=async k=>{if(k===f.historyKey)throw Error('read failed');return get(k);};
+ await assert.rejects(f.run(),e=>e.code==='basket_checkout_unknown');
+ assert.equal(f.objects.get(f.key).etag,'prior');assert.equal(f.remote,0);
+});
+test('concurrent changed-revision attempts retain history and make at most one remote create',async()=>{
+ const f=await historyFixture(),get=f.bucket.get;let reads=0,release;
+ const bothRead=new Promise(resolve=>{release=resolve;});
+ f.bucket.get=async k=>{const snapshot=await get(k);if(k===f.key){if(++reads===2)release();await bothRead;}return snapshot;};
+ const results=await Promise.allSettled([f.run(),f.run()]);
+ assert.equal(results.filter(r=>r.status==='fulfilled').length,1);assert.equal(f.remote,1);
+ assert.deepEqual(JSON.parse(f.objects.get(f.historyKey).body),f.prior);
+ assert.equal(results.find(r=>r.status==='rejected').reason.code,'basket_checkout_unknown');
 });

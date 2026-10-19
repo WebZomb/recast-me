@@ -359,3 +359,47 @@ Existing PR92 fulfillment integration and cart recovery gates still apply.
 No merge, live enablement, order, payment, limit or discount change performed.
 Rollback this follow-up only: restore basketShop and its regression test; retain
 the saved-checkout repair and all private attempt records.
+
+## October19, early morning Eastern — immutable checkout history
+
+Baseline PR93 head `6aad1d2259dea6742a7abde880668312f284873d`; main last
+observed `849282875b4eba428bd5f3f6b7a05974f5c230c7`. All five touched files
+were compared with this exact branch baseline before saving the delta. Prior
+6aad1d2 hosted security39207662154 and customer-policy39207662177 passed.
+The owner has authorized deployment and the bundle/CI checks. Cloudflare Google
+sign-in failed in the previous interactive session; manual handoff is pending.
+No authentication retry was attempted during this scheduled work session.
+
+Changed-revision checkout now saves the entire validated earlier ready record
+under private `commerce/basket-checkout-history/v1/<identity-hash>/<revision>.json`
+before it may replace the current attempt. History uses conditional create only;
+an existing slot must match the exact serialized record. Missing acknowledgement,
+conflicting/corrupt history and unreadable history stop before current-record
+replacement or Shopify creation. An explicit retry may recognize an already
+saved identical archive. Current-attempt ETag claims still select one winner.
+Same-revision reuse and ambiguous pending locks retain their existing behavior.
+History includes private cart capabilities and approved line evidence; it is
+never projected to the customer or logged, and uses private/no-store metadata.
+
+Validation: 7 new regression cases; 44 checkout cases and 9 routed cases pass.
+Full repository Node suite: **696/696 PASS**, no skips/failures. Five local
+Miniflare R2 cases PASS, including the new changed-revision checkout race with
+one mocked remote create and exact retained history. Initial new concurrency
+test incorrectly expected one rejection without forcing overlapping reads;
+the second caller could validly reuse the completed checkout. Added an explicit
+read barrier; the forced race passes. No production Shopify request occurred.
+No GraphQL or UI change; no new visual acceptance claim. Existing short-name
+configuration fix remains present. Hosted checks for the resulting commit are
+tracked separately; local evidence is not a production deployment.
+
+Files: src/basket-checkout.js, tests/basket-checkout.test.mjs,
+scripts/basket-r2-smoke.mjs, this session and docs/ASTRA-HANDOFF.md.
+Save as a leased follow-up on the existing draft PR93; do not create a second
+cart PR. Still default-off/not merged/not enabled. Remaining release gates:
+fresh remote cart validation/expired URL recovery, approval receipt renewal,
+browser-session recovery, PR92 fulfillment integration and authenticated live
+configuration/checkout/mobile acceptance. History preserves evidence; it does
+not itself implement reconciliation or prohibit separate payment of an old cart.
+No orders, payments, renders, live limits, discounts or ad mutations.
+Rollback only this five-file delta; retain every history record, saved approval,
+order and uncertain attempt lock. Resulting commit is recorded in the Page log.

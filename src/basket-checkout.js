@@ -53,6 +53,20 @@ function checkedReady(prior,identity,revision,shop){
  checkedCartId(prior.cartId);
  return {checkoutUrl:checkedUrl(prior.checkoutUrl,shop),lines:canonicalLines(prior.lines)};
 }
+async function retainCheckoutHistory(bucket,key,prior){
+ // A changed basket may start another checkout, but must not erase the old
+ // private reconciliation evidence. Never overwrite an existing history slot.
+ const historyKey=key.replace('commerce/basket-checkouts/v1/','commerce/basket-checkout-history/v1/').replace(/\.json$/,`/${prior.revision}.json`);
+ const body=JSON.stringify(prior);
+ try{
+  const saved=await bucket.put(historyKey,body,{onlyIf:new Headers({'If-None-Match':'*'}),httpMetadata:{contentType:'application/json',cacheControl:'private, no-store'}});
+  if(saved?.etag)return;
+  // A concurrent caller or a previous lost response may already have saved it.
+  const existing=await bucket.get(historyKey);
+  if(existing?.etag&&JSON.stringify(await existing.json())===body)return;
+ }catch{throw unavailable();}
+ throw unavailable();
+}
 function verifiedCart(result,lines,shop){
  const cart=result?.cart;
  if(!cart?.id||typeof cart.id!=='string'||!cart.checkoutUrl||result.userErrors?.length||result.warnings?.length)throw unavailable();
@@ -88,6 +102,7 @@ export async function beginBasketCheckout(env,identity,state,lines,{fetcher=fetc
    if(saved.lines!==expectedLines)throw unavailable();
    return {checkoutUrl:saved.checkoutUrl,reused:true};
   }
+  await retainCheckoutHistory(bucket,key,prior);
  }
  const attempt={ownerId:identity.ownerId,basketId:identity.basketId,revision,
   status:'pending',startedAt:new Date().toISOString(),lines:structuredClone(lines)};

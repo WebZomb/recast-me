@@ -2,6 +2,7 @@
 import assert from 'node:assert/strict';
 import * as miniflare from 'miniflare';
 import { mutateStoredBasket, readStoredBasket } from '../src/basket-storage.js';
+import { beginBasketCheckout, checkoutAttemptKey } from '../src/basket-checkout.js';
 
 const options = { cf: false, modules: true, script: 'export default {fetch(){return new Response("offline basket fixture")}}', r2Buckets: ['BASKETS'] };
 // Installed v5 exposes the documented v4-options converter; v4 uses them directly.
@@ -45,4 +46,19 @@ try {
   const recovered = await mutateStoredBasket(lost, { ...first, basketId: 'lost-response' }, add(), approved);
   assert.equal(recovered.recovered, true); assert.equal(puts, 1);
   console.log('PASS local R2 committed write/lost response: receipt readback without duplicate PUT');
+
+  const identity={...first,basketId:'checkout-history-race'},key=await checkoutAttemptKey(identity);
+  const lines=[{merchandiseId:'gid://shopify/ProductVariant/123',quantity:1,attributes:[{key:'Artwork ID',value:'fixture'}]}];
+  const prior={...identity,revision:1,status:'ready',lines,cartId:'gid://shopify/Cart/old?key=fixture-private',checkoutUrl:'https://fixture.myshopify.com/checkouts/old',startedAt:'2026-10-19T00:00:00Z',completedAt:'2026-10-19T00:00:01Z'};
+  await bucket.put(key,JSON.stringify(prior));
+  const env={ARTWORK:racing(bucket),BASKET_ENABLED:'true',SHOPIFY_SHOP:'fixture',SHOPIFY_STOREFRONT_TOKEN:'fixture-only'};
+  let creates=0;
+  const fetcher=async()=>{creates++;return Response.json({data:{cartCreate:{cart:{id:'gid://shopify/Cart/new?key=fixture-private',checkoutUrl:'https://fixture.myshopify.com/checkouts/new',lines:{nodes:lines.map(l=>({quantity:l.quantity,attributes:l.attributes,merchandise:{id:l.merchandiseId}}))}},userErrors:[],warnings:[]}}});};
+  const checkouts=await Promise.allSettled([1,2].map(()=>beginBasketCheckout(env,identity,{revision:2,lines:[{id:'fixture'}]},lines,{fetcher})));
+  assert.equal(checkouts.filter(r=>r.status==='fulfilled').length,1);assert.equal(creates,1);
+  assert.equal(checkouts.find(r=>r.status==='rejected').reason.code,'basket_checkout_unknown');
+  const historyKey=key.replace('/basket-checkouts/','/basket-checkout-history/').replace(/\.json$/,'/1.json');
+  assert.deepEqual(await (await bucket.get(historyKey)).json(),prior);
+  assert.equal((await (await bucket.get(key)).json()).revision,2);
+  console.log('PASS local R2 changed-checkout race: immutable prior history and one mocked remote create');
 } finally { await mf.dispose(); }
