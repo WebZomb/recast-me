@@ -276,3 +276,60 @@ Changed files: entry/router/preview-security; basket-routes/session/checkout/adm
 public basket/checkout/admin/admin-recovery; integration/browser tests and policy CI;
 this handoff and cumulative index. Reviewed source record confirms prior TestFlight
 Build10 exists; earlier chat statement implying no mobile build was corrected.
+
+## October18, late evening Eastern / October19 UTC — saved checkout validation
+
+Baseline: PR93 `06cab310420c44a20918dfa9284000c6f3cdf115`, tree
+`a9749f73249af4e8fe4a9283f2fb2c147f2952ce`; main8492828 unchanged.
+Fresh remote byte comparison confirmed the edited source and both documentation
+files matched this exact head before changes. Other dirty worktree files are
+existing branch work and remain untouched. Resulting review-commit SHA will be
+recorded in the project Pages; PR93 head is intentionally not advanced here.
+
+The earlier audit reproduced missing/off-shop saved URLs accepted by the same-
+revision fast path. Added regression tests first: 22/29 initial cases failed on
+the baseline (including unsafe reuse and an unnormalized JSON read failure).
+Implemented shared HTTPS exact-shop-origin URL validation for fresh and reused
+checkouts, rejects credentials/nondefault ports/control characters/backslashes/
+fragments, validates the complete private Cart GID/key without parsing its opaque
+token, and validates stored owner/basket/revision/timestamps/line schema. Same-
+revision reuse must match current server-approved variant, quantity and every
+attribute, independent of attribute/line ordering. Snapshot trusted inputs before
+storage awaits; parse/read failures return the safe unknown-checkout error.
+No public cart IDs/keys or new logging. Malformed earlier revisions cannot be
+overwritten. Pending/unknown attempts still cannot trigger another remote create.
+
+Tests actually executed: final36new checkout cases plus existing suite =
+**688/688 Node tests PASS**, zero skips/failures; four actual local Miniflare R2
+concurrency/recovery smoke cases PASS. Node syntax and git whitespace checks PASS.
+The first focused post-fix run had38/38 including9routed integration cases; final
+suite adds fragment/type/old-revision/null/key-absence/duplicate-key cases.
+No GraphQL operation changed. Shopify's official cart guide was rechecked:
+https://shopify.dev/docs/storefronts/headless/building-with-the-storefront-api/cart/manage
+Full Cart IDs include private keys; never expose them. The guide also requires
+fresh checkout URL retrieval when appropriate; this patch does NOT implement
+remote cart revalidation, URL refresh or expiry recovery. These remain release gates.
+The cloud Shopify skill's local search/validator/feedback scripts were not present;
+used the connected documentation search plus official page instead. No fresh
+GraphQL-schema-validation claim is made for this JavaScript-only patch.
+
+Blocked/unverified: local browser check failed before launch because the Chromium
+executable is absent. No new visual pass; customer UI is unchanged. The combined
+deployment-bundle dry-run command was blocked by an execution approval safeguard
+because it may transmit source/metadata to Cloudflare. Do not retry it or trigger
+the same check indirectly via CI without approval. Independent local R2 checks
+were rerun alone and passed. No deployment, remote cart, provider call, order,
+payment, alert send, live limit, discount or ad mutation occurred.
+
+Delivery boundary: save the four-file delta as a review commit in the explicitly
+authorized repository, without advancing a ref (therefore no new PR CI trigger).
+No new hosted success is claimed; prior06cab310 CI only covers the baseline.
+Next: obtain approval for the blocked bundle/CI workflow, then attach the reviewed
+commit to PR93 after a fresh head check. Keep basket default-off. Versioned attempt
+history for changed revisions, remote stale/expired cart checks, receipt renewal,
+session recovery, PR92 fulfillment integration and live acceptance remain open.
+
+Changed files: src/basket-checkout.js, tests/basket-checkout.test.mjs, this session,
+docs/ASTRA-HANDOFF.md. Rollback this four-file review delta only; never delete saved
+approvals, basket records, orders or uncertain attempt locks. This is a local-
+tested validation repair, not proof that the complete cart is launch-ready.
