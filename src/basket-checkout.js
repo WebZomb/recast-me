@@ -7,6 +7,12 @@ export const CART_CREATE = `mutation RecastBasket($input: CartInput!) {
   warnings { code message target }
  }
 }`;
+export const CART_REFRESH = `query RecastBasketRefresh($id: ID!) {
+ cart(id: $id) {
+  id checkoutUrl
+  lines(first: 100) { pageInfo { hasNextPage } nodes { quantity attributes { key value } merchandise { ... on ProductVariant { id } } } }
+ }
+}`;
 export function basketShop(env) {
  const raw=String(env.SHOPIFY_SHOP||'').trim().replace(/^https:\/\//,'').replace(/\/$/,'');
  const shop=/^[a-z0-9][a-z0-9-]*$/.test(raw)?`${raw}.myshopify.com`:raw;
@@ -82,6 +88,23 @@ function verifiedCart(result,lines,shop){
  }
  return {cartId,checkoutUrl};
 }
+async function refreshCheckout(env,bucket,key,etag,prior,lines,fetcher){
+ // Read only: a missing cart may have expired OR already completed checkout.
+ // Never infer permission to recreate it from null, a timeout, or an error.
+ try{
+  const response=await fetcher(`https://${basketShop(env)}/api/2026-10/graphql.json`,{method:'POST',redirect:'error',signal:AbortSignal.timeout(20000),
+   headers:{'Content-Type':'application/json','X-Shopify-Storefront-Access-Token':env.SHOPIFY_STOREFRONT_TOKEN},
+   body:JSON.stringify({query:CART_REFRESH,variables:{id:prior.cartId}})});
+  if(!response.ok)throw unavailable();
+  const data=await response.json(),cart=data.data?.cart;
+  if(data.errors?.length||!cart||cart.id!==prior.cartId||cart.lines?.pageInfo?.hasNextPage!==false)throw unavailable();
+  const verified=verifiedCart({cart},lines,basketShop(env));
+  // Another request may have replaced this attempt while Shopify was queried.
+  const current=await bucket.get(key);
+  if(!current||current.etag!==etag)throw unavailable();
+  return {checkoutUrl:verified.checkoutUrl,reused:true};
+ }catch{throw unavailable();}
+}
 // One remote create at most after an atomic durable claim. An ambiguous result
 // keeps the claim forever until inspected; elapsed time is NOT permission to retry.
 export async function beginBasketCheckout(env,identity,state,lines,{fetcher=fetch}={}){
@@ -100,7 +123,7 @@ export async function beginBasketCheckout(env,identity,state,lines,{fetcher=fetc
   const saved=checkedReady(prior,identity,revision,shop);
   if(prior.revision===revision){
    if(saved.lines!==expectedLines)throw unavailable();
-   return {checkoutUrl:saved.checkoutUrl,reused:true};
+   return refreshCheckout(env,bucket,key,priorObject.etag,prior,lines,fetcher);
   }
   await retainCheckoutHistory(bucket,key,prior);
  }

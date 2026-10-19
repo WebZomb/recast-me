@@ -6,13 +6,15 @@ import {recommendedCheckoutDesign} from '../src/commerce-store.js';
 import {FULFILLMENT} from '../src/entry.js';
 const sku='RECAST-MUG-11OZ';
 async function fixture(t){
- const calls=[],control={failCart:false,wrongQuantity:false,variant:'1'};
+ const calls=[],control={failCart:false,wrongQuantity:false,variant:'1',savedCart:null};
  t.mock.method(globalThis,'fetch',async(url,options={})=>{
   url=String(url);let body={};try{body=JSON.parse(options.body);}catch{}calls.push({url,body});
   if(url.includes('/oauth/'))return Response.json({access_token:'fixture',expires_in:3600});
-  if(body.query?.includes('RecastBasket')){
+  if(body.query?.includes('query RecastBasketRefresh'))return Response.json({data:{cart:control.savedCart}});
+  if(body.query?.includes('mutation RecastBasket(')){
    if(control.failCart)throw Error('remote timeout');
-   return Response.json({data:{cartCreate:{cart:{id:'gid://shopify/Cart/test?key=PRIVATE',checkoutUrl:'https://test.myshopify.com/checkouts/test',lines:{nodes:body.variables.input.lines.map((l,i)=>({id:'line'+i,quantity:control.wrongQuantity?99:l.quantity,attributes:l.attributes,merchandise:{id:l.merchandiseId}}))}},userErrors:[],warnings:[]}}});
+   control.savedCart={id:'gid://shopify/Cart/test?key=PRIVATE',checkoutUrl:'https://test.myshopify.com/checkouts/test',lines:{pageInfo:{hasNextPage:false},nodes:body.variables.input.lines.map((l,i)=>({id:'line'+i,quantity:control.wrongQuantity?99:l.quantity,attributes:l.attributes,merchandise:{id:l.merchandiseId}}))}};
+   return Response.json({data:{cartCreate:{cart:control.savedCart,userErrors:[],warnings:[]}}});
   }
   if(url.includes('/graphql'))return Response.json({data:{products:{nodes:[{id:'p',title:'Custom Recast Mug',status:'ACTIVE',variants:{nodes:[{id:'gid://shopify/ProductVariant/'+control.variant,title:'11 oz',sku,price:'24.99'}]}}]}}});
   if(url.includes('/v2/catalog-variants/1320'))return Response.json({data:{id:1320,catalog_product_id:19}});
@@ -36,12 +38,13 @@ test('original-photo capable session, two separate approved lines, quantity/remo
  const f=await fixture(t);assert.equal((await f.add()).response.status,200);assert.equal((await f.add('two',1)).response.status,200);
  let r=await f.call('/api/basket/action',{basketId:'basket',command:{type:'quantity',lineId:'one',actionId:'q',expectedRevision:2,quantity:2}});assert.equal(r.data.basket.lines[0].quantity,2);
  r=await f.call('/api/basket/checkout',{basketId:'basket',revision:3});assert.equal(r.response.status,200,JSON.stringify(r.data));
- const cart=f.calls.find(c=>c.body.query?.includes('RecastBasket')).body.variables.input;
+ const cart=f.calls.find(c=>c.body.query?.includes('mutation RecastBasket(')).body.variables.input;
  assert.equal(cart.lines.length,2);assert.equal(cart.lines[0].quantity,2);
  for(const line of cart.lines)for(const key of ['Artwork ID','_Recast Design','_Recast Proof','_Recast Mockup','_Recast Preview Token','_Recast Preapproval','_Recast Basket Line'])assert.ok(line.attributes.find(a=>a.key===key));
  assert.notEqual(cart.lines[0].attributes.at(-1).value,cart.lines[1].attributes.at(-1).value);
  assert.equal((await f.call('/api/basket/checkout',{basketId:'basket',revision:3})).data.reused,true);
- assert.equal(f.calls.filter(c=>c.body.query?.includes('RecastBasket')).length,1);
+ assert.equal(f.calls.filter(c=>c.body.query?.includes('mutation RecastBasket(')).length,1);
+ assert.equal(f.calls.filter(c=>c.body.query?.includes('query RecastBasketRefresh')).length,1);
  const projection=(await f.call('/api/basket?id=basket')).data;assert.equal(projection.basket.lines.length,2);assert.doesNotMatch(JSON.stringify(projection),/approvalToken|proofHash|ownerId|PRIVATE|accessToken/);
  assert.equal((await f.call('/api/basket/action',{basketId:'basket',command:{type:'remove',lineId:'two',actionId:'r',expectedRevision:3}})).data.basket.lines.length,1);
  assert.equal([...f.env.ARTWORK.objects.keys()].some(k=>k.includes('/wallets/')),false);

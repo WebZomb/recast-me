@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {beginBasketCheckout,basketShop,checkoutAttemptKey} from '../src/basket-checkout.js';
+import {beginBasketCheckout,basketShop,checkoutAttemptKey,CART_REFRESH} from '../src/basket-checkout.js';
 
 test('shop configuration accepts the production short name and exact Shopify domain',()=>{
  for(const shop of ['b2wnfu-7g','b2wnfu-7g.myshopify.com','https://b2wnfu-7g.myshopify.com/'])
@@ -18,20 +18,28 @@ const ready=()=>({...identity,status:'ready',revision:2,lines:structuredClone(li
  cartId:'gid://shopify/Cart/fixture?key=private-fixture',checkoutUrl:'https://fixture.myshopify.com/checkouts/fixture'});
 function fixture(prior){
  const calls={reads:0,writes:0,remote:0};
+ const remoteCart={id:ready().cartId,checkoutUrl:'https://fixture.myshopify.com/checkouts/fresh',lines:{pageInfo:{hasNextPage:false},nodes:lines.map(l=>({quantity:l.quantity,attributes:structuredClone(l.attributes),merchandise:{id:l.merchandiseId}}))}};
+ const control={data:{data:{cart:remoteCart}},status:200,fail:false,beforeResponse:null};
  const env={BASKET_ENABLED:'true',SHOPIFY_SHOP:'fixture.myshopify.com',SHOPIFY_STOREFRONT_TOKEN:'fixture-only',ARTWORK:{
   get:async()=>{calls.reads++;return {etag:'fixture-etag',json:async()=>structuredClone(prior)};},
   put:async()=>{calls.writes++;throw Error('Unexpected write');}
  }};
- const run=(input=lines)=>beginBasketCheckout(env,identity,state,input,{fetcher:async()=>{calls.remote++;throw Error('Unexpected network');}});
- return {env,calls,run};
+ const run=(input=lines)=>beginBasketCheckout(env,identity,state,input,{fetcher:async(url,options)=>{
+  calls.remote++;assert.equal(url,'https://fixture.myshopify.com/api/2026-10/graphql.json');assert.equal(options.redirect,'error');
+  assert.deepEqual(JSON.parse(options.body),{query:CART_REFRESH,variables:{id:ready().cartId}});
+  if(control.fail)throw Error('private provider error');
+  await control.beforeResponse?.();
+  return Response.json(control.data,{status:control.status});
+ }});
+ return {env,calls,run,remoteCart,control};
 }
-test('valid saved checkout reuses only its checked URL, without writes or requests',async()=>{
- const f=fixture(ready());assert.deepEqual(await f.run(),{checkoutUrl:ready().checkoutUrl,reused:true});
- assert.deepEqual(f.calls,{reads:1,writes:0,remote:0});
+test('valid saved checkout fetches a fresh checked URL without writes or cart creation',async()=>{
+ const f=fixture(ready());assert.deepEqual(await f.run(),{checkoutUrl:f.remoteCart.checkoutUrl,reused:true});
+ assert.deepEqual(f.calls,{reads:2,writes:0,remote:1});
 });
 test('attribute order does not invalidate the same approved saved lines',async()=>{
  const p=ready();p.lines[0].attributes.reverse();const f=fixture(p);assert.equal((await f.run()).reused,true);
- assert.equal(f.calls.remote,0);assert.equal(f.calls.writes,0);
+ assert.equal(f.calls.remote,1);assert.equal(f.calls.writes,0);
 });
 const invalid=[
  ['missing URL',p=>{delete p.checkoutUrl;}],
@@ -88,7 +96,36 @@ test('valid snapshot is unchanged by caller edits during storage read',async()=>
  const f=fixture(ready()),input=structuredClone(lines),get=f.env.ARTWORK.get;
  f.env.ARTWORK.get=async()=>{input[0].quantity=9;return get();};
  assert.equal((await f.run(input)).reused,true);
- assert.equal(f.calls.writes,0);assert.equal(f.calls.remote,0);
+ assert.equal(f.calls.writes,0);assert.equal(f.calls.remote,1);
+});
+
+const changedRemote=[
+ ['missing or completed cart',f=>{f.control.data.data.cart=null;}],
+ ['wrong cart',f=>{f.remoteCart.id='gid://shopify/Cart/other?key=other';}],
+ ['off-shop URL',f=>{f.remoteCart.checkoutUrl='https://other.example/checkout';}],
+ ['changed quantity',f=>{f.remoteCart.lines.nodes[0].quantity=9;}],
+ ['changed variant',f=>{f.remoteCart.lines.nodes[0].merchandise.id='gid://shopify/ProductVariant/2';}],
+ ['changed artwork',f=>{f.remoteCart.lines.nodes[0].attributes[0].value='other-art';}],
+ ['extra line',f=>{f.remoteCart.lines.nodes.push(structuredClone(f.remoteCart.lines.nodes[0]));}],
+ ['truncated lines',f=>{f.remoteCart.lines.pageInfo.hasNextPage=true;}],
+ ['missing pagination evidence',f=>{delete f.remoteCart.lines.pageInfo;}],
+ ['GraphQL error',f=>{f.control.data.errors=[{message:'private error'}];}],
+ ['HTTP failure',f=>{f.control.status=503;}],
+ ['network failure',f=>{f.control.fail=true;}]
+];
+for(const [name,change] of changedRemote)test('remote checkout fails closed without replacement: '+name,async()=>{
+ const f=fixture(ready());change(f);
+ await assert.rejects(f.run(),e=>e.code==='basket_checkout_unknown'&&!e.message.includes('private'));
+ assert.equal(f.calls.remote,1);assert.equal(f.calls.writes,0);
+});
+test('checkout changed during remote refresh is not returned',async()=>{
+ const f=fixture(ready());f.control.beforeResponse=()=>{f.env.ARTWORK.get=async()=>({etag:'new-attempt'});};
+ await assert.rejects(f.run(),e=>e.code==='basket_checkout_unknown');assert.equal(f.calls.writes,0);
+});
+test('failed read-only refresh permits explicit retry of the same cart without creating one',async()=>{
+ const f=fixture(ready());f.control.fail=true;
+ await assert.rejects(f.run(),e=>e.code==='basket_checkout_unknown');f.control.fail=false;
+ assert.equal((await f.run()).checkoutUrl,f.remoteCart.checkoutUrl);assert.equal(f.calls.remote,2);assert.equal(f.calls.writes,0);
 });
 
 async function historyFixture(){

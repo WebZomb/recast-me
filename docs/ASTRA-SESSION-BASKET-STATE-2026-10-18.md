@@ -403,3 +403,50 @@ not itself implement reconciliation or prohibit separate payment of an old cart.
 No orders, payments, renders, live limits, discounts or ad mutations.
 Rollback only this five-file delta; retain every history record, saved approval,
 order and uncertain attempt lock. Resulting commit is recorded in the Page log.
+
+## October19, 07:42 Eastern session — revalidate returning checkouts
+
+Exact baseline PR93 `fa1408e98aca78b7d1467ae24e9e26108fb16758`, main
+`849282875b4eba428bd5f3f6b7a05974f5c230c7`. Compared all five touched files
+byte-for-byte with the remote baseline before editing. That baseline has a
+successful Workers Builds check117960944305; its GitHub Actions query returned
+no runs, so no new security/customer-policy pass is inferred from it.
+
+Implemented read-only Storefront cart refresh before returning a same-revision
+saved checkout. The server sends the complete private cart ID, checks the returned
+identity, exact approved variants/quantities/artwork attributes and complete line
+pagination, validates the refreshed URL against the exact shop origin, then
+rechecks the current durable attempt ETag. A concurrently replaced attempt is
+not handed to the buyer. Refreshed URLs are returned only after these checks;
+original attempt/history records are not rewritten by refresh requests.
+
+Null/missing carts, network/HTTP/GraphQL errors, mismatched lines or an unsafe URL
+stop safely without creating a replacement cart or resetting the existing lock.
+A later explicit request may retry the read-only query. A missing cart is not
+proof of expiry or nonpayment, so automatic expired-cart recreation remains
+unimplemented pending payment reconciliation. Existing fresh-cart mutation and
+changed-revision history behavior are preserved. No real Shopify request/order.
+
+Shopify skill documentation search and validator scripts were available in this
+session. Search and GraphQL validation targeted the configured **2026-10** version;
+the new RecastBasketRefresh query passed schema validation. Telemetry opted out.
+Sources: https://shopify.dev/docs/api/storefront/2026-10/queries/cart and
+https://shopify.dev/docs/storefronts/headless/building-with-the-storefront-api/cart/manage .
+
+Tests executed: 14 additional regression cases;67 focused checkout/routed cases
+PASS; **710/710 full Node tests PASS**, no skips/failures;5 existing local
+Miniflare R2 concurrency/recovery cases PASS; Wrangler bundle dry-run PASS.
+Local browser verification failed before launch because the Chromium executable
+is missing; no new visual acceptance claimed. Customer UI is unchanged. Syntax
+and whitespace checked before saving. No failed code test in this session.
+
+Five changed files: src/basket-checkout.js, tests/basket-checkout.test.mjs,
+tests/basket-integration.test.mjs, this session and docs/ASTRA-HANDOFF.md.
+Save to the existing draft PR93 with an expected-head lease; resulting commit
+and check receipts recorded in the Christmas/Marketing Pages. No merge, live
+enablement, deployment, render, payment, order, alert send, limit increase,
+discount activation or advertising action. Owner Cloudflare login still pending.
+Next: receipt renewal/session recovery, conservative expired/completed-cart
+reconciliation, PR92 fulfillment integration and authenticated mobile/live
+acceptance. Rollback this five-file delta only; never delete private histories,
+approvals, orders or uncertain locks. Cart remains default-off until release gates.
