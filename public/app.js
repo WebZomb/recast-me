@@ -444,6 +444,8 @@ function applyReadiness(){
     const message=photoShoppingNotice(readinessSnapshot);
     photoNotice.hidden=!message;
     photoNotice.textContent=message;
+    const photoShopping=document.querySelector('#photo-shopping');
+    if(photoShopping)photoShopping.hidden=!message;
   }
   if(currentFallback().returnToHigh&&!generationInFlight){
     const high=document.querySelector('input[name="qualityMode"][value="high"]');if(high)high.checked=true;

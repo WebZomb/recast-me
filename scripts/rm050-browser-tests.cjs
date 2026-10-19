@@ -85,7 +85,8 @@ const policy={highDaily:3,standardDaily:5,purchaseBonus:3,websiteCalls:70,social
    assert.equal(await originalChoice.isVisible(),true,'Original-photo option is equally visible up front');
    assert.equal(await originalChoice.getAttribute('aria-pressed'),'false');
    assert.equal(await page.locator('#photo-shopping-outage').isHidden(),true);
-   await page.locator('[data-use-original]').click();
+   assert.equal(await page.locator('#photo-shopping').isHidden(),true,'No duplicate photo-shopping card during normal service');
+   await originalChoice.click();
    assert.equal(await originalChoice.getAttribute('aria-pressed'),'true');
    assert.equal(await page.locator('#recast-form').isHidden(),true,'Hide unrelated AI controls when original is chosen');
    assert.equal(await page.locator('#original-photo-form').isVisible(),true,'Original upload and consent become immediate');
@@ -227,6 +228,7 @@ const policy={highDaily:3,standardDaily:5,purchaseBonus:3,websiteCalls:70,social
    assert.equal(await page.locator('#quality-fallback').isVisible(),true);
    assert.match(await page.locator('#quality-fallback-reason').textContent(),/High Quality is unavailable/);
    assert.match(await page.locator('#photo-shopping-outage').textContent(),/High Quality AI is temporarily unavailable/);
+   assert.equal(await page.locator('#photo-shopping').isVisible(),true,'Show photo shopping during an observed engine outage');
    assert.match(await page.locator('#render-credits').textContent(),/Standard: 4 left/,'Approved outage also displays Standard credits');
    await page.locator('#choose-standard').click();
    assert.equal(await page.locator('input[name="qualityMode"][value="quick"]').isChecked(),true);
@@ -238,6 +240,7 @@ const policy={highDaily:3,standardDaily:5,purchaseBonus:3,websiteCalls:70,social
    assert.equal(await page.locator('input[name="qualityMode"][value="high"]').isChecked(),true);
    assert.equal(await page.locator('#quality-fallback').isHidden(),true);
    assert.equal(await page.locator('#photo-shopping-outage').isHidden(),true,'Outage callout clears after recovery');
+   assert.equal(await page.locator('#photo-shopping').isHidden(),true,'Entire extra card clears after recovery');
    Object.assign(state,{hqOutage:false,quickDown:false,remaining:3,free:3,bonus:3});
    // Fast path still presents the exact selected artwork, and does not ask Printful for a mockup.
    await page.evaluate(()=>{window.__recastActiveRequest={requestId:'RC-TEST0001-ABCDEF',accessToken:'fixture-token'};const c=document.querySelector('#preview-canvas');c.width=400;c.height=500;c.getContext('2d').fillRect(0,0,400,500);document.dispatchEvent(new Event('recast-artwork-selected'));});
