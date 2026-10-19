@@ -4,6 +4,9 @@ import router from '../src/router.js';
 import {setup,ID,TOKEN} from './security-helpers.mjs';
 import {recommendedCheckoutDesign} from '../src/commerce-store.js';
 import {FULFILLMENT} from '../src/entry.js';
+import {reconcileShopifyOrder} from '../src/workflow.js';
+import {read} from '../src/commerce-store.js';
+import {listOrderIssues} from '../src/order-issues.js';
 const sku='RECAST-MUG-11OZ';
 async function fixture(t){
  const calls=[],control={failCart:false,wrongQuantity:false,variant:'1',savedCart:null};
@@ -96,4 +99,55 @@ test('owner recovery view redacts all capabilities and never resubmits checkout'
  const r=await f.call('/api/admin/basket-attempts',null,{authorization:'Bearer owner-test-secret'});
  assert.equal(r.data.items[0].status,'needs_review');assert.doesNotMatch(JSON.stringify(r.data),/ownerId|approvalToken|PRIVATE|accessToken|attributes|cartId/);
  assert.equal(f.calls.filter(c=>c.body.query?.includes('RecastBasket')).length,1);
+});
+
+async function checkoutOrder(f){
+ await f.add();await f.add('two',1);
+ await f.call('/api/basket/action',{basketId:'basket',command:{type:'quantity',lineId:'one',actionId:'q',expectedRevision:2,quantity:2}});
+ const checkout=await f.call('/api/basket/checkout',{basketId:'basket',revision:3});
+ assert.equal(checkout.response.status,200,JSON.stringify(checkout.data));
+ const lines=f.calls.find(c=>c.body.query?.includes('mutation RecastBasket(')).body.variables.input.lines;
+ return {id:'gid://shopify/Order/123',name:'#1001',displayFinancialStatus:'PAID',test:false,cancelledAt:null,createdAt:'2026-10-19T00:00:00Z',lineItems:{pageInfo:{hasNextPage:false},nodes:lines.map((line,i)=>({id:'gid://shopify/LineItem/'+(456+i),sku,quantity:line.quantity,customAttributes:line.attributes}))}};
+}
+const heldReconciliation={allowAutomation:false,holdNewJobs:true};
+test('routed basket checkout attributes preserve separate approved jobs and frozen designs on duplicate reconciliation',async t=>{
+ const f=await fixture(t),order=await checkoutOrder(f),before=f.calls.length;
+ assert.deepEqual(await reconcileShopifyOrder(f.env,order,heldReconciliation),{created:2,seen:2,issues:0});
+ const first=await read(f.env,'jobs/123-456.json'),second=await read(f.env,'jobs/123-457.json');
+ assert.equal(first.quantity,2);assert.equal(second.quantity,1);
+ for(const job of [first,second]){
+  assert.equal(job.preapprovedCheckout,true);assert.equal(job.status,'on_hold');assert.equal(job.requestId,ID);
+  const design=await read(f.env,`commerce/designs/${job.id}.json`);
+  const approval=await read(f.env,`commerce/preapprovals/${job.preapprovalToken}.json`);
+  assert.equal(design.snapshotKey,approval.snapshotKey);assert.equal(design.sourceHash,approval.sourceHash);
+  assert.equal(design.proof.quantity,job.quantity);assert.deepEqual(design.proof.design,approval.design);
+ }
+ const snapshot=[...f.env.ARTWORK.objects.entries()].filter(([key])=>key.startsWith('jobs/')||key.startsWith('commerce/designs/')).map(([key,value])=>[key,value.bytes.toString()]);
+ assert.equal((await reconcileShopifyOrder(f.env,order,heldReconciliation)).created,0);
+ for(const [key,value] of snapshot)assert.equal(await (await f.env.ARTWORK.get(key)).text(),value);
+ assert.equal(f.calls.length,before,'no supplier or payment calls during held reconciliation');
+});
+test('routed basket checkout preserves an accepted legacy line while creating only the other held line',async t=>{
+ const f=await fixture(t),order=await checkoutOrder(f),before=f.calls.length;
+ const id=`${order.name}-${ID}-${sku}`.replace(/[^a-zA-Z0-9._-]+/g,'-').slice(0,180);
+ const accepted={id,orderId:order.id,lineId:order.lineItems.nodes[0].id,requestId:ID,sku,quantity:2,status:'in_printful_production',printfulOrderId:9001,printfulExternalId:'fixture-accepted',sentToProductionAt:'2026-10-19T01:00:00Z'};
+ await f.env.ARTWORK.put(`jobs/${id}.json`,JSON.stringify(accepted));
+ assert.deepEqual(await reconcileShopifyOrder(f.env,order,heldReconciliation),{created:1,seen:2,issues:0});
+ assert.deepEqual(await read(f.env,`jobs/${id}.json`),accepted);
+ assert.equal(await read(f.env,'jobs/123-456.json'),null);
+ assert.equal((await read(f.env,'jobs/123-457.json')).preapprovedCheckout,true);
+ assert.equal((await reconcileShopifyOrder(f.env,order,heldReconciliation)).created,0);
+ assert.equal(f.calls.length,before);
+});
+test('routed basket order with unbound legacy supplier state holds both lines with durable issues and no new job',async t=>{
+ const f=await fixture(t),order=await checkoutOrder(f),before=f.calls.length;
+ const id=`${order.name}-${ID}-${sku}`.replace(/[^a-zA-Z0-9._-]+/g,'-').slice(0,180);
+ const uncertain={id,orderId:order.id,requestId:ID,sku,quantity:1,status:'production_submission_unknown',printfulExternalId:'fixture-unknown'};
+ await f.env.ARTWORK.put(`jobs/${id}.json`,JSON.stringify(uncertain));
+ for(let n=0;n<2;n++)assert.deepEqual(await reconcileShopifyOrder(f.env,order,heldReconciliation),{created:0,seen:2,issues:2});
+ assert.deepEqual(await read(f.env,`jobs/${id}.json`),uncertain);
+ assert.equal((await f.env.ARTWORK.list({prefix:'jobs/'})).objects.length,1);
+ const {issues}=await listOrderIssues(f.env);assert.equal(issues.length,2);
+ assert.ok(issues.every(issue=>issue.code==='job_identity_review'&&issue.status==='open'));
+ assert.equal(f.calls.length,before);
 });

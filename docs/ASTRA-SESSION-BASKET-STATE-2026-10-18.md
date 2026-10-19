@@ -450,3 +450,55 @@ Next: receipt renewal/session recovery, conservative expired/completed-cart
 reconciliation, PR92 fulfillment integration and authenticated mobile/live
 acceptance. Rollback this five-file delta only; never delete private histories,
 approvals, orders or uncertain locks. Cart remains default-off until release gates.
+
+## October19, 11:42 Eastern session — integrate exact-line fulfillment prerequisite
+
+Baseline cart PR93 head `91ca3fb0162f9d3e7b7d24c8e1ee655076b8c4ed`,
+main `849282875b4eba428bd5f3f6b7a05974f5c230c7`.
+Integrated the exact runtime and 12-test delta from PR92 head
+`5d20456504b54d50ee68fa052ad53b3541fc6fae` into the existing cart review
+branch. src/workflow.js matches that reviewed source byte-for-byte; preserved
+its original session record. PR92 itself remains unchanged and should not be
+independently merged without checking the now-shared patch.
+
+Three new routed integration cases carry actual fixture basket cartCreate
+attributes into held Shopify-order reconciliation: same artwork/SKU separate
+lines with quantities 2 and 1 retain separate approved jobs and frozen designs;
+repeated reconciliation does not rewrite those jobs/designs; a previously
+accepted legacy line retains its supplier identity while only the other line
+gets a new held job; an unbound legacy supplier attempt creates two durable
+identity-review issues and no replacement jobs. No provider calls occur during
+these reconciliation checks. This validates the mocked contract, not real
+Shopify payment or webhook delivery.
+
+Executed 24 focused routed/identity tests PASS; 725/725 full Node tests PASS
+(0 failed, 0 skipped); Wrangler deploy --dry-run PASS; git diff --check PASS.
+No failed code test. Local file capture initially exceeded tool-output size;
+retried bounded read chunks, then verified exact source equality. No customer
+UI change and no new live or visual acceptance. Local Chromium remains
+previously unavailable; did not claim or repeat a successful browser run.
+Source review preserves existing phone-friendly issue cards and actionable
+recovery wording. Current head91ca Workers Builds check118041838185 is success;
+its Actions query returns zero runs, not a security/customer-policy pass.
+
+GitHub metadata discrepancy: PR93 reports mergeable:false/dirty while the
+compare endpoint reports main8492828 is the merge base, ahead8/behind0.
+No conflict markers or speculative rebase were applied. Recheck mergeability
+and final checks on the resulting head; do not force-merge based on this API
+comparison. Exact resulting commit is recorded in the Marketing/Christmas
+Pages after branch readback.
+
+Changed six files: src/workflow.js, tests/order-line-identity.test.mjs,
+tests/basket-integration.test.mjs, original PR92 session record, this basket
+session, and cumulative handoff. Remaining gates: action-receipt exhaustion,
+session recovery, expired/completed-cart reconciliation, authenticated
+Storefront/configuration, hosted final-head mobile/security checks and real
+checkout/payment-to-fulfillment acceptance. PR90 remains separate. Existing
+cart default-off and production unchanged; no paid order, render, supplier
+submission, live cap increase, discount, ad or alert action. Tinyfish credit
+block was already reported in the interactive session; no metered retry.
+
+Rollback only this six-file integration delta; preserve all private approvals,
+checkout histories, jobs, supplier IDs and uncertain locks. Do not delete or
+resubmit records to clear a review issue.
+
