@@ -8,7 +8,8 @@ export const CART_CREATE = `mutation RecastBasket($input: CartInput!) {
  }
 }`;
 export function basketShop(env) {
- const shop=String(env.SHOPIFY_SHOP||'').replace(/^https:\/\//,'').replace(/\/$/,'');
+ const raw=String(env.SHOPIFY_SHOP||'').trim().replace(/^https:\/\//,'').replace(/\/$/,'');
+ const shop=/^[a-z0-9][a-z0-9-]*$/.test(raw)?`${raw}.myshopify.com`:raw;
  if(!/^[a-z0-9][a-z0-9-]*\.myshopify\.com$/.test(shop))throw fault('basket_configuration','Basket checkout needs owner setup.',503);
  return shop;
 }

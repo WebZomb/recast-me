@@ -1,6 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {beginBasketCheckout} from '../src/basket-checkout.js';
+import {beginBasketCheckout,basketShop} from '../src/basket-checkout.js';
+
+test('shop configuration accepts the production short name and exact Shopify domain',()=>{
+ for(const shop of ['b2wnfu-7g','b2wnfu-7g.myshopify.com','https://b2wnfu-7g.myshopify.com/'])
+  assert.equal(basketShop({SHOPIFY_SHOP:shop}),'b2wnfu-7g.myshopify.com');
+ for(const shop of ['','evil.example','https://evil.example','b2wnfu-7g@evil.example','b2wnfu-7g/checkout'])
+  assert.throws(()=>basketShop({SHOPIFY_SHOP:shop}),e=>e.code==='basket_configuration');
+});
 
 const identity={ownerId:'fixture-owner',basketId:'fixture-basket'};
 const lines=[{merchandiseId:'gid://shopify/ProductVariant/1',quantity:2,attributes:[

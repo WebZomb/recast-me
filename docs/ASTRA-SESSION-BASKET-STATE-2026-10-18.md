@@ -333,3 +333,29 @@ Changed files: src/basket-checkout.js, tests/basket-checkout.test.mjs, this sess
 docs/ASTRA-HANDOFF.md. Rollback this four-file review delta only; never delete saved
 approvals, basket records, orders or uncertain attempt locks. This is a local-
 tested validation repair, not proof that the complete cart is launch-ready.
+
+## October19, 02:07 Eastern — owner authorizes cart deployment
+
+Owner explicitly requested deployment and approved the previously blocked Cloudflare
+bundle check. PR93 advanced with a lease from06cab310 to reviewed b9a6b264.
+Wrangler dry-run now passes (metrics disabled); hosted security39207430004 passed,
+customer-policy39207430045 was still running at the check. These results apply to
+b9a6b264. Main and production have not changed.
+
+Release inspection found a concrete configuration incompatibility: wrangler.jsonc
+stores SHOPIFY_SHOP as b2wnfu-7g, while basketShop previously accepted only a full
+myshopify.com domain. Match the existing application's short-name normalization
+without weakening the domain allowlist. Added one regression covering the actual
+configured shop and hostile/invalid values;37 checkout tests and46 combined
+checkout/routed integration tests pass. No GraphQL operation changed.
+
+Access: current local environment has no Cloudflare deployment credentials or
+Storefront token configured. This does not prove production secrets are absent.
+Opera connector reports disconnected; authorized online PC exposes no active
+browser debugging session on9222/9223. Cloud browser reaches Cloudflare login,
+not an authenticated dashboard. Need authenticated access to verify/configure
+Storefront checkout and enable the feature; do not ask owner to pay for a test.
+Existing PR92 fulfillment integration and cart recovery gates still apply.
+No merge, live enablement, order, payment, limit or discount change performed.
+Rollback this follow-up only: restore basketShop and its regression test; retain
+the saved-checkout repair and all private attempt records.
