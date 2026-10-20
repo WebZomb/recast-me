@@ -22,6 +22,8 @@ final class StoreScreenshots: XCTestCase {
         let loaded = app.webViews.firstMatch.staticTexts.matching(NSPredicate(format: "label CONTAINS[c] %@", "Your photo")).firstMatch
         XCTAssertTrue(loaded.waitForExistence(timeout: 45))
         XCTAssertFalse(app.staticTexts["We couldn’t open the studio"].exists)
+        // Allow remote assets to settle; outputs still require visual acceptance.
+        Thread.sleep(forTimeInterval: 20)
         capture("02-create")
         app.buttons["My Recasts"].firstMatch.tap()
         capture("03-my-recasts-empty")

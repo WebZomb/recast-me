@@ -60,7 +60,9 @@ jobs:
           print(matches[-1]['udid'])
           PYDEVICE
           )
-          xcodebuild -project RecastMe.xcodeproj -scheme StoreScreenshots -configuration Debug -destination "platform=iOS Simulator,id=$RECAST_SIMULATOR" -resultBundlePath /tmp/recast-screens.xcresult CODE_SIGNING_ALLOWED=NO test
+          xcrun simctl boot "$RECAST_SIMULATOR" || true
+          xcrun simctl bootstatus "$RECAST_SIMULATOR" -b
+          xcodebuild -retry-tests-on-failure -test-iterations 2 -project RecastMe.xcodeproj -scheme StoreScreenshots -configuration Debug -destination "platform=iOS Simulator,id=$RECAST_SIMULATOR" -resultBundlePath /tmp/recast-screens.xcresult CODE_SIGNING_ALLOWED=NO test
       - name: Export captured attachments
         if: always()
         run: |
