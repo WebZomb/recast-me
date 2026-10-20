@@ -1,4 +1,4 @@
-const sources={environment:'Environment setting',default:'Source default',code:'Fixed in code',invalid_environment_fallback:'Invalid setting — fallback applied',invalid_environment:'Invalid setting — check configuration'};
+const sources={owner_settings:'Saved admin setting',environment:'Environment setting',default:'Source default',code:'Fixed in code',invalid_environment_fallback:'Invalid setting — fallback applied',invalid_environment:'Invalid setting — check configuration'};
 export function initOwnerCapacity(api){
   const root=document.getElementById('capacity-rows'),status=document.getElementById('capacity-status'),note=document.getElementById('capacity-note');
   let generation=0;

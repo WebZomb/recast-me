@@ -1,6 +1,6 @@
 import {walletFor} from './render-credits.js';
 import {ownerCapacitySnapshot} from './owner-capacity.js';
-import {screeningCapacity} from './capacity-policy.js';
+import {screeningCapacity,CAPACITY_SOURCES} from './capacity-policy.js';
 // Owner-only, versioned policy controls. No credentials or arbitrary env keys are editable.
 import {change,read,equal,fault,sameOrigin,privateJson} from './commerce-store.js';
 export const SETTINGS_KEY='system/owner-settings-v1.json';
@@ -40,6 +40,11 @@ export async function withOwnerSettings(env){
   const stored=await read(env,SETTINGS_KEY);if(!stored)return {...env,RECAST_SETTINGS_APPLIED:true};
   if(!Number.isSafeInteger(stored.revision)||stored.revision<1)throw fault('settings_storage','Owner settings need review.',503);
   const values=validate(stored.values,policyFromEnv(env)),next={...env,RECAST_SETTINGS_APPLIED:true};
+  next[CAPACITY_SOURCES]=Object.fromEntries(capacityFields.map(key=>{
+    const binding=fields[key][0];
+    const inherited=key==='screeningDaily'?screeningCapacity(env).source:env[binding]==null?'default':'environment';
+    return [binding,Object.hasOwn(stored.values,key)?'owner_settings':inherited];
+  }));
   for(const [key,[binding]] of Object.entries(fields))next[binding]=String(values[key]);
   next.RENDER_PAUSED=String(values.paused);return next;
 }

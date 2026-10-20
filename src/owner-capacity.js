@@ -1,7 +1,7 @@
 import {hash} from './commerce-store.js';
 import {moderationReadiness} from './content-safety.js';
 import {SUBJECT_VERSION} from './subject-detection.js';
-import {screeningCapacity,subjectDetectionLimit,ORIGINAL_PHOTO_DAILY_LIMIT} from './capacity-policy.js';
+import {screeningCapacity,subjectDetectionLimit,ORIGINAL_PHOTO_DAILY_LIMIT,capacitySource} from './capacity-policy.js';
 
 // Read only. Never initializes a salt, claims capacity, probes a provider or writes a ledger.
 async function record(env,key){
@@ -19,7 +19,7 @@ function usage(row,field){
   return Number.isSafeInteger(used)&&used>=0?{used,usageStatus:'recorded'}:{used:null,usageStatus:'invalid'};
 }
 function detectionPolicy(env,key,fallback){
-  try{return {limit:subjectDetectionLimit(env,key,fallback),source:env[key]==null?'default':'environment'};}
+  try{return {limit:subjectDetectionLimit(env,key,fallback),source:capacitySource(env,key,env[key]==null?'default':'environment')};}
   catch{return {limit:null,source:'invalid_environment'};}
 }
 function capacity(id,label,policy,count,extra={}){

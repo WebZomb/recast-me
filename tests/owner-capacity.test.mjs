@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {Bucket} from './security-helpers.mjs';
 import {hash} from '../src/commerce-store.js';
 import {ownerCapacitySnapshot} from '../src/owner-capacity.js';
-import {ownerSettingsRoute} from '../src/owner-settings.js';
+import {ownerSettingsRoute,withOwnerSettings,policyFromEnv,SETTINGS_KEY} from '../src/owner-settings.js';
 import {screeningCapacity,subjectDetectionLimit} from '../src/capacity-policy.js';
 const now=new Date('2026-10-17T23:59:59Z'),day='2026-10-17';
 const req=(method='GET',token='owner-fixture')=>new Request('https://recast.test/api/admin/capacity',{method,headers:{authorization:`Bearer ${token}`,'cf-connecting-ip':'192.0.2.10'}});
@@ -56,4 +56,30 @@ test('invalid subject configuration is visible and unavailable current network i
   const e={...env(),SUBJECT_DETECTION_DAILY_LIMIT:'bad',SUBJECT_DETECTION_NETWORK_LIMIT:'0'};
   const d=await ownerCapacitySnapshot(new Request('https://recast.test/'),e,now);
   assert.equal(d.rows[1].limit,null);assert.equal(d.rows[1].source,'invalid_environment');assert.equal(d.rows[2].limit,0);assert.equal(d.rows[3].usageStatus,'unavailable');
+});
+test('saved capacity values report admin origin without changing enforcement or counters',async()=>{
+  const e={...env(),CONTENT_SCREENING_DAILY_LIMIT:'200',SUBJECT_DETECTION_DAILY_LIMIT:'200',SUBJECT_DETECTION_NETWORK_LIMIT:'20'};
+  const values={...policyFromEnv(e),screeningDaily:250,subjectDaily:300,subjectNetwork:0};
+  await e.ARTWORK.put(SETTINGS_KEY,JSON.stringify({revision:1,values,history:[]}));
+  const serial=e.ARTWORK.serial;e.ARTWORK.put=()=>{throw Error('diagnostics must not write');};
+  const active=await withOwnerSettings(e),response=await ownerSettingsRoute(req(),active),d=await response.json();
+  assert.deepEqual(d.rows.slice(0,3).map(r=>[r.limit,r.source]),[[250,'owner_settings'],[300,'owner_settings'],[0,'owner_settings']]);
+  assert.equal(screeningCapacity(active).limit,250);assert.equal(subjectDetectionLimit(active,'SUBJECT_DETECTION_NETWORK_LIMIT',20),0);
+  assert.equal(d.rows[3].source,'code');assert.equal(e.ARTWORK.serial,serial);assert.equal(await withOwnerSettings(active),active);
+  assert.equal(e.CONTENT_SCREENING_DAILY_LIMIT,'200');
+});
+test('legacy saved settings retain actual inherited default environment and fallback origins',async()=>{
+  for(const raw of [undefined,'275','bad']){
+    const e={...env(),CONTENT_SCREENING_DAILY_LIMIT:raw,SUBJECT_DETECTION_DAILY_LIMIT:'350'};
+    const values=policyFromEnv(e);delete values.screeningDaily;delete values.subjectDaily;delete values.subjectNetwork;
+    await e.ARTWORK.put(SETTINGS_KEY,JSON.stringify({revision:1,values,history:[]}));
+    const d=await ownerCapacitySnapshot(req(),await withOwnerSettings(e),now);
+    assert.deepEqual(d.rows.slice(0,3).map(r=>r.source),[raw===undefined?'default':raw==='bad'?'invalid_environment_fallback':'environment','environment','default']);
+    assert.equal(d.rows[0].limit,raw==='275'?275:200);
+  }
+});
+test('without saved settings defaults and environment sources remain unchanged',async()=>{
+  const e={...env(),SUBJECT_DETECTION_NETWORK_LIMIT:'0'},active=await withOwnerSettings(e);
+  const d=await ownerCapacitySnapshot(req(),active,now);
+  assert.deepEqual(d.rows.map(r=>r.source),['default','default','environment','code']);
 });
