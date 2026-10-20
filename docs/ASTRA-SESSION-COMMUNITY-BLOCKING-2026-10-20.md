@@ -1,0 +1,15 @@
+# Community contributor blocking — October 20, 2026
+
+Baseline main 6ddf24e208d7327574e39ba502f546775e3ac2fa. Owner requests completing App Store blockers and submission. This change addresses a known Community gap; it does not prove Apple approval or submission readiness.
+
+Implemented visitor Block contributor, server-side suppression from New/Popular/favorites/image routes, and authenticated admin Block/Unblock in both review surfaces. Owner blocking hides all known contributor posts and rejects new submissions. Unblock never automatically republishes pictures. New submissions retain a stable salted cookie-based contributor reference plus existing salted network grouping. Legacy network-only entries remain blockable. No raw IP, contributor reference or block list is exposed publicly. Existing owner capability checks, review-before-publication, rate limiting and storage conditional writes remain enforced. Private artwork, purchases and order paths are unchanged.
+
+Blocking is anonymous browser/network enforcement, not account-level identity. Clearing storage, new devices/networks and shared networks limit accuracy. No claim of complete abuse prevention. Viewer lists are bounded at 600 references/5000 viewers, owner list at2000 references and total existing Community state at4MB. Deleted blocked pictures retain a private removed moderation reference, without image bytes, so owner unblock remains possible. This consumes an existing retained-record slot and needs future operational cleanup design.
+
+Changed files: src/community.js; public/community.js/html, privacy.html, admin-community-panel.js, admin-community.js/html, admin.js; tests/community.test.mjs; scripts/community-browser.cjs. Quiet text action fits existing card style; no extra bottom navigation tab. Privacy copy explains anonymous identity and block retention.
+
+Validation: 605 Node tests PASS; focused10 Community tests PASS including cross-IP browser persistence, whole-contributor filtering, owner auth, banning/explicit unban, legacy blocks and no private identity leakage. Worker dry-run PASS. Browser script adds real button click, confirmation and resulting gallery removal across320/393/768/1280 fixtures; hosted execution pending. No live customer blocks, posts, votes, rendering, payments, spending-limit changes or production orders.
+
+Deployment: isolated source branch only at this entry; not live. Apple build1002 selected in previous session, not submitted. Privacy/screenshot tasks independent. Source evidence: Apple App Review Guideline1.2 https://developer.apple.com/app-store/review/guidelines/#user-generated-content (checked Oct20). Apple decides adequacy of safeguards; do not claim compliance certification.
+
+Rollback: revert runtime/UI commit via guarded deployment while retaining Community state/block references. Older runtime ignores blocks and would show approved posts hidden only by viewer preference, but owner-banned posts remain rejected. Prefer a forward fix to preserve blocking rather than silently removing this protection. Do not delete Community records or reset customer votes.

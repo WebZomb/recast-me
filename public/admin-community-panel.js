@@ -15,12 +15,13 @@ export function initCommunityReview(api,headers){
     const image=document.createElement('img');image.alt=`${post.styleName} — watermarked submission`;
     const body=document.createElement('div');body.className='community-review-body';
     const title=document.createElement('h3');title.textContent=post.styleName;
-    const info=document.createElement('p');info.textContent=`${post.status} · ${post.reports||0} reports`;
+    const info=document.createElement('p');info.textContent=`${post.status}${post.blocked?' · contributor blocked':''} · ${post.reports||0} reports`;
     const actions=document.createElement('div');actions.className='community-review-actions';
-    for(const [label,action,value] of [['Approve','review','approved'],['Reject / hide','review','rejected'],['Delete','remove',null]]){
+    for(const [label,action,value] of [['Approve','review','approved'],['Reject / hide','review','rejected'],['Delete','remove',null],[post.blocked?'Unblock contributor':'Block contributor',post.blocked?'unban':'ban',null]]){
      const button=document.createElement('button');button.type='button';button.textContent=label;if(value==='approved')button.disabled=true;
      button.onclick=async()=>{
       if(current!==generation)return;
+      if(action==='ban'&&!confirm('Block this contributor from Community and hide all their posts? Private artwork and orders are unchanged.'))return;
       if(action==='remove'&&!confirm('Permanently delete this community post? Private artwork and orders are not deleted.'))return;
       actions.querySelectorAll('button').forEach(b=>b.disabled=true);
       try{await api(`/api/admin/community/${post.id}/${action}`,{method:'POST',body:value?{status:value}:{}});if(current===generation)await load()}

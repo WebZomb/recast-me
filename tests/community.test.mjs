@@ -86,3 +86,34 @@ test('tampered cookies cannot impersonate another network vote; legacy votes rem
  await f.call(`/api/community/${id}/heart`,{active:false},false,'9.8.7.6',forged);
  assert.equal((await(await f.call('/api/community')).json()).posts[0].hearts,1);
 });
+
+test('viewer block hides contributor across New, Popular, favorites and image route without exposing identity',async()=>{
+ const f=setup();const created=await f.call('/api/community/submit',submission);const cookie=created.headers.get('set-cookie').split(';')[0];const {id}=await created.json();
+ const second=await(await f.call('/api/community/submit',{...submission,requestId:'RC-TEST-SECOND'},false,'8.8.8.8',cookie)).json();
+ for(const item of [id,second.id])await f.call(`/api/admin/community/${item}/review`,{status:'approved'},true);
+ const viewer=await f.call('/api/community',null,false,'9.9.9.9');const vc=viewer.headers.get('set-cookie').split(';')[0];
+ assert.equal((await f.call(`/api/community/${id}/block`,{},false,'9.9.9.9',vc)).status,200);
+ for(const url of ['/api/community','/api/community?sort=popular','/api/community?ids='+second.id])assert.deepEqual((await(await f.call(url,null,false,'10.10.10.10',vc)).json()).posts,[]);
+ assert.equal((await f.call(`/api/community/${second.id}/image`,null,false,'10.10.10.10',vc)).status,404);
+ const publicResult=await(await f.call('/api/community',null,false,'11.11.11.11')).json();assert.equal(publicResult.posts.length,2);assert.doesNotMatch(JSON.stringify(publicResult),/submitter|networkSubmitter|blockedSubmitters|viewerBlocks/);
+ assert.equal((await f.call(`/api/admin/community/${id}/image`,null,true)).status,200);
+});
+test('admin ban hides all contributor posts, blocks new submissions across IP change and requires explicit unban/review',async()=>{
+ const f=setup();const created=await f.call('/api/community/submit',submission);const cookie=created.headers.get('set-cookie').split(';')[0];const {id}=await created.json();
+ await f.call(`/api/admin/community/${id}/review`,{status:'approved'},true);
+ assert.equal((await f.call(`/api/community/${id}/ban`,{})).status,403);
+ assert.equal((await f.call(`/api/admin/community/${id}/ban`,{},true)).status,200);
+ assert.deepEqual((await(await f.call('/api/community')).json()).posts,[]);
+ assert.equal((await f.call('/api/community/submit',{...submission,requestId:'RC-TEST-NEWBLOCK'},false,'8.8.8.8',cookie)).status,403);
+ assert.equal((await f.call(`/api/admin/community/${id}/review`,{status:'approved'},true)).status,409);
+ await f.call(`/api/admin/community/${id}/unban`,{},true);
+ assert.deepEqual((await(await f.call('/api/community')).json()).posts,[]);
+ assert.equal((await f.call(`/api/admin/community/${id}/review`,{status:'approved'},true)).status,200);
+ assert.equal((await(await f.call('/api/community')).json()).posts.length,1);
+});
+test('legacy network-only submitter bans retain an admin recovery reference and prevent new submissions',async()=>{
+ const f=setup(),{id}=await(await f.call('/api/community/submit',submission)).json();
+ const key='community/v1/index.json',stored=f.data.get(key),state=JSON.parse(stored.value);state.rows[0].submitter=state.rows[0].networkSubmitter;delete state.rows[0].networkSubmitter;stored.value=JSON.stringify(state);
+ await f.call(`/api/admin/community/${id}/ban`,{},true);assert.equal((await f.call(`/api/admin/community/${id}/remove`,{},true)).status,200);assert.equal((await(await f.call('/api/admin/community',null,true)).json()).posts[0].status,'removed');
+ assert.equal((await f.call('/api/community/submit',{...submission,requestId:'RC-TEST-LEGACY'})).status,403);
+});
