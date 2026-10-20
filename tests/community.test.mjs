@@ -9,8 +9,8 @@ function setup(){
  async delete(key){data.delete(key)}
  }};
  const deps={authorize:async(e,id,token)=>{if(token!=='secret')throw Object.assign(Error('Invalid artwork access token.'),{status:403});return {styleId:'royal',styleName:'Royal'}},preview:async()=>new Uint8Array([255,216,255]),admin:r=>{if(r.headers.get('authorization')!=='Bearer test-owner')throw Object.assign(Error('Owner required.'),{status:401})}};
- async function call(path,body,admin=false,ip='1.2.3.4'){
- const request=new Request('https://recast.test'+path,{method:body?'POST':'GET',headers:{'x-recast-request':'1','cf-connecting-ip':ip,...(admin?{authorization:'Bearer test-owner'}:{})},...(body?{body:JSON.stringify(body)}:{})});return communityRoutes(request,env,deps);
+ async function call(path,body,admin=false,ip='1.2.3.4',cookie=''){
+ const request=new Request('https://recast.test'+path,{method:body?'POST':'GET',headers:{'x-recast-request':'1','cf-connecting-ip':ip,cookie,...(admin?{authorization:'Bearer test-owner'}:{})},...(body?{body:JSON.stringify(body)}:{})});return communityRoutes(request,env,deps);
  }
  return {call,env,deps,data};
 }
@@ -57,4 +57,32 @@ test('concurrent duplicate submissions and hearts keep one record and distinct v
  await f.call(`/api/admin/community/${a.id}/review`,{status:'approved'},true);
  await Promise.all(['1','2','3'].map(ip=>f.call(`/api/community/${a.id}/heart`,{active:true},false,ip)));
  assert.equal((await(await f.call('/api/community')).json()).posts[0].hearts,3);
+});
+
+test('signed heart identity survives reload, IP changes and undo without duplicate votes',async()=>{
+ const f=setup(),{id}=await(await f.call('/api/community/submit',submission)).json();
+ await f.call(`/api/admin/community/${id}/review`,{status:'approved'},true);
+ const first=await f.call('/api/community');const cookie=first.headers.get('set-cookie').split(';')[0];
+ assert.match(first.headers.get('set-cookie'),/Secure; HttpOnly; SameSite=Lax/);
+ await f.call(`/api/community/${id}/heart`,{active:true},false,'1.2.3.4',cookie);
+ for(let i=0;i<3;i++)await f.call(`/api/community/${id}/heart`,{active:true},false,'9.8.7.6',cookie);
+ let post=(await(await f.call('/api/community',null,false,'9.8.7.6',cookie)).json()).posts[0];
+ assert.equal(post.hearts,1);assert.equal(post.liked,true);
+ await f.call(`/api/community/${id}/heart`,{active:false},false,'9.8.7.6',cookie);
+ post=(await(await f.call('/api/community',null,false,'9.8.7.6',cookie)).json()).posts[0];
+ assert.equal(post.hearts,0);assert.equal(post.liked,false);
+ await f.call(`/api/community/${id}/heart`,{active:true},false,'9.8.7.6',cookie);
+ assert.equal((await(await f.call('/api/community',null,false,'9.8.7.6',cookie)).json()).posts[0].hearts,1);
+});
+test('tampered cookies cannot impersonate another network vote; legacy votes remain recognized',async()=>{
+ const f=setup(),{id}=await(await f.call('/api/community/submit',submission)).json();
+ await f.call(`/api/admin/community/${id}/review`,{status:'approved'},true);
+ await f.call(`/api/community/${id}/heart`,{active:true});
+ const first=await f.call('/api/community');const cookie=first.headers.get('set-cookie').split(';')[0];
+ assert.equal((await first.json()).posts[0].liked,true);
+ const forged=cookie.slice(0,-1)+(cookie.endsWith('0')?'1':'0');
+ const response=await f.call('/api/community',null,false,'9.8.7.6',forged);
+ assert.ok(response.headers.get('set-cookie'));assert.equal((await response.json()).posts[0].liked,false);
+ await f.call(`/api/community/${id}/heart`,{active:false},false,'9.8.7.6',forged);
+ assert.equal((await(await f.call('/api/community')).json()).posts[0].hearts,1);
 });
