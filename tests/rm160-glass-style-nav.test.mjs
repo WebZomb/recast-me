@@ -40,7 +40,7 @@ test('native-style black website dock still overrides the old hidden-link rule',
   assert.match(js,/if \(window\.webkit\?\.messageHandlers\?\.recastPreview\) return/);
   assert.match(js,/dock\.children\.length !== 5/);
   assert.match(js,/setProperty\('display', 'flex', 'important'\)/);
-  const labels=['Create','My Recasts','My Orders','Specials','Guide'];
+  const labels=['Create','My Recasts','My Orders','Specials','Community'];
   const positions=labels.map(name=>js.indexOf("label:'"+name+"'"));
   assert.ok(positions.every(x=>x!==-1));
   assert.ok(positions.every((x,i)=>i===0||x>positions[i-1]));
@@ -59,7 +59,7 @@ test('native-style black website dock still overrides the old hidden-link rule',
 test('black app-style website navigation is shared across phone and desktop pages',()=>{
   for(const page of ['index.html','my-recasts.html','my-orders.html','order.html','purchase-demo.html',
                      'guide.html','privacy.html','support.html','gift-ideas.html']){
-    assert.match(read('public/'+page),/mobile-bottom-nav\.js\?v=164/,page);
+    assert.match(read('public/'+page),/mobile-bottom-nav\.js\?v=165/,page);
   }
   assert.match(read('public/index.html'),/id="more-adventures"/);
   assert.match(read('public/index.html'),/id="surprise-world"/);

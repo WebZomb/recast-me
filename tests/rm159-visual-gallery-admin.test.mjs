@@ -67,14 +67,14 @@ test('the two illustrated worlds are original standalone SVG with only local ass
 });
 test('mobile navigation order is Create, My Recasts, My Orders, Guide, without old floating pill',()=>{
  const nav=text('public/mobile-bottom-nav.js');
- const names=['Create','My Recasts','My Orders','Specials','Guide'];
+ const names=['Create','My Recasts','My Orders','Specials','Community'];
  const positions=names.map(name=>nav.indexOf("label:'"+name+"'"));
  assert.ok(positions.every(x=>x>=0));
  assert.ok(positions.every((x,i)=>i===0||x>positions[i-1]));
  assert.doesNotMatch(nav,/document\.body\.append\(a\)/);
  assert.doesNotMatch(nav,/recast-legacy-orders-pill/);
  for(const file of ['index.html','my-recasts.html','my-orders.html','guide.html','order.html','purchase-demo.html']){
-  assert.match(text('public/'+file),/mobile-bottom-nav\.js\?v=164/,file);
+  assert.match(text('public/'+file),/mobile-bottom-nav\.js\?v=165/,file);
  }
 });
 test('saved Recasts show individual ID and reusable clean-image product link',()=>{

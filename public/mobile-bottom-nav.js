@@ -2,6 +2,8 @@
    The existing .site-header is the natural location on desktop; phones use a
    fixed, illuminated black dock. Never render an empty decorative shell. */
 (() => {
+  const help=document.createElement('a');help.href='/guide.html';help.textContent='Help';help.className='community-help-link';help.setAttribute('aria-label','Help and Guide');
+  const header=document.querySelector('.site-header, .library-header');if(header)header.append(help);
   if (window.webkit?.messageHandlers?.recastPreview) return;
   if (document.querySelector('nav.recast-mobile-nav')) return;
 
@@ -10,7 +12,7 @@
     { path:'/my-recasts.html',label:'My Recasts', icon:'<rect x="3" y="7" width="15" height="13" rx="2"/><path d="M7 7V4h14v13h-3"/><circle cx="9" cy="11" r="1.4"/><path d="m5 18 5-5 4 3 2-2"/>' },
     { path:'/my-orders.html',label:'My Orders', icon:'<path d="M3 7h18v14H3V7Zm0 0 3-4h12l3 4M12 3v18m-9-8h18"/>' },
     { path:'/specials.html',label:'Specials', icon:'<path d="M3 9h18v12H3V9Z"/><path d="M2 6h20v3H2zM12 6v15"/><path d="M12 6C9 1 5 1 5 4c0 2 3 2 7 2Zm0 0c3-5 7-5 7-2 0 2-3 2-7 2Z"/>' },
-    { path:'/guide.html',label:'Guide', icon:'<circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.6 2.6 0 0 1 5 1c0 1.8-2.5 2-2.5 4m0 3.5h.01"/>' }
+    { path:'/community.html',label:'Community', icon:'<circle cx="9" cy="8" r="3"/><path d="M3 21v-3a6 6 0 0 1 12 0v3M16 5a3 3 0 0 1 0 6m2 3a5 5 0 0 1 3 5v2"/>' }
   ];
 
   // Cloudflare serves both extensionless URLs and .html paths. They must
@@ -64,6 +66,7 @@
     }
   };
 
+  const helpStyle=document.createElement('link');helpStyle.rel='stylesheet';helpStyle.href='/community.css?v=1';document.head.append(helpStyle);
   const old = document.querySelector('link[data-recast-bottom-nav]');
   if (old) old.href = '/mobile-bottom-nav.css?v=163';
   else {

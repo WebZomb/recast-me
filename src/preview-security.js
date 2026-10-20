@@ -1,3 +1,4 @@
+import {communityRoutes} from './community.js';
 import { shopifyCatalog } from "./index.js";
 import {saveOriginalPhoto} from './original-photo.js';
 import { WATERMARK_TILE_BASE64, WATERMARK_FOOTER_BASE64 } from './watermark-tile.js';
@@ -183,6 +184,8 @@ export function secureApplication(application) {
           const image=`data:image/jpeg;base64,${to64(await protectedArtwork(env,data.requestId))}`;
           return json({...data,image,watermarked:true});
         }
+        const community=await communityRoutes(request,env,{authorize:customerMeta,preview:protectedArtwork,admin:requireOwner});
+        if(community)return hardened(community);
         const creditResponse=await creditRoute(request,env);
         if(creditResponse)return hardened(creditResponse);
         const approvedPrint=path.match(/^\/api\/order-print\/([a-zA-Z0-9._-]+)$/);
