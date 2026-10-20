@@ -1,5 +1,5 @@
 import {communityAction,readLocal,OWNED} from './community-share.js';
-const FAVORITES='recast_community_favorites_v1',HEARTS='recast_community_hearts_v1';
+const FAVORITES='recast_community_favorites_v1';
 const grid=document.querySelector('#community-grid'),status=document.querySelector('#community-status'),more=document.querySelector('#community-more');
 let posts=[],shown=0,sort='new',loadVersion=0;
 function toggleLocal(key,id){const old=readLocal(key);const next=old.includes(id)?old.filter(x=>x!==id):[id,...old].slice(0,100);localStorage.setItem(key,JSON.stringify(next));return next.includes(id)}
@@ -9,8 +9,8 @@ function card(post){
  const body=document.createElement('div');body.className='community-card-body';
  const title=document.createElement('h2');title.textContent=post.styleName;
  const actions=document.createElement('div');actions.className='community-card-actions';
- const heart=document.createElement('button');let liked=readLocal(HEARTS).includes(post.id);heart.textContent=`♡ ${post.hearts}`;heart.setAttribute('aria-label',`Heart ${post.styleName}`);heart.setAttribute('aria-pressed',liked);
- heart.onclick=async()=>{heart.disabled=true;try{await communityAction(`/api/community/${post.id}/heart`,{active:!liked});toggleLocal(HEARTS,post.id);await load()}catch(e){status.textContent=e.message}finally{heart.disabled=false}};
+ const heart=document.createElement('button');const liked=post.liked===true;heart.textContent=`${liked?'♥':'♡'} ${post.hearts}`;heart.setAttribute('aria-label',`Heart ${post.styleName}`);heart.setAttribute('aria-pressed',liked);
+ heart.onclick=async()=>{heart.disabled=true;try{await communityAction(`/api/community/${post.id}/heart`,{active:!liked});await load()}catch(e){status.textContent=e.message}finally{heart.disabled=false}};
  const save=document.createElement('button');save.textContent=readLocal(FAVORITES).includes(post.id)?'★ Saved':'☆ Save';save.setAttribute('aria-pressed',readLocal(FAVORITES).includes(post.id));
  save.onclick=()=>{try{const active=toggleLocal(FAVORITES,post.id);save.textContent=active?'★ Saved':'☆ Save';save.setAttribute('aria-pressed',active);status.textContent=active?'Saved to Community favorites in this browser.':'Removed from Community favorites.';if(sort==='saved')load()}catch{status.textContent='Your browser could not save this favorite.'}};
  actions.append(heart,save);

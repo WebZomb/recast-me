@@ -53,7 +53,9 @@ try {
   await bucket.put(key,JSON.stringify(prior));
   const env={ARTWORK:racing(bucket),BASKET_ENABLED:'true',SHOPIFY_SHOP:'fixture',SHOPIFY_STOREFRONT_TOKEN:'fixture-only'};
   let creates=0;
-  const fetcher=async()=>{creates++;return Response.json({data:{cartCreate:{cart:{id:'gid://shopify/Cart/new?key=fixture-private',checkoutUrl:'https://fixture.myshopify.com/checkouts/new',lines:{nodes:lines.map(l=>({quantity:l.quantity,attributes:l.attributes,merchandise:{id:l.merchandiseId}}))}},userErrors:[],warnings:[]}}});};
+  const fetcher=async(_url,options)=>{
+   if(JSON.parse(options.body).query.includes('query RecastBasketRefresh'))return Response.json({data:{cart:{id:prior.cartId,checkoutUrl:prior.checkoutUrl,lines:{pageInfo:{hasNextPage:false},nodes:lines.map(l=>({quantity:l.quantity,attributes:l.attributes,merchandise:{id:l.merchandiseId}}))}}}});
+   creates++;return Response.json({data:{cartCreate:{cart:{id:'gid://shopify/Cart/new?key=fixture-private',checkoutUrl:'https://fixture.myshopify.com/checkouts/new',lines:{nodes:lines.map(l=>({quantity:l.quantity,attributes:l.attributes,merchandise:{id:l.merchandiseId}}))}},userErrors:[],warnings:[]}}});};
   const checkouts=await Promise.allSettled([1,2].map(()=>beginBasketCheckout(env,identity,{revision:2,lines:[{id:'fixture'}]},lines,{fetcher})));
   assert.equal(checkouts.filter(r=>r.status==='fulfilled').length,1);assert.equal(creates,1);
   assert.equal(checkouts.find(r=>r.status==='rejected').reason.code,'basket_checkout_unknown');
