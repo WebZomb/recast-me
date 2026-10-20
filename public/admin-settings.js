@@ -33,10 +33,11 @@ export function initOwnerSettings(api,notify){
     try{
       const values={};for(const key of Object.keys(current.values)){
         const input=form.elements.namedItem(key);
-        values[key]=key==='paused'?input.checked:key==='budgetCents'?Math.round(Number(input.value)*100):Number(input.value);
+        values[key]=!input?current.values[key]:key==='paused'?input.checked:key==='budgetCents'?Math.round(Number(input.value)*100):Number(input.value);
       }
-      const increased=['budgetCents','websiteCalls','socialCalls'].some(k=>values[k]>current.values[k]);
-      if(increased&&!confirm(`Raise these limits? The AI reservation budget will be $${(values.budgetCents/100).toFixed(2)} per UTC day, with ${values.websiteCalls} website calls and ${values.socialCalls} X calls. This may allow more paid AI usage. Other service costs are separate.`))return;
+      const raised=['budgetCents','websiteCalls','socialCalls','screeningDaily','subjectDaily','subjectNetwork'].filter(k=>values[k]>current.values[k]);
+      const increased=raised.length>0;
+      if(increased&&!confirm(`Raise these limits? ${raised.map(k=>`${k}: ${current.values[k]} → ${values[k]}`).join(', ')}. Budget values are cents. This may allow more paid usage. Existing usage is not reset.`))return;
       await api('/api/admin/owner-settings',{method:'POST',body:{revision:current.revision,values,...(increased?{confirm:'INCREASE_LIMITS'}:{})}});
       await load(true);notify('Settings saved. Existing purchase credits and print orders are unchanged.');
     }catch(e){text('owner-settings-save-status',e.message);notify(e.message)}finally{button.disabled=false}

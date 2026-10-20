@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#060611">
   <meta name="robots" content="noindex,nofollow">
   <title>Recast Me — Control Center</title>
-  <link rel="stylesheet" href="/admin.css?v=166">
+  <link rel="stylesheet" href="/admin.css?v=capacity1">
 </head>
 <body>
   <div class="aurora aurora-a"></div><div class="aurora aurora-b"></div>
@@ -157,15 +157,24 @@
         </div>
         <button type="button" id="reset-my-renders">Reset my daily HQ renders</button><p id="reset-my-renders-status" role="status" data-private-setting></p><p class="muted">Owner testing only. Use the same browser as your previews. Restores this network’s daily allowance; leaves site spending limits unchanged.</p>
         <p id="usage-day" class="muted" data-private-setting></p>
+        <section class="capacity-panel" aria-labelledby="capacity-title">
+          <div class="panel-heading"><div><h3 id="capacity-title">Upload &amp; screening capacity</h3><p>Read-only checks for limits that are separate from image rendering.</p></div><button id="refresh-capacity" type="button">Refresh capacity</button></div>
+          <p id="capacity-status" role="status" aria-live="polite" data-private-setting></p>
+          <div id="capacity-rows" class="capacity-grid" data-private-setting></div>
+          <p id="capacity-note" class="muted" data-private-setting></p>
+        </section>
         <form id="owner-settings-form" class="glass settings-form">
           <label>High Quality previews per 24 hours<input name="highDaily" type="number" min="0" max="20" step="1" required></label>
           <label>Standard previews after High Quality runs out<input name="standardDaily" type="number" min="0" max="25" step="1" required></label>
           <label>Bonus High Quality previews per new paid order<input name="purchaseBonus" type="number" min="0" max="20" step="1" required></label>
           <label>Website AI calls per UTC day<input name="websiteCalls" type="number" min="0" max="10000" step="1" required></label>
           <label>X AI calls per UTC day<input name="socialCalls" type="number" min="0" max="10000" step="1" required></label>
+          <label>Safety screenings per UTC day<input name="screeningDaily" type="number" min="1" max="1000" step="1" required></label>
+          <label>Subject checks per UTC day<input name="subjectDaily" type="number" min="0" max="1000" step="1" required></label>
+          <label>Subject checks per network / UTC day<input name="subjectNetwork" type="number" min="0" max="1000" step="1" required></label>
           <label>Shared AI reservation budget ($ / UTC day)<input name="budgetCents" type="number" min="0" max="1000" step="0.01" required></label>
           <label class="pause-setting"><input name="paused" type="checkbox"> Pause new image creation. Saved artwork and checkout stay available.</label>
-          <p>Raising spending or call limits asks for confirmation. A zero limit blocks new calls in that pool. This does not enable X, change print automation, or reset usage already counted.</p>
+          <p>Raising spending or check limits asks for confirmation. Safety screening stays on and has a minimum of one check. Zero blocks new calls in other pools. Original-photo uploads remain limited to 10 per network per UTC day. Saving does not reset counted usage or change print automation.</p>
           <button type="submit">Save settings</button><p id="owner-settings-save-status" role="status" data-private-setting></p>
         </form>
         <details class="glass settings-details"><summary>Engine configuration &amp; policy details</summary><pre id="owner-engines" data-private-setting></pre><p id="owner-settings-note" data-private-setting></p></details>
@@ -244,6 +253,6 @@
       <div id="toast" class="toast hidden"></div>
     </section>
   </main>
-  <script src="/admin.js?v=rm166" type="module"></script>
+  <script src="/admin.js?v=capacity1" type="module"></script>
 </body>
 </html>

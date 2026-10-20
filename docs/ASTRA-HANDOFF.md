@@ -369,6 +369,11 @@ October17 subject-variety follow-up — owner approved apparel models/print geom
 
 October17 original-photo shopping — prominent no-AI gift path and observed engine-outage notices; multi-item basket confirmed absent, not implemented. See [session](ASTRA-SESSION-PHOTO-SHOPPING-2026-10-17.md). Release pending.
 
+October17 capacity visibility — read-only authenticated screening/subject/original-upload inventory and responsive owner panel implemented on isolated branch. 601 Node tests and Worker dry-run pass; local browser install blocked by invalid archives, hosted visual checks pending. Not deployed; no caps or production operations changed. See [capacity session](ASTRA-SESSION-CAPACITY-2026-10-17.md).
+
+### October 18: owner capacity quick fixes (PR90 follow-up)
+
+Expanded owner command-center limits with authenticated/revisioned screening and subject-check controls; increases require explicit confirmation, legacy values migrate without counter resets, screening cannot be disabled, original-photo network limit stays 10. Parent PR90 975c9e0, production baseline 8492828 unchanged. 603 local Node tests and diff check pass; new-head hosted validation/deployment not yet established. No live limits, paid requests or orders changed. Details and release/rollback boundaries: [capacity session](ASTRA-SESSION-CAPACITY-2026-10-17.md). Coordinate with gated cart/recovery PR93; merge is not deployment and defaults are not verified live values.
 October19 owner clarification — redundant permanent own-photo card becomes outage/capacity-only; normal chooser preserved. See [session](ASTRA-SESSION-OUTAGE-ONLY-2026-10-19.md). Focused checks pass; release pending.
 
 October19/20 SEO discovery — three independent gift guides, expanded sitemap and missing Guide canonical, preserving existing site appearance/behavior. 595 tests and bundle pass; production pending. See [session](ASTRA-SESSION-SEO-2026-10-20.md).
@@ -378,3 +383,5 @@ October20 guide follow-up — owner screenshot reveals unstyled main guide CTA. 
 October20 Community — opted-in, owner-reviewed watermarked gallery, New/Popular100each, hearts, separate favorites and preset-only reuse with own photo. Five web tabs now include Community; Guide moves to header Help. 600 Node checks and bundle pass; browser gate/native/live release unverified. See [session](ASTRA-SESSION-COMMUNITY-2026-10-20.md). Preserve independent Save PR98 during integration.
 
 Community LIVE October20 — PR99 merge c233f379c3fa80f37cc1a45c24c4338d375ade66; final runtime f0778329e03c385b0451909a65608da3eeb05edf passed security39377736463/customer browser39377736512. Deploy39378084370 and smoke passed, Worker c1c966a3-d00e-4335-95f0-2eda87605caf. Live /community browser verified navigation and empty New/Popular/favorites. No customer photo published. Native tab and separate Save PR98 remain independent. See Community session receipt.
+
+October20 capacity integration — merged main728f02c into review-only PR90 d56c9b7, preserving both handoff histories and current Community/gift-guide/outage-only behavior.608local tests and bundle pass; local Chromium unavailable, final hosted gates pending. No live changes. See [capacity session](ASTRA-SESSION-CAPACITY-2026-10-17.md) for remaining source-attribution/live-data/alert gaps and rollback. Cart PR93 remains separate.

@@ -3,7 +3,7 @@ const {chromium,webkit}=require('playwright');
 const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
 const root=path.resolve('public'),out=path.resolve('rm050-browser-results');fs.mkdirSync(out,{recursive:true});
 const ready={ok:true,local:{ready:true},modes:{high:{ready:true,state:'ready'},quick:{ready:true,state:'ready'}}};
-const policy={highDaily:3,standardDaily:5,purchaseBonus:3,websiteCalls:70,socialCalls:100,budgetCents:500,paused:false};
+const policy={highDaily:3,standardDaily:5,purchaseBonus:3,websiteCalls:70,socialCalls:100,budgetCents:500,screeningDaily:200,subjectDaily:200,subjectNetwork:20,paused:false};
 (async()=>{
  const report={type:'Mocked APIs and image placeholders; not a live provider or visual-art acceptance test',checks:[],failures:[]};
  for(const [engine,width] of (process.env.RECAST_CHROMIUM_ONLY==='1'?[[chromium,320],[chromium,1440]]:[[webkit,393],[chromium,320],[chromium,1440]])){
@@ -40,6 +40,7 @@ const policy={highDaily:3,standardDaily:5,purchaseBonus:3,websiteCalls:70,social
    else if(p==='/api/admin/trends')d.trends=[];
    else if(p==='/api/admin/generation-errors')d.errors=[];
    else if(p==='/api/admin/render-readiness')Object.assign(d,{render:{lastResult:'not tested',checkedAt:null},social:{}});
+   else if(p==='/api/admin/capacity')d={ok:true,checkedAt:'2026-10-17T12:00:00Z',resetAt:'2026-10-18T00:00:00Z',rows:[{id:'screening',label:'Photo screening',used:200,limit:200,remaining:0,source:'default',usageStatus:'recorded',scope:'Site-wide',enabled:true,configured:true,note:'Shared screening budget.'},{id:'original-network',label:'Original-photo uploads on this network',used:null,limit:10,remaining:null,source:'code',usageStatus:'not_recorded',scope:'Current request network only',note:'No AI rendering.'}],note:'Read-only snapshot.'};
    else if(p==='/api/admin/owner-settings'){
     if(request.method()==='POST'){const body=request.postDataJSON();state.settings=body.values;state.revision++;state.saved.push(body);}
     Object.assign(d,{revision:state.revision,values:state.settings,history:[],usage:{day:'2026-10-06',websiteCalls:0,highCalls:0,standardCalls:0,socialCalls:0,reservedCents:0},connections:{creditsEnabled:true,socialEnabled:false,botProtection:false},engines:{high:'dev',standard:'klein9',social:'klein4'},note:'Test fixture'});
@@ -283,7 +284,14 @@ const policy={highDaily:3,standardDaily:5,purchaseBonus:3,websiteCalls:70,social
    await tapAdminTab('traffic');
    assert.equal(await page.locator('[data-panel="traffic"]').isVisible(),true);
    await tapAdminTab('limits');assert.equal(await page.locator('[name="purchaseBonus"]').inputValue(),'3');
+   await page.locator('#capacity-rows .capacity-card').first().waitFor();
+   assert.match(await page.locator('#capacity-rows').textContent(),/0 remaining/);
+   assert.match(await page.locator('#capacity-rows').textContent(),/Unknown \/ 10/);
+   assert.equal(await page.locator('#capacity-rows input').count(),0);
+   assert.ok(await page.locator('#capacity-rows').evaluate(el=>el.scrollWidth<=el.clientWidth+1),'Capacity cards fit the phone viewport');
    await page.locator('[name="highDaily"]').fill('2');
+   assert.equal(await page.locator('[name="screeningDaily"]').inputValue(),'200');
+   await page.locator('[name="subjectNetwork"]').fill('10');
    const saveOwner=page.locator('#owner-settings-form [type="submit"]');
    // WebKit intermittently never considers this button "stable" after a long
    // mobile scroll. Verify the pointer hit target, then send a real mouse click
@@ -300,7 +308,11 @@ const policy={highDaily:3,standardDaily:5,purchaseBonus:3,websiteCalls:70,social
    }
    await saveByPointer();
    assert.equal(state.saved.at(-1).values.highDaily,2);
+   assert.equal(state.saved.at(-1).values.subjectNetwork,10);
    page.on('dialog',d=>d.accept());await page.locator('[name="budgetCents"]').fill('6.00');await saveByPointer();
+   assert.equal(state.saved.at(-1).confirm,'INCREASE_LIMITS');
+   await page.locator('[name="screeningDaily"]').fill('300');await saveByPointer();
+   assert.equal(state.saved.at(-1).values.screeningDaily,300);
    assert.equal(state.saved.at(-1).confirm,'INCREASE_LIMITS');
    await page.screenshot({path:path.join(out,`${engine.name()}-${width}-admin.png`)});
    const adminOverflow=await page.evaluate(()=>{
