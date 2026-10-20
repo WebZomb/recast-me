@@ -22,3 +22,12 @@ Run 9d6f470d-3a0b-42b3-9694-ee0838a8a09f successfully added existing build 1.0 (
 Build 1001 is the October 17 binary and does NOT include today's native Community change. Latest native source still requires a new signed Codemagic archive/upload with an explicitly checked unused build number greater than 1001. Simulator CI success is not signed distribution evidence.
 
 Pricing/availability and privacy pages did not render app-specific content during follow-up; no values changed. Next: authenticated Codemagic release build, verify actual screenshot requirements and privacy/US availability through working Apple navigation, then review submission readiness. Public release remains unsubmitted.
+
+
+## October 20 12:20 Eastern — device screenshot and release access follow-up
+
+Owner screenshot shows top Help and native bottom Guide. Fresh source comparison confirms distribution source553fd4e7bb9b902141a67e576a00dc74b28face3 has Guide; current rm152-ios-testflight RecastMeApp.swift blob7e2b0290f68d47969c01aee1e2cc8120bb9ebb0d has Community. Screenshot is consistent with the older native shell; Help alone is not evidence of a new binary. No device build number was independently read this turn.
+
+TinyFish run9dae2c2a-319d-4ae2-8768-e2828163f6b4 verified saved Codemagic access and app identity; latest visible finished build remained6ad3917d7550aed8108f9998 from October17, source553fd4e. Follow-up run3d2cfc1e-863a-494f-bd7d-612e09b1c4a2 opened the corrected singular /app/ URL but main app UI stayed blank after one reload; root/navigation/modal containers empty, support widget only. Could not inspect Start build, set one-off build number, or verify active builds. Opera connector read-only list_tabs returned Browser not connected. No repeated login requested because prior saved authentication worked; current blocker is dashboard rendering/control access.
+
+No code/config changes, signed build, Apple upload, review submission, or billing changes this turn. Only this evidence record updated. Next: use working Codemagic build controls, verify unique Apple number above1001, launch recast-app-store-release on current native branch once, verify final upload and processing, then assign to existing Owner Testing group. Do not start with missing RECAST_NEXT_BUILD_NUMBER or claim that website Help updates native tabs. Existing rollback guidance above remains applicable.
