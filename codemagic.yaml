@@ -33,10 +33,11 @@ workflows:
       - name: Set a unique build number
         script: |
           set -eu
-          # The source build is 3; this workflow starts above it.
-          RECAST_COUNTER="${BUILD_NUMBER:?Missing Codemagic build number}"
+          # Check the highest Apple build and explicitly select an unused number.
+          RECAST_COUNTER="${RECAST_NEXT_BUILD_NUMBER:?Set a verified unused Apple build number above 1001}"
           case "$RECAST_COUNTER" in *[!0-9]*|'') exit 1 ;; esac
-          RECAST_BUILD_NUMBER=$((RECAST_COUNTER + 4))
+          RECAST_BUILD_NUMBER="$RECAST_COUNTER"
+          test "$RECAST_BUILD_NUMBER" -gt 1001
           test "$RECAST_BUILD_NUMBER" -le 9999 || {
             echo 'Review the Apple build-number range before uploading.'
             exit 1
@@ -86,9 +87,10 @@ workflows:
       - name: Set distribution build number
         script: |
           set -eu
-          RECAST_COUNTER="${BUILD_NUMBER:?Missing Codemagic build number}"
+          RECAST_COUNTER="${RECAST_NEXT_BUILD_NUMBER:?Set a verified unused Apple build number above 1001}"
           case "$RECAST_COUNTER" in *[!0-9]*|'') exit 1 ;; esac
-          RECAST_RELEASE_BUILD=$((RECAST_COUNTER + 1000))
+          RECAST_RELEASE_BUILD="$RECAST_COUNTER"
+          test "$RECAST_RELEASE_BUILD" -gt 1001
           test "$RECAST_RELEASE_BUILD" -le 9999
           /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $RECAST_RELEASE_BUILD" ios/RecastMe/Info.plist
       - name: Apply App Store signing

@@ -354,3 +354,5 @@ RM156 iOS — Owner completed private TestFlight app testing and a paid physical
 
 
 2026-10-17 App Store preparation — distribution workflow, upfront native photo-processing consent and listing/review dossier; signing/upload/submission blocked on authenticated access and final commerce/listing checks. See [session](ASTRA-SESSION-APPSTORE-2026-10-17.md) and [submission package](APP-STORE-SUBMISSION-2026-10-17.md).
+
+October20 native follow-up — owner asks to finish App Store release and align the app. Prepared fifth Community tab, retained offline Help sheet, and explicit shared build-number input to avoid older internal counters after uploaded1001. Source/compile is not a signed upload; authenticated Apple/Codemagic reconnect and listing gates remain. See [session](ASTRA-SESSION-NATIVE-COMMUNITY-2026-10-20.md).
