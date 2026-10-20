@@ -125,6 +125,9 @@ export async function beginBasketCheckout(env,identity,state,lines,{fetcher=fetc
    if(saved.lines!==expectedLines)throw unavailable();
    return refreshCheckout(env,bucket,key,priorObject.etag,prior,lines,fetcher);
   }
+  // Editing cannot bypass an expired, completed, or unconfirmed checkout.
+  // Verify the previous remote cart against ITS frozen lines before replacing it.
+  await refreshCheckout(env,bucket,key,priorObject.etag,prior,prior.lines,fetcher);
   await retainCheckoutHistory(bucket,key,prior);
  }
  const attempt={ownerId:identity.ownerId,basketId:identity.basketId,revision,

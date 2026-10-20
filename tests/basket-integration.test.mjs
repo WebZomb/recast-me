@@ -9,7 +9,7 @@ import {read} from '../src/commerce-store.js';
 import {listOrderIssues} from '../src/order-issues.js';
 const sku='RECAST-MUG-11OZ';
 async function fixture(t){
- const calls=[],control={failCart:false,wrongQuantity:false,variant:'1',savedCart:null};
+ const calls=[],control={failCart:false,wrongQuantity:false,variant:'1',savedCart:null,extraProducts:[]};
  t.mock.method(globalThis,'fetch',async(url,options={})=>{
   url=String(url);let body={};try{body=JSON.parse(options.body);}catch{}calls.push({url,body});
   if(url.includes('/oauth/'))return Response.json({access_token:'fixture',expires_in:3600});
@@ -19,9 +19,11 @@ async function fixture(t){
    control.savedCart={id:'gid://shopify/Cart/test?key=PRIVATE',checkoutUrl:'https://test.myshopify.com/checkouts/test',lines:{pageInfo:{hasNextPage:false},nodes:body.variables.input.lines.map((l,i)=>({id:'line'+i,quantity:control.wrongQuantity?99:l.quantity,attributes:l.attributes,merchandise:{id:l.merchandiseId}}))}};
    return Response.json({data:{cartCreate:{cart:control.savedCart,userErrors:[],warnings:[]}}});
   }
-  if(url.includes('/graphql'))return Response.json({data:{products:{nodes:[{id:'p',title:'Custom Recast Mug',status:'ACTIVE',variants:{nodes:[{id:'gid://shopify/ProductVariant/'+control.variant,title:'11 oz',sku,price:'24.99'}]}}]}}});
+  if(url.includes('/graphql'))return Response.json({data:{products:{nodes:[{id:'p',title:'Custom Recast Mug',status:'ACTIVE',variants:{nodes:[{id:'gid://shopify/ProductVariant/'+control.variant,title:'11 oz',sku,price:'24.99'}]}},...control.extraProducts]}}});
+  if(url.includes('/v2/catalog-variants/4533'))return Response.json({data:{id:4533,catalog_product_id:84}});
+  if(url.endsWith('/printfiles/84'))return Response.json({result:{printfiles:[{printfile_id:90,width:1500,height:1500}],variant_printfiles:[{variant_id:4533,placements:{default:90}}]}});
   if(url.includes('/v2/catalog-variants/1320'))return Response.json({data:{id:1320,catalog_product_id:19}});
-  if(url.endsWith('/printfiles/19'))return Response.json({result:{printfiles:[{printfile_id:43,width:2700,height:1050}],variant_printfiles:[{variant_id:1320,placements:{default:43}}]}});
+  if(url.endsWith('/printfiles/19'))return Response.json({result:{printfiles:[{printfile_id:43,width:2700,height:1050}],variant_printfiles:[{variant_id:1320,placements:{default:43}},{variant_id:4830,placements:{default:43}}]}});
   throw Error('Unexpected operation '+url);
  });
  const env=await setup({BASKET_ENABLED:'true',SHOPIFY_STOREFRONT_TOKEN:'fixture',SHOPIFY_SHOP:'test.myshopify.com',SHOPIFY_CLIENT_ID:'fixture',SHOPIFY_CLIENT_SECRET:'fixture',PRINTFUL_API_TOKEN:'fixture'});
@@ -181,4 +183,44 @@ test('line-limit rejection preserves twenty approved items and permits removal',
  assert.deepEqual((await f.call('/api/basket?id=basket')).data.basket,before);
  const remove=await f.call('/api/basket/action',{basketId:'basket',command:{type:'remove',lineId:'line-0',actionId:'remove-one',expectedRevision:20}});
  assert.equal(remove.response.status,200);assert.equal(remove.data.basket.lines.length,19);
+});
+
+// User acceptance matrix: quantities, one artwork on multiple variants, and
+// multiple artworks on the same variant must remain distinct through fulfillment.
+test('mixed gift basket preserves every artwork, product and copy count through order reconciliation and rollback',async t=>{
+ const f=await fixture(t),secondId='RC-TEST0002-ABCDEF',large='RECAST-TOTE-BLACK';
+ const original=await (await f.env.ARTWORK.get(`requests/${ID}/request.json`)).json();
+ await f.env.ARTWORK.put(`requests/${secondId}/request.json`,JSON.stringify({...original,requestId:secondId}));
+ const bytes=await (await f.env.ARTWORK.get(`requests/${ID}/preview.b64`)).text();
+ await f.env.ARTWORK.put(`requests/${secondId}/preview.b64`,bytes);
+ f.control.extraProducts=[{id:'p2',title:'Tote Bag',status:'ACTIVE',variants:{nodes:[{id:'gid://shopify/ProductVariant/2',title:'Black',sku:large,price:'29.99'}]}}];
+ const expected=[{art:ID,sku,qty:3,variant:'1'},{art:ID,sku:large,qty:2,variant:'2'},{art:secondId,sku,qty:4,variant:'1'}];
+ for(const [i,line] of expected.entries()){
+  const a=await f.call('/api/basket/approve',{basketId:'basket',designApproval:{...f.designApproval,requestId:line.art,sku:line.sku,design:recommendedCheckoutDesign(FULFILLMENT[line.sku])}});
+  assert.equal(a.response.status,200,JSON.stringify(a.data));
+  const added=await f.call('/api/basket/action',{basketId:'basket',approvalToken:a.data.approvalToken,command:{type:'add',actionId:'matrix-'+i,lineId:'matrix-'+i,expectedRevision:i,quantity:line.qty}});
+  assert.equal(added.response.status,200,JSON.stringify(added.data));
+ }
+ const checkout=await f.call('/api/basket/checkout',{basketId:'basket',revision:3});
+ assert.equal(checkout.response.status,200,JSON.stringify(checkout.data));
+ const lines=f.calls.find(c=>c.body.query?.includes('mutation RecastBasket(')).body.variables.input.lines;
+ for(const [i,line] of lines.entries()){
+  assert.equal(line.quantity,expected[i].qty);assert.equal(line.merchandiseId,'gid://shopify/ProductVariant/'+expected[i].variant);
+  assert.equal(line.attributes.find(a=>a.key==='Artwork ID').value,expected[i].art);
+ }
+ // Rollback disables cart entry, but must preserve paid multiline reconciliation.
+ f.env.BASKET_ENABLED='false';
+ assert.equal((await f.call('/api/basket/status')).data.enabled,false);
+ assert.equal((await f.call('/api/checkout-link',f.designApproval)).response.status,200);
+ const order={id:'gid://shopify/Order/987',name:'#1987',displayFinancialStatus:'PAID',test:false,cancelledAt:null,createdAt:'2026-10-20T00:00:00Z',lineItems:{pageInfo:{hasNextPage:false},nodes:lines.map((line,i)=>({id:'gid://shopify/LineItem/'+(800+i),sku:expected[i].sku,quantity:line.quantity,customAttributes:line.attributes}))}};
+ assert.deepEqual(await reconcileShopifyOrder(f.env,order,heldReconciliation),{created:3,seen:3,issues:0});
+ for(const [i,line] of expected.entries()){
+  const job=await read(f.env,`jobs/987-${800+i}.json`);
+  assert.equal(job.quantity,line.qty);assert.equal(job.requestId,line.art);assert.equal(job.sku,line.sku);assert.equal(job.status,'on_hold');
+ }
+ const before=[...f.env.ARTWORK.objects.entries()].filter(([k])=>k.startsWith('jobs/')||k.startsWith('commerce/designs/')).map(([k,v])=>[k,v.bytes.toString()]);
+ await reconcileShopifyOrder(f.env,order,heldReconciliation);
+ for(const [k,v] of before)assert.equal(await (await f.env.ARTWORK.get(k)).text(),v);
+ f.env.BASKET_ENABLED='true';
+ assert.equal((await f.call('/api/basket?id=basket')).data.basket.lines.length,3);
 });

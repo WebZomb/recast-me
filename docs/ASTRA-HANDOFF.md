@@ -401,3 +401,5 @@ October20 cart integration — PR93 070e92e reconciled with main728f02c using a 
 October20 inline owner Community review — owner wants review inside the existing Control Center. Added authenticated Community Review tab with pending badge, private previews and approve/reject/delete controls using existing owner auth. See [session](ASTRA-SESSION-ADMIN-COMMUNITY-2026-10-20.md). Release pending.
 
 October20 owner-requested cart release follow-up — integrated eff6e86 inline Community admin into PR93;732Node and5R2checks pass. Detailed staged rollback preserves paid-order fulfillment and all private histories. Authentication/live Storefront and remaining recovery gates still block activation. See basket session. Native/App Store work is separate.
+
+October20 mixed-gift cart acceptance — PR93 added prior-cart readback before changed-revision replacement and12uncertainty regressions. Mug/tote/different-artwork quantities and staged rollback tested through held fulfillment;745Node tests/bundle PASS. Still default-off pending live and recovery gates. See basket session.

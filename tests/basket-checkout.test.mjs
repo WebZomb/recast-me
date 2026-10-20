@@ -149,7 +149,8 @@ async function historyFixture(){
   }
  };
  const env={BASKET_ENABLED:'true',SHOPIFY_SHOP:'fixture',SHOPIFY_STOREFRONT_TOKEN:'fixture-only',ARTWORK:bucket};
- const run=()=>beginBasketCheckout(env,identity,state,lines,{fetcher:async()=>{
+ const run=()=>beginBasketCheckout(env,identity,state,lines,{fetcher:async(_url,options)=>{
+  if(JSON.parse(options.body).query===CART_REFRESH)return Response.json({data:{cart:{id:prior.cartId,checkoutUrl:prior.checkoutUrl,lines:{pageInfo:{hasNextPage:false},nodes:prior.lines.map(l=>({quantity:l.quantity,attributes:l.attributes,merchandise:{id:l.merchandiseId}}))}}}});
   remote++;events.push('remote');
   return Response.json({data:{cartCreate:{cart:{id:'gid://shopify/Cart/new?key=private-new',checkoutUrl:'https://fixture.myshopify.com/checkouts/new',lines:{nodes:lines.map(l=>({quantity:l.quantity,attributes:l.attributes,merchandise:{id:l.merchandiseId}}))}},userErrors:[],warnings:[]}}});
  }});
@@ -197,4 +198,10 @@ test('concurrent changed-revision attempts retain history and make at most one r
  assert.equal(results.filter(r=>r.status==='fulfilled').length,1);assert.equal(f.remote,1);
  assert.deepEqual(JSON.parse(f.objects.get(f.historyKey).body),f.prior);
  assert.equal(results.find(r=>r.status==='rejected').reason.code,'basket_checkout_unknown');
+});
+
+for(const [name,change] of changedRemote)test('editing cannot bypass previous checkout uncertainty: '+name,async()=>{
+ const p=ready();p.revision=1;const f=fixture(p);change(f);
+ await assert.rejects(f.run(),e=>e.code==='basket_checkout_unknown');
+ assert.equal(f.calls.remote,1);assert.equal(f.calls.writes,0);
 });
