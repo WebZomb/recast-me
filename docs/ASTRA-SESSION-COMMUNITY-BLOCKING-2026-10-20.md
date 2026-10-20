@@ -13,3 +13,7 @@ Validation: 605 Node tests PASS; focused10 Community tests PASS including cross-
 Deployment: isolated source branch only at this entry; not live. Apple build1002 selected in previous session, not submitted. Privacy/screenshot tasks independent. Source evidence: Apple App Review Guideline1.2 https://developer.apple.com/app-store/review/guidelines/#user-generated-content (checked Oct20). Apple decides adequacy of safeguards; do not claim compliance certification.
 
 Rollback: revert runtime/UI commit via guarded deployment while retaining Community state/block references. Older runtime ignores blocks and would show approved posts hidden only by viewer preference, but owner-banned posts remain rejected. Prefer a forward fix to preserve blocking rather than silently removing this protection. Do not delete Community records or reset customer votes.
+
+## Verified release receipt — October 20, 2026
+
+PR103 merged as b885b3f7a369a2ed0a58a8c9ea8c121312083f26. Hosted security run39474612508 and customer-policy/browser run39474612393 passed; reviewed393px admin screenshot shows Block action fitting existing layout. Guarded production deployment39475403821 succeeded including read-only production smoke. Independent public browser audit39475403893 completed successfully, including product-specific examples and isolated mock commerce. Contributor blocking is now LIVE. No customer content, votes, orders or paid actions were changed. This supersedes the earlier source-only deployment status; Apple submission remains separate and uncompleted.
