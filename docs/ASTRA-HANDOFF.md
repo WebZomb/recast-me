@@ -382,3 +382,6 @@ Community LIVE October20 — PR99 merge c233f379c3fa80f37cc1a45c24c4338d375ade66
 October20 inline owner Community review — owner wants review inside the existing Control Center. Added authenticated Community Review tab with pending badge, private previews and approve/reject/delete controls using existing owner auth. See [session](ASTRA-SESSION-ADMIN-COMMUNITY-2026-10-20.md). Release pending.
 
 October20 heart persistence — signed browser identity preserves network vote across IP changes; server-authoritative pressed state. 602 Node tests pass; release pending. See [session](ASTRA-SESSION-COMMUNITY-HEARTS-2026-10-20.md).
+
+
+October20 Community blocking — visitor contributor blocks and owner block/unblock controls implemented with anonymous identity limitations;605Node tests/bundle passed, hosted/browser/deployment pending. See [session](ASTRA-SESSION-COMMUNITY-BLOCKING-2026-10-20.md). Apple submission remains separate.

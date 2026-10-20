@@ -17,7 +17,9 @@ function card(post){
  const use=document.createElement('a');use.className='button primary';use.href=`/?style=${encodeURIComponent(post.styleId)}&community=1#start`;use.textContent='Try this style →';
  const report=document.createElement('button');report.className='report';report.textContent='Report';
  report.onclick=async()=>{if(!confirm('Report this picture for a privacy, permission or content concern?'))return;report.disabled=true;try{await communityAction(`/api/community/${post.id}/report`,{});status.textContent='Report sent to the owner for review.'}catch(e){status.textContent=e.message;report.disabled=false}};
- body.append(title,actions,use,report);root.append(img,body);return root;
+ const block=document.createElement('button');block.className='report';block.textContent='Block contributor';
+ block.onclick=async()=>{if(!confirm('Hide this contributor’s Community posts in this browser? Your private pictures and orders are unchanged.'))return;block.disabled=true;try{await communityAction(`/api/community/${post.id}/block`,{});await load();status.textContent='Contributor blocked. Their posts are hidden in this browser.'}catch(e){status.textContent=e.message;block.disabled=false}};
+ body.append(title,actions,use,report,block);root.append(img,body);return root;
 }
 function renderMore(){const batch=posts.slice(shown,shown+20);grid.append(...batch.map(card));shown+=batch.length;more.hidden=shown>=posts.length}
 async function load(){

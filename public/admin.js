@@ -1,4 +1,4 @@
-import {initCommunityReview} from './admin-community-panel.js?v=1';
+import {initCommunityReview} from './admin-community-panel.js?v=2';
 import {initHolidaySchedule} from './admin-holidays.js?v=166';
 import {initOwnerAlerts} from './admin-alerts.js?v=rm068';
 import {initOwnerSettings} from './admin-settings.js?v=rm075-250';

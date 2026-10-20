@@ -9,7 +9,9 @@ const http=require('node:http'),fs=require('node:fs'),path=require('node:path'),
   for(const width of [320,393,768,1280]){
    const page=await browser.newPage({viewport:{width,height:900}});const errors=[];page.on('pageerror',e=>errors.push(e.message));
    await page.route('**/*',route=>route.request().url().startsWith('http://127.0.0.1:')?route.continue():route.abort());
-   await page.route('**/api/community*',route=>route.fulfill({json:{ok:true,posts:Array.from({length:25},(_,i)=>({id:String(i).padStart(32,'0'),styleId:'royal',styleName:'Royal',hearts:i,liked:i===0,image:'/assets/world-royal-v18.webp'}))}}));
+   let blocked=false;
+   await page.route('**/api/community*',route=>route.fulfill({json:{ok:true,posts:blocked?[]:Array.from({length:25},(_,i)=>({id:String(i).padStart(32,'0'),styleId:'royal',styleName:'Royal',hearts:i,liked:i===0,image:'/assets/world-royal-v18.webp'}))}}));
+   await page.route('**/api/community/*/block',route=>{blocked=true;return route.fulfill({json:{ok:true}})});
    await page.goto(`http://127.0.0.1:${server.address().port}/community.html`,{waitUntil:'networkidle'});
    await page.waitForSelector('.community-card');
    assert.equal(await page.locator('.community-card').count(),20);
@@ -24,6 +26,10 @@ const http=require('node:http'),fs=require('node:fs'),path=require('node:path'),
    await page.getByRole('button',{name:'Load more'}).click();assert.equal(await page.locator('.community-card').count(),25);
    await page.getByRole('button',{name:'☆ Save',exact:true}).first().click();
    assert.equal(await page.getByRole('button',{name:'★ Saved',exact:true}).count(),1);
+   page.once('dialog',dialog=>dialog.accept());
+   await page.getByRole('button',{name:'Block contributor',exact:true}).first().click();
+   await page.waitForFunction(()=>document.querySelectorAll('.community-card').length===0);
+   assert.equal(blocked,true);
    await page.getByRole('button',{name:'Manage my shared Recasts'}).click();await page.getByRole('button',{name:'Done',exact:true}).click();
    await page.evaluate(async()=>{const {shareWithCommunity}=await import('/community-share.js');shareWithCommunity({requestId:'RC-TEST-123456',accessToken:'test-only'})});
    assert.equal(await page.getByRole('button',{name:'Submit for review'}).isDisabled(),true);
