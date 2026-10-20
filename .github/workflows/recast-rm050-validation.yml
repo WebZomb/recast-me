@@ -40,6 +40,10 @@ jobs:
         run: NODE_PATH=/tmp/recast-browser/node_modules node scripts/basket-browser-tests.cjs
       - name: Seasonal storefront and owner schedule browser checks
         run: NODE_PATH=/tmp/recast-browser/node_modules node scripts/rm166-seasonal-browser.cjs
+      - name: Gift guide CTA and narrow-phone checks
+        run: NODE_PATH=/tmp/recast-browser/node_modules node scripts/gift-guides-browser.cjs
+      - name: Community browsing and consent phone checks
+        run: NODE_PATH=/tmp/recast-browser/node_modules node scripts/community-browser.cjs
       - name: Retain regression evidence
         uses: actions/upload-artifact@v4
         if: always()

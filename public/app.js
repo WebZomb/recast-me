@@ -1,3 +1,4 @@
+import {shareWithCommunity} from './community-share.js';
 import {photoShoppingNotice} from './photo-shopping.js?v=1';
 import {initSubjectDetection} from './subject-detection.js?v=291';
 import {ADVENTURE_GUIDES} from './adventure-guides.js?v=2';
@@ -444,6 +445,8 @@ function applyReadiness(){
     const message=photoShoppingNotice(readinessSnapshot);
     photoNotice.hidden=!message;
     photoNotice.textContent=message;
+    const photoShopping=document.querySelector('#photo-shopping');
+    if(photoShopping)photoShopping.hidden=!message;
   }
   if(currentFallback().returnToHigh&&!generationInFlight){
     const high=document.querySelector('input[name="qualityMode"][value="high"]');if(high)high.checked=true;
@@ -1093,7 +1096,7 @@ async function status(){
   }
 }
 updateQualityUI();
-if(new URLSearchParams(location.hash.slice(1)).has('recast')){restorePrivateLink(location.href).catch(e=>{document.querySelector('#recover-status').textContent=e.message;});}else if(!openApprovalFromQuery()) restoreRecentVersionOnLoad();
+if(new URLSearchParams(location.hash.slice(1)).has('recast')){restorePrivateLink(location.href).catch(e=>{document.querySelector('#recover-status').textContent=e.message;});}else if(!openApprovalFromQuery()&&params.get('community')!=='1') restoreRecentVersionOnLoad();
 status();
 setupTurnstile();
 document.querySelector('.preview-info a[href="#shop"]')?.addEventListener('click',async event=>{
@@ -1168,6 +1171,10 @@ async function exportPreview(native=false){
 }
 document.querySelector('#share-preview')?.addEventListener('click',()=>exportPreview());
 nativeSave?.addEventListener('click',()=>exportPreview(true));
+document.querySelector('#share-community')?.addEventListener('click',()=>{
+  if(!lastSuccessfulPreviewMeta?.accessToken){exportStatus.textContent='Create or open a saved Recast first.';return}
+  shareWithCommunity({...lastSuccessfulPreviewMeta});
+});
 
 async function restorePrivateLink(value){
   const incoming=new URL(value,location.origin),incomingParams=new URLSearchParams(incoming.hash.slice(1)),goShop=incomingParams.get('shop')==='1';

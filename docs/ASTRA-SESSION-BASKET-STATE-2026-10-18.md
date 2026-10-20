@@ -551,3 +551,33 @@ Rollback only this six-file limit-recovery delta. Preserve every approval,
 action receipt, checkout history, supplier identity and uncertain lock; never
 clear storage or resubmit orders as a shortcut to recovery.
 
+## October20 early morning Eastern — reconcile cart with current main
+
+Baseline PR93 070e92e9748adecdadf87d20dacc4ba29d6cecd7; current main
+728f02c395db1339d2de41c165beb6fc0b5e8b4b. Fresh isolated checkout used;
+older dirty worktrees were left untouched. The earlier local origin pointed
+to a missing scratch repository, so the public GitHub repository was cloned.
+Read-only merge-tree proved the current conflict is solely the append-only
+ASTRA-HANDOFF.md. Preserved both branches' complete entries and performed a
+normal two-parent integration, not a force update or replacement of main.
+
+Merged runtime/workflow changes inspected: Community remains routed inside
+the existing secure boundary; basket session-cookie preservation remains
+restricted to successful POST /api/basket/session. Hosted policy workflow
+keeps basket, gift-guide, Community, customer/owner and seasonal browser gates.
+Current navigation, SEO guides, Community consent, outage-only photo callout
+and all original cart files are retained. Save PR98, capacity PR90 and Shopping
+price PR97 remain separate, unmerged changes; no claim they were integrated.
+
+732/732 Node tests PASS, no failures/skips. Five local Miniflare R2 concurrency
+and unknown-response checks PASS. Wrangler bundle-only dry-run PASS with metrics
+disabled; no deployment. Whitespace check PASS. Local Chromium is absent; no
+repeat download attempt or local visual pass. Exact resulting head and fresh
+hosted browser/security results are recorded in the PR and operational Pages.
+This integration addresses a concrete merge blocker, not the remaining cart
+acceptance gates: receipt/session renewal, completed/expired-cart reconciliation,
+authenticated Storefront configuration, real unpaid handoff and order propagation.
+Keep basket default-off. No live cap, discount, payment, order, provider request,
+alert, personal data, advertisement or spending change. Rollback this integration
+only, preserving every approval/history/order/supplier lock and current main.
+
