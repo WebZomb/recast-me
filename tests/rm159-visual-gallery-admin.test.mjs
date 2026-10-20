@@ -40,7 +40,7 @@ test('text filtering searches reason, quality mode and ID without exposing raw J
  assert.match(ui,/navigator\.clipboard\.writeText\(item\.reference\)/);
  assert.match(html,/id="generation-filter"/);
  assert.match(html,/id="generation-show-more"/);
- assert.match(html,/admin\.js\?v=rm166/);
+ assert.match(html,/admin\.js\?v=community2/);
 });
 test('the two illustrated worlds are original standalone SVG with only local assets',()=>{
  const a=text('public/assets/recast-discover-portal-v159.svg');

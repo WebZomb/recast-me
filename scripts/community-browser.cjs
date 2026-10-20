@@ -26,7 +26,31 @@ const http=require('node:http'),fs=require('node:fs'),path=require('node:path'),
    await page.locator('.community-dialog input').check();assert.equal(await page.getByRole('button',{name:'Submit for review'}).isDisabled(),false);
    const fit=await page.locator('.community-dialog').evaluate(el=>{const r=el.getBoundingClientRect();return r.left>=0&&r.right<=innerWidth});assert.equal(fit,true);
    await page.screenshot({path:`rm050-browser-results/community-${width}.png`});
-   assert.deepEqual(errors,[]);console.log('PASS community',width);await page.close();
+   // Owner panel harness uses the actual admin markup and module with fixture data.
+   await page.route('**/admin.js*',r=>r.fulfill({contentType:'text/javascript',body:''}));
+   await page.goto(`http://127.0.0.1:${server.address().port}/admin.html`);
+   await page.evaluate(async()=>{
+    document.querySelector('#dashboard').classList.remove('hidden');
+    document.querySelectorAll('.tab-panel').forEach(p=>p.classList.toggle('active',p.dataset.panel==='community'));
+    window.reviewCalls=[];let state='pending';
+    const {initCommunityReview}=await import('/admin-community-panel.js');
+    window.reviewPanel=initCommunityReview(async(path,options)=>{
+     if(options){window.reviewCalls.push({path,...options});state=options.body.status}
+     return {posts:[{id:'test-post',styleName:'Royal',status:state,reports:0,image:'/assets/world-royal-v18.webp'}]};
+    },()=>({'x-recast-request':'1'}));await window.reviewPanel.load();
+   });
+   await page.waitForFunction(()=>!document.querySelector('#community-review-posts button').disabled);
+   assert.equal(await page.locator('#community-pending').textContent(),'1');
+   await page.getByRole('button',{name:'Approve',exact:true}).click();
+   await page.waitForFunction(()=>document.querySelector('#community-pending').textContent==='0');
+   assert.equal(await page.evaluate(()=>window.reviewCalls[0].body.status),'approved');
+   await page.getByRole('button',{name:'Reject / hide',exact:true}).click();
+   await page.waitForFunction(()=>window.reviewCalls.length===2);
+   assert.equal(await page.evaluate(()=>window.reviewCalls[1].body.status),'rejected');
+   assert.equal(await page.locator('[data-panel="community"]').evaluate(el=>el.scrollWidth>el.clientWidth),false);
+   await page.screenshot({path:`rm050-browser-results/admin-community-${width}.png`});
+   await page.evaluate(()=>window.reviewPanel.clear());assert.equal(await page.locator('.community-review-card').count(),0);
+   assert.deepEqual(errors,[]);console.log('PASS community and owner review',width);await page.close();
   }
  }finally{if(browser)await browser.close();await new Promise(r=>server.close(r))}
 })().catch(e=>{console.error(e);process.exitCode=1});

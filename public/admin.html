@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#060611">
   <meta name="robots" content="noindex,nofollow">
   <title>Recast Me — Control Center</title>
-  <link rel="stylesheet" href="/admin.css?v=166">
+  <link rel="stylesheet" href="/admin.css?v=community2">
 </head>
 <body>
   <div class="aurora aurora-a"></div><div class="aurora aurora-b"></div>
@@ -44,6 +44,7 @@
 
       <nav class="admin-tabs" aria-label="Control center sections">
         <button class="active" data-tab="orders">Orders</button>
+        <button data-tab="community">Community Review <span id="community-pending">—</span></button>
         <button data-tab="social">X Requests</button>
         <button data-tab="trends">Trend Review</button>
         <button data-tab="recovery">Recover artwork</button>
@@ -58,6 +59,12 @@
         <div class="panel-heading"><div><div class="eyebrow">FULFILLMENT</div><h2>Orders & production</h2><p>New paid orders can auto-print after the customer confirms the exact design before checkout. Legacy orders and holds may need review. Syncing orders may advance already-authorized jobs.</p></div><button id="sync-orders">Sync paid Shopify orders</button></div>
         <div class="glass op-card"><h3>Order alerts &amp; recovery</h3><p id="order-sync-health" role="status">Checking automatic sync…</p><p id="order-audit-health" class="muted"></p><p class="muted">Dashboard alerts are always available here. Set your email or phone destination in the Alerts tab.</p><button id="audit-orders" type="button">Check last 30 days for missing orders</button><p class="muted">Checks purchase records without submitting production. Newly recovered jobs stay on hold for inspection.</p><div id="order-issues-list" class="card-list"></div><button id="more-order-issues" type="button" hidden>Load more issue records</button></div>
         <p id="jobs-page-status" class="muted"></p><div id="jobs-list" class="card-list"></div><button type="button" id="more-jobs" hidden>Load more orders</button>
+      </section>
+
+      <section class="tab-panel" data-panel="community">
+        <div class="panel-heading"><div><div class="eyebrow">COMMUNITY</div><h2>Community Review</h2><p>Review pictures for safety, privacy, permission concerns and a matching preset before approval. Reported posts remain public until hidden.</p></div><button id="community-refresh" type="button">Refresh submissions</button></div>
+        <p id="community-review-status" role="status"></p>
+        <div id="community-review-posts" class="community-review-grid"></div>
       </section>
 
       <section class="tab-panel" data-panel="social">
@@ -244,6 +251,6 @@
       <div id="toast" class="toast hidden"></div>
     </section>
   </main>
-  <script src="/admin.js?v=rm166" type="module"></script>
+  <script src="/admin.js?v=community2" type="module"></script>
 </body>
 </html>
