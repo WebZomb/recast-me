@@ -1,7 +1,23 @@
-import {change,read,hash,sameOrigin,privateJson,fault} from './commerce-store.js';
+import {change,read,hash,sameOrigin,privateJson,fault,equal} from './commerce-store.js';
 const KEY='community/v1/index.json';
 const ID=/^[a-f0-9]{32}$/;
 const clean=row=>({id:row.id,styleId:row.styleId,styleName:row.styleName,createdAt:row.createdAt,hearts:row.voters.length,image:`/api/community/${row.id}/image`});
+// Signed, HttpOnly identity preserves the original network vote across network changes.
+// This is anonymous deduplication, not proof of a unique person across devices.
+async function heartIdentity(request,env) {
+ if(!env.ADMIN_TOKEN)return null;
+ const ip=request.headers.get('cf-connecting-ip');if(!ip)return null;
+ const sign=async value=>{
+  const key=await crypto.subtle.importKey('raw',new TextEncoder().encode(env.ADMIN_TOKEN),{name:'HMAC',hash:'SHA-256'},false,['sign']);
+  return [...new Uint8Array(await crypto.subtle.sign('HMAC',key,new TextEncoder().encode('community-heart-v1:'+value)))].map(b=>b.toString(16).padStart(2,'0')).join('');
+ };
+ const cookie=request.headers.get('cookie')?.split(';').map(x=>x.trim()).find(x=>x.startsWith('__Host-recast-heart='))?.slice(20);
+ if(cookie&&/^[a-f0-9]{32}\.[a-f0-9]{64}$/.test(cookie)){
+  const [id,signature]=cookie.split('.');if(equal(signature,await sign(id)))return {id};
+ }
+ const id=(await hash(`${env.ADMIN_TOKEN}:community:${ip}`)).slice(0,32);
+ return {id,cookie:`__Host-recast-heart=${id}.${await sign(id)}; Path=/; Secure; HttpOnly; SameSite=Lax; Max-Age=31536000`};
+}
 export function selectCommunity(rows,mode='new',now=Date.now()) {
  const approved=rows.filter(r=>r.status==='approved');
  const pool=mode==='popular'?approved.filter(r=>Date.parse(r.createdAt)>now-30*86400000):approved;
@@ -12,6 +28,8 @@ export async function communityRoutes(request,env,{authorize,preview,admin}) {
  if(!path.startsWith('/api/community')&&!path.startsWith('/api/admin/community'))return null;
  try {
   const isAdmin=path.startsWith('/api/admin/community');
+  const identity=!isAdmin&&(path==='/api/community'||path.endsWith('/heart'))?await heartIdentity(request,env):null;
+  const reply=data=>privateJson(data,200,identity?.cookie?{'set-cookie':identity.cookie}:{});
   if(isAdmin)admin(request,env);
   if(!env.ARTWORK)throw fault('unavailable','Community is temporarily unavailable.',503);
   const mutate=fn=>change(env,KEY,{rows:[]},state=>{fn(state.rows);if(JSON.stringify(state).length>4000000)throw fault('capacity','Community is at capacity. Please try again later.',503);return state});
@@ -29,7 +47,7 @@ export async function communityRoutes(request,env,{authorize,preview,admin}) {
    const mode=u.searchParams.get('sort')==='popular'?'popular':'new';
    const ids=u.searchParams.get('ids');
    const rows=ids?state.rows.filter(r=>r.status==='approved'&&ids.split(',').slice(0,100).includes(r.id)).map(clean):selectCommunity(state.rows,mode);
-   return privateJson({ok:true,posts:rows});
+   return reply({ok:true,posts:rows.map(post=>({...post,liked:!!identity&&state.rows.find(r=>r.id===post.id).voters.includes(identity.id)}))});
   }
   if(path==='/api/admin/community'&&request.method==='GET')return privateJson({ok:true,posts:state.rows.map(r=>({...clean(r),status:r.status,reports:r.reports||0,image:`/api/admin/community/${r.id}/image`}))});
   if(request.method==='GET') {
@@ -85,7 +103,8 @@ export async function communityRoutes(request,env,{authorize,preview,admin}) {
   }else{
    if(row.status!=='approved')throw fault('missing','This post is no longer available.',404);
    if(!env.ADMIN_TOKEN)throw fault('unavailable','Community reactions are temporarily unavailable.',503);
-   const voter=(await hash(`${env.ADMIN_TOKEN}:community:${request.headers.get('cf-connecting-ip')}`)).slice(0,32);
+   const voter=action==='heart'?identity?.id:(await hash(`${env.ADMIN_TOKEN}:community:${request.headers.get('cf-connecting-ip')}`)).slice(0,32);
+   if(!voter)throw fault('identity','Please reload Community before reacting.',403);
    await mutate(rows=>{
     const r=rows.find(r=>r.id===id);if(!r||r.status!=='approved')throw fault('missing','Post unavailable.',404);
     const key=action==='heart'?'voters':'reporters';
@@ -97,6 +116,6 @@ export async function communityRoutes(request,env,{authorize,preview,admin}) {
     if(action==='report')r.reports=r.reporters.length;
    });
   }
-  return privateJson({ok:true});
+  return reply({ok:true});
  }catch(e){return privateJson({ok:false,error:e.status?e.message:'Community is temporarily unavailable. Please try again.'},e.status||503)}
 }

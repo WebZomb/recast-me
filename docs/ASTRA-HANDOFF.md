@@ -380,3 +380,5 @@ October20 Community — opted-in, owner-reviewed watermarked gallery, New/Popula
 Community LIVE October20 — PR99 merge c233f379c3fa80f37cc1a45c24c4338d375ade66; final runtime f0778329e03c385b0451909a65608da3eeb05edf passed security39377736463/customer browser39377736512. Deploy39378084370 and smoke passed, Worker c1c966a3-d00e-4335-95f0-2eda87605caf. Live /community browser verified navigation and empty New/Popular/favorites. No customer photo published. Native tab and separate Save PR98 remain independent. See Community session receipt.
 
 October20 inline owner Community review — owner wants review inside the existing Control Center. Added authenticated Community Review tab with pending badge, private previews and approve/reject/delete controls using existing owner auth. See [session](ASTRA-SESSION-ADMIN-COMMUNITY-2026-10-20.md). Release pending.
+
+October20 heart persistence — signed browser identity preserves network vote across IP changes; server-authoritative pressed state. 602 Node tests pass; release pending. See [session](ASTRA-SESSION-COMMUNITY-HEARTS-2026-10-20.md).

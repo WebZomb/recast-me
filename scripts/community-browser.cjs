@@ -9,10 +9,14 @@ const http=require('node:http'),fs=require('node:fs'),path=require('node:path'),
   for(const width of [320,393,768,1280]){
    const page=await browser.newPage({viewport:{width,height:900}});const errors=[];page.on('pageerror',e=>errors.push(e.message));
    await page.route('**/*',route=>route.request().url().startsWith('http://127.0.0.1:')?route.continue():route.abort());
-   await page.route('**/api/community*',route=>route.fulfill({json:{ok:true,posts:Array.from({length:25},(_,i)=>({id:String(i).padStart(32,'0'),styleId:'royal',styleName:'Royal',hearts:i,image:'/assets/world-royal-v18.webp'}))}}));
+   await page.route('**/api/community*',route=>route.fulfill({json:{ok:true,posts:Array.from({length:25},(_,i)=>({id:String(i).padStart(32,'0'),styleId:'royal',styleName:'Royal',hearts:i,liked:i===0,image:'/assets/world-royal-v18.webp'}))}}));
    await page.goto(`http://127.0.0.1:${server.address().port}/community.html`,{waitUntil:'networkidle'});
    await page.waitForSelector('.community-card');
    assert.equal(await page.locator('.community-card').count(),20);
+   assert.equal(await page.getByRole('button',{name:'Heart Royal',exact:true}).first().getAttribute('aria-pressed'),'true');
+   assert.match(await page.getByRole('button',{name:'Heart Royal',exact:true}).first().textContent(),/♥/);
+   await page.reload({waitUntil:'networkidle'});
+   assert.equal(await page.getByRole('button',{name:'Heart Royal',exact:true}).first().getAttribute('aria-pressed'),'true');
    assert.deepEqual(await page.locator('.recast-mobile-nav span').allTextContents(),['Create','My Recasts','My Orders','Specials','Community']);
    assert.equal(await page.locator('.community-help-link').getAttribute('href'),'/guide.html');
    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
