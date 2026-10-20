@@ -41,7 +41,7 @@ test('Cloudflare extensionless and canonical .html pages highlight the same tab'
     ['/my-recasts','My Recasts'],['/my-recasts.html','My Recasts'],
     ['/my-orders','My Orders'],['/my-orders.html','My Orders'],
     ['/specials','Specials'],['/specials.html','Specials'],
-    ['/guide','Guide'],['/guide.html','Guide']
+    ['/community','Community'],['/community.html','Community']
   ];
   for(const [pathname,expected] of tests){
     const {dock,selected}=runAt(pathname);
