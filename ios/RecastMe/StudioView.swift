@@ -29,6 +29,7 @@ struct StudioView: View {
     @State private var externalURL: URL?
     @State private var checkout: SafariCheckout?
     @State private var reloadID = UUID()
+    @State private var showGuide = false
     var body: some View {
         ZStack {
           if photoConsent.accepted {
@@ -49,6 +50,13 @@ struct StudioView: View {
             PhotoConsentView { photoConsent.accepted = true }
           }
         }
+        .safeAreaInset(edge: .top, alignment: .trailing, spacing: 0) {
+            Button { showGuide = true } label: {
+                Label("Help", systemImage: "questionmark.circle")
+                    .font(.callout).padding(.horizontal, 16).frame(minHeight: 44)
+            }.accessibilityLabel("Open photo guide and support")
+        }
+        .sheet(isPresented: $showGuide) { RecastGuideView() }
         .sheet(item: $checkout, onDismiss: {
             NotificationCenter.default.post(name: .init("RecastCheckoutReturned"), object: nil)
         }) { page in
