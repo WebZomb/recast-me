@@ -581,3 +581,10 @@ Keep basket default-off. No live cap, discount, payment, order, provider request
 alert, personal data, advertisement or spending change. Rollback this integration
 only, preserving every approval/history/order/supplier lock and current main.
 
+
+## October20 interactive release preparation
+Owner again requested cart installation and verified rollback. Integrated current main eff6e86a22041fe36c638cef4532d4f73a3aa373 into PR93 baseline d849315ed4f063424bc4194da6124cf87b6e32e9 in an isolated worktree. Only handoff text conflicted; retained both histories. New inline Community review module, pending badge, owner login/lock/refresh and browser fixtures preserved. 732 Node tests and all5local R2 checks passed. Native app changes remain separate.
+
+The cart is not enabled or production-installed by this integration. Required secret binding SHOPIFY_STOREFRONT_TOKEN and BASKET_ENABLED=true must be verified through authorized deployment configuration; never expose token contents. Real unpaid Storefront handoff/per-line attributes, safe128-action/session renewal and completed/expired/uncertain checkout reconciliation remain release gates. Unknown outcomes remain locked rather than creating duplicate carts/orders.
+
+Rollback plan: record pre-enable Worker version and exact deployed commit; first disable BASKET_ENABLED to stop new basket/checkout entry while keeping the existing single-product path. Do not delete R2 basket sessions, approval bindings, receipts, checkout attempts/history, jobs or supplier IDs. Paid multi-line orders require retaining exact-line fulfillment protections even if cart UI is withdrawn; a whole-worker rollback to before those protections is not safe after such orders exist. Before enabling, verify flag-off/on behavior in isolated fixtures and prepare a release retaining fulfillment fixes with the cart disabled. Never treat rollback as undoing payments or supplier production. No real orders, provider calls, cap/spending changes or secrets touched.
