@@ -597,3 +597,10 @@ Found changed-revision checkout bypassed the remote refresh used for same-revisi
 Rollback: revert only this patch if needed, preserving all immutable checkout history/approvals/jobs. For eventual release first disable BASKET_ENABLED; preserve exact-line fulfillment handlers for already-paid baskets. Never delete state or blindly resubmit unknown orders.
 
 Integrated current main6ddf24e208d7327574e39ba502f546775e3ac2fa including released heart persistence, preserving both handoff histories. Integrated747Node tests PASS. R2 smoke initially failed because its remote fixture lacked newly required read-only refresh response; added that response, reran all5cases PASS including conditional changed-checkout race. No change to real R2 consistency or production. Hosted final-head gates still required.
+
+
+## October 20, 2026 — final hosted validation receipt
+
+Runtime head `ad52459a146ad3d52dabff2aac5e60f3d6f5c150` passed security workflow 39471709471 and customer-policy workflow 39471709325. Local validation: 747 Node tests, 5 local R2 smoke tests, worker bundle and diff checks passed. Mixed-artwork/mixed-product quantities (3 mugs and 2 totes for artwork A; 4 mugs for artwork B) and flag-off fulfillment reconciliation were tested with mocked external services, not paid production orders.
+
+PR93 remains draft and the cart remains default-off, unmerged and undeployed. Production Storefront token/product access and a real unpaid cart handoff are not verified. Receipt/session cap and completed/expired/uncertain checkout recovery remain release gates. Shopify connector access to Recast Me Ai / b2wnfu-7g.myshopify.com does not establish Worker Storefront credentials. Rollback must disable basket entry first while retaining exact-line reconciliation for any paid multi-line orders; never delete approval/order/history/provider-lock records.
