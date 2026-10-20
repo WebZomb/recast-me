@@ -370,3 +370,5 @@ October17 subject-variety follow-up — owner approved apparel models/print geom
 October17 original-photo shopping — prominent no-AI gift path and observed engine-outage notices; multi-item basket confirmed absent, not implemented. See [session](ASTRA-SESSION-PHOTO-SHOPPING-2026-10-17.md). Release pending.
 
 October19 owner clarification — redundant permanent own-photo card becomes outage/capacity-only; normal chooser preserved. See [session](ASTRA-SESSION-OUTAGE-ONLY-2026-10-19.md). Focused checks pass; release pending.
+
+October19/20 SEO discovery — three independent gift guides, expanded sitemap and missing Guide canonical, preserving existing site appearance/behavior. 595 tests and bundle pass; production pending. See [session](ASTRA-SESSION-SEO-2026-10-20.md).
