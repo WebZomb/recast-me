@@ -1,0 +1,12 @@
+/* Scoped to discovery pages; no existing storefront styles are changed. */
+.order-shell .gift-guide-cta{
+ display:flex;align-items:center;justify-content:center;box-sizing:border-box;
+ width:100%;max-width:620px;min-height:72px;margin:26px 0 32px;padding:20px 26px;
+ background:linear-gradient(110deg,#932fff 0%,#644cff 45%,#13badd 100%);
+ border:2px solid #ac91ff;border-radius:20px;color:#fff;
+ font-size:clamp(20px,3vw,26px);font-weight:800;line-height:1.25;text-align:center;
+ text-decoration:none;white-space:normal;box-shadow:0 8px 32px #6536ee55;
+}
+.order-shell .gift-guide-cta:hover{filter:brightness(1.1)}
+.order-shell .gift-guide-cta:focus-visible{outline:3px solid #fff;outline-offset:5px}
+@media(max-width:520px){.order-shell .gift-guide-cta{min-height:76px;padding:20px 16px;margin:24px 0 30px}}
