@@ -61,3 +61,6 @@
 .diagnostic-load-more[hidden]{display:none}
 
 .holiday-schedule-fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:16px;margin:18px 0}.holiday-schedule-fields fieldset{min-width:0;border:1px solid #42405a;border-radius:14px;padding:16px}.holiday-schedule-fields label{display:grid;gap:5px;margin:12px 0}.holiday-schedule-fields input{max-width:100%;min-height:44px}.holiday-schedule-fields input[type=checkbox]{width:24px;height:24px;min-height:24px}
+
+/* Owner Community review: contain private previews and wrap actions on phones. */
+.community-review-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,260px),1fr));gap:18px}.community-review-card{overflow:hidden;border:1px solid #474264;border-radius:20px;background:#101222;min-width:0}.community-review-card img{display:block;width:100%;height:280px;object-fit:contain;background:#090b16}.community-review-body{padding:16px}.community-review-actions{display:flex;flex-wrap:wrap;gap:8px}.community-review-actions button{min-height:44px;flex:1 1 110px}.community-review-body h3{overflow-wrap:anywhere}#community-pending{display:inline-block;border-radius:20px;padding:2px 8px;background:#39305b;color:#b8f3ff}
