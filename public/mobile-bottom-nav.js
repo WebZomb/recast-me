@@ -2,9 +2,10 @@
    The existing .site-header is the natural location on desktop; phones use a
    fixed, illuminated black dock. Never render an empty decorative shell. */
 (() => {
+  // The iOS shell already provides Help and its own navigation.
+  if (window.webkit?.messageHandlers?.recastPreview) return;
   const help=document.createElement('a');help.href='/guide.html';help.textContent='Help';help.className='community-help-link';help.setAttribute('aria-label','Help and Guide');
   const header=document.querySelector('.site-header, .library-header');if(header)header.append(help);
-  if (window.webkit?.messageHandlers?.recastPreview) return;
   if (document.querySelector('nav.recast-mobile-nav')) return;
 
   const pages = [

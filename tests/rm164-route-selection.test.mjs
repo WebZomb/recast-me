@@ -19,10 +19,10 @@ function runAt(pathname,native=false){
       setAttribute(key,value){this.attributes[key]=String(value)}
     };
   }
-  const body=node('body'),head=node('head');
+  const body=node('body'),head=node('head'),header=node('header');
   const document={
     body,head,
-    querySelector(){return null},
+    querySelector(selector){return selector==='.site-header, .library-header'?header:null},
     createElement:node,createElementNS(_ns,name){return node(name)}
   };
   const window={
@@ -32,7 +32,7 @@ function runAt(pathname,native=false){
   };
   vm.runInNewContext(source,{window,document,location:{pathname},console});
   const dock=body.children.find(x=>x.className==='recast-mobile-nav');
-  return {dock,selected:dock?.children.filter(x=>x.attributes['aria-current']==='page')
+  return {help:header.children.filter(x=>x.className==='community-help-link'),dock,selected:dock?.children.filter(x=>x.attributes['aria-current']==='page')
                       .map(x=>x.children[1]?.textContent)||[]};
 }
 test('Cloudflare extensionless and canonical .html pages highlight the same tab',()=>{
@@ -55,5 +55,11 @@ test('Unrelated pages do not incorrectly highlight a different nav tab',()=>{
   assert.deepEqual(selected,[]);
 });
 test('Native TestFlight keeps only its real SwiftUI tab bar, not a duplicate web dock',()=>{
-  assert.equal(runAt('/specials',true).dock,undefined);
+  for(const path of ['/', '/my-orders', '/specials', '/community']){
+    const native=runAt(path,true),web=runAt(path);
+    assert.equal(native.dock,undefined);
+    assert.equal(native.help.length,0);
+    assert.equal(web.help.length,1);
+    assert.equal(web.help[0].href,'/guide.html');
+  }
 });

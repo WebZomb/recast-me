@@ -385,3 +385,5 @@ October20 heart persistence — signed browser identity preserves network vote a
 
 
 October20 Community blocking — visitor contributor blocks and owner block/unblock controls implemented with anonymous identity limitations;605Node tests/bundle passed, hosted/browser/deployment pending. See [session](ASTRA-SESSION-COMMUNITY-BLOCKING-2026-10-20.md). Apple submission remains separate.
+
+October20 duplicate Help — native bridge check now precedes website Help injection; website Help preserved, shared script cache refreshed. Focused checks passed; deployment pending. See [session](ASTRA-SESSION-HELP-2026-10-20.md).

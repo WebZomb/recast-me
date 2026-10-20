@@ -59,7 +59,7 @@ test('native-style black website dock still overrides the old hidden-link rule',
 test('black app-style website navigation is shared across phone and desktop pages',()=>{
   for(const page of ['index.html','my-recasts.html','my-orders.html','order.html','purchase-demo.html',
                      'guide.html','privacy.html','support.html','gift-ideas.html']){
-    assert.match(read('public/'+page),/mobile-bottom-nav\.js\?v=165/,page);
+    assert.match(read('public/'+page),/mobile-bottom-nav\.js\?v=166/,page);
   }
   assert.match(read('public/index.html'),/id="more-adventures"/);
   assert.match(read('public/index.html'),/id="surprise-world"/);
