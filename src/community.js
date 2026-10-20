@@ -60,6 +60,7 @@ export async function communityRoutes(request,env,{authorize,preview,admin}) {
    await env.ARTWORK.put(`community/v1/images/${id}.jpg`,bytes,{httpMetadata:{contentType:'image/jpeg'}});
    let selected=id;
    try {await mutate(rows=>{
+    selected=id; // Reset attempt-local result when a conditional write retries.
     const duplicate=rows.find(r=>r.requestId===body.requestId);
     if(duplicate){selected=duplicate.id;return}
     if(rows.filter(r=>r.submitter===submitter&&r.createdAt.startsWith(today)).length>=5)throw fault('daily','You can submit up to five Recasts per network each day. Please try again tomorrow.',429);
