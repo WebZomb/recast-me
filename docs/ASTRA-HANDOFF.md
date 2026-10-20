@@ -374,3 +374,5 @@ October19 owner clarification — redundant permanent own-photo card becomes out
 October19/20 SEO discovery — three independent gift guides, expanded sitemap and missing Guide canonical, preserving existing site appearance/behavior. 595 tests and bundle pass; production pending. See [session](ASTRA-SESSION-SEO-2026-10-20.md).
 
 October20 guide follow-up — owner screenshot reveals unstyled main guide CTA. Added guide-only large gradient buttons and distinct dog/cat/Christmas guides, no main-store changes. See [session](ASTRA-SESSION-GUIDE-CTA-2026-10-20.md).
+
+October20 device Save — preserve My Recasts first, then protected JPEG desktop download or phone/tablet save dialog with fresh-tap sharing and image fallback. 598 tests and Worker dry-run pass; real-device Photos and deployment unverified. See [session](ASTRA-SESSION-DEVICE-SAVE-2026-10-20.md).

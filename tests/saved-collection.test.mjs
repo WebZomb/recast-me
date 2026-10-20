@@ -19,7 +19,7 @@ test('browser and iPhone both show a Save to My Recasts action and reuse private
  assert.doesNotMatch(page,/class="preview-more"/);
  assert.match(page,/href="\/my-recasts.html"/);
  assert.match(app,/saveRecast/);
- assert.match(app,/accessToken:lastSuccessfulPreviewMeta\?\.accessToken/);
+ assert.match(app,/accessToken:version\.accessToken/);
  // Native Keychain access and the offline gallery are validated on the separate
  // iOS TestFlight branch; the web PR must work independently at release.
  assert.match(app,/messageHandlers\.recastPreview\.postMessage/);

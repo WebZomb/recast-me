@@ -94,5 +94,5 @@ test('saved Recasts show individual ID and reusable clean-image product link',()
  assert.match(ui,/Use on a Product/);
  assert.match(ui,/Copy Artwork ID/);
  assert.match(ui,/item\.requestId/);
- assert.match(nativeBridge,/styleName:lastSuccessfulPreviewMeta/);
+ assert.match(nativeBridge,/styleName:version/);
 });

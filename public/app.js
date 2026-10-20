@@ -5,6 +5,7 @@ import {mergeHistory,privateRecastLink,readRecastLink} from './recast-history.js
 import {initCreationWizard,surpriseChoices} from './creation-wizard.js?v=292';
 import {fallbackState,creditSummary,creditHeadline,recoveryUnverified} from './quality-policy.js?v=267';
 import {protectedPreviewFile} from './preview-export.js';
+import {offerDeviceSave} from './device-preview-save.js';
 import {initCheckoutReturnExperience} from './order-experience.js?v=3';
 import {saveRecast} from './recast-collection.js?v=1';
 let creditInfo=null;
@@ -1125,35 +1126,41 @@ if(nativeSave)nativeSave.hidden=false;
 async function exportPreview(native=false){
   const button=document.querySelector(native?'#save-native-preview':'#share-preview');
   if(!button||button.disabled)return;
+  const version={...lastSuccessfulPreviewMeta};
+  let collectionSaved=false;
   button.disabled=true;
   exportStatus.textContent=native?'Saving your preview to My Recasts…':'Preparing your watermarked preview…';
   if(native){button.classList.add('is-saving');button.querySelector('span').textContent='Saving…';}
   try{
     if(native&&!window.webkit?.messageHandlers?.recastPreview){
       const saved=saveRecast({
-        ...lastSuccessfulPreviewMeta,
-        styleName:lastSuccessfulPreviewMeta?.title?.replace(/ preview ready\.$/,'') || 'Recast'
+        ...version,
+        styleName:version.title?.replace(/ preview ready\.$/,'') || 'Recast'
       });
       if(!saved.ok)throw Error(saved.error);
-      exportStatus.textContent='✓ Saved to My Recasts in this browser. Use it on a product any time while the private artwork is available.';
+      collectionSaved=true;
+      exportStatus.textContent='✓ Saved to My Recasts. Preparing your watermarked download…';
       button.classList.add('is-saved');button.querySelector('span').textContent='✓ Saved';
       showNativeSavedToast('✓ Saved to My Recasts!');
       setTimeout(()=>{button.classList.remove('is-saved');button.querySelector('span').textContent='Save';},2500);
-      return;
     }
-    const result=await protectedPreviewFile(lastSuccessfulPreviewMeta);
-    if(native){
+    const result=await protectedPreviewFile(version);
+    if(native&&!collectionSaved){
       // Native replies after it has actually persisted the file.
       const reply=await window.webkit.messageHandlers.recastPreview.postMessage({
-        id:result.id,image:result.image,accessToken:lastSuccessfulPreviewMeta?.accessToken||'',
-        styleName:lastSuccessfulPreviewMeta?.title?.replace(/ preview ready\.$/,'')||'My Recast'
+        id:result.id,image:result.image,accessToken:version.accessToken||'',
+        styleName:version.title?.replace(/ preview ready\.$/,'')||'My Recast'
       });
+      collectionSaved=true;
       exportStatus.textContent=reply?.reusable===false
         ?'✓ Saved offline. Reopen this version in Recent Recasts to restore its private product link.'
         :'✓ Saved to My Recasts on this iPhone. Open it to put it on a product.';
       button.classList.add('is-saved');button.querySelector('span').textContent='✓ Saved';
       showNativeSavedToast('✓ Saved to My Recasts!');
       setTimeout(()=>{button.classList.remove('is-saved');button.querySelector('span').textContent='Save';},2500);
+    }
+    if(native){
+      offerDeviceSave(result,exportStatus);
     }else if(navigator.canShare?.({files:[result.file]})){
       await navigator.share({files:[result.file],title:'My Recast',text:'Made with @RecastMeAi'});
       exportStatus.textContent='Your watermarked preview is ready to share.';
@@ -1164,7 +1171,7 @@ async function exportPreview(native=false){
       exportStatus.textContent='Your watermarked preview download has started.';
     }
   }catch(error){
-    exportStatus.textContent=error.name==='AbortError'?'Sharing canceled. Your preview is still here.':error.message||'Could not save this preview.';
+    exportStatus.textContent=collectionSaved?'✓ Saved to My Recasts. The device copy could not be prepared. Tap Save to try again.':error.name==='AbortError'?'Sharing canceled. Your preview is still here.':error.message||'Could not save this preview.';
     if(native){button.classList.remove('is-saved');button.querySelector('span').textContent='Save';}
   }finally{button.disabled=false;button.classList.remove('is-saving');}
 }
