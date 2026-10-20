@@ -1,0 +1,76 @@
+name: Capture actual Recast iOS screenshots
+on:
+  workflow_dispatch:
+  push:
+    branches: ['codex/ios-store-screenshots-1002']
+    paths: ['ios/StoreScreenshots/**', '.github/workflows/recast-store-screenshots.yml']
+permissions:
+  contents: read
+jobs:
+  capture:
+    runs-on: macos-15
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        device: ['iPhone', 'iPad']
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo xcode-select -s /Applications/Xcode_26.2.app/Contents/Developer
+      - run: brew install xcodegen
+      - name: Add capture-only test target without modifying shipping app
+        run: |
+          cat >> ios/project.yml <<'YAML'
+            StoreScreenshots:
+              build:
+                targets:
+                  RecastMe: all
+                  StoreScreenshots: [test]
+              test:
+                targets: [StoreScreenshots]
+          YAML
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('ios/project.yml')
+          s = p.read_text().replace('schemes:\n', '''  StoreScreenshots:
+              type: bundle.ui-testing
+              platform: iOS
+              sources: [StoreScreenshots]
+              dependencies:
+                - target: RecastMe
+              settings:
+                base:
+                  GENERATE_INFOPLIST_FILE: YES
+                  PRODUCT_BUNDLE_IDENTIFIER: com.recastme.screenshots
+          schemes:
+          ''')
+          p.write_text(s)
+          PY
+      - name: Capture current native app on simulator
+        run: |
+          cd ios
+          xcodegen generate
+          xcrun simctl list devices available --json > /tmp/recast-simulators.json
+          RECAST_SIMULATOR=$(python3 - <<'PYDEVICE'
+          import json
+          rows=[d for devices in json.load(open('/tmp/recast-simulators.json'))['devices'].values() for d in devices if d.get('isAvailable')]
+          family='${{ matrix.device }}'
+          matches=[d for d in rows if ('iPhone' in d['name'] and 'Pro Max' in d['name'])] if family=='iPhone' else [d for d in rows if 'iPad Pro 13-inch' in d['name']]
+          if not matches: raise SystemExit('Required screenshot simulator unavailable')
+          print(matches[-1]['udid'])
+          PYDEVICE
+          )
+          xcodebuild -project RecastMe.xcodeproj -scheme StoreScreenshots -configuration Debug -destination "platform=iOS Simulator,id=$RECAST_SIMULATOR" -resultBundlePath /tmp/recast-screens.xcresult CODE_SIGNING_ALLOWED=NO test
+      - name: Export captured attachments
+        if: always()
+        run: |
+          mkdir -p /tmp/recast-store-screens
+          if test -d /tmp/recast-screens.xcresult; then
+            xcrun xcresulttool export attachments --path /tmp/recast-screens.xcresult --output-path /tmp/recast-store-screens
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: recast-native-screens-${{ matrix.device }}
+          path: /tmp/recast-store-screens
+          if-no-files-found: warn
