@@ -23,9 +23,9 @@ final class StoreScreenshots: XCTestCase {
         XCTAssertTrue(loaded.waitForExistence(timeout: 45))
         XCTAssertFalse(app.staticTexts["We couldn’t open the studio"].exists)
         capture("02-create")
-        app.tabBars.buttons["My Recasts"].tap()
+        app.buttons["My Recasts"].firstMatch.tap()
         capture("03-my-recasts-empty")
-        app.tabBars.buttons["Create"].tap()
+        app.buttons["Create"].firstMatch.tap()
         let help = app.buttons["Open photo guide and support"]
         XCTAssertTrue(help.waitForExistence(timeout: 10))
         help.tap()
