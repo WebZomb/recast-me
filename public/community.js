@@ -2,6 +2,27 @@ import {communityAction,readLocal,OWNED} from './community-share.js';
 const FAVORITES='recast_community_favorites_v1';
 const grid=document.querySelector('#community-grid'),status=document.querySelector('#community-status'),more=document.querySelector('#community-more');
 let posts=[],shown=0,sort='new',loadVersion=0;
+let confirmationDialog=null;
+// WKWebView cancels window.confirm() when the native shell has no confirm delegate.
+// Keep these controls in the page so installed apps and browsers use the same UI.
+function confirmCommunityAction(title,message,actionLabel){
+ if(confirmationDialog)return Promise.resolve(false);
+ return new Promise(resolve=>{
+  const dialog=document.createElement('dialog');dialog.className='community-dialog community-confirm-dialog';
+  dialog.setAttribute('aria-labelledby','community-confirm-title');dialog.setAttribute('aria-describedby','community-confirm-message');
+  const heading=document.createElement('h2');heading.id='community-confirm-title';heading.textContent=title;
+  const description=document.createElement('p');description.id='community-confirm-message';description.textContent=message;
+  const actions=document.createElement('div');actions.className='community-confirm-actions';
+  const cancel=document.createElement('button');cancel.type='button';cancel.textContent='Cancel';cancel.autofocus=true;cancel.onclick=()=>dialog.close();
+  const confirm=document.createElement('button');confirm.type='button';confirm.className='primary';confirm.textContent=actionLabel;confirm.onclick=()=>dialog.close('confirmed');
+  const previousFocus=document.activeElement;
+  const finish=confirmed=>{confirmationDialog=null;dialog.remove();if(previousFocus?.isConnected)previousFocus.focus();resolve(confirmed)};
+  dialog.addEventListener('close',()=>finish(dialog.returnValue==='confirmed'),{once:true});
+  actions.append(cancel,confirm);dialog.append(heading,description,actions);confirmationDialog=dialog;document.body.append(dialog);
+  try{dialog.showModal()}catch{finish(false);status.textContent='The confirmation could not open. Please reload Community and try again.'}
+ });
+}
+function showActionStatus(message){status.textContent=message;status.focus()}
 function toggleLocal(key,id){const old=readLocal(key);const next=old.includes(id)?old.filter(x=>x!==id):[id,...old].slice(0,100);localStorage.setItem(key,JSON.stringify(next));return next.includes(id)}
 function card(post){
  const root=document.createElement('article');root.className='community-card';
@@ -16,9 +37,9 @@ function card(post){
  actions.append(heart,save);
  const use=document.createElement('a');use.className='button primary';use.href=`/?style=${encodeURIComponent(post.styleId)}&community=1#start`;use.textContent='Try this style →';
  const report=document.createElement('button');report.className='report';report.textContent='Report';
- report.onclick=async()=>{if(!confirm('Report this picture for a privacy, permission or content concern?'))return;report.disabled=true;try{await communityAction(`/api/community/${post.id}/report`,{});status.textContent='Report sent to the owner for review.'}catch(e){status.textContent=e.message;report.disabled=false}};
+ report.onclick=async()=>{if(!await confirmCommunityAction('Report this picture?','Send this picture to the owner for review of a privacy, permission or content concern.','Send report'))return;report.disabled=true;try{await communityAction(`/api/community/${post.id}/report`,{});showActionStatus('Report sent to the owner for review.')}catch(e){report.disabled=false;showActionStatus(e.message)}};
  const block=document.createElement('button');block.className='report';block.textContent='Block contributor';
- block.onclick=async()=>{if(!confirm('Hide this contributor’s Community posts in this browser? Your private pictures and orders are unchanged.'))return;block.disabled=true;try{await communityAction(`/api/community/${post.id}/block`,{});await load();status.textContent='Contributor blocked. Their posts are hidden in this browser.'}catch(e){status.textContent=e.message;block.disabled=false}};
+ block.onclick=async()=>{if(!await confirmCommunityAction('Block this contributor?','Hide this contributor’s Community posts from your view. Posts from a shared network may also be hidden. Your private pictures and orders stay available.','Block contributor'))return;block.disabled=true;try{await communityAction(`/api/community/${post.id}/block`,{});await load();showActionStatus('Contributor blocked. Their posts are hidden from your Community view.')}catch(e){block.disabled=false;showActionStatus(e.message)}};
  body.append(title,actions,use,report,block);root.append(img,body);return root;
 }
 function renderMore(){const batch=posts.slice(shown,shown+20);grid.append(...batch.map(card));shown+=batch.length;more.hidden=shown>=posts.length}

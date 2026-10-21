@@ -387,3 +387,5 @@ October20 heart persistence — signed browser identity preserves network vote a
 October20 Community blocking — visitor contributor blocks and owner block/unblock controls implemented with anonymous identity limitations;605Node tests/bundle passed, hosted/browser/deployment pending. See [session](ASTRA-SESSION-COMMUNITY-BLOCKING-2026-10-20.md). Apple submission remains separate.
 
 October20 duplicate Help — native bridge check now precedes website Help injection; website Help preserved, shared script cache refreshed. Focused checks passed; deployment pending. See [session](ASTRA-SESSION-HELP-2026-10-20.md).
+
+October21 Community confirmations — owner videos show browser prompts but native no-op. Submitted build1002 lacks the JavaScript confirm callback; the page now uses accessible in-page dialogs with explicit Cancel/action choices. Existing backend protection is preserved. Expanded Chromium/WebKit regression and deployment verification pending; no native rebuild required for this focused web change. See [session](ASTRA-SESSION-COMMUNITY-DIALOGS-2026-10-21.md).
