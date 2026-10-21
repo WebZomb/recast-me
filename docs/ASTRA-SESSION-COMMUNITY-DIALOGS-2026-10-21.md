@@ -45,3 +45,31 @@ PR106 source head `90083ae1fdebf8245dba77472c9a91738238fa76`, tree `e77d284ec018
 The local-only browser network guard was broadened to permit same-origin `blob:` previews and embedded `data:` resources, while continuing to reject every external network request. This accounts for WebKit interception of owner preview blobs. Added bounded failure diagnostics and a screenshot at the owner-preview wait so a further failure will identify image load state instead of only a timeout. This is a test-harness change, not a claimed production fix or justification to skip the failed assertion. A fresh full hosted pass is required. The customer JS/CSS/HTML are unchanged from the reviewed source head.
 
 Related follow-up found during source audit: unpaid artwork deletion (`public/order.js`), web favorite removal (`public/my-recasts.js`) and a render-error fallback (`public/app.js`) still use native JS confirm/alert calls. Their actual installed-app behavior is untested here. Record native dialog delegate coverage for the next native update or separately verify and migrate those flows; do not describe this two-action Community correction as a global popup fix.
+
+## Final PR verification
+
+Final PR106 head `019de4e8f660d064f9f2672524cff9ac2a198e93`, tree `bbb2052f2a43b487be56d700c2d9e2b2e6f507fb`, contains only the local-blob fixture correction and diagnostic notes after the initial source commit. Hosted run39645011047/job119378145194 completed successfully: 605/605 Node tests, Worker dry-run, all existing customer/owner, Model Lab, seasonal and gift-guide browser suites, and all ten Community scenarios. The log explicitly confirms both customer dialog checks and owner review in Chromium and WebKit at 320/393/768/1280px plus the 393px simulated native bridge. Allowing the fixture's local blob resources cleared the WebKit owner-preview failure without removing its assertion or changing the production owner panel.
+
+Native reload audit: build1002 creates the Community WebView with a normal URLRequest to the extensionless `/community` URL. It uses the persistent default data store; there is no forced cache bypass. Resume only dispatches an event, and Community has no reload listener. Verify the deployed extensionless HTML and its cache headers, then instruct a full quit from the app switcher and reopen. The hosted native-bridge fixture is not a real iPhone test.
+
+## Verified production release — October 21, 2026, 17:44 UTC
+
+PR106 was marked ready and merged with an expected-head guard at `019de4e8f660d064f9f2672524cff9ac2a198e93`. Main/runtime commit is `c2c14872e9e3251f7edb55ee4b3f072d8519324f`; its tree `bbb2052f2a43b487be56d700c2d9e2b2e6f507fb` exactly matches the tested PR tree. Prior main was `82d619f087fc2ac0fab31709a3c93793673d07ae`.
+
+Guarded deployment run39645991618 succeeded: test/bundle job119381583185 and deployment job119381786383, including the read-only production smoke. Worker version `9e291499-9397-4d4d-a1dd-31c89ac2ce89` was published at approximately 17:41:51 UTC; the run completed at 17:41:57. Existing deployment credentials were used by the workflow, with no secret values read or changed. The separate security workflow was skipped for this change; do not describe it as a completed security run.
+
+Final browser artifact12366409353 (`recast-policy-browser-evidence`, 62,196,251 bytes) has SHA-256 `0abe579bb51f2e66b150d54ac9bbf8580e86e3c689433e3ff828fe859eeb9efb`. Both Report and Block screenshots were visually inspected in WebKit at 320px and in the 393px native fixture: readable text, visible Cancel and action buttons, no clipping or navigation overlap. At 320px actions stack; at 393px the Block contributor label wraps cleanly within its touch target. The blocked external logo in fixtures is not a new production defect.
+
+Read-only launch audit39645991718/job119381584105 also passed (605 tests, public HTTP/browser checks with no listed failures, 18 product illustrations, isolated mock-commerce flow). It listed the previous Community CSS version, so it may have read production before deployment completed and is not the evidence that this fix is live.
+
+Independent live asset readback at approximately 17:44 UTC verified `/community`, `/community.html` (redirecting to `/community`), `/community.js?v=4` and `/community.css?v=2` all return HTTP200. Both HTML paths reference the new JS and CSS versions and retain the programmatically focusable status. Responses use `Cache-Control: public, max-age=0, must-revalidate`. JavaScript and CSS match the tested source byte for byte:
+
+- JS SHA-256: `3daa408641cd4c5b9a092a5afc6b7c1beebfdf757622fd3706a436ca6f8fa0d8`.
+- CSS SHA-256: `d1824ec95fe3b67f2dc4b172c5d2f7a553ea65d50377d74bc7fbf597ba9cb1fb`.
+- HTML source SHA-256: `4173b74677e983856ad4fdd71ae60bb16fff654ca7185b1d13718795e937ba8b`. Live HTML differs only by Cloudflare's injected analytics beacon; removing exactly that one injection yields a byte-for-byte match. Do not claim unmodified live HTML has the source hash.
+
+The authorized PC's default DNS lookup initially returned ENOTFOUND. A read-only query to public resolver1.1.1.1 returned the domain's addresses; the successful HTTPS reads used one returned address for those requests while preserving the domain Host/SNI and normal certificate verification. No PC DNS, browser session or TLS setting was changed. The deployment workflow independently reached the normal public domain successfully.
+
+The fix is deployed and its public assets are verified. Physical acceptance remains: fully quit Recast Me from the app switcher, reopen Community, open Report then Cancel, and open Block contributor then Cancel. This leaves report/block submission untested on the real phone; never claim fixture success or dialog-only footage proves a completed live report/block or Apple acceptance. No new native build was created and no Apple submission or review message was changed. No live report, block, moderation action, render, purchase or paid provider request was performed.
+
+Rollback remains a focused revert of this runtime change through the existing guarded workflow, preserving all stored Community data. It would restore the original native-confirm defect; prefer a forward correction if further device evidence identifies a problem.
