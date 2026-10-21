@@ -37,3 +37,11 @@ At this entry the fix is local source only. The existing guarded deployment must
 No live report, block, ban, photo publication, vote, render, purchase, fulfillment action, secret read, or paid provider request was made. Browser regressions use local fixtures only.
 
 Rollback: revert only this session's page JS/CSS/HTML changes through the guarded deployment, preserving all Community backend state and block references. That restores the previous native confirmation defect, so a forward correction is preferable. Do not revert the underlying blocking feature or clear user data.
+
+## First hosted run and test-harness follow-up
+
+PR106 source head `90083ae1fdebf8245dba77472c9a91738238fa76`, tree `e77d284ec018402a9d9661c8df0190ea841f608b`. Local full-suite result was 605/605. Hosted run39643948455/job119374468674 passed the same 605 tests, bundle, all pre-existing customer/Model Lab/seasonal/gift-guide suites, and all five Chromium Community scenarios. The first WebKit scenario completed the new report/block/cancel/error/retry/consent steps but then timed out at the existing owner-preview Approve-enabled wait (script line91). The run failed and was not merged or deployed.
+
+The local-only browser network guard was broadened to permit same-origin `blob:` previews and embedded `data:` resources, while continuing to reject every external network request. This accounts for WebKit interception of owner preview blobs. Added bounded failure diagnostics and a screenshot at the owner-preview wait so a further failure will identify image load state instead of only a timeout. This is a test-harness change, not a claimed production fix or justification to skip the failed assertion. A fresh full hosted pass is required. The customer JS/CSS/HTML are unchanged from the reviewed source head.
+
+Related follow-up found during source audit: unpaid artwork deletion (`public/order.js`), web favorite removal (`public/my-recasts.js`) and a render-error fallback (`public/app.js`) still use native JS confirm/alert calls. Their actual installed-app behavior is untested here. Record native dialog delegate coverage for the next native update or separately verify and migrate those flows; do not describe this two-action Community correction as a global popup fix.

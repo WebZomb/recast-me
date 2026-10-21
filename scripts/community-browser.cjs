@@ -9,14 +9,16 @@ const http=require('node:http'),fs=require('node:fs'),path=require('node:path'),
   for(const [engineName,engine] of Object.entries({chromium,webkit})){
   browser=await engine.launch({headless:true});
   for(const {width,native} of [...[320,393,768,1280].map(width=>({width,native:false})),{width:393,native:true}]){
-   const page=await browser.newPage({viewport:{width,height:900}});const errors=[];page.on('pageerror',e=>errors.push(e.message));
+   const page=await browser.newPage({viewport:{width,height:900}});const errors=[],failedRequests=[];page.on('pageerror',e=>errors.push(e.message));page.on('requestfailed',r=>failedRequests.push({url:r.url(),error:r.failure()?.errorText}));
    const label=`${engineName}-${width}${native?'-native':''}`;
    await page.addInitScript(({native})=>{
     // Reproduce the installed shell: unsupported JS confirmations return Cancel.
     window.confirmCalls=0;window.confirm=()=>{window.confirmCalls++;return false};
     if(native)Object.defineProperty(window,'webkit',{value:{messageHandlers:{recastPreview:{postMessage:async()=>({})}}},configurable:true});
    },{native});
-   await page.route('**/*',route=>route.request().url().startsWith('http://127.0.0.1:')?route.continue():route.abort());
+   const origin=`http://127.0.0.1:${server.address().port}`;
+   // WebKit also routes locally-created blob previews; they are not external traffic.
+   await page.route('**/*',route=>{const url=route.request().url();return url.startsWith(origin+'/')||url.startsWith('blob:'+origin+'/')||url.startsWith('data:')?route.continue():route.abort()});
    let blocked=false,reportCalls=0,blockCalls=0,failReport=true,failBlock=true;
    await page.route('**/api/community*',route=>route.fulfill({json:{ok:true,posts:blocked?[]:Array.from({length:25},(_,i)=>({id:String(i).padStart(32,'0'),styleId:'royal',styleName:'Royal',hearts:i,liked:i===0,image:'/assets/world-royal-v18.webp'}))}}));
    await page.route('**/api/community/*/report',route=>{assert.equal(route.request().method(),'POST');reportCalls++;return route.fulfill({status:failReport?503:200,json:failReport?{ok:false,error:'Test report retry'}:{ok:true}})});
@@ -75,6 +77,7 @@ const http=require('node:http'),fs=require('node:fs'),path=require('node:path'),
    await page.locator('.community-dialog input').check();assert.equal(await page.getByRole('button',{name:'Submit for review'}).isDisabled(),false);
    const fit=await page.locator('.community-dialog').evaluate(el=>{const r=el.getBoundingClientRect();return r.left>=0&&r.right<=innerWidth});assert.equal(fit,true);
    await page.screenshot({path:`rm050-browser-results/community-${label}.png`});
+   console.log('PASS customer Community dialogs, cancellation, retry, success, and consent',label);
    // Owner panel harness uses the actual admin markup and module with fixture data.
    await page.route('**/admin.js*',r=>r.fulfill({contentType:'text/javascript',body:''}));
    await page.goto(`http://127.0.0.1:${server.address().port}/admin.html`);
@@ -88,7 +91,10 @@ const http=require('node:http'),fs=require('node:fs'),path=require('node:path'),
      return {posts:[{id:'test-post',styleName:'Royal',status:state,reports:0,image:'/assets/world-royal-v18.webp'}]};
     },()=>({'x-recast-request':'1'}));await window.reviewPanel.load();
    });
-   await page.waitForFunction(()=>!document.querySelector('#community-review-posts button').disabled);
+   try{await page.waitForFunction(()=>!document.querySelector('#community-review-posts button').disabled)}catch(error){
+    await page.screenshot({path:`rm050-browser-results/admin-community-failure-${label}.png`});
+    console.error('Owner preview diagnostic',label,JSON.stringify({failedRequests,errors,state:await page.locator('#community-review-posts').evaluate(el=>({text:el.textContent,image:[...el.querySelectorAll('img')].map(img=>({src:img.src,complete:img.complete,width:img.naturalWidth}))}))}));throw error;
+   }
    assert.equal(await page.locator('#community-pending').textContent(),'1');
    await page.getByRole('button',{name:'Approve',exact:true}).click();
    await page.waitForFunction(()=>document.querySelector('#community-pending').textContent==='0');
