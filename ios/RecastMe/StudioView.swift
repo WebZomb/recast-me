@@ -33,7 +33,7 @@ struct StudioView: View {
     var body: some View {
         ZStack {
           if photoConsent.accepted {
-            StudioWebView(gallery: gallery, initialURL: initialURL, loadError: $loadError, isLoading: $isLoading, externalURL: $externalURL, checkout: $checkout).id(reloadID)
+            StudioWebView(gallery: gallery, initialURL: initialURL, loadError: $loadError, isLoading: $isLoading, externalURL: $externalURL, checkout: $checkout, showGuide: $showGuide).id(reloadID)
             if isLoading && loadError == nil {
                 ProgressView("Opening your studio…").padding().background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
             }
@@ -50,11 +50,15 @@ struct StudioView: View {
             PhotoConsentView { photoConsent.accepted = true }
           }
         }
-        .safeAreaInset(edge: .top, alignment: .trailing, spacing: 0) {
-            Button { showGuide = true } label: {
-                Label("Help", systemImage: "questionmark.circle")
-                    .font(.callout).padding(.horizontal, 16).frame(minHeight: 44)
-            }.accessibilityLabel("Open photo guide and support")
+        .overlay(alignment: .topTrailing) {
+            // Help remains available when the web page cannot display its button.
+            if !photoConsent.accepted || loadError != nil {
+                Button("Help") { showGuide = true }
+                    .font(.callout).padding(12)
+                    .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 8))
+                    .padding(8)
+                    .accessibilityLabel("Open photo guide and support")
+            }
         }
         .sheet(isPresented: $showGuide) { RecastGuideView() }
         .sheet(item: $checkout, onDismiss: {
@@ -85,6 +89,7 @@ struct StudioWebView: UIViewRepresentable {
     @Binding var isLoading: Bool
     @Binding var externalURL: URL?
     @Binding var checkout: SafariCheckout?
+    @Binding var showGuide: Bool
     func makeCoordinator() -> Coordinator { Coordinator(self) }
     func makeUIView(context: Context) -> WKWebView {
         let config = WKWebViewConfiguration()
@@ -92,6 +97,38 @@ struct StudioWebView: UIViewRepresentable {
         config.userContentController.addScriptMessageHandler(context.coordinator, contentWorld: .page, name: "recastPreview")
         config.userContentController.addScriptMessageHandler(context.coordinator, contentWorld: .page, name: "recastHaptic")
         config.userContentController.addScriptMessageHandler(context.coordinator, contentWorld: .page, name: "recastAccess")
+        config.userContentController.addScriptMessageHandler(context.coordinator, contentWorld: .page, name: "recastHelp")
+        // Restore the compact page control without reserving a native toolbar row.
+        // Current website scripts skip Help in native apps; this shell owns it.
+        let helpScript = """
+        (() => {
+          if (location.origin !== 'https://recastmeai.com') return;
+          const header = document.querySelector('.site-header, .library-header');
+          const help = document.querySelector('.community-help-link') || document.createElement('a');
+          help.href = '/guide.html';
+          help.textContent = 'Help';
+          help.className = 'community-help-link';
+          help.setAttribute('aria-label', 'Open photo guide and support');
+          help.style.cssText = 'display:inline-flex!important;align-items:center;justify-content:center;box-sizing:border-box;min-width:44px;min-height:44px;padding:4px 10px;color:#c6eafa!important;font:14px system-ui;text-decoration:none;background:#111222;border:1px solid #45405f;border-radius:0 0 8px 8px;z-index:50';
+          if (header) {
+            if (getComputedStyle(header).position === 'static') header.style.position = 'relative';
+            help.style.position = 'absolute';
+            help.style.right = '12px';
+            help.style.top = '100%';
+            header.append(help);
+          } else {
+            help.style.position = 'fixed';
+            help.style.right = '12px';
+            help.style.top = '8px';
+            document.body.append(help);
+          }
+          help.addEventListener('click', event => {
+            event.preventDefault();
+            window.webkit.messageHandlers.recastHelp.postMessage('open');
+          });
+        })();
+        """
+        config.userContentController.addUserScript(WKUserScript(source: helpScript, injectionTime: .atDocumentEnd, forMainFrameOnly: true))
         // Only the exact Recast main page can send tap feedback. No third-party frames.
         let touchScript = """
         (() => {
@@ -150,6 +187,7 @@ struct StudioWebView: UIViewRepresentable {
         view.configuration.userContentController.removeScriptMessageHandler(forName: "recastPreview", contentWorld: .page)
         view.configuration.userContentController.removeScriptMessageHandler(forName: "recastHaptic", contentWorld: .page)
         view.configuration.userContentController.removeScriptMessageHandler(forName: "recastAccess", contentWorld: .page)
+        view.configuration.userContentController.removeScriptMessageHandler(forName: "recastHelp", contentWorld: .page)
         NotificationCenter.default.removeObserver(coordinator, name: UIApplication.didBecomeActiveNotification, object: nil)
         NotificationCenter.default.removeObserver(coordinator, name: .init("RecastCheckoutReturned"), object: nil)
         coordinator.webView = nil
@@ -169,6 +207,14 @@ struct StudioWebView: UIViewRepresentable {
             guard message.frameInfo.isMainFrame,
                   origin.protocol == "https", origin.host == StudioView.origin.host, origin.port == 0 || origin.port == 443 else {
                 replyHandler(nil, "This action is not allowed."); return
+            }
+            if message.name == "recastHelp" {
+                guard let action = message.body as? String, action == "open" else {
+                    replyHandler(nil, "Unknown help action."); return
+                }
+                parent.showGuide = true
+                replyHandler(["ok": true], nil)
+                return
             }
             if message.name == "recastHaptic" {
                 guard let kind = message.body as? String, kind == "tap" || kind == "success" else {
