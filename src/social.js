@@ -1,4 +1,5 @@
 import {moderateContent,moderationReadiness,screenText,CONTENT_MESSAGE,CONTENT_POLICY_VERSION} from './content-safety.js';
+import {appChannelHeaders} from './app-channel.js';
 import {socialIntent} from './social-products.js';
 import {saveOriginalPhoto} from './original-photo.js';
 import {createMockup,mockupStatus} from './workflow.js';
@@ -297,11 +298,11 @@ export async function socialRoutes(request,env,ctx) {
   // These two bridges grant purchase access only. Private artwork/source tokens never leave the server.
   if(action==='products'&&request.method==='GET'){
     const inner=new URL('/api/checkout-options',url.origin);inner.search=new URLSearchParams({requestId:meta.requestId,token:meta.accessToken});
-    return app.fetch(new Request(inner),env,ctx);
+    return app.fetch(new Request(inner,{headers:appChannelHeaders(request)}),env,ctx);
   }
   if(action==='checkout'&&request.method==='POST'){
     const body=await request.json().catch(()=>({}));
-    return app.fetch(new Request(new URL('/api/checkout-link',url.origin),{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({requestId:meta.requestId,accessToken:meta.accessToken,sku:String(body.sku||''),mockupId:body.mockupId,design:body.design,confirmDesign:body.confirmDesign===true,skipMockup:body.skipMockup===true,confirmArtwork:body.confirmArtwork===true})}),env,ctx);
+    return app.fetch(new Request(new URL('/api/checkout-link',url.origin),{method:'POST',headers:appChannelHeaders(request,{'content-type':'application/json'}),body:JSON.stringify({requestId:meta.requestId,accessToken:meta.accessToken,sku:String(body.sku||''),mockupId:body.mockupId,design:body.design,confirmDesign:body.confirmDesign===true,skipMockup:body.skipMockup===true,confirmArtwork:body.confirmArtwork===true})}),env,ctx);
   }
   if(action==='mockup-create'&&request.method==='POST'){
     const body=await request.json().catch(()=>({}));

@@ -1,4 +1,5 @@
 import {launchSetup} from './launch-setup.js';
+import {isNativeAppRequest, digitalUnavailableInAppResponse} from './app-channel.js';
 import {ownerAlertRoute,sendOwnerAlerts} from './owner-alerts.js';
 import {orderIssueId,recordOrderIssue,resolveOrderIssue,loadOrderIssue,listOrderIssues,orderRecoveryAdvice} from './order-issues.js';
 import {loadContextualSpec} from './contextual-mockups.js';
@@ -631,12 +632,13 @@ export async function customerOrderStatus(request,env){
       }
       return {id:j.id,orderName:j.orderName,product:j.product,sku:j.sku,status:j.status,digital:j.digital,preapprovedCheckout:Boolean(j.preapprovedCheckout),createdAt:j.createdAt,printfulStatus:j.printfulStatus||null,...publicShipmentTracking(j),approvedPreviewUrl:j.approvedPreviewToken?`${appBase(env,request)}/proof/${encodeURIComponent(j.approvedPreviewToken)}`:null,approvedPreviewImage:approvedPreviewImages[0]?.url||null,approvedPreviewImages,productDesign:j.productDesign||null,design:j.digital?null:publicDesign(await designFor(env,j))};
     }));
-    return json({ok:true,creditsEnabled:creditsEnabled(env),request:{requestId,styleName:meta.styleName,paid:Boolean(meta.paid),orderName:meta.orderName||null,digitalEntitlement:meta.digitalEntitlement||null},jobs:views});
+    return json({ok:true,creditsEnabled:creditsEnabled(env),request:{requestId,styleName:meta.styleName,paid:Boolean(meta.paid),orderName:meta.orderName||null,digitalEntitlement:isNativeAppRequest(request)?null:meta.digitalEntitlement||null},jobs:views});
   }catch(error){return json({ok:false,error:error.message},error.status||500)}
 }
 
 export async function digitalDownload(request,env,requestId){
   try{
+    if(isNativeAppRequest(request))return digitalUnavailableInAppResponse();
     const url=new URL(request.url);const token=String(url.searchParams.get("token")||"");const meta=await requireRequest(env,requestId,token);
     if(!meta.paid||!meta.digitalEntitlement)return new Response("Digital purchase required",{status:403});
     const finalObject=await env.ARTWORK?.get(requestKey(requestId,"final-print.jpg"));

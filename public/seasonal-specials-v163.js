@@ -1,4 +1,4 @@
-import {renderSeasonalProducts} from './seasonal-products.js?v=166';
+import {renderSeasonalProducts} from './seasonal-products.js?v=167';
 import {seasonalSpotlight,upcomingGiftEvents,daysToEvent,eventDateLabel} from './season-calendar.js?v=166';
 let campaign={active:null,offer:null};
 try{const response=await fetch('/api/seasonal-campaign',{cache:'no-store'});if(response.ok)campaign=await response.json();}catch{}

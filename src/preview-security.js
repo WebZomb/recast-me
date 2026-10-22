@@ -1,4 +1,5 @@
 import {communityRoutes} from './community.js';
+import {isNativeAppRequest, digitalUnavailableInAppResponse} from './app-channel.js';
 import { shopifyCatalog } from "./index.js";
 import {saveOriginalPhoto} from './original-photo.js';
 import { WATERMARK_TILE_BASE64, WATERMARK_FOOTER_BASE64 } from './watermark-tile.js';
@@ -287,6 +288,7 @@ export function secureApplication(application) {
         }
         match = path.match(/^\/api\/digital-download\/([^/]+)$/);
         if (match && request.method === 'GET') {
+          if (isNativeAppRequest(request)) return digitalUnavailableInAppResponse();
           const id = artworkId(match[1]), meta = await customerMeta(env, id, url.searchParams.get('token'));
           if (!paid(meta) || !['RECAST-DIGITAL-HD', 'RECAST-DIGITAL-PACK'].includes(meta.digitalEntitlement)) return json({ error: 'digital_purchase_required' }, 403);
           // The existing entitlement path serves the exact stored artwork.

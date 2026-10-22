@@ -1,9 +1,10 @@
+import {nativeAppPlatform,appRequestHeaders} from './app-channel.js?v=1';
 const params=new URLSearchParams(location.search),requestId=params.get('requestId')||'',token=params.get('token')||'';
 const card=document.querySelector('#order-card');
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let jobs=[];
 function versions(){try{return JSON.parse(localStorage.getItem('recast_recent_versions_v12')||'[]').filter(v=>v?.requestId&&v?.accessToken).slice(0,4)}catch{return[]}}
-async function api(url,body){const r=await fetch(url,body?{method:'POST',headers:{'content-type':'application/json','x-recast-request':'1'},body:JSON.stringify(body)}:undefined);const d=await r.json().catch(()=>({}));if(!r.ok||!d.ok)throw Error(d.userMessage||d.error||'We could not complete that update.');return d}
+async function api(url,body){const r=await fetch(url,body?{method:'POST',headers:appRequestHeaders({'content-type':'application/json','x-recast-request':'1'}),body:JSON.stringify(body)}:{headers:appRequestHeaders(),cache:'no-store'});const d=await r.json().catch(()=>({}));if(!r.ok||!d.ok)throw Error(d.userMessage||d.error||'We could not complete that update.');return d}
 function message(text){document.querySelector('#order-message').textContent=text}
 function designSummary(design){
  if(!design)return '';
@@ -57,7 +58,7 @@ async function load(){
   card.innerHTML=`<div id="order-message" role="status" aria-live="polite"></div><div class="order-state"><strong>${d.request.paid?'Order detected':'Waiting for a paid order'}</strong><span>${esc(d.request.orderName||'Artwork saved')}</span></div>
   ${d.creditsEnabled&&jobs.length?'<div class="download-box"><h3>Keep creating</h3><p id="credit-status">Checking your High Quality purchase credits…</p><button id="check-bonus" class="button ghost">Check my purchase credits</button><a id="create-more" class="button primary" href="/#start">Try another idea →</a></div>':''}
   <div class="order-items">${jobs.length?jobs.map(j=>`<article class="order-item"><h2>${esc(j.product)}</h2><p>Status: ${esc(orderStatusLabel(j))}</p>${['auto_print_review','owner_release_review','printful_failed','on_hold'].includes(j.status)?'<p>Your order is saved and needs a fulfillment check. Please do not place it again. You can contact us through Orders &amp; support below.</p>':''}${j.trackingReady===true && ['shipped','partially_shipped'].includes(j.status) && j.trackingNumber && /^https:\/\//i.test(j.trackingUrl||'')?`<a class="button primary" href="${esc(j.trackingUrl)}" target="_blank" rel="noopener noreferrer">Track shipment →</a><p>Carrier reference: ${esc(j.carrier||'Carrier')} · ${esc(j.trackingNumber)}</p>`:'<p class="order-shipment-pending">Tracking will appear after your order ships. Please do not place another order.</p>'}${designCard(j)}</article>`).join(''):'<p>After payment is verified, your order will appear here automatically.</p>'}</div>
-  ${d.request.digitalEntitlement?`<div class="download-box"><h3>Your digital artwork</h3><a class="button primary" href="/api/digital-download/${encodeURIComponent(requestId)}?token=${encodeURIComponent(token)}">Download purchased artwork</a></div>`:''}
+  ${d.request.digitalEntitlement&&!nativeAppPlatform()?`<div class="download-box"><h3>Your digital artwork</h3><a class="button primary" href="/api/digital-download/${encodeURIComponent(requestId)}?token=${encodeURIComponent(token)}">Download purchased artwork</a></div>`:''}
   <p class="order-note">Keep this private order link. It gives access to this artwork and its orders.</p>${!d.request.paid?'<button id="delete-recast" class="delete-recast">Delete this unpaid Recast</button>':''}`;
   card.querySelectorAll('[data-consent]').forEach(el=>el.onchange=()=>{card.querySelector(`[data-action="approve"][data-job="${CSS.escape(el.dataset.consent)}"]`).disabled=!el.checked});
   card.querySelectorAll('[data-action]').forEach(el=>el.onclick=()=>act(el));
