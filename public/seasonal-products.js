@@ -1,3 +1,4 @@
+import {nativeAppPlatform,isDigitalArtworkProduct,appRequestHeaders} from './app-channel.js?v=1';
 export const seasonalProducts = [
   {name:"Poster",price:"from $29.99",asset:"poster",image:"https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-lifestyle-poster-rm059.png?v=1791422885&width=1000",badge:"MOST POPULAR",pitch:"The easiest way to turn your Recast into wall art.",tier:"featured"},
   {name:"Hoodie",price:"from $59.99",asset:"hoodie",image:"https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-hoodie-variety-20261017.png?v=1792212037&width=1000",badge:"FAN FAVORITE",pitch:"Wear your Recast as a premium statement piece.",tier:"featured"},
@@ -25,9 +26,9 @@ const node=(tag,cls,text)=>{const x=document.createElement(tag);if(cls)x.classNa
 export async function renderSeasonalProducts(campaign){
  const grid=document.getElementById('season-shop-grid'),status=document.getElementById('season-shop-status');if(!grid)return;
  try{
-  const response=await fetch('/api/seasonal-products',{cache:'no-store'});const data=await response.json();if(!response.ok||!data.ok||!Array.isArray(data.products))throw Error('unavailable');
+  const response=await fetch('/api/seasonal-products',{cache:'no-store',headers:appRequestHeaders()});const data=await response.json();if(!response.ok||!data.ok||!Array.isArray(data.products))throw Error('unavailable');
   const halloween=campaign.active?.id==='halloween';
-  const items=seasonalProducts.map(item=>({...item,live:data.products.find(p=>p.name===(item.name==='Tough Phone Case'?'Phone Case':item.name))})).filter(item=>item.live);
+  const items=seasonalProducts.filter(item=>!nativeAppPlatform()||!isDigitalArtworkProduct(item)).map(item=>({...item,live:data.products.find(p=>p.name===(item.name==='Tough Phone Case'?'Phone Case':item.name))})).filter(item=>item.live);
   grid.replaceChildren();
   for(const item of items){
    const card=node('article','season-shop-card');

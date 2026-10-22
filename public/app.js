@@ -1,4 +1,5 @@
 import {shareWithCommunity} from './community-share.js';
+import {nativeAppPlatform,isDigitalArtworkProduct} from './app-channel.js?v=1';
 import {photoShoppingNotice} from './photo-shopping.js?v=1';
 import {initSubjectDetection} from './subject-detection.js?v=291';
 import {ADVENTURE_GUIDES} from './adventure-guides.js?v=2';
@@ -144,6 +145,7 @@ document.querySelectorAll('.style-card').forEach(card=>{
 
 const EXAMPLE_SKUS={"Tote Bag":"RECAST-TOTE-BLACK","Puzzle":"RECAST-PUZZLE-252","Hardcover Journal":"RECAST-JOURNAL-HC","Pillow":"RECAST-PILLOW-14","Tough Phone Case":"RECAST-TOUGH-IP15","Sticker Sheet":"RECAST-STICKER-PACK",Poster:'RECAST-POSTER-12X16',Hoodie:'RECAST-HOODIE-S','Framed Poster':'RECAST-FRAME-12X16',Canvas:'RECAST-CANVAS-12X16','T-Shirt':'RECAST-TEE-S',Blanket:'RECAST-BLANKET-50X60',Mug:'RECAST-MUG-11OZ',Tumbler:'RECAST-TUMBLER-20OZ','Magnet 3-Pack':'RECAST-MAGNET-SET','Coaster 4-Pack':'RECAST-COASTER-SET'};
 function merchCard(item,{featured=false}={}){
+  if(nativeAppPlatform()&&isDigitalArtworkProduct(item))return '';
   const classes=['product',featured?'featured-product':'secondary-product'].filter(Boolean).join(' ');
   return `<div class="${classes}" ${EXAMPLE_SKUS[item.name]?`data-example-sku="${EXAMPLE_SKUS[item.name]}"`:""}>
     <div class="product-art"><img src="${item.image || `/assets/product-${item.asset}-v09.jpg`}" alt="${item.name==='Hoodie'?'Illustrative black hoodie with centered soft-edge chest artwork':`Style illustration for ${item.name}`}" loading="lazy" decoding="async">${EXAMPLE_SKUS[item.name]?`<span class="example-design-label">${item.name==='Hoodie'?'Lifestyle example · preview your selected size':'Lifestyle example · preview your selected size'}</span>`:""}</div>
@@ -1056,7 +1058,7 @@ function openApprovalFromQuery(){
   }
   const status=document.querySelector('#recover-status');
   if(status){
-    status.textContent='To approve this order, open this page in the browser where you created this Recast, then use Track this Recast / downloads.';
+    status.textContent='To approve this order, open this page in the browser where you created this Recast, then use Order details & updates.';
   }
   document.querySelector('#preview-section')?.classList.remove('hidden');
   return false;

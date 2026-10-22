@@ -1,4 +1,5 @@
 import {applyHolidayDiscount} from './holiday-campaigns.js';
+import {isNativeAppRequest, digitalUnavailableInAppResponse} from './app-channel.js';
 import {checkStoredArtwork} from './content-safety.js';
 import core, { shopifyCatalog } from "./index.js";
 import {createMockup} from "./workflow.js";
@@ -171,7 +172,7 @@ async function checkoutOptions(request, env, ctx) {
   const accessToken = url.searchParams.get("token");
   const recast = await validateRecast(request, env, ctx, requestId, accessToken);
   const snapshot = await shopifySnapshot(request, env, ctx);
-  const rows = flattenShopifyProducts(snapshot);
+  const rows = flattenShopifyProducts(snapshot).filter(row => !row.digital || !isNativeAppRequest(request));
 
   const grouped = new Map();
   for (const row of rows) {
@@ -265,6 +266,7 @@ async function checkoutLink(request, env, ctx) {
   const requestId = String(body.requestId || "");
   const accessToken = String(body.accessToken || "");
   const sku = String(body.sku || "");
+  if (FULFILLMENT[sku]?.digital && isNativeAppRequest(request)) return digitalUnavailableInAppResponse();
   const recast = await validateRecast(request, env, ctx, requestId, accessToken);
   const safetyMeta=await env.ARTWORK.get(`requests/${requestId}/request.json`);
   if(safetyMeta)await checkStoredArtwork(env,await safetyMeta.json());
@@ -462,7 +464,7 @@ async function injectCheckoutScript(response) {
   if (!contentType.includes("text/html")) return response;
   const html = await response.text();
   if (html.includes("/checkout.js")) return new Response(html, response);
-  const next = html.replace("</body>", '  <script src="/checkout.js?v=190" type="module"></script>\n</body>');
+  const next = html.replace("</body>", '  <script src="/checkout.js?v=304" type="module"></script>\n</body>');
   return new Response(next, {
     status: response.status,
     headers: response.headers
@@ -475,7 +477,7 @@ export default {
 
     if(url.pathname==='/api/seasonal-products'&&request.method==='GET'){
       try{
-        const rows=flattenShopifyProducts(await shopifySnapshot(request,env,ctx)).filter(row=>row.status==='ACTIVE');
+        const rows=flattenShopifyProducts(await shopifySnapshot(request,env,ctx)).filter(row=>row.status==='ACTIVE'&&(!row.digital||!isNativeAppRequest(request)));
         const products=new Map();
         for(const row of rows){
           const name=FULFILLMENT[row.sku].product;
@@ -494,7 +496,8 @@ export default {
     if(approvedPage&&request.method==="GET")return approvedPreviewPage(env,approvedPage[1]);
 
     if (url.pathname === "/api/fulfillment-map" && request.method === "GET") {
-      return json({ ok: true, mapping: FULFILLMENT });
+      const mapping=isNativeAppRequest(request)?Object.fromEntries(Object.entries(FULFILLMENT).filter(([,product])=>!product.digital)):FULFILLMENT;
+      return json({ ok: true, mapping });
     }
 
     if (url.pathname === "/api/checkout-options" && request.method === "GET") {

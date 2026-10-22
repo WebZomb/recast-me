@@ -4,6 +4,8 @@ import vm from 'node:vm';
 import {readFileSync} from 'node:fs';
 import {productPrintfile} from '../src/commerce-store.js';
 import {mockupPosition} from '../src/workflow.js';
+const channelSource=readFileSync(new URL('../public/app-channel.js',import.meta.url),'utf8').replace(/^export\s+/gm,'');
+const vmCheckout=source=>channelSource+'\n'+source.replace(/^import\s+\{[^}]+\}\s+from\s+['"]\.\/app-channel\.js[^'"]*['"];?\s*$/m,'');
 
 test('RM0511 Printful dimensions accept numeric strings instead of falsely reporting unavailable',()=>{
   const catalog={
@@ -18,8 +20,8 @@ test('RM0511 Printful dimensions accept numeric strings instead of falsely repor
 
 test('RM0511 checkout deduplicates repeated Printful view labels and uses compact names',()=>{
   const source=readFileSync(new URL('../public/checkout.js',import.meta.url),'utf8');
-  const context={document:{querySelector:()=>null,querySelectorAll:()=>[],addEventListener(){}},window:{},localStorage:{getItem:()=>null},location:{origin:'https://recast.test'},URL,console,setTimeout,fetch:async()=>({ok:false,json:async()=>({})})};
-  vm.runInNewContext(source,context);
+  const context={document:{querySelector:()=>null,querySelectorAll:()=>[],addEventListener(){}},window:{},localStorage:{getItem:()=>null},location:{origin:'https://recast.test'},URL,Headers,console,setTimeout,fetch:async()=>({ok:false,json:async()=>({})})};
+  vm.runInNewContext(vmCheckout(source),context);
   const views=vm.runInNewContext(`uniqueMockupViews([
     {title:'Front view',url:'1'},{title:'Front view',url:'2'},
     {title:'Back',url:'3'},{title:'Back view',url:'4'},
@@ -55,8 +57,8 @@ test('RM0511 storefront errors do not expose deployment stage or worker IDs',()=
 
 test('apparel omits oversized first scene while preserving front and second supplier proof',()=>{
  const source=readFileSync(new URL('../public/checkout.js',import.meta.url),'utf8');
- const context={document:{querySelector:()=>null,querySelectorAll:()=>[],addEventListener(){}},window:{},localStorage:{getItem:()=>null},location:{origin:'https://recast.test'},URL,console,setTimeout,fetch:async()=>({ok:false,json:async()=>({})})};
- vm.runInNewContext(source,context);
+ const context={document:{querySelector:()=>null,querySelectorAll:()=>[],addEventListener(){}},window:{},localStorage:{getItem:()=>null},location:{origin:'https://recast.test'},URL,Headers,console,setTimeout,fetch:async()=>({ok:false,json:async()=>({})})};
+ vm.runInNewContext(vmCheckout(source),context);
  for(const title of ['Custom Recast Hoodie','Custom Recast T-Shirt']){
   context.title=title;
   const views=vm.runInNewContext(`uniqueMockupViews([{title:'Front',group:'Flat',url:'front'},{title:'Front',group:'Lifestyle',url:'oversized'},{title:'Front',group:'Lifestyle 2',url:'second'}],title)`,context);

@@ -8,9 +8,11 @@ import {normalizeProductDesign,composeProductLayout} from '../src/commerce-store
 import {mockupPosition} from '../src/workflow.js';
 
 const checkout=readFileSync(new URL('../public/checkout.js',import.meta.url),'utf8');
+const channelSource=readFileSync(new URL('../public/app-channel.js',import.meta.url),'utf8').replace(/^export\s+/gm,'');
+const vmCheckout=channelSource+'\n'+checkout.replace(/^import\s+\{[^}]+\}\s+from\s+['"]\.\/app-channel\.js[^'"]*['"];?\s*$/m,'');
 
 function maskPixels(bytes){let p=8,w,h,parts=[];while(p<bytes.length){const n=new DataView(bytes.buffer,bytes.byteOffset+p).getUint32(0),t=Buffer.from(bytes.subarray(p+4,p+8)).toString();if(t==='IHDR'){w=new DataView(bytes.buffer,bytes.byteOffset+p+8).getUint32(0);h=new DataView(bytes.buffer,bytes.byteOffset+p+12).getUint32(0)}if(t==='IDAT')parts.push(bytes.subarray(p+8,p+8+n));p+=n+12}const a=inflateSync(Buffer.concat(parts));return {w,h,a,pixel:(x,y)=>a[y*(w+1)+x+1]}}
-function context(){const c={document:{querySelector:()=>null,querySelectorAll:()=>[],addEventListener(){}},window:{},localStorage:{getItem:()=>null},location:{origin:'https://recast.test'},URL,console,setTimeout,fetch:async()=>({ok:false,json:async()=>({})})};vm.runInNewContext(readFileSync(new URL('../public/checkout.js',import.meta.url),'utf8'),c);return c}
+function context(){const c={document:{querySelector:()=>null,querySelectorAll:()=>[],addEventListener(){}},window:{},localStorage:{getItem:()=>null},location:{origin:'https://recast.test'},URL,Headers,console,setTimeout,fetch:async()=>({ok:false,json:async()=>({})})};vm.runInNewContext(vmCheckout,c);return c}
 
 test('v6 print boxes fit every verified template without clipping at all offered scales',()=>{
  for(const [sw,sh] of [[1600,900],[900,1600],[1000,1000],[5000,500],[500,5000]])for(const [w,h] of [[2400,2880],[4096,5461],[1800,2400]])for(const scale of [70,85,100,118,500])for(const side of ['left','center','right']){

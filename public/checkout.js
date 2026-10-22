@@ -1,3 +1,4 @@
+import {nativeAppPlatform,isDigitalArtworkProduct,appRequestHeaders} from './app-channel.js?v=1';
 try{const seasonalGift=new URLSearchParams(location.search).get('gift');if(/^RECAST-[A-Z0-9-]{1,60}$/.test(seasonalGift||''))sessionStorage.setItem('recast_preferred_gift',seasonalGift);}catch{}
 const grid = document.querySelector("#product-grid");
 const requestLabel = document.querySelector("#request-id");
@@ -347,7 +348,7 @@ async function confirmCheckout({req,sku,card,button,modal}){
   }
   confirm.disabled=true;confirm.textContent="Opening secure checkout…";errorCopy.hidden=true;
   try{
-    const res=await fetch(checkoutEndpoint("/api/checkout-link",req),{method:"POST",headers:{"x-recast-request":"1","content-type":"application/json"},body:JSON.stringify({
+    const res=await fetch(checkoutEndpoint("/api/checkout-link",req),{method:"POST",headers:appRequestHeaders({"x-recast-request":"1","content-type":"application/json"}),body:JSON.stringify({
       requestId:req.requestId,accessToken:req.accessToken,sku,mockupId:state.mockupId,design:state.design,confirmDesign:true
     })});
     const result=await res.json().catch(()=>({}));
@@ -404,7 +405,7 @@ function openRecommendedReview({req,sku,card,button}){
  confirm.addEventListener('click',async()=>{
   if(!activeArtworkMatches(req)||signature!==designSignature(card,card.querySelector('.recast-variant')?.value)){error.textContent='Your artwork or product changed. Close this review and check the new selection.';error.hidden=false;return;}
   confirm.disabled=true;confirm.textContent='Preparing secure checkout…';error.hidden=true;
-  try{const response=await fetch(checkoutEndpoint('/api/checkout-link',req),{method:'POST',headers:{'x-recast-request':'1','content-type':'application/json'},body:JSON.stringify({requestId:req.requestId,accessToken:req.accessToken,sku,design,confirmDesign:true,confirmArtwork:true,skipMockup:true})});const data=await response.json();if(!response.ok||!data.ok||!data.checkoutUrl)throw Error(data.error||'Checkout is temporarily unavailable.');if(!activeArtworkMatches(req))throw Error('Your selected artwork changed. Please review it again.');if(modal.isConnected)leaveForCheckout(req,data.checkoutUrl);}
+  try{const response=await fetch(checkoutEndpoint('/api/checkout-link',req),{method:'POST',headers:appRequestHeaders({'x-recast-request':'1','content-type':'application/json'}),body:JSON.stringify({requestId:req.requestId,accessToken:req.accessToken,sku,design,confirmDesign:true,confirmArtwork:true,skipMockup:true})});const data=await response.json();if(!response.ok||!data.ok||!data.checkoutUrl)throw Error(data.error||'Checkout is temporarily unavailable.');if(!activeArtworkMatches(req))throw Error('Your selected artwork changed. Please review it again.');if(modal.isConnected)leaveForCheckout(req,data.checkoutUrl);}
   catch(cause){confirm.disabled=false;confirm.textContent='Approve artwork & checkout';error.textContent=cause.message;error.hidden=false;}
  });
  reviewKeydown=event=>{if(event.key==='Escape'){event.preventDefault();close();}if(event.key==='Tab'){const focusable=[...modal.querySelectorAll('button:not([disabled])')];const first=focusable[0],last=focusable.at(-1);if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus();}else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus();}}};document.addEventListener('keydown',reviewKeydown);
@@ -429,7 +430,7 @@ async function generateRealMockup({req,sku,card,button}){
       if(!await safeWait(initialWait))return;
     }
     const startRequest=()=>fetch(checkoutEndpoint("/api/mockup/create",req),{
-      method:"POST",headers:{"x-recast-request":"1","content-type":"application/json","cache-control":"no-cache"},
+      method:"POST",headers:appRequestHeaders({"x-recast-request":"1","content-type":"application/json","cache-control":"no-cache"}),
       body:JSON.stringify({requestId:req.requestId,accessToken:req.accessToken,sku,design,presentation:"room-v1"}),
       cache:"no-store"
     });
@@ -476,7 +477,7 @@ async function generateRealMockup({req,sku,card,button}){
       if(!await safeWait(attempt===0?10000:8000))return;
       const url=new URL(checkoutEndpoint("/api/mockup/status",req),location.origin);
       url.searchParams.set("requestId",req.requestId);url.searchParams.set("token",req.accessToken);url.searchParams.set("sku",sku);url.searchParams.set("mockup",mockupId);
-      const response=await fetch(url,{cache:"no-store"});data=await response.json().catch(()=>({}));
+      const response=await fetch(url,{cache:"no-store",headers:appRequestHeaders()});data=await response.json().catch(()=>({}));
       if(!current())return;
       if(response.ok&&data.status==="completed"&&data.images?.length){
         const img=card.querySelector(".product-art img"),views=uniqueMockupViews(data.images,card.dataset.productTitle);
@@ -543,7 +544,7 @@ async function loadCheckout(){
     const url=new URL(checkoutEndpoint("/api/checkout-options",req),location.origin);
     url.searchParams.set("requestId",req.requestId);
     url.searchParams.set("token",req.accessToken);
-    response=await fetch(url);
+    response=await fetch(url,{headers:appRequestHeaders(),cache:'no-store'});
     data=await response.json().catch(()=>({}));
   }catch(error){data={error:error?.message||'Connection interrupted.'}}
   if(loadId!==checkoutLoadId)return;
@@ -555,6 +556,7 @@ async function loadCheckout(){
 
   const ordered=[...(data.products||[])]
     .filter(product=>PRODUCT_META[product.title]&&product.status==="ACTIVE")
+    .filter(product=>!nativeAppPlatform()||!isDigitalArtworkProduct(product))
     .sort((a,b)=>{
       const ap=PRIMARY_PRODUCT_TITLES.has(a.title)?0:1,bp=PRIMARY_PRODUCT_TITLES.has(b.title)?0:1;
       return ap-bp||((PRODUCT_META[a.title]?.order??50)-(PRODUCT_META[b.title]?.order??50));
@@ -653,6 +655,9 @@ async function loadCheckout(){
       const selector=document.querySelector(`.recast-variant[data-product="${index}"]`);
       const sku=selector?.value;if(!sku)return;
       const card=document.querySelector(`[data-product-index="${index}"]`),digital=card?.dataset?.digital==="true";
+      // Recheck when activated so a restored or stale website card cannot buy
+      // digital artwork after the page is handed to a native shell.
+      if(nativeAppPlatform()&&(digital||isDigitalArtworkProduct(sku))){await loadCheckout();return;}
       if(lastRequest()?.requestId!==req.requestId||lastRequest()?.accessToken!==req.accessToken){await loadCheckout();return;}
       const errorCopy=button.parentElement.querySelector(".checkout-error");
       errorCopy.hidden=true;errorCopy.textContent="";
@@ -663,7 +668,7 @@ async function loadCheckout(){
       if(!digital){openFinalReview({req,sku,card,button});return;}
       button.disabled=true;const previous=button.textContent;button.textContent="Opening Shopify…";
       try{
-        const res=await fetch(checkoutEndpoint("/api/checkout-link",req),{method:"POST",headers:{"x-recast-request":"1","content-type":"application/json"},body:JSON.stringify({requestId:req.requestId,accessToken:req.accessToken,sku})});
+        const res=await fetch(checkoutEndpoint("/api/checkout-link",req),{method:"POST",headers:appRequestHeaders({"x-recast-request":"1","content-type":"application/json"}),body:JSON.stringify({requestId:req.requestId,accessToken:req.accessToken,sku})});
         const result=await res.json().catch(()=>({}));
         if(!res.ok||!result.ok||!result.checkoutUrl)throw new Error(result.error||"Checkout link could not be created.");
         window.recastTrack?.('checkout_clicked');

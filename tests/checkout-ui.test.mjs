@@ -4,6 +4,10 @@ import vm from 'node:vm';
 import {normalizeProductDesign} from '../src/commerce-store.js';
 import {readFileSync} from 'node:fs';
 const source=readFileSync(new URL('../public/checkout.js',import.meta.url),'utf8');
+// Execute the real shared channel helper inside the same VM realm as checkout,
+// so dynamic native detection observes this fixture's window and navigator.
+const channelSource=readFileSync(new URL('../public/app-channel.js',import.meta.url),'utf8').replace(/^export\s+/gm,'');
+const vmSource=channelSource+'\n'+source.replace(/^import\s+\{[^}]+\}\s+from\s+['"]\.\/app-channel\.js[^'"]*['"];?\s*$/m,'');
 function setup(fetcher){
   const listeners={},calls=[],error={hidden:true,textContent:''},img={src:'',alt:''},caption={textContent:''};
   const layout={value:'two-sided'},x={value:'center'},scale={value:'110'},spacing={value:'standard'},fill={value:'ambient'};
@@ -13,8 +17,8 @@ function setup(fetcher){
     querySelector:s=>s==='.product-art img'?img:s==='.example-design-label'?caption:s==='.mockup-error'?error:s==='.product-preview-action'?preview:s==='.recast-buy'?button:s==='[data-design-layout]'?layout:s==='[data-design-x]'?x:s==='[data-design-scale]'?scale:s==='[data-design-spacing]'?spacing:s==='[data-design-fill]'?fill:null};
   const grid={querySelectorAll:()=>[],innerHTML:'marketing',children:[],classList:{add(){},remove(){},contains(){return false}},replaceChildren(){this.innerHTML='';this.children=[]},append(...items){this.children.push(...items)}};
   const document={querySelector:s=>s==='#product-grid'?grid:s==='#request-id'?{textContent:''}:s.startsWith('.recast-variant')?{value:'RECAST-MUG-15OZ'}:s.startsWith('[data-product-index')?card:null,querySelectorAll:s=>s==='.recast-buy'?[button]:[],addEventListener:(name,fn)=>listeners[name]=fn,createElement:()=>({children:[],setAttribute(){},addEventListener(name,fn){this[name]=fn},append(...x){this.children.push(...x)}})};
-  const context={document,window:{},localStorage:{getItem:()=>JSON.stringify({requestId:'old',accessToken:'old-token'})},location:{origin:'https://recast.test'},URL,console:{warn(){}},setTimeout,setInterval,clearInterval,fetch:async(...args)=>{calls.push(args);return fetcher(...args)}};
-  vm.runInNewContext(source,context);
+  const context={document,window:{},localStorage:{getItem:()=>JSON.stringify({requestId:'old',accessToken:'old-token'})},location:{origin:'https://recast.test'},URL,Headers,console:{warn(){}},setTimeout,setInterval,clearInterval,fetch:async(...args)=>{calls.push(args);return fetcher(...args)}};
+  vm.runInNewContext(vmSource,context);
   return {context,grid,button,error,card,calls,select:async(id='new')=>{context.window.__recastActiveRequest={requestId:id,accessToken:`${id}-token`};await listeners['recast-artwork-selected']()}};
 }
 const catalog=()=>({ok:true,json:async()=>({ok:true,products:[{title:'Custom Recast Mug',status:'ACTIVE',variants:[{sku:'RECAST-MUG-15OZ',variantTitle:'15 oz',price:'29.99'}]}]})});
