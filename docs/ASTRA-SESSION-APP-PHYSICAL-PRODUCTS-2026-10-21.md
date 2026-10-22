@@ -38,4 +38,6 @@ Rollback: revert this focused change to the baseline shared app files; stored ca
 
 ## Hosted validation and release receipt
 
-Pending at implementation commit. Append exact PR head, tested tree, merge/deployment identifiers, checks actually completed and production readback here.
+October 22: PR107 implementation head `8e625a633e12502472d447063c4ad6609cfeae17` matched locally verified tree `8457fa10ddf520107698c5c60da80216b83879e9`. Hosted security validation and the pre-existing browser suites passed. The first new app-channel browser case stopped during free preview Save because its mock access token was not the 64-character hexadecimal value required by the existing private-collection contract. The fixture now uses a valid synthetic token, and failure reporting retains the original stack. Production validation was preserved. No customer key or real purchase was used. Full browser validation and release remain pending until the corrected head passes.
+
+Append exact final head, tested tree, merge/deployment identifiers, checks actually completed and production readback here.

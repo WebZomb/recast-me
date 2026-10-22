@@ -3,7 +3,7 @@
 const {chromium,webkit}=require('playwright');
 const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
 const root=path.resolve('public'),out=path.resolve('rm050-browser-results');
-const origin='http://recast.test',requestId='RC-TEST0001-ABCDEF',accessToken='fixture-private-artwork-token';
+const origin='http://recast.test',requestId='RC-TEST0001-ABCDEF',accessToken='a'.repeat(64);
 const fixture=fs.readFileSync(path.join(root,'assets/world-game-v18.webp'));
 const image='data:image/webp;base64,'+fixture.toString('base64');
 const protectedImage='data:image/jpeg;base64,'+fs.readFileSync(path.join(root,'assets/product-mug-v09.jpg')).toString('base64');
@@ -141,7 +141,7 @@ async function runCase(browser,engineName,config){
   console.log('PASS',label,'catalog, free preview save/share, physical checkout, order access and layout');
  }catch(error){
   await page.screenshot({path:path.join(out,'app-channel-failed-'+label+'.png')}).catch(()=>{});
-  throw new Error(label+': '+error.message+'; page errors: '+JSON.stringify(state.errors),{cause:error});
+  throw new Error(label+': '+(error.stack||error.message)+'; page errors: '+JSON.stringify(state.errors),{cause:error});
  }finally{await context.close();}
 }
 async function staleCardCase(browser,engineName,platform){
