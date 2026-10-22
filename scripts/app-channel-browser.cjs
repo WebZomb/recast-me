@@ -118,11 +118,12 @@ async function runCase(browser,engineName,config){
   assert.equal(state.checkouts[0].body.sku,'RECAST-MUG-11OZ');
   assert.equal(state.checkouts[0].platform,config.platform,label+' sends app channel at physical checkout');
   assert.equal(state.destinations.length,1,label+' retains the mocked merchant checkout handoff');
+  const orderRequestsBefore=state.api.length;
   await page.goto(`${origin}/order.html?requestId=${requestId}&token=${accessToken}`,{waitUntil:'networkidle'});
   await page.locator('.order-item').waitFor();
   assert.equal(await page.getByRole('link',{name:'Download purchased artwork',exact:true}).count(),config.platform?0:1,label+' paid download visibility');
   assert.equal(await page.getByRole('link',{name:'Track shipment →',exact:true}).count(),1,label+' physical order tracking');
-  assert.equal(state.api.find(call=>call.path==='/api/order-status')?.platform,config.platform,label+' sends channel when loading orders');
+  assert.equal(state.api.slice(orderRequestsBefore).find(call=>call.path==='/api/order-status')?.platform,config.platform,label+' sends channel when loading orders');
   await checkFit(page,label+' order details');
   await page.goto(origin+'/specials.html',{waitUntil:'networkidle'});
   await page.locator('.season-shop-card').first().waitFor();
