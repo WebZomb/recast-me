@@ -6,6 +6,7 @@ on:
       - 'public/**'
       - 'tests/**'
       - 'scripts/rm050-browser-tests.cjs'
+      - 'scripts/basket-browser-tests.cjs'
       - 'scripts/rm121-model-lab-audit.cjs'
       - 'scripts/community-browser.cjs'
       - 'scripts/app-channel-browser.cjs'
@@ -39,6 +40,8 @@ jobs:
         run: NODE_PATH=/tmp/recast-browser/node_modules node scripts/rm050-browser-tests.cjs
       - name: Mocked identity Model Lab mobile checks
         run: NODE_PATH=/tmp/recast-browser/node_modules node scripts/rm121-model-lab-audit.cjs
+      - name: Basket recovery mobile browser checks
+        run: NODE_PATH=/tmp/recast-browser/node_modules node scripts/basket-browser-tests.cjs
       - name: Seasonal storefront and owner schedule browser checks
         run: NODE_PATH=/tmp/recast-browser/node_modules node scripts/rm166-seasonal-browser.cjs
       - name: Gift guide CTA and narrow-phone checks

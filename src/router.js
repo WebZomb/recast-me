@@ -1,4 +1,6 @@
 import {expireSeasonalCheckouts} from './seasonal-checkout.js';
+import {basketRoutes} from './basket-routes.js';
+import {basketAdminRoute} from './basket-admin.js';
 import {holidayRoutes} from './holiday-campaigns.js';
 import app from "./entry.js";
 import {subjectDetection} from "./subject-detection.js";
@@ -16,6 +18,10 @@ import { printFinishRoutes } from './print-finish.js';
 const application = {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
+    const basketAdmin=await basketAdminRoute(request,env,{requireAdmin});
+    if(basketAdmin)return basketAdmin;
+    const basket=await basketRoutes(request,env,ctx);
+    if(basket)return basket;
     const holiday=await holidayRoutes(request,env);
     if(holiday)return holiday;
     if(url.pathname==='/api/subject-detection' && request.method==='POST')return subjectDetection(request,env);

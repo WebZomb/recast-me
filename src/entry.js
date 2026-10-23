@@ -138,7 +138,7 @@ async function shopifySnapshot(request, env, ctx) {
   return shopifyCatalog(env);
 }
 
-function flattenShopifyProducts(snapshot) {
+export function flattenShopifyProducts(snapshot) {
   const rows = [];
   for (const product of snapshot.recastProducts || []) {
     for (const variant of product.variants?.nodes || []) {
@@ -257,11 +257,19 @@ async function freezeCheckoutApproval(env,{requestId,sku,mockupId,proofHash,mock
     sourceHash:await hash(sourceBase64),position:mockup.position,images:approvedPreview.images||[],
     approvedAt:new Date().toISOString(),schemaVersion:1,approvalMode:mockup.approvalMode||'product-mockup'
   };
+  const previous=await env.ARTWORK.get(recordKey);
+  if(previous){
+    const saved=await previous.json();
+    for(const key of ['token','requestId','sku','mockupId','proofHash','previewToken','design','snapshotKey','sourceHash','position','approvalMode']){
+      if(JSON.stringify(saved[key])!==JSON.stringify(record[key]))throw new Error('This approved design needs review. Please generate a fresh preview.');
+    }
+    return saved;
+  }
   await env.ARTWORK.put(recordKey,JSON.stringify(record),{httpMetadata:{contentType:"application/json"}});
   return record;
 }
 
-async function checkoutLink(request, env, ctx) {
+export async function prepareCheckout(request, env, ctx) {
   const body = await request.json().catch(() => ({}));
   const requestId = String(body.requestId || "");
   const accessToken = String(body.accessToken || "");
@@ -338,6 +346,13 @@ async function checkoutLink(request, env, ctx) {
       ...(checkoutApproval?{"_Recast Preapproval":checkoutApproval.token}:{})
     }:{})
   };
+  return {requestId, recast, row, numericId, properties, checkoutApproval, approvedPreview, sku};
+}
+
+async function checkoutLink(request, env, ctx) {
+  const prepared=await prepareCheckout(request,env,ctx);
+  if(prepared instanceof Response)return prepared;
+  const {requestId,recast,row,numericId,properties,approvedPreview,sku}=prepared;
   const encodedProperties = base64UrlUtf8(JSON.stringify(properties));
   const checkoutUrl = await applyHolidayDiscount(`https://${shopDomain(env)}/cart/${numericId}:1?properties=${encodeURIComponent(encodedProperties)}&ref=recast-me`,env,new Date(),{artwork:recast,variantId:row.variantId,properties,requestId});
 
