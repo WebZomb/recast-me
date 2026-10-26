@@ -4,10 +4,10 @@
 (() => {
   const enabled=['recastmeai.com','www.recastmeai.com','recast-me.sergz24.workers.dev'].includes(location.hostname);
   const pagePath=location.pathname.replace(/\.html$/,'');
-  const page=({'/':'home','/credits':'credits','/order':'order','/support':'support','/privacy':'privacy'})[pagePath];
+  const page=({'/':'home','/credits':'credits','/order':'order','/support':'support','/privacy':'privacy','/gift-ideas':'gift-ideas','/guide':'guide','/specials':'specials','/pet-portrait-gifts':'pet-portrait-gifts','/original-photo-gifts':'original-photo-gifts','/personalized-photo-blankets':'personalized-photo-blankets','/dog-photo-gifts':'dog-photo-gifts','/cat-photo-gifts':'cat-photo-gifts','/christmas-photo-gifts':'christmas-photo-gifts'})[pagePath];
   const visitorKey='recast_analytics_visitor_v1',sessionKey='recast_analytics_session_v1',optOutKey='recast_analytics_opt_out';
   const DAY=86400000,SESSION=30*60000,VISITOR=30*DAY;
-  const pages=new Set(['home','credits','order','support','privacy']);
+  const pages=new Set(['home','credits','order','support','privacy','gift-ideas','guide','specials','pet-portrait-gifts','original-photo-gifts','personalized-photo-blankets','dog-photo-gifts','cat-photo-gifts','christmas-photo-gifts']);
   const types=new Set(['creator_started','photo_added','adventure_selected','render_started','render_succeeded','render_failed','product_preview','checkout_clicked','credit_checkout','credit_redeemed']);
   const sourceNames=new Set(['direct','internal','google','bing','search','instagram','facebook','tiktok','youtube','x','pinterest','email','other']);
   const randomId=()=>[...crypto.getRandomValues(new Uint8Array(16))].map(x=>x.toString(16).padStart(2,'0')).join('');
@@ -42,7 +42,7 @@
       try{const ref=new URL(document.referrer);source=classify(ref.hostname)}catch{source='direct'}
     }
     if(!sourceNames.has(source))source='other';
-    return {source,campaign:slug(params.get('utm_campaign'))};
+    return {source,campaign:slug(params.get('utm_campaign')),content:slug(params.get('utm_content'))};
   };
   const setup=()=>{
     if(!enabled||!pages.has(page)||optedOut())return null;
@@ -65,7 +65,7 @@
     if(type!=='visit'&&type!=='page_view'&&!types.has(type))return;
     const safeAdventure=type==='adventure_selected'?slug(extra.adventure):'';
     const body=JSON.stringify({type,visitorId:identity.visitor.id,sessionId:identity.session.id,
-      path:page,source:identity.session.source,campaign:identity.session.campaign,
+      path:page,source:identity.session.source,campaign:identity.session.campaign,content:identity.session.content||'',
       ...(safeAdventure?{adventure:safeAdventure}:{})});
     fetch('/api/analytics/event',{method:'POST',headers:{'content-type':'application/json','x-recast-request':'1'},
       body,keepalive:true,credentials:'omit',cache:'no-store'}).catch(()=>{});

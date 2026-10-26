@@ -13,7 +13,7 @@ const client={
 const friend={
  visitorId:'fedcba9876543210fedcba9876543210',
  sessionId:'abcdef0123456789abcdef0123456789',
- type:'visit',path:'credits',source:'instagram',campaign:'halloween'
+ type:'visit',path:'credits',source:'instagram',campaign:'halloween',content:'preview_before_buy'
 };
 function makeEvent(body=client,headers={}){
  const request=new Request('https://recast.test/api/analytics/event',{method:'POST',
@@ -61,6 +61,7 @@ test('Visitors, sessions, source and funnel events aggregate without storing ind
  assert.equal(d.totals.adventuresPicked,1);
  assert.deepEqual(d.sources.map(x=>x.name).sort(),['direct','instagram']);
  assert.deepEqual(d.campaigns.map(x=>x.name),['halloween']);
+ assert.deepEqual(d.contents.map(x=>x.name),['preview_before_buy']);
  assert.equal(d.devices[0].name,'mobile');assert.equal(d.countries[0].name,'US');
  assert.equal(d.topPages.find(x=>x.name==='credits').count,3);
  const list=await e.ARTWORK.list({prefix:'analytics/site-v1/'});
@@ -104,6 +105,8 @@ test('Invalid, giant or data-bearing tracker payloads cannot poison metrics',asy
   {...client,type:'visit',path:'order.html?token=secret'},
   {...client,type:'adventure_selected',adventure:'<script>alert(1)</script>'},
   {...client,type:'visit',campaign:'visit@customer.email'},
+  {...client,type:'visit',content:'creative@customer.email'},
+  {...client,type:'visit',path:'not-a-public-page'},
   {...client,visitorId:'test'},
   {...client,source:'http://untrusted.example/secret'}
  ]){
@@ -138,7 +141,7 @@ test('Privacy disclosure, opt-out, source categories and UI funnel instrumentati
  assert.doesNotMatch(tracker,/location\.href|document\.cookie|sendBeacon|gtag|fbq\(/);
  assert.match(privacy,/Optional website analytics/);
  assert.match(privacy,/id="analytics-opt-out"/);
- assert.match(publicFile('index.html'),/analytics\.js\?v=1/);
+ assert.match(publicFile('index.html'),/analytics\.js\?v=2/);
  assert.match(publicFile('credits.html'),/analytics\.js\?v=1/);
  assert.match(publicFile('admin.html'),/data-panel="traffic"/);
  assert.match(publicFile('admin.js'),/initOwnerTraffic/);

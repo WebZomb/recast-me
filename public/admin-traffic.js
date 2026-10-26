@@ -4,7 +4,7 @@ export function initOwnerTraffic(api){
  const root=document.querySelector('[data-panel="traffic"]');
  if(!root)return {load:async()=>{},clear:()=>{}};
  const $=id=>root.querySelector('#'+id);
- const labels={home:'Home / Creator',credits:'Credits & Gifts',order:'Saved Order Status',support:'Support',privacy:'Privacy'};
+ const labels={home:'Home / Creator',credits:'Credits & Gifts',order:'Saved Order Status',support:'Support',privacy:'Privacy','gift-ideas':'Gift Ideas',guide:'Guide',specials:'Specials','pet-portrait-gifts':'Pet Portrait Gifts','original-photo-gifts':'Original Photo Gifts','personalized-photo-blankets':'Photo Blankets','dog-photo-gifts':'Dog Photo Gifts','cat-photo-gifts':'Cat Photo Gifts','christmas-photo-gifts':'Christmas Photo Gifts'};
  let range=7,loaded=false;
  const n=value=>Number(value||0).toLocaleString();
  function ranking(id,rows){
@@ -56,7 +56,7 @@ export function initOwnerTraffic(api){
   drawTimeline(data.timeline);
   ranking('traffic-sources',data.sources);ranking('traffic-pages',data.topPages);
   ranking('traffic-devices',data.devices);ranking('traffic-countries',data.countries);
-  ranking('traffic-campaigns',data.campaigns);ranking('traffic-adventures',data.adventures);
+  ranking('traffic-campaigns',data.campaigns);ranking('traffic-content',data.contents);ranking('traffic-adventures',data.adventures);
   setText('traffic-last-updated','Updated '+new Date().toLocaleString()+' · '+(data.days===1?'Today':data.days+' days')+' · UTC date boundaries.');
   const overview=document.querySelector('#stat-visitors');
   if(overview)overview.textContent=n(t.visitors);
@@ -113,7 +113,7 @@ export function initOwnerTraffic(api){
   loaded=false;
   root.querySelectorAll('[data-traffic-secret]').forEach(node=>node.textContent='—');
   $('traffic-timeline')?.replaceChildren();
-  for(const id of ['traffic-sources','traffic-pages','traffic-devices','traffic-countries','traffic-campaigns','traffic-adventures'])$(id)?.replaceChildren();
+  for(const id of ['traffic-sources','traffic-pages','traffic-devices','traffic-countries','traffic-campaigns','traffic-content','traffic-adventures'])$(id)?.replaceChildren();
   setText('traffic-fetch-status','');
   const card=document.querySelector('#stat-visitors');if(card)card.textContent='—';
  }};
