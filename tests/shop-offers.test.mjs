@@ -1,0 +1,13 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {validateOffer,resolveBag,publicOffer} from '../src/shop-offers.js';
+const hash='a'.repeat(64),map={MUG:{printfulVariantId:1320}};
+const offer={id:'golden-mug',sku:'MUG',status:'verified',pet:'dog',priceCents:2499,currency:'USD',variantId:'gid://shopify/ProductVariant/1',artworkRevision:hash,artworkKey:'shop/masters/golden.png',mockupUrl:'https://example.com/proof.jpg',proof:{provider:'printful',approved:true,artworkRevision:hash,printfulVariantId:1320,printFileHash:hash,placementHash:hash,taskId:'test-proof',checkedAt:'2026-10-27'}};
+const line={offerId:offer.id,revision:hash,quantity:1};
+const catalog={version:1,offers:[offer]};
+test('rejects client price, artwork and variant injection',()=>{for(const key of ['priceCents','artworkUrl','variantId'])assert.throws(()=>resolveBag([{...line,[key]:'fake'}],catalog,map));});
+test('rejects stale revisions, missing offers, excess quantity and duplicate catalog IDs',()=>{assert.throws(()=>resolveBag([{...line,revision:'old'}],catalog,map));assert.throws(()=>resolveBag([{...line,offerId:'missing'}],catalog,map));assert.throws(()=>resolveBag([{...line,quantity:20},line],catalog,map));assert.throws(()=>resolveBag([line],{...catalog,offers:[offer,offer]},map));});
+test('supplier proof must match exact artwork, file, placement and mapped variant',()=>{for(const patch of [{printfulVariantId:4830},{artworkRevision:'b'.repeat(64)},{printFileHash:null},{placementHash:null},{approved:false}])assert.throws(()=>validateOffer({...offer,proof:{...offer.proof,...patch}},map));});
+test('separate artwork sharing a Shopify variant stays separate',()=>{const other={...offer,id:'cat-mug',pet:'cat'};const result=resolveBag([line,{...line,offerId:other.id,quantity:2}],{version:1,offers:[offer,other]},map);assert.equal(result.lines.length,2);assert.equal(result.subtotalCents,7497);});
+test('unknown and digital products cannot become premade pet inventory',()=>{assert.throws(()=>validateOffer(offer,{}));assert.throws(()=>validateOffer(offer,{MUG:{digital:true}}));assert.throws(()=>validateOffer({...offer,pet:'person'},map));});
+test('public catalog excludes master paths and supplier internals',()=>{const result=publicOffer(offer);assert.equal(result.artworkKey,undefined);assert.equal(result.sku,undefined);assert.equal(result.proof.printFileHash,undefined);assert.equal(result.id,offer.id);});
