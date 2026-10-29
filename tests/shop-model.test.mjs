@@ -27,3 +27,12 @@ test('filters intersect, and all agreed pets are represented',()=>{
  assert.ok(matches(offer,{pet:'dog',search:'golden',occasion:'christmas'}));
  assert.equal(matches(offer,{pet:'cat'}),false);
 });
+
+test('shareable filters round-trip and reject incompatible breed / unsupported fields',async()=>{
+ const {readShopFilters,shopFilterQuery}=await import('../public/shop-model.js');
+ const filters=readShopFilters('?occasion=all&pet=cat&breed=Calico&search=red%20scarf&sort=price-low');
+ assert.deepEqual(readShopFilters('?'+shopFilterQuery(filters)),filters);
+ assert.equal(readShopFilters('?pet=cat&breed=Golden%20Retriever').breed,'all');
+ assert.equal(readShopFilters('?occasion=unknown&product=invalid').occasion,'christmas');
+ assert.equal(readShopFilters('?search='+'x'.repeat(500)).search.length,120);
+});

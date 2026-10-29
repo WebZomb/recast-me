@@ -401,3 +401,5 @@ October 22 app product scope LIVE — PR107 merged `3c7dbc96b2fc0e207db1c6e53318
 
 
 October 27 pets-only Shop Designs preview — local implementation a424f3f with Christmas first, proposed breed/look filters and browser-local preview cart. Three illustrative pet product concepts; real checkout, supplier proofs, production seasonal switch and native release remain pending. Remote push was blocked by automatic approval review; no remote publication claimed. See [session](ASTRA-SESSION-PET-SHOP-2026-10-27.md).
+
+October 29 staged Shop continuation — dedicated Christmas page, shareable pet collections, clearer bag and isolated authoritative checkout-preflight checks added to PR114 branch. No sellable inventory or live checkout; supplier browser disconnected and local browser installation failed. See [dated session](ASTRA-SESSION-PET-SHOP-2026-10-27.md).

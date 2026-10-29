@@ -47,3 +47,23 @@ export function subtotal(cart, offers) {
   const valid = restoreCart(cart,offers);
   return valid.reduce((sum,l) => sum + offers.find(o => o.id === l.offerId).priceCents * l.quantity,0);
 }
+
+// Only allow known filters into shareable collection URLs.
+export function readShopFilters(search, defaultOccasion = 'christmas') {
+  const params = new URLSearchParams(search);
+  const pet = ['dog','cat'].includes(params.get('pet')) ? params.get('pet') : 'all';
+  const breed = (pet === 'all' ? Object.values(PETS).flat() : PETS[pet]).includes(params.get('breed')) ? params.get('breed') : 'all';
+  return {occasion:['christmas','everyday','all'].includes(params.get('occasion')) ? params.get('occasion') : defaultOccasion,
+    pet,breed,product:['mug','blanket','pillow','canvas','hoodie','tumbler'].includes(params.get('product')) ? params.get('product') : 'all',
+    search:(params.get('search') || '').slice(0,120),sort:['price-low','price-high'].includes(params.get('sort')) ? params.get('sort') : 'featured'};
+}
+export function shopFilterQuery(filters) {
+  const params = new URLSearchParams();
+  for (const key of ['occasion','pet','breed','product','search','sort']) {
+    const value = filters[key];
+    if(value && value !== 'all' && value !== 'featured') params.set(key,value);
+  }
+  // Explicit all preserves selection across reload during the Christmas season.
+  if(filters.occasion === 'all') params.set('occasion','all');
+  return params.toString();
+}
