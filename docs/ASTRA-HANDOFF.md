@@ -425,3 +425,9 @@ October 22 app product scope LIVE — PR107 merged `3c7dbc96b2fc0e207db1c6e53318
 October30 Christmas launch: owner requests both pages live. Focused Christmas merchandising/static metadata and dedicated entry prepared independently of incomplete PR114. Discounts remain off; shop not sellable yet. See [session](ASTRA-SESSION-CHRISTMAS-LAUNCH-2026-10-30.md) for verified tests/deployment status.
 
 October30 public Christmas verification:PR115 main54510b70835fdd48691923eb4b097e809b029e73. Live Specials and dedicated /christmas-gifts.html confirmed in Chrome at393/1280, exact public JS matches,617localNode tests and8localChrome cases pass. Security hosted passed; customer browser/guarded deployment completion not confirmed. Premade PR114 remains unmerged and not sellable. See Christmas launch session for precise evidence and limitations.
+
+October 27 pets-only Shop Designs preview — local implementation a424f3f with Christmas first, proposed breed/look filters and browser-local preview cart. Three illustrative pet product concepts; real checkout, supplier proofs, production seasonal switch and native release remain pending. Remote push was blocked by automatic approval review; no remote publication claimed. See [session](ASTRA-SESSION-PET-SHOP-2026-10-27.md).
+
+October 29 staged Shop continuation — dedicated Christmas page, shareable pet collections, clearer bag and isolated authoritative checkout-preflight checks added to PR114 branch. No sellable inventory or live checkout; supplier browser disconnected and local browser installation failed. See [dated session](ASTRA-SESSION-PET-SHOP-2026-10-27.md).
+
+October29 continued PR114 — checkout attempt coordinator/frozen approval line checks, same-origin approved logo,632 Node tests and real Chromium320/393/768/1280 PASS. Added Shop checks to hosted customer-policy CI; WebKit local missing libraries. No live checkout or supplier-approved catalog. [Evidence](ASTRA-SESSION-PET-SHOP-2026-10-27.md).

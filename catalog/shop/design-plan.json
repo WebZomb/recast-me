@@ -1,0 +1,870 @@
+{
+  "version": 1,
+  "note": "Production plan only. Not sellable offers or verified supplier inventory.",
+  "designs": [
+    {
+      "id": "christmas-french-bulldog-winter-lights",
+      "pet": "dog",
+      "breed": "French Bulldog",
+      "occasion": "christmas",
+      "title": "French Bulldog · Winter Lights",
+      "status": "planned",
+      "artworkRevision": null,
+      "prompt": "Original premium painterly illustration of a fictional French Bulldog. Luminous midnight winter portrait with evergreen branches, warm fairy lights, burgundy scarf and subtle cyan-violet aurora. Pets only, no people, no text, no logo, no product mockup. Print-safe composition.",
+      "candidateSkus": [
+        "RECAST-MUG-11OZ",
+        "RECAST-PILLOW-14",
+        "RECAST-BLANKET-50X60",
+        "RECAST-CANVAS-12X16"
+      ]
+    },
+    {
+      "id": "christmas-french-bulldog-cozy-christmas",
+      "pet": "dog",
+      "breed": "French Bulldog",
+      "occasion": "christmas",
+      "title": "French Bulldog · Cozy Christmas",
+      "status": "planned",
+      "artworkRevision": null,
+      "prompt": "Original premium painterly illustration of a fictional French Bulldog. Warm painterly pet portrait with a knitted blanket, evergreen boughs and tasteful wrapped gifts; cream, cranberry and forest green. Pets only, no people, no text, no logo, no product mockup. Print-safe composition.",
+      "candidateSkus": [
+        "RECAST-MUG-11OZ",
+        "RECAST-PILLOW-14",
+        "RECAST-BLANKET-50X60",
+        "RECAST-CANVAS-12X16"
+      ]
+    },
+    {
+      "id": "christmas-french-bulldog-snow-day",
+      "pet": "dog",
+      "breed": "French Bulldog",
+      "occasion": "christmas",
+      "title": "French Bulldog · Snow Day",
+      "status": "planned",
+      "artworkRevision": null,
+      "prompt": "Original premium painterly illustration of a fictional French Bulldog. Playful pet in fresh snow with a soft blue winter forest, falling snowflakes and a small red scarf. Pets only, no people, no text, no logo, no product mockup. Print-safe composition.",
+      "candidateSkus": [
+        "RECAST-MUG-11OZ",
+        "RECAST-PILLOW-14",
+        "RECAST-BLANKET-50X60",
+        "RECAST-CANVAS-12X16"
+      ]
+    },
+    {
+      "id": "christmas-labrador-retriever-winter-lights",
+      "pet": "dog",
+      "breed": "Labrador Retriever",
+      "occasion": "christmas",
+      "title": "Labrador Retriever · Winter Lights",
+      "status": "planned",
+      "artworkRevision": null,
+      "prompt": "Original premium painterly illustration of a fictional Labrador Retriever. Luminous midnight winter portrait with evergreen branches, warm fairy lights, burgundy scarf and subtle cyan-violet aurora. Pets only, no people, no text, no logo, no product mockup. Print-safe composition.",
+      "candidateSkus": [
+        "RECAST-MUG-11OZ",
+        "RECAST-PILLOW-14",
+        "RECAST-BLANKET-50X60",
+        "RECAST-CANVAS-12X16"
+      ]
+    },
+    {
+      "id": "christmas-labrador-retriever-cozy-christmas",
+      "pet": "dog",
+      "breed": "Labrador Retriever",
+      "occasion": "christmas",
+      "title": "Labrador Retriever · Cozy Christmas",
+      "status": "planned",
+      "artworkRevision": null,
+      "prompt": "Original premium painterly illustration of a fictional Labrador Retriever. Warm painterly pet portrait with a knitted blanket, evergreen boughs and tasteful wrapped gifts; cream, cranberry and forest green. Pets only, no people, no text, no logo, no product mockup. Print-safe composition.",
+      "candidateSkus": [
+        "RECAST-MUG-11OZ",
+        "RECAST-PILLOW-14",
+        "RECAST-BLANKET-50X60",
+        "RECAST-CANVAS-12X16"
+      ]
+    },
+    {
+      "id": "christmas-labrador-retriever-snow-day",
+      "pet": "dog",
+      "breed": "Labrador Retriever",
+      "occasion": "christmas",
+      "title": "Labrador Retriever · Snow Day",
+      "status": "planned",
+      "artworkRevision": null,
+      "prompt": "Original premium painterly illustration of a fictional Labrador Retriever. Playful pet in fresh snow with a soft blue winter forest, falling snowflakes and a small red scarf. Pets only, no people, no text, no logo, no product mockup. Print-safe composition.",
+      "candidateSkus": [
+        "RECAST-MUG-11OZ",
+        "RECAST-PILLOW-14",
+        "RECAST-BLANKET-50X60",
+        "RECAST-CANVAS-12X16"
+      ]
+    },
+    {
+      "id": "christmas-golden-retriever-winter-lights",
+      "pet": "dog",
+      "breed": "Golden Retriever",
+      "occasion": "christmas",
+      "title": "Golden Retriever · Winter Lights",
+      "status": "planned",
+      "artworkRevision": null,
+      "prompt": "Original premium painterly illustration of a fictional Golden Retriever. Luminous midnight winter portrait with evergreen branches, warm fairy lights, burgundy scarf and subtle cyan-violet aurora. Pets only, no people, no text, no logo, no product mockup. Print-safe composition.",
+      "candidateSkus": [
+        "RECAST-MUG-11OZ",
+        "RECAST-PILLOW-14",
+        "RECAST-BLANKET-50X60",
+        "RECAST-CANVAS-12X16"
+      ]
+    },
+    {
+      "id": "christmas-golden-retriever-cozy-christmas",
+      "pet": "dog",
+      "breed": "Golden Retriever",
+      "occasion": "christmas",
+      "title": "Golden Retriever · Cozy Christmas",
+      "status": "planned",
+      "artworkRevision": null,
+      "prompt": "Original premium painterly illustration of a fictional Golden Retriever. Warm painterly pet portrait with a knitted blanket, evergreen boughs and tasteful wrapped gifts; cream, cranberry and forest green. Pets only, no people, no text, no logo, no product mockup. Print-safe composition.",
+      "candidateSkus": [
+        "RECAST-MUG-11OZ",
+        "RECAST-PILLOW-14",
+        "RECAST-BLANKET-50X60",
+        "RECAST-CANVAS-12X16"
+      ]
+    },
+    {
+      "id": "christmas-golden-retriever-snow-day",
+      "pet": "dog",
+      "breed": "Golden Retriever",
+      "occasion": "christmas",
+      "title": "Golden Retriever · Snow Day",
+      "status": "planned",
+      "artworkRevision": null,
+      "prompt": "Original premium painterly illustration of a fictional Golden Retriever. Playful pet in fresh snow with a soft blue winter forest, falling snowflakes and a small red scarf. Pets only, no people, no text, no logo, no product mockup. Print-safe composition.",
+      "candidateSkus": [
+        "RECAST-MUG-11OZ",
+        "RECAST-PILLOW-14",
+        "RECAST-BLANKET-50X60",
+        "RECAST-CANVAS-12X16"
+      ]
+    },
+    {
+      "id": "christmas-german-shepherd-winter-lights",
+      "pet": "dog",
+      "breed": "German Shepherd",
+      "occasion": "christmas",
+      "title": "German Shepherd · Winter Lights",
+      "status": "planned",
+      "artworkRevision": null,
+      "prompt": "Original premium painterly illustration of a fictional German Shepherd. Luminous midnight winter portrait with evergreen branches, warm fairy lights, burgundy scarf and subtle cyan-violet aurora. Pets only, no people, no text, no logo, no product mockup. Print-safe composition.",
+      "candidateSkus": [
+        "RECAST-MUG-11OZ",
+        "RECAST-PILLOW-14",
+        "RECAST-BLANKET-50X60",
+        "RECAST-CANVAS-12X16"
+      ]
+    },
+    {
+      "id": "christmas-german-shepherd-cozy-christmas",
+      "pet": "dog",
+      "breed": "German Shepherd",
+      "occasion": "christmas",
+      "title": "German Shepherd · Cozy Christmas",
+      "status": "planned",
+      "artworkRevision": null,
+      "prompt": "Original premium painterly illustration of a fictional German Shepherd. Warm painterly pet portrait with a knitted blanket, evergreen boughs and tasteful wrapped gifts; cream, cranberry and forest green. Pets only, no people, no text, no logo, no product mockup. Print-safe composition.",
+      "candidateSkus": [
+        "RECAST-MUG-11OZ",
+        "RECAST-PILLOW-14",
+        "RECAST-BLANKET-50X60",
+        "RECAST-CANVAS-12X16"
+      ]
+    },
+    {
+      "id": "christmas-german-shepherd-snow-day",
+      "pet": "dog",
+      "breed": "German Shepherd",
+      "occasion": "christmas",
+      "title": "German Shepherd · Snow Day",
+      "status": "planned",
+      "artworkRevision": null,
+      "prompt": "Original premium painterly illustration of a fictional German Shepherd. Playful pet in fresh snow with a soft blue winter forest, falling snowflakes and a small red scarf. Pets only, no people, no text, no logo, no product mockup. Print-safe composition.",
+      "candidateSkus": [
+        "RECAST-MUG-11OZ",
+        "RECAST-PILLOW-14",
+        "RECAST-BLANKET-50X60",
+        "RECAST-CANVAS-12X16"
+      ]
+    },
+    {
+      "id": "christmas-dachshund-winter-lights",
+      "pet": "dog",
+      "breed": "Dachshund",
+      "occasion": "christmas",
+      "title": "Dachshund · Winter Lights",
+      "status": "planned",
+      "artworkRevision": null,
+      "prompt": "Original premium painterly illustration of a fictional Dachshund. Luminous midnight winter portrait with evergreen branches, warm fairy lights, burgundy scarf and subtle cyan-violet aurora. Pets only, no people, no text, no logo, no product mockup. Print-safe composition.",
+      "candidateSkus": [
+        "RECAST-MUG-11OZ",
+        "RECAST-PILLOW-14",
+        "RECAST-BLANKET-50X60",
+        "RECAST-CANVAS-12X16"
+      ]
+    },
+    {
+      "id": "christmas-dachshund-cozy-christmas",
+      "pet": "dog",
+      "breed": "Dachshund",
+      "occasion": "christmas",
+      "title": "Dachshund · Cozy Christmas",
+      "status": "planned",
+      "artworkRevision": null,
+      "prompt": "Original premium painterly illustration of a fictional Dachshund. Warm painterly pet portrait with a knitted blanket, evergreen boughs and tasteful wrapped gifts; cream, cranberry and forest green. Pets only, no people, no text, no logo, no product mockup. Print-safe composition.",
+      "candidateSkus": [
+        "RECAST-MUG-11OZ",
+        "RECAST-PILLOW-14",
+        "RECAST-BLANKET-50X60",
+        "RECAST-CANVAS-12X16"
+      ]
+    },
+    {
+      "id": "christmas-dachshund-snow-day",
+      "pet": "dog",
+      "breed": "Dachshund",
+      "occasion": "christmas",
+      "title": "Dachshund · Snow Day",
+      "status": "planned",
+      "artworkRevision": null,
+      "prompt": "Original premium painterly illustration of a fictional Dachshund. Playful pet in fresh snow with a soft blue winter forest, falling snowflakes and a small red scarf. Pets only, no people, no text, no logo, no product mockup. Print-safe composition.",
+      "candidateSkus": [
+        "RECAST-MUG-11OZ",
+        "RECAST-PILLOW-14",
+        "RECAST-BLANKET-50X60",
+        "RECAST-CANVAS-12X16"
+      ]
+    },
+    {
+      "id": "christmas-poodle-winter-lights",
+      "pet": "dog",
+      "breed": "Poodle",
+      "occasion": "christmas",
+      "title": "Poodle · Winter Lights",
+      "status": "planned",
+      "artworkRevision": null,
+      "prompt": "Original premium painterly illustration of a fictional Poodle. Luminous midnight winter portrait with evergreen branches, warm fairy lights, burgundy scarf and subtle cyan-violet aurora. Pets only, no people, no text, no logo, no product mockup. Print-safe composition.",
+      "candidateSkus": [
+        "RECAST-MUG-11OZ",
+        "RECAST-PILLOW-14",
+        "RECAST-BLANKET-50X60",
+        "RECAST-CANVAS-12X16"
+      ]
+    },
+    {
+      "id": "christmas-poodle-cozy-christmas",
+      "pet": "dog",
+      "breed": "Poodle",
+      "occasion": "christmas",
+      "title": "Poodle · Cozy Christmas",
+      "status": "planned",
+      "artworkRevision": null,
+      "prompt": "Original premium painterly illustration of a fictional Poodle. Warm painterly pet portrait with a knitted blanket, evergreen boughs and tasteful wrapped gifts; cream, cranberry and forest green. Pets only, no people, no text, no logo, no product mockup. Print-safe composition.",
+      "candidateSkus": [
+        "RECAST-MUG-11OZ",
+        "RECAST-PILLOW-14",
+        "RECAST-BLANKET-50X60",
+        "RECAST-CANVAS-12X16"
+      ]
+    },
+    {
+      "id": "christmas-poodle-snow-day",
+      "pet": "dog",
+      "breed": "Poodle",
+      "occasion": "christmas",
+      "title": "Poodle · Snow Day",
+      "status": "planned",
+      "artworkRevision": null,
+      "prompt": "Original premium painterly illustration of a fictional Poodle. Playful pet in fresh snow with a soft blue winter forest, falling snowflakes and a small red scarf. Pets only, no people, no text, no logo, no product mockup. Print-safe composition.",
+      "candidateSkus": [
+        "RECAST-MUG-11OZ",
+        "RECAST-PILLOW-14",
+        "RECAST-BLANKET-50X60",
+        "RECAST-CANVAS-12X16"
+      ]
+    },
+    {
+      "id": "christmas-beagle-winter-lights",
+      "pet": "dog",
+      "breed": "Beagle",
+      "occasion": "christmas",
+      "title": "Beagle · Winter Lights",
+      "status": "planned",
+      "artworkRevision": null,
+      "prompt": "Original premium painterly illustration of a fictional Beagle. Luminous midnight winter portrait with evergreen branches, warm fairy lights, burgundy scarf and subtle cyan-violet aurora. Pets only, no people, no text, no logo, no product mockup. Print-safe composition.",
+      "candidateSkus": [
+        "RECAST-MUG-11OZ",
+        "RECAST-PILLOW-14",
+        "RECAST-BLANKET-50X60",
+        "RECAST-CANVAS-12X16"
+      ]
+    },
+    {
+      "id": "christmas-beagle-cozy-christmas",
+      "pet": "dog",
+      "breed": "Beagle",
+      "occasion": "christmas",
+      "title": "Beagle · Cozy Christmas",
+      "status": "planned",
+      "artworkRevision": null,
+      "prompt": "Original premium painterly illustration of a fictional Beagle. Warm painterly pet portrait with a knitted blanket, evergreen boughs and tasteful wrapped gifts; cream, cranberry and forest green. Pets only, no people, no text, no logo, no product mockup. Print-safe composition.",
+      "candidateSkus": [
+        "RECAST-MUG-11OZ",
+        "RECAST-PILLOW-14",
+        "RECAST-BLANKET-50X60",
+        "RECAST-CANVAS-12X16"
+      ]
+    },
+    {
+      "id": "christmas-beagle-snow-day",
+      "pet": "dog",
+      "breed": "Beagle",
+      "occasion": "christmas",
+      "title": "Beagle · Snow Day",
+      "status": "planned",
+      "artworkRevision": null,
+      "prompt": "Original premium painterly illustration of a fictional Beagle. Playful pet in fresh snow with a soft blue winter forest, falling snowflakes and a small red scarf. Pets only, no people, no text, no logo, no product mockup. Print-safe composition.",
+      "candidateSkus": [
+        "RECAST-MUG-11OZ",
+        "RECAST-PILLOW-14",
+        "RECAST-BLANKET-50X60",
+        "RECAST-CANVAS-12X16"
+      ]
+    },
+    {
+      "id": "christmas-rottweiler-winter-lights",
+      "pet": "dog",
+      "breed": "Rottweiler",
+      "occasion": "christmas",
+      "title": "Rottweiler · Winter Lights",
+      "status": "planned",
+      "artworkRevision": null,
+      "prompt": "Original premium painterly illustration of a fictional Rottweiler. Luminous midnight winter portrait with evergreen branches, warm fairy lights, burgundy scarf and subtle cyan-violet aurora. Pets only, no people, no text, no logo, no product mockup. Print-safe composition.",
+      "candidateSkus": [
+        "RECAST-MUG-11OZ",
+        "RECAST-PILLOW-14",
+        "RECAST-BLANKET-50X60",
+        "RECAST-CANVAS-12X16"
+      ]
+    },
+    {
+      "id": "christmas-rottweiler-cozy-christmas",
+      "pet": "dog",
+      "breed": "Rottweiler",
+      "occasion": "christmas",
+      "title": "Rottweiler · Cozy Christmas",
+      "status": "planned",
+      "artworkRevision": null,
+      "prompt": "Original premium painterly illustration of a fictional Rottweiler. Warm painterly pet portrait with a knitted blanket, evergreen boughs and tasteful wrapped gifts; cream, cranberry and forest green. Pets only, no people, no text, no logo, no product mockup. Print-safe composition.",
+      "candidateSkus": [
+        "RECAST-MUG-11OZ",
+        "RECAST-PILLOW-14",
+        "RECAST-BLANKET-50X60",
+        "RECAST-CANVAS-12X16"
+      ]
+    },
+    {
+      "id": "christmas-rottweiler-snow-day",
+      "pet": "dog",
+      "breed": "Rottweiler",
+      "occasion": "christmas",
+      "title": "Rottweiler · Snow Day",
+      "status": "planned",
+      "artworkRevision": null,
+      "prompt": "Original premium painterly illustration of a fictional Rottweiler. Playful pet in fresh snow with a soft blue winter forest, falling snowflakes and a small red scarf. Pets only, no people, no text, no logo, no product mockup. Print-safe composition.",
+      "candidateSkus": [
+        "RECAST-MUG-11OZ",
+        "RECAST-PILLOW-14",
+        "RECAST-BLANKET-50X60",
+        "RECAST-CANVAS-12X16"
+      ]
+    },
+    {
+      "id": "christmas-german-shorthaired-pointer-winter-lights",
+      "pet": "dog",
+      "breed": "German Shorthaired Pointer",
+      "occasion": "christmas",
+      "title": "German Shorthaired Pointer · Winter Lights",
+      "status": "planned",
+      "artworkRevision": null,
+      "prompt": "Original premium painterly illustration of a fictional German Shorthaired Pointer. Luminous midnight winter portrait with evergreen branches, warm fairy lights, burgundy scarf and subtle cyan-violet aurora. Pets only, no people, no text, no logo, no product mockup. Print-safe composition.",
+      "candidateSkus": [
+        "RECAST-MUG-11OZ",
+        "RECAST-PILLOW-14",
+        "RECAST-BLANKET-50X60",
+        "RECAST-CANVAS-12X16"
+      ]
+    },
+    {
+      "id": "christmas-german-shorthaired-pointer-cozy-christmas",
+      "pet": "dog",
+      "breed": "German Shorthaired Pointer",
+      "occasion": "christmas",
+      "title": "German Shorthaired Pointer · Cozy Christmas",
+      "status": "planned",
+      "artworkRevision": null,
+      "prompt": "Original premium painterly illustration of a fictional German Shorthaired Pointer. Warm painterly pet portrait with a knitted blanket, evergreen boughs and tasteful wrapped gifts; cream, cranberry and forest green. Pets only, no people, no text, no logo, no product mockup. Print-safe composition.",
+      "candidateSkus": [
+        "RECAST-MUG-11OZ",
+        "RECAST-PILLOW-14",
+        "RECAST-BLANKET-50X60",
+        "RECAST-CANVAS-12X16"
+      ]
+    },
+    {
+      "id": "christmas-german-shorthaired-pointer-snow-day",
+      "pet": "dog",
+      "breed": "German Shorthaired Pointer",
+      "occasion": "christmas",
+      "title": "German Shorthaired Pointer · Snow Day",
+      "status": "planned",
+      "artworkRevision": null,
+      "prompt": "Original premium painterly illustration of a fictional German Shorthaired Pointer. Playful pet in fresh snow with a soft blue winter forest, falling snowflakes and a small red scarf. Pets only, no people, no text, no logo, no product mockup. Print-safe composition.",
+      "candidateSkus": [
+        "RECAST-MUG-11OZ",
+        "RECAST-PILLOW-14",
+        "RECAST-BLANKET-50X60",
+        "RECAST-CANVAS-12X16"
+      ]
+    },
+    {
+      "id": "christmas-bulldog-winter-lights",
+      "pet": "dog",
+      "breed": "Bulldog",
+      "occasion": "christmas",
+      "title": "Bulldog · Winter Lights",
+      "status": "planned",
+      "artworkRevision": null,
+      "prompt": "Original premium painterly illustration of a fictional Bulldog. Luminous midnight winter portrait with evergreen branches, warm fairy lights, burgundy scarf and subtle cyan-violet aurora. Pets only, no people, no text, no logo, no product mockup. Print-safe composition.",
+      "candidateSkus": [
+        "RECAST-MUG-11OZ",
+        "RECAST-PILLOW-14",
+        "RECAST-BLANKET-50X60",
+        "RECAST-CANVAS-12X16"
+      ]
+    },
+    {
+      "id": "christmas-bulldog-cozy-christmas",
+      "pet": "dog",
+      "breed": "Bulldog",
+      "occasion": "christmas",
+      "title": "Bulldog · Cozy Christmas",
+      "status": "planned",
+      "artworkRevision": null,
+      "prompt": "Original premium painterly illustration of a fictional Bulldog. Warm painterly pet portrait with a knitted blanket, evergreen boughs and tasteful wrapped gifts; cream, cranberry and forest green. Pets only, no people, no text, no logo, no product mockup. Print-safe composition.",
+      "candidateSkus": [
+        "RECAST-MUG-11OZ",
+        "RECAST-PILLOW-14",
+        "RECAST-BLANKET-50X60",
+        "RECAST-CANVAS-12X16"
+      ]
+    },
+    {
+      "id": "christmas-bulldog-snow-day",
+      "pet": "dog",
+      "breed": "Bulldog",
+      "occasion": "christmas",
+      "title": "Bulldog · Snow Day",
+      "status": "planned",
+      "artworkRevision": null,
+      "prompt": "Original premium painterly illustration of a fictional Bulldog. Playful pet in fresh snow with a soft blue winter forest, falling snowflakes and a small red scarf. Pets only, no people, no text, no logo, no product mockup. Print-safe composition.",
+      "candidateSkus": [
+        "RECAST-MUG-11OZ",
+        "RECAST-PILLOW-14",
+        "RECAST-BLANKET-50X60",
+        "RECAST-CANVAS-12X16"
+      ]
+    },
+    {
+      "id": "christmas-chihuahua-winter-lights",
+      "pet": "dog",
+      "breed": "Chihuahua",
+      "occasion": "christmas",
+      "title": "Chihuahua · Winter Lights",
+      "status": "planned",
+      "artworkRevision": null,
+      "prompt": "Original premium painterly illustration of a fictional Chihuahua. Luminous midnight winter portrait with evergreen branches, warm fairy lights, burgundy scarf and subtle cyan-violet aurora. Pets only, no people, no text, no logo, no product mockup. Print-safe composition.",
+      "candidateSkus": [
+        "RECAST-MUG-11OZ",
+        "RECAST-PILLOW-14",
+        "RECAST-BLANKET-50X60",
+        "RECAST-CANVAS-12X16"
+      ]
+    },
+    {
+      "id": "christmas-chihuahua-cozy-christmas",
+      "pet": "dog",
+      "breed": "Chihuahua",
+      "occasion": "christmas",
+      "title": "Chihuahua · Cozy Christmas",
+      "status": "planned",
+      "artworkRevision": null,
+      "prompt": "Original premium painterly illustration of a fictional Chihuahua. Warm painterly pet portrait with a knitted blanket, evergreen boughs and tasteful wrapped gifts; cream, cranberry and forest green. Pets only, no people, no text, no logo, no product mockup. Print-safe composition.",
+      "candidateSkus": [
+        "RECAST-MUG-11OZ",
+        "RECAST-PILLOW-14",
+        "RECAST-BLANKET-50X60",
+        "RECAST-CANVAS-12X16"
+      ]
+    },
+    {
+      "id": "christmas-chihuahua-snow-day",
+      "pet": "dog",
+      "breed": "Chihuahua",
+      "occasion": "christmas",
+      "title": "Chihuahua · Snow Day",
+      "status": "planned",
+      "artworkRevision": null,
+      "prompt": "Original premium painterly illustration of a fictional Chihuahua. Playful pet in fresh snow with a soft blue winter forest, falling snowflakes and a small red scarf. Pets only, no people, no text, no logo, no product mockup. Print-safe composition.",
+      "candidateSkus": [
+        "RECAST-MUG-11OZ",
+        "RECAST-PILLOW-14",
+        "RECAST-BLANKET-50X60",
+        "RECAST-CANVAS-12X16"
+      ]
+    },
+    {
+      "id": "christmas-corgi-winter-lights",
+      "pet": "dog",
+      "breed": "Corgi",
+      "occasion": "christmas",
+      "title": "Corgi · Winter Lights",
+      "status": "planned",
+      "artworkRevision": null,
+      "prompt": "Original premium painterly illustration of a fictional Corgi. Luminous midnight winter portrait with evergreen branches, warm fairy lights, burgundy scarf and subtle cyan-violet aurora. Pets only, no people, no text, no logo, no product mockup. Print-safe composition.",
+      "candidateSkus": [
+        "RECAST-MUG-11OZ",
+        "RECAST-PILLOW-14",
+        "RECAST-BLANKET-50X60",
+        "RECAST-CANVAS-12X16"
+      ]
+    },
+    {
+      "id": "christmas-corgi-cozy-christmas",
+      "pet": "dog",
+      "breed": "Corgi",
+      "occasion": "christmas",
+      "title": "Corgi · Cozy Christmas",
+      "status": "planned",
+      "artworkRevision": null,
+      "prompt": "Original premium painterly illustration of a fictional Corgi. Warm painterly pet portrait with a knitted blanket, evergreen boughs and tasteful wrapped gifts; cream, cranberry and forest green. Pets only, no people, no text, no logo, no product mockup. Print-safe composition.",
+      "candidateSkus": [
+        "RECAST-MUG-11OZ",
+        "RECAST-PILLOW-14",
+        "RECAST-BLANKET-50X60",
+        "RECAST-CANVAS-12X16"
+      ]
+    },
+    {
+      "id": "christmas-corgi-snow-day",
+      "pet": "dog",
+      "breed": "Corgi",
+      "occasion": "christmas",
+      "title": "Corgi · Snow Day",
+      "status": "planned",
+      "artworkRevision": null,
+      "prompt": "Original premium painterly illustration of a fictional Corgi. Playful pet in fresh snow with a soft blue winter forest, falling snowflakes and a small red scarf. Pets only, no people, no text, no logo, no product mockup. Print-safe composition.",
+      "candidateSkus": [
+        "RECAST-MUG-11OZ",
+        "RECAST-PILLOW-14",
+        "RECAST-BLANKET-50X60",
+        "RECAST-CANVAS-12X16"
+      ]
+    },
+    {
+      "id": "christmas-orange-tabby-winter-lights",
+      "pet": "cat",
+      "breed": "Orange tabby",
+      "occasion": "christmas",
+      "title": "Orange tabby · Winter Lights",
+      "status": "planned",
+      "artworkRevision": null,
+      "prompt": "Original premium painterly illustration of a fictional Orange tabby. Luminous midnight winter portrait with evergreen branches, warm fairy lights, burgundy scarf and subtle cyan-violet aurora. Pets only, no people, no text, no logo, no product mockup. Print-safe composition.",
+      "candidateSkus": [
+        "RECAST-MUG-11OZ",
+        "RECAST-PILLOW-14",
+        "RECAST-BLANKET-50X60",
+        "RECAST-CANVAS-12X16"
+      ]
+    },
+    {
+      "id": "christmas-orange-tabby-cozy-christmas",
+      "pet": "cat",
+      "breed": "Orange tabby",
+      "occasion": "christmas",
+      "title": "Orange tabby · Cozy Christmas",
+      "status": "planned",
+      "artworkRevision": null,
+      "prompt": "Original premium painterly illustration of a fictional Orange tabby. Warm painterly pet portrait with a knitted blanket, evergreen boughs and tasteful wrapped gifts; cream, cranberry and forest green. Pets only, no people, no text, no logo, no product mockup. Print-safe composition.",
+      "candidateSkus": [
+        "RECAST-MUG-11OZ",
+        "RECAST-PILLOW-14",
+        "RECAST-BLANKET-50X60",
+        "RECAST-CANVAS-12X16"
+      ]
+    },
+    {
+      "id": "christmas-orange-tabby-snow-day",
+      "pet": "cat",
+      "breed": "Orange tabby",
+      "occasion": "christmas",
+      "title": "Orange tabby · Snow Day",
+      "status": "planned",
+      "artworkRevision": null,
+      "prompt": "Original premium painterly illustration of a fictional Orange tabby. Playful pet in fresh snow with a soft blue winter forest, falling snowflakes and a small red scarf. Pets only, no people, no text, no logo, no product mockup. Print-safe composition.",
+      "candidateSkus": [
+        "RECAST-MUG-11OZ",
+        "RECAST-PILLOW-14",
+        "RECAST-BLANKET-50X60",
+        "RECAST-CANVAS-12X16"
+      ]
+    },
+    {
+      "id": "christmas-gray-tabby-winter-lights",
+      "pet": "cat",
+      "breed": "Gray tabby",
+      "occasion": "christmas",
+      "title": "Gray tabby · Winter Lights",
+      "status": "planned",
+      "artworkRevision": null,
+      "prompt": "Original premium painterly illustration of a fictional Gray tabby. Luminous midnight winter portrait with evergreen branches, warm fairy lights, burgundy scarf and subtle cyan-violet aurora. Pets only, no people, no text, no logo, no product mockup. Print-safe composition.",
+      "candidateSkus": [
+        "RECAST-MUG-11OZ",
+        "RECAST-PILLOW-14",
+        "RECAST-BLANKET-50X60",
+        "RECAST-CANVAS-12X16"
+      ]
+    },
+    {
+      "id": "christmas-gray-tabby-cozy-christmas",
+      "pet": "cat",
+      "breed": "Gray tabby",
+      "occasion": "christmas",
+      "title": "Gray tabby · Cozy Christmas",
+      "status": "planned",
+      "artworkRevision": null,
+      "prompt": "Original premium painterly illustration of a fictional Gray tabby. Warm painterly pet portrait with a knitted blanket, evergreen boughs and tasteful wrapped gifts; cream, cranberry and forest green. Pets only, no people, no text, no logo, no product mockup. Print-safe composition.",
+      "candidateSkus": [
+        "RECAST-MUG-11OZ",
+        "RECAST-PILLOW-14",
+        "RECAST-BLANKET-50X60",
+        "RECAST-CANVAS-12X16"
+      ]
+    },
+    {
+      "id": "christmas-gray-tabby-snow-day",
+      "pet": "cat",
+      "breed": "Gray tabby",
+      "occasion": "christmas",
+      "title": "Gray tabby · Snow Day",
+      "status": "planned",
+      "artworkRevision": null,
+      "prompt": "Original premium painterly illustration of a fictional Gray tabby. Playful pet in fresh snow with a soft blue winter forest, falling snowflakes and a small red scarf. Pets only, no people, no text, no logo, no product mockup. Print-safe composition.",
+      "candidateSkus": [
+        "RECAST-MUG-11OZ",
+        "RECAST-PILLOW-14",
+        "RECAST-BLANKET-50X60",
+        "RECAST-CANVAS-12X16"
+      ]
+    },
+    {
+      "id": "christmas-black-cat-winter-lights",
+      "pet": "cat",
+      "breed": "Black cat",
+      "occasion": "christmas",
+      "title": "Black cat · Winter Lights",
+      "status": "planned",
+      "artworkRevision": null,
+      "prompt": "Original premium painterly illustration of a fictional Black cat. Luminous midnight winter portrait with evergreen branches, warm fairy lights, burgundy scarf and subtle cyan-violet aurora. Pets only, no people, no text, no logo, no product mockup. Print-safe composition.",
+      "candidateSkus": [
+        "RECAST-MUG-11OZ",
+        "RECAST-PILLOW-14",
+        "RECAST-BLANKET-50X60",
+        "RECAST-CANVAS-12X16"
+      ]
+    },
+    {
+      "id": "christmas-black-cat-cozy-christmas",
+      "pet": "cat",
+      "breed": "Black cat",
+      "occasion": "christmas",
+      "title": "Black cat · Cozy Christmas",
+      "status": "planned",
+      "artworkRevision": null,
+      "prompt": "Original premium painterly illustration of a fictional Black cat. Warm painterly pet portrait with a knitted blanket, evergreen boughs and tasteful wrapped gifts; cream, cranberry and forest green. Pets only, no people, no text, no logo, no product mockup. Print-safe composition.",
+      "candidateSkus": [
+        "RECAST-MUG-11OZ",
+        "RECAST-PILLOW-14",
+        "RECAST-BLANKET-50X60",
+        "RECAST-CANVAS-12X16"
+      ]
+    },
+    {
+      "id": "christmas-black-cat-snow-day",
+      "pet": "cat",
+      "breed": "Black cat",
+      "occasion": "christmas",
+      "title": "Black cat · Snow Day",
+      "status": "planned",
+      "artworkRevision": null,
+      "prompt": "Original premium painterly illustration of a fictional Black cat. Playful pet in fresh snow with a soft blue winter forest, falling snowflakes and a small red scarf. Pets only, no people, no text, no logo, no product mockup. Print-safe composition.",
+      "candidateSkus": [
+        "RECAST-MUG-11OZ",
+        "RECAST-PILLOW-14",
+        "RECAST-BLANKET-50X60",
+        "RECAST-CANVAS-12X16"
+      ]
+    },
+    {
+      "id": "christmas-tuxedo-winter-lights",
+      "pet": "cat",
+      "breed": "Tuxedo",
+      "occasion": "christmas",
+      "title": "Tuxedo · Winter Lights",
+      "status": "planned",
+      "artworkRevision": null,
+      "prompt": "Original premium painterly illustration of a fictional Tuxedo. Luminous midnight winter portrait with evergreen branches, warm fairy lights, burgundy scarf and subtle cyan-violet aurora. Pets only, no people, no text, no logo, no product mockup. Print-safe composition.",
+      "candidateSkus": [
+        "RECAST-MUG-11OZ",
+        "RECAST-PILLOW-14",
+        "RECAST-BLANKET-50X60",
+        "RECAST-CANVAS-12X16"
+      ]
+    },
+    {
+      "id": "christmas-tuxedo-cozy-christmas",
+      "pet": "cat",
+      "breed": "Tuxedo",
+      "occasion": "christmas",
+      "title": "Tuxedo · Cozy Christmas",
+      "status": "planned",
+      "artworkRevision": null,
+      "prompt": "Original premium painterly illustration of a fictional Tuxedo. Warm painterly pet portrait with a knitted blanket, evergreen boughs and tasteful wrapped gifts; cream, cranberry and forest green. Pets only, no people, no text, no logo, no product mockup. Print-safe composition.",
+      "candidateSkus": [
+        "RECAST-MUG-11OZ",
+        "RECAST-PILLOW-14",
+        "RECAST-BLANKET-50X60",
+        "RECAST-CANVAS-12X16"
+      ]
+    },
+    {
+      "id": "christmas-tuxedo-snow-day",
+      "pet": "cat",
+      "breed": "Tuxedo",
+      "occasion": "christmas",
+      "title": "Tuxedo · Snow Day",
+      "status": "planned",
+      "artworkRevision": null,
+      "prompt": "Original premium painterly illustration of a fictional Tuxedo. Playful pet in fresh snow with a soft blue winter forest, falling snowflakes and a small red scarf. Pets only, no people, no text, no logo, no product mockup. Print-safe composition.",
+      "candidateSkus": [
+        "RECAST-MUG-11OZ",
+        "RECAST-PILLOW-14",
+        "RECAST-BLANKET-50X60",
+        "RECAST-CANVAS-12X16"
+      ]
+    },
+    {
+      "id": "christmas-calico-winter-lights",
+      "pet": "cat",
+      "breed": "Calico",
+      "occasion": "christmas",
+      "title": "Calico · Winter Lights",
+      "status": "planned",
+      "artworkRevision": null,
+      "prompt": "Original premium painterly illustration of a fictional Calico. Luminous midnight winter portrait with evergreen branches, warm fairy lights, burgundy scarf and subtle cyan-violet aurora. Pets only, no people, no text, no logo, no product mockup. Print-safe composition.",
+      "candidateSkus": [
+        "RECAST-MUG-11OZ",
+        "RECAST-PILLOW-14",
+        "RECAST-BLANKET-50X60",
+        "RECAST-CANVAS-12X16"
+      ]
+    },
+    {
+      "id": "christmas-calico-cozy-christmas",
+      "pet": "cat",
+      "breed": "Calico",
+      "occasion": "christmas",
+      "title": "Calico · Cozy Christmas",
+      "status": "planned",
+      "artworkRevision": null,
+      "prompt": "Original premium painterly illustration of a fictional Calico. Warm painterly pet portrait with a knitted blanket, evergreen boughs and tasteful wrapped gifts; cream, cranberry and forest green. Pets only, no people, no text, no logo, no product mockup. Print-safe composition.",
+      "candidateSkus": [
+        "RECAST-MUG-11OZ",
+        "RECAST-PILLOW-14",
+        "RECAST-BLANKET-50X60",
+        "RECAST-CANVAS-12X16"
+      ]
+    },
+    {
+      "id": "christmas-calico-snow-day",
+      "pet": "cat",
+      "breed": "Calico",
+      "occasion": "christmas",
+      "title": "Calico · Snow Day",
+      "status": "planned",
+      "artworkRevision": null,
+      "prompt": "Original premium painterly illustration of a fictional Calico. Playful pet in fresh snow with a soft blue winter forest, falling snowflakes and a small red scarf. Pets only, no people, no text, no logo, no product mockup. Print-safe composition.",
+      "candidateSkus": [
+        "RECAST-MUG-11OZ",
+        "RECAST-PILLOW-14",
+        "RECAST-BLANKET-50X60",
+        "RECAST-CANVAS-12X16"
+      ]
+    },
+    {
+      "id": "christmas-maine-coon-winter-lights",
+      "pet": "cat",
+      "breed": "Maine Coon",
+      "occasion": "christmas",
+      "title": "Maine Coon · Winter Lights",
+      "status": "planned",
+      "artworkRevision": null,
+      "prompt": "Original premium painterly illustration of a fictional Maine Coon. Luminous midnight winter portrait with evergreen branches, warm fairy lights, burgundy scarf and subtle cyan-violet aurora. Pets only, no people, no text, no logo, no product mockup. Print-safe composition.",
+      "candidateSkus": [
+        "RECAST-MUG-11OZ",
+        "RECAST-PILLOW-14",
+        "RECAST-BLANKET-50X60",
+        "RECAST-CANVAS-12X16"
+      ]
+    },
+    {
+      "id": "christmas-maine-coon-cozy-christmas",
+      "pet": "cat",
+      "breed": "Maine Coon",
+      "occasion": "christmas",
+      "title": "Maine Coon · Cozy Christmas",
+      "status": "planned",
+      "artworkRevision": null,
+      "prompt": "Original premium painterly illustration of a fictional Maine Coon. Warm painterly pet portrait with a knitted blanket, evergreen boughs and tasteful wrapped gifts; cream, cranberry and forest green. Pets only, no people, no text, no logo, no product mockup. Print-safe composition.",
+      "candidateSkus": [
+        "RECAST-MUG-11OZ",
+        "RECAST-PILLOW-14",
+        "RECAST-BLANKET-50X60",
+        "RECAST-CANVAS-12X16"
+      ]
+    },
+    {
+      "id": "christmas-maine-coon-snow-day",
+      "pet": "cat",
+      "breed": "Maine Coon",
+      "occasion": "christmas",
+      "title": "Maine Coon · Snow Day",
+      "status": "planned",
+      "artworkRevision": null,
+      "prompt": "Original premium painterly illustration of a fictional Maine Coon. Playful pet in fresh snow with a soft blue winter forest, falling snowflakes and a small red scarf. Pets only, no people, no text, no logo, no product mockup. Print-safe composition.",
+      "candidateSkus": [
+        "RECAST-MUG-11OZ",
+        "RECAST-PILLOW-14",
+        "RECAST-BLANKET-50X60",
+        "RECAST-CANVAS-12X16"
+      ]
+    }
+  ]
+}
