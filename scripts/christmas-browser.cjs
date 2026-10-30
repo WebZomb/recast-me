@@ -1,10 +1,12 @@
-﻿const {chromium}=require('playwright');
+﻿const {chromium,webkit}=require('playwright');
 const fs=require('fs'),path=require('path'),assert=require('node:assert/strict');
 (async()=>{
- const root=path.resolve('public'),out=path.resolve('../RecastChristmasShop20261030-evidence');fs.mkdirSync(out,{recursive:true});
- const productResponse=await fetch('https://recastmeai.com/api/seasonal-products',{signal:AbortSignal.timeout(20000)});if(!productResponse.ok)throw Error('live catalog read failed');const products=await productResponse.json();
+ const root=path.resolve('public'),out=path.resolve('rm050-browser-results/christmas');fs.mkdirSync(out,{recursive:true});
+ const {seasonalProducts}=await import('../public/seasonal-products.js');
+ const products={ok:true,products:seasonalProducts.map(p=>({name:p.name==='Tough Phone Case'?'Phone Case':p.name,price:Number(p.price.match(/[\d.]+/)[0]),sku:'RECAST-'+p.name.replace(/[^A-Z]/gi,'').toUpperCase()}))};
  const executable=['C:/Program Files/Google/Chrome/Application/chrome.exe','C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe','C:/Program Files/Microsoft/Edge/Application/msedge.exe'].find(x=>fs.existsSync(x));
- const browser=await chromium.launch({headless:true,executablePath:executable});
+ const engine=process.env.RECAST_BROWSER==='webkit'?'webkit':'chromium';
+ const browser=await (engine==='webkit'?webkit:chromium).launch(engine==='webkit'?{headless:true}:{headless:true,executablePath:executable});
  try{for(const width of [320,393,768,1280]){
    const context=await browser.newContext({viewport:{width,height:900},deviceScaleFactor:1});const page=await context.newPage();await page.addInitScript(()=>{const OriginalDate=Date;const timestamp=Date.UTC(2026,9,30,17);window.Date=class extends OriginalDate{constructor(...args){super(...(args.length?args:[timestamp]));}static now(){return timestamp;}};});const errors=[];page.on('pageerror',e=>errors.push(e.message));
    await page.route('https://recastmeai.com/**',async route=>{
@@ -27,7 +29,7 @@ const fs=require('fs'),path=require('path'),assert=require('node:assert/strict')
     assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1),false,'overflow '+width+' '+name);
     assert.equal(await page.locator('#season-hero-image').evaluate(x=>x.complete&&x.naturalWidth>0),true);
     assert.match(await page.title(),/Christmas/);assert.deepEqual(errors,[]);
-    await page.screenshot({path:path.join(out,name+'-'+width+'.png'),fullPage:false});
+    await page.screenshot({path:path.join(out,engine+'-'+name+'-'+width+'.png'),fullPage:false});
     console.log('PASS',name,width,'cards',await page.locator('.season-shop-card').count());
    }
    await context.close();
