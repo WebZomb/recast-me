@@ -1,11 +1,15 @@
 import {renderSeasonalProducts} from './seasonal-products.js?v=167';
+import {christmasCampaign} from './christmas-feature.js?v=1';
 import {seasonalSpotlight,upcomingGiftEvents,daysToEvent,eventDateLabel} from './season-calendar.js?v=166';
 let campaign={active:null,offer:null};
 try{const response=await fetch('/api/seasonal-campaign',{cache:'no-store'});if(response.ok)campaign=await response.json();}catch{}
-const now=new Date(),spot=seasonalSpotlight(now,campaign.active||null);
+const now=new Date();
+campaign=christmasCampaign(campaign,{fixed:document.body.dataset.fixedCollection==='christmas',now});
+const spot=seasonalSpotlight(now,campaign.active||null);
+if(spot?.id==='christmas'){spot.badge='CHRISTMAS MAGIC';spot.title='Make Christmas unforgettable.';spot.intro='Give their favorite face a little Christmas magic. Create festive artwork, then preview it on a gift they can keep.';}
 const by=id=>document.getElementById(id);
 const put=(id,value)=>{const el=by(id);if(el)el.textContent=value};
-const src=(id,value)=>{const el=by(id);if(el)el.src=value};
+const src=(id,value)=>{const image=by(id);if(!image)return;image.src=value;image.alt=value.includes('christmas')?'Illustrated Christmas gift inspiration with festive holiday artwork':value.includes('halloween')?'Illustrated Halloween gift inspiration':value.includes('royal')?'Illustrative royal-style Recast artwork':'Illustrative fantasy-style Recast artwork';};
 const href=(id,value)=>{const el=by(id);if(el)el.href=value};
 const el=(tag,cls,value)=>{
   const node=document.createElement(tag);
@@ -40,7 +44,22 @@ function updateHero(){
     'Halloween is October 31'+(days===0?' — today is the day!':'.'):
     (featured?.title||'Your next occasion')+' '+(featured?eventDateLabel(featured.date):'')+(days===0?' is here!':'.');
   put('season-date-note',dayCopy+' Personalized gifts are made to order; check estimated delivery at checkout.');
-  if(spot.id==='halloween')return;
+  if(spot.id==='halloween'){
+    const shopLink=document.querySelector('a[href="#season-shop"]');if(shopLink)shopLink.textContent='Explore Halloween gifts';
+    put('season-marquee','SPOOKY-CUTE PORTRAITS · YOUR FAVORITE PETS · PERSONAL GIFTS · HALLOWEEN MAGIC');
+    put('season-styles-title','A whole new world. Starring you.');
+    put('season-styles-copy','Put your dog, cat, partner or family into a Halloween scene worth showing off. Pick the look you love.');
+    put('season-product-title','The Halloween gift they’ll actually keep.');
+    put('season-secondary-title',spot.secondaryTitle);put('season-secondary-copy',spot.secondaryCopy);
+    src('season-gift-image','/assets/recast-halloween-gifts-v163.webp');
+    src('season-secondary-image','/assets/recast-halloween-ideas-v163.webp');
+    put('season-image-label','YOUR PHOTO · YOUR RECAST · YOUR GIFT');
+    const cards=[['one','COSTUMES & CREATURES','Spooky-cute stars','A little vampire, a magical wizard, or a tiny legend with a big personality.','halloween','/assets/recast-halloween-ideas-v163.webp'],['two','SPELLBINDING WORLDS','Moonlit magic','Cinematic portraits, glowing castles and adventures around every corner.','wizard-academy','/assets/recast-halloween-hero-v167.webp'],['three','PLAYFUL & PERSONAL','Your own storybook','Make a magical tale from an ordinary photo of someone you love.','storybook','/assets/world-halloween-v18.webp']];
+    const anchors=document.querySelectorAll('.season-idea-card > a');
+    cards.forEach(([code,badge,title,description,style,image],i)=>{const id='season-card-'+code,link='/?style='+style+'#start';put(id+'-badge',badge);put(id+'-title',title);put(id+'-description',description);src(id+'-image',image);put(id+'-link','Choose '+title);href(id+'-link',link);if(anchors[i]){anchors[i].href=link;anchors[i].setAttribute('aria-label','Create '+title.toLowerCase());}});
+    const secondary=document.querySelector('#season-favorites a');if(secondary)secondary.href=mainLink;
+    return;
+  }
   const shopLink=document.querySelector('a[href="#season-shop"]');if(shopLink)shopLink.textContent='Explore personalized gifts ✦';
   for(const link of document.querySelectorAll('a[href="/?style=halloween#start"]'))link.href=mainLink;
   put('season-marquee','✦  YOUR FAVORITE PHOTO     ✦     A WHOLE NEW WORLD     ✦     PERSONAL GIFTS     ✦     MADE WITH MAGIC  ✦');
@@ -68,7 +87,7 @@ function updateHero(){
       const [badge,title,description,style]=labels[i],link='/?style='+style+'#start',id='season-card-'+codes[i];
       put(id+'-badge',badge);put(id+'-title',title);put(id+'-description',description);
       put(id+'-link','Choose '+title+' →');href(id+'-link',link);
-      if(anchors[i])anchors[i].href=link;
+      if(anchors[i]){anchors[i].href=link;anchors[i].setAttribute('aria-label','Create '+title.toLowerCase());}
     }
   }else{
     src('season-card-one-image','/assets/world-royal-v18.webp');
@@ -86,7 +105,7 @@ function updateHero(){
       const [badge,title,description,style]=labels[i],link='/?style='+style+'#start',id='season-card-'+codes[i];
       put(id+'-badge',badge);put(id+'-title',title);put(id+'-description',description);
       put(id+'-link','Choose '+title+' →');href(id+'-link',link);
-      if(anchors[i])anchors[i].href=link;
+      if(anchors[i]){anchors[i].href=link;anchors[i].setAttribute('aria-label','Create '+title.toLowerCase());}
     }
   }
 }

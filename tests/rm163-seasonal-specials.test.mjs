@@ -41,16 +41,16 @@ test('US Thanksgiving and movable Mothers and Fathers Days are calculated for ea
 });
 test('seasonal page is indexable, themed to the bottom and honest about made-to-order shipping',()=>{
  const html=read('public/specials.html'),css=read('public/seasonal-specials-v163.css'),code=read('public/seasonal-specials-v163.js');
- assert.match(html,/Halloween Magic &amp; Seasonal Photo Gifts/);
+ assert.match(html,/Christmas Photo Gifts &amp; Seasonal Specials/);
  assert.match(html,/rel="canonical" href="https:\/\/recastmeai.com\/specials.html"/);
- assert.match(html,/data-season="halloween"/);
+ assert.match(html,/data-season="winter"/);
  assert.match(html,/id="season-hero-image"/);
  assert.match(html,/id="season-gift-image"/);
  assert.match(html,/id="season-card-one-image"/);
  assert.match(html,/id="season-secondary-image"/);
  assert.match(html,/id="upcoming-holidays"/);
  assert.match(html,/id="season-ending-title"/);
- assert.match(html,/Halloween is October 31/);
+ assert.match(html,/Christmas is December 25/);
  assert.match(html,/check estimated delivery at checkout/);
  assert.match(html,/Shipping times vary|shipping times vary|holiday arrival is not guaranteed/i);
  assert.match(code,/upcomingGiftEvents\(now,6\)/);

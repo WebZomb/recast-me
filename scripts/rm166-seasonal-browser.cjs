@@ -11,6 +11,8 @@ const root=path.resolve('public'),out=path.resolve('rm050-browser-results/season
  const browser=await chromium.launch(process.env.RECAST_CHROMIUM_PATH?{executablePath:process.env.RECAST_CHROMIUM_PATH,args:["--no-sandbox","--disable-gpu","--no-zygote"]}:{});const report=[];
  for(const width of [320,393,768,1280]){
   const page=await browser.newPage({viewport:{width,height:900},reducedMotion:'reduce'});let saved=null;const errors=[];page.on('pageerror',e=>errors.push(e.message));
+  // Keep this Halloween fixture independent of the real calendar and the Christmas launch.
+  await page.addInitScript(()=>{const OriginalDate=Date;const timestamp=Date.UTC(2026,9,13,20);window.Date=class extends OriginalDate{constructor(...args){super(...(args.length?args:[timestamp]));}static now(){return timestamp;}};});
   await page.route('**/*',async route=>{
    const url=new URL(route.request().url());
    if(url.hostname!=='recast.test')return route.fulfill({status:204});
