@@ -1,3 +1,5 @@
+import {runShopSeed} from './shop-seed.js';
+import {shopRoutes} from './shop-routes.js';
 import {expireSeasonalCheckouts} from './seasonal-checkout.js';
 import {basketRoutes} from './basket-routes.js';
 import {basketAdminRoute} from './basket-admin.js';
@@ -18,6 +20,7 @@ import { printFinishRoutes } from './print-finish.js';
 const application = {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
+    const shop=await shopRoutes(request,env);if(shop)return shop;
     const basketAdmin=await basketAdminRoute(request,env,{requireAdmin});
     if(basketAdmin)return basketAdmin;
     const basket=await basketRoutes(request,env,ctx);
@@ -68,6 +71,7 @@ const application = {
   },
 
   async scheduled(controller, env, ctx) {
+    ctx.waitUntil(runShopSeed(env).catch(()=>console.error('Premade catalog preparation needs review.')));
     ctx.waitUntil(expireSeasonalCheckouts(env).catch(error=>console.error("Seasonal invoice expiry failed:",error.message)));
     return scheduledWorkflow(controller, env, ctx);
   }

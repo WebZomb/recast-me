@@ -3,7 +3,7 @@ try{const seasonalGift=new URLSearchParams(location.search).get('gift');if(/^REC
 const grid = document.querySelector("#product-grid");
 const requestLabel = document.querySelector("#request-id");
 let basketClient=null;
-import('/basket.js?v=1').then(async module=>{await module.initialize();basketClient=module;}).catch(()=>{});
+import('/basket.js?v=2').then(async module=>{await module.initialize();basketClient=module;}).catch(()=>{});
 
 // Keep checkout standalone for share pages and isolated purchase-policy tests.
 function rememberCheckoutStarted(req) {

@@ -20,8 +20,9 @@ export function basketShop(env) {
  return shop;
 }
 export function basketConfigured(env){
- try{return env.BASKET_ENABLED==='true'&&!!env.SHOPIFY_STOREFRONT_TOKEN&&!!basketShop(env);}catch{return false;}
+ try{return env.BASKET_ENABLED==='true'&&(!!env.SHOPIFY_STOREFRONT_TOKEN||env.SHOPIFY_STOREFRONT_TOKENLESS==='true')&&!!basketShop(env);}catch{return false;}
 }
+export function storefrontHeaders(env){return {'Content-Type':'application/json',...(env.SHOPIFY_STOREFRONT_TOKEN?{'X-Shopify-Storefront-Access-Token':env.SHOPIFY_STOREFRONT_TOKEN}:{})};}
 export async function checkoutAttemptKey(identity){return 'commerce/basket-checkouts/v1/'+await hash(JSON.stringify([identity.ownerId,identity.basketId]))+'.json';}
 const unavailable=()=>fault('basket_checkout_unknown','Your items are saved. We could not confirm checkout. Please contact support before trying again.',503);
 function checkedUrl(value,shop){
@@ -93,7 +94,7 @@ async function refreshCheckout(env,bucket,key,etag,prior,lines,fetcher){
  // Never infer permission to recreate it from null, a timeout, or an error.
  try{
   const response=await fetcher(`https://${basketShop(env)}/api/2026-10/graphql.json`,{method:'POST',redirect:'error',signal:AbortSignal.timeout(20000),
-   headers:{'Content-Type':'application/json','X-Shopify-Storefront-Access-Token':env.SHOPIFY_STOREFRONT_TOKEN},
+   headers:storefrontHeaders(env),
    body:JSON.stringify({query:CART_REFRESH,variables:{id:prior.cartId}})});
   if(!response.ok)throw unavailable();
   const data=await response.json(),cart=data.data?.cart;
@@ -138,7 +139,7 @@ export async function beginBasketCheckout(env,identity,state,lines,{fetcher=fetc
  let response,data;
  try{
   response=await fetcher(`https://${basketShop(env)}/api/2026-10/graphql.json`,{method:'POST',redirect:'error',signal:AbortSignal.timeout(20000),
-   headers:{'Content-Type':'application/json','X-Shopify-Storefront-Access-Token':env.SHOPIFY_STOREFRONT_TOKEN},
+   headers:storefrontHeaders(env),
    body:JSON.stringify({query:CART_CREATE,variables:{input:{lines}}})});
   if(!response.ok)throw unavailable();data=await response.json();
   if(data.errors?.length)throw unavailable();

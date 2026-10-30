@@ -224,3 +224,108 @@ test('mixed gift basket preserves every artwork, product and copy count through 
  f.env.BASKET_ENABLED='true';
  assert.equal((await f.call('/api/basket?id=basket')).data.basket.lines.length,3);
 });
+
+// Unified-shop fixtures below are private in-memory test records, never live inventory.
+async function premadeFixture(f){
+ const {hash}=await import('../src/commerce-store.js');
+ const {hashBytes,SHOP_CATALOG_KEY}=await import('../src/shop-catalog-store.js');
+ const art='RC-PREMADE-TEST0001',id='golden-winter-mug-11oz',designId='golden-winter';
+ const source=await(await f.env.ARTWORK.get(`requests/${ID}/preview.b64`)).text();
+ const original=await(await f.env.ARTWORK.get(`requests/${ID}/request.json`)).json();
+ const design=f.designApproval.design,proofHash=await hash(source+'|'+JSON.stringify(design));
+ const mockupId='shop-fixture-mug',folder=`mockups/${art}/${sku}/${mockupId}`;
+ const bytes=Uint8Array.from(atob(source),c=>c.charCodeAt(0)),artworkRevision=await hashBytes(bytes),sourceHash=await hash(source);
+ await f.env.ARTWORK.put(`requests/${art}/request.json`,JSON.stringify({...original,requestId:art,source:'premade-catalog',catalogDesignId:designId,catalogMasterHash:artworkRevision,catalogRightsConfirmedAt:'2026-10-30T17:00:00Z'}));
+ await f.env.ARTWORK.put(`requests/${art}/preview.b64`,source);
+ const position={area_width:2700,area_height:1050,width:2700,height:1050,top:0,left:0};
+ const task={status:'completed',requestId:art,sku,mockupId,sourceHash:proofHash,design,position,taskKey:'real-fixture-task',printfulVariantId:1320,images:[{title:'Front',url:'https://recast.test/fixture.jpg'}]};
+ await f.env.ARTWORK.put(folder+'/task.json',JSON.stringify(task));await f.env.ARTWORK.put(folder+'/image-0.jpg',bytes);
+ const a=await f.call('/api/basket/approve',{basketId:'basket',designApproval:{...f.designApproval,requestId:art,skipMockup:false,mockupId,design}});
+ assert.equal(a.response.status,200,JSON.stringify(a.data));
+ const record=await read(f.env,`commerce/preapprovals/${a.data.approvalToken}.json`);
+ const artworkKey=`shop/masters/${designId}/${artworkRevision}.png`;
+ await f.env.ARTWORK.put(artworkKey,bytes);
+ const printFileHash=await hashBytes(bytes),placementHash=await hash(JSON.stringify(position));
+ const finalKey=`shop/printfiles/${id}/${printFileHash}.jpg`;await f.env.ARTWORK.put(finalKey,bytes);
+ record.premadePrint={key:finalKey,sha256:printFileHash,mime:'image/jpeg',sku,sourceHash,proofHash,placementHash,artworkRevision};await f.env.ARTWORK.put(`commerce/preapprovals/${record.token}.json`,JSON.stringify(record));
+ const offer={id,designId,title:'Golden Retriever — Winter Lights Mug',occasion:'christmas',pet:'dog',breed:'Golden Retriever',product:'mug',variantLabel:'White · 11 oz',variantId:'gid://shopify/ProductVariant/1',sku,priceCents:2499,currency:'USD',status:'verified',artworkRevision,artworkKey,requestId:art,sourceHash,proofHash,mockupId,approvalToken:record.token,approvalRecordHash:await hash(JSON.stringify(record)),mockupUrl:'https://recast.test/api/approved-preview/'+record.token,proof:{provider:'printful',approved:true,artworkRevision,printfulVariantId:1320,printFileHash,placementHash,taskId:task.taskKey,checkedAt:'2026-10-30T17:01:00Z'}};
+ await f.env.ARTWORK.put(`shop/proofs/${id}.json`,JSON.stringify({...offer.proof,mockupUrl:offer.mockupUrl}));
+ await f.env.ARTWORK.put(SHOP_CATALOG_KEY,JSON.stringify({version:1,revision:1,offers:[offer]}));
+ return {offer,record,art,bytes,SHOP_CATALOG_KEY,source};
+}
+test('mixed premade and custom basket uses one checkout and preserves same-variant designs through fulfillment',async t=>{
+ const f=await fixture(t),p=await premadeFixture(f);
+ await f.add('custom',0);
+ const a=await f.call('/api/basket/premade',{basketId:'basket',offerId:p.offer.id,revision:p.offer.artworkRevision});assert.equal(a.response.status,200,JSON.stringify(a.data));
+ const added=await f.call('/api/basket/action',{basketId:'basket',approvalToken:a.data.approvalToken,command:{type:'add',actionId:'premade-add',lineId:'premade',expectedRevision:1,quantity:2}});assert.equal(added.response.status,200,JSON.stringify(added.data));
+ const view=(await f.call('/api/basket?id=basket')).data.basket;assert.equal(view.lines.length,2);assert.equal(view.subtotalCents,7497);assert.equal(view.lines[0].sourceKind,'custom');assert.equal(view.lines[1].sourceKind,'premade');assert.equal(view.lines[1].lineTotalCents,4998);
+ const result=await f.call('/api/basket/checkout',{basketId:'basket',revision:2});assert.equal(result.response.status,200,JSON.stringify(result.data));
+ const lines=f.calls.find(x=>x.body.query?.includes('mutation RecastBasket(')).body.variables.input.lines;assert.equal(lines.length,2);assert.equal(lines[0].merchandiseId,lines[1].merchandiseId);assert.notEqual(lines[0].attributes.find(x=>x.key==='Artwork ID').value,lines[1].attributes.find(x=>x.key==='Artwork ID').value);
+ assert.equal(lines[1].attributes.find(x=>x.key==='_Recast Offer').value,p.offer.id);
+ const order={id:'gid://shopify/Order/246',name:'#1246',displayFinancialStatus:'PAID',test:false,cancelledAt:null,createdAt:'2026-10-30T17:00:00Z',lineItems:{pageInfo:{hasNextPage:false},nodes:lines.map((l,i)=>({id:'gid://shopify/LineItem/'+(900+i),sku,quantity:l.quantity,customAttributes:l.attributes}))}};
+ assert.deepEqual(await reconcileShopifyOrder(f.env,order,heldReconciliation),{created:2,seen:2,issues:0});
+ assert.equal((await read(f.env,'jobs/246-900.json')).requestId,ID);assert.equal((await read(f.env,'jobs/246-901.json')).requestId,p.art);assert.equal((await read(f.env,'jobs/246-901.json')).quantity,2);
+ assert.equal((await reconcileShopifyOrder(f.env,order,heldReconciliation)).created,0);
+});
+test('guest can start from a verified premade design without an AI render or private artwork token',async t=>{
+ const f=await fixture(t),p=await premadeFixture(f);
+ const result=await f.call('/api/basket/session',{offerId:p.offer.id,revision:p.offer.artworkRevision},{cookie:''});assert.equal(result.response.status,200,JSON.stringify(result.data));assert.match(result.response.headers.get('set-cookie'),/Secure; HttpOnly; SameSite=Lax/);
+ const cookie=result.response.headers.get('set-cookie').split(';')[0];
+ assert.equal((await f.call('/api/basket/premade',{basketId:'new',offerId:p.offer.id,revision:p.offer.artworkRevision},{cookie})).response.status,200);
+ assert.equal((await f.call('/api/basket/session',{offerId:'unknown',revision:p.offer.artworkRevision},{cookie:''})).response.status,409);
+ assert.equal(f.calls.some(x=>/transform|inference|fal\.run/.test(x.url)),false);
+});
+test('public catalog excludes private source credentials and customer photos cannot become stock',async t=>{
+ const f=await fixture(t),p=await premadeFixture(f);
+ const publicData=await f.call('/api/shop/catalog');assert.equal(publicData.response.status,200);assert.equal(publicData.data.offers.length,1);
+ assert.doesNotMatch(JSON.stringify(publicData.data),/approvalToken|accessToken|snapshotKey|artworkKey|catalogRightsConfirmedAt/);
+ const meta=await read(f.env,`requests/${p.art}/request.json`);meta.source='original-photo';await f.env.ARTWORK.put(`requests/${p.art}/request.json`,JSON.stringify(meta));
+ assert.equal((await f.call('/api/shop/catalog')).data.offers.length,0);
+ assert.equal((await f.call('/api/basket/premade',{basketId:'basket',offerId:p.offer.id,revision:p.offer.artworkRevision})).response.status,409);
+});
+test('premade add rejects caller-controlled price, source URL and substitute approval',async t=>{
+ const f=await fixture(t),p=await premadeFixture(f);
+ for(const extra of [{priceCents:1},{artworkUrl:'https://evil.test/private.jpg'},{approvalToken:'a'.repeat(48)}]){
+  const r=await f.call('/api/basket/premade',{basketId:'basket',offerId:p.offer.id,revision:p.offer.artworkRevision,...extra});assert.equal(r.response.status,400);assert.equal(r.data.code,'shop_request');
+ }
+});
+test('master bytes, frozen proof, offer revision and retirement are checked again before checkout',async t=>{
+ const f=await fixture(t),p=await premadeFixture(f),a=await f.call('/api/basket/premade',{basketId:'basket',offerId:p.offer.id,revision:p.offer.artworkRevision});
+ await f.call('/api/basket/action',{basketId:'basket',approvalToken:a.data.approvalToken,command:{type:'add',actionId:'p',lineId:'p',expectedRevision:0,quantity:1}});
+ await f.env.ARTWORK.put(p.offer.artworkKey,Uint8Array.of(1,2,3));assert.equal((await f.call('/api/basket/checkout',{basketId:'basket',revision:1})).response.status,409);
+ await f.env.ARTWORK.put(p.offer.artworkKey,p.bytes);
+ assert.equal((await f.call('/api/basket/premade',{basketId:'basket',offerId:p.offer.id,revision:'0'.repeat(64)})).response.status,409);
+ await f.env.ARTWORK.put(p.SHOP_CATALOG_KEY,JSON.stringify({version:1,revision:2,offers:[]}));assert.equal((await f.call('/api/basket/checkout',{basketId:'basket',revision:1})).response.status,409);
+ const removed=await f.call('/api/basket/action',{basketId:'basket',command:{type:'remove',actionId:'retired-remove',lineId:'p',expectedRevision:1}});assert.equal(removed.response.status,200);assert.equal(removed.data.basket.lines.length,0);
+ assert.equal(f.calls.some(x=>x.body.query?.includes('mutation RecastBasket(')),false);
+});
+test('tokenless cart access is explicitly enabled and never sends an undefined token',async t=>{
+ const {basketConfigured,storefrontHeaders}=await import('../src/basket-checkout.js');
+ const base={BASKET_ENABLED:'true',SHOPIFY_SHOP:'test.myshopify.com'};
+ assert.equal(basketConfigured(base),false);assert.equal(basketConfigured({...base,SHOPIFY_STOREFRONT_TOKENLESS:'true'}),true);assert.equal(basketConfigured({...base,BASKET_ENABLED:'false',SHOPIFY_STOREFRONT_TOKENLESS:'true'}),false);
+ assert.deepEqual(storefrontHeaders(base),{'Content-Type':'application/json'});
+ const f=await fixture(t);delete f.env.SHOPIFY_STOREFRONT_TOKEN;f.env.SHOPIFY_STOREFRONT_TOKENLESS='true';await f.add();assert.equal((await f.call('/api/basket/checkout',{basketId:'basket',revision:1})).response.status,200);
+});
+
+test('two shoppers buying the same premade gift receive distinct private order capabilities',async t=>{
+ const f=await fixture(t),p=await premadeFixture(f);
+ const first=await f.call('/api/basket/premade',{basketId:'one',offerId:p.offer.id,revision:p.offer.artworkRevision});assert.equal(first.response.status,200,JSON.stringify(first.data));
+ const session=await f.call('/api/basket/session',{offerId:p.offer.id,revision:p.offer.artworkRevision},{cookie:''});const cookie=session.response.headers.get('set-cookie').split(';')[0];
+ const second=await f.call('/api/basket/premade',{basketId:'two',offerId:p.offer.id,revision:p.offer.artworkRevision},{cookie});assert.equal(second.response.status,200,JSON.stringify(second.data));
+ assert.notEqual(first.data.approvalToken,second.data.approvalToken);assert.notEqual(first.data.approvalToken,p.record.token);assert.notEqual(second.data.approvalToken,p.record.token);
+ const r1=await read(f.env,`commerce/preapprovals/${first.data.approvalToken}.json`),r2=await read(f.env,`commerce/preapprovals/${second.data.approvalToken}.json`);
+ assert.notEqual(r1.buyerScope,r2.buyerScope);assert.equal(r1.sourceHash,r2.sourceHash);assert.equal(r1.premadePrint.key,r2.premadePrint.key);
+ assert.ok(await f.env.ARTWORK.head(`commerce/checkout-previews/${r1.token}.jpg`));
+ const {customerDesignAction}=await import('../src/order-approval.js');
+ await f.env.ARTWORK.put('jobs/private-order.json',JSON.stringify({id:'private-order',requestId:p.art,approvedPreviewToken:r1.token}));
+ for(const token of [r2.token,p.record.token])await assert.rejects(()=>customerDesignAction(new Request('https://recast.test/api/customer/design/private-order/approve',{method:'POST',headers:{'x-recast-request':'1',origin:'https://recast.test','content-type':'application/json'},body:JSON.stringify({proofToken:token})}),f.env,'private-order','approve',{verifyPaid:()=>{throw Error('Must not reach payment lookup');}}),e=>e.code==='order_access');
+});
+test('approved premade print files are reused unchanged and tampering blocks finishing',async t=>{
+ const f=await fixture(t),p=await premadeFixture(f),a=await f.call('/api/basket/premade',{basketId:'basket',offerId:p.offer.id,revision:p.offer.artworkRevision});
+ await f.call('/api/basket/action',{basketId:'basket',approvalToken:a.data.approvalToken,command:{type:'add',actionId:'p',lineId:'p',expectedRevision:0,quantity:1}});
+ await f.call('/api/basket/checkout',{basketId:'basket',revision:1});const lines=f.calls.find(x=>x.body.query?.includes('mutation RecastBasket(')).body.variables.input.lines;
+ const order={id:'gid://shopify/Order/247',name:'#1247',displayFinancialStatus:'PAID',test:false,cancelledAt:null,lineItems:{pageInfo:{hasNextPage:false},nodes:[{id:'gid://shopify/LineItem/901',sku,quantity:1,customAttributes:lines[0].attributes}]}};
+ await reconcileShopifyOrder(f.env,order,heldReconciliation);const job=await read(f.env,'jobs/247-901.json');
+ const {finishApprovedDesign}=await import('../src/order-approval.js');const design=await finishApprovedDesign(f.env,job);assert.equal(design.finalKey,p.record.premadePrint.key);assert.equal(design.finishMethod,'premade-locked-v1');
+ await f.env.ARTWORK.put(design.finalKey,Uint8Array.of(1,2,3));await assert.rejects(()=>finishApprovedDesign(f.env,job),e=>e.code==='premade_print_changed');
+});

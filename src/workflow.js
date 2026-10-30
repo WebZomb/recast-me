@@ -1,3 +1,4 @@
+import {verifiedPremadePrint} from './premade-print.js';
 import {launchSetup} from './launch-setup.js';
 import {isNativeAppRequest, digitalUnavailableInAppResponse} from './app-channel.js';
 import {ownerAlertRoute,sendOwnerAlerts} from './owner-alerts.js';
@@ -418,6 +419,7 @@ async function validatedPreapproval(env,line,map,requestId){
   if(row.requestId!==requestId||row.sku!==line.sku||row.proofHash!==proof||row.mockupId!==mockup||row.previewToken!==preview)return null;
   if(!design||JSON.stringify(design)!==JSON.stringify(row.design))return null;
   if(!row.snapshotKey||!await env.ARTWORK?.head(row.snapshotKey))return null;
+  if(row.premadePrint){if(!row.buyerScope||!row.catalogSourceApproval)throw fault('premade_buyer_required','This catalog proof is not a private purchase approval.',409);await verifiedPremadePrint(env,row);}
   return row;
 }
 export function recipientFromOrder(order){
@@ -504,7 +506,7 @@ export async function reconcileShopifyOrder(env,order,{allowAutomation=true,hold
       if(holdNewJobs||priorIssue?.status==='open'){job.status='on_hold';job.holdReason='Recovered by order audit. Inspect the original purchase and approved design before using fulfillment controls.';}
       const put=await env.ARTWORK.put(jobKey(id),JSON.stringify(job),{onlyIf:new Headers({'If-None-Match':'*'})});if(put)created++;
       if(checkoutApproved&&put){
-        await putJson(env,`commerce/designs/${id}.json`,{revision:1,selectedRequestId:requestId,approvedAt:preapproval.approvedAt,preapprovedAt:preapproval.approvedAt,snapshotKey:preapproval.snapshotKey,sourceHash:preapproval.sourceHash,printToken:randomHex(24),proof:{images:preapproval.images||[],position:preapproval.position,design:preapproval.design,sku:line.sku,quantity:line.quantity,sourceHash:preapproval.sourceHash}});
+        await putJson(env,`commerce/designs/${id}.json`,{revision:1,selectedRequestId:requestId,approvedAt:preapproval.approvedAt,preapprovedAt:preapproval.approvedAt,snapshotKey:preapproval.snapshotKey,sourceHash:preapproval.sourceHash,...(preapproval.premadePrint?await verifiedPremadePrint(env,preapproval):{}),printToken:randomHex(24),proof:{images:preapproval.images||[],position:preapproval.position,design:preapproval.design,sku:line.sku,quantity:line.quantity,sourceHash:preapproval.sourceHash}});
       }
       await putJson(env,`commerce/request-jobs/${requestId}/${id}.json`,{id});
       if(allowAutomation&&checkoutApproved&&String(env.AUTO_PRINT_PREAPPROVED_ENABLED||"false")==="true"){

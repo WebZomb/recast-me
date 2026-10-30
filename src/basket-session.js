@@ -1,6 +1,7 @@
 import {sameOrigin,hash,randomToken,privateJson,fault} from './commerce-store.js';
 import {authorizedArtwork} from './order-approval.js';
 import {createBasket} from './basket-state.js';
+import {resolveShopOffer} from './shop-catalog-store.js';
 const COOKIE='__Host-recast-basket';
 function cookie(request){
  const values=(request.headers.get('cookie')||'').split(';').map(s=>s.trim()).filter(s=>s.startsWith(COOKIE+'='));
@@ -21,7 +22,8 @@ export async function initializeBasketSession(request,env,body){
  if(await session(request,env))return privateJson({ok:true});
  // A valid saved-artwork capability is required before creating private storage.
  // This works for original photos without creating a render-credit wallet.
- await authorizedArtwork(env,body.requestId,body.accessToken);
+ if(body.offerId!==undefined)await resolveShopOffer(env,body.offerId,body.revision);
+ else await authorizedArtwork(env,body.requestId,body.accessToken);
  const token=randomToken(),ownerId=await hash(token);
  const result=await env.ARTWORK.put(`commerce/basket-sessions/${ownerId}.json`,JSON.stringify({ownerId,createdAt:new Date().toISOString()}),{onlyIf:new Headers({'If-None-Match':'*'}),httpMetadata:{contentType:'application/json',cacheControl:'private, no-store'}});
  if(!result?.etag)throw fault('basket_session','Your basket could not be opened. Please try again.',503);

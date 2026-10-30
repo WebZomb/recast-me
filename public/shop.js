@@ -1,26 +1,41 @@
-import {PETS,currentOccasion,matches,readyOffer,restoreCart,changeQuantity,subtotal,readShopFilters,shopFilterQuery} from './shop-model.js';
-const $=s=>document.querySelector(s), form=$('#filters'), dialog=$('#cart');
-const key='rm-fixed-design-bag-v1';
-let offers=[],cart=[],occasion=currentOccasion();
-// Only collections represented in this first release are selectable.
+import {nativeAppPlatform} from './app-channel.js?v=1';
+if(nativeAppPlatform())document.querySelector('nav.bottom')?.remove();
+import {PETS,currentOccasion,matches,readyOffer,readShopFilters,shopFilterQuery} from './shop-model.js';
+import {initialize,addPremade,openCart} from './basket.js?v=2';
+const $=s=>document.querySelector(s),form=$('#filters');
+let offers=[],occasion=currentOccasion(),adding=false;
 if(!['christmas','everyday'].includes(occasion))occasion='everyday';
-const initial=readShopFilters(location.search,document.body.dataset.collection || occasion);
-occasion=initial.occasion;
-const money=cents=>new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(cents/100);
-function node(tag,text,className){const el=document.createElement(tag);if(text)el.textContent=text;if(className)el.className=className;return el;}
+const initial=readShopFilters(location.search,document.body.dataset.collection||occasion);occasion=initial.occasion;
+const money=c=>new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(c/100);
+function node(tag,text,cls){const el=document.createElement(tag);if(text)el.textContent=text;if(cls)el.className=cls;return el;}
 function button(text,fn){const el=node('button',text);el.type='button';el.addEventListener('click',fn);return el;}
 function breeds(){const selected=form.elements.breed.value;form.elements.breed.replaceChildren(new Option('All breeds & looks','all'));const pet=form.elements.pet.value;for(const breed of pet==='all'?Object.values(PETS).flat():PETS[pet])form.elements.breed.add(new Option(breed,breed));if([...form.elements.breed.options].some(o=>o.value===selected))form.elements.breed.value=selected;}
-function save(){try{localStorage.setItem(key,JSON.stringify(cart));}catch{$('#cart-message').textContent='Your bag is available for this visit. This browser could not save it.';}renderCart();}
-function add(offer,open=false){cart=changeQuantity(cart,offer,1);save();$('#shop-announcement').textContent=`${offer.title} added to your bag.`;if(open)dialog.showModal();}
-function render(){const filters={...Object.fromEntries(new FormData(form)),occasion};history.replaceState(null,'',`${location.pathname}?${shopFilterQuery({...filters,sort:$('#sort').value})}${location.hash}`);const found=offers.filter(o=>matches(o,filters));const sort=$('#sort').value;if(sort!=='featured')found.sort((a,b)=>sort==='price-low'?a.priceCents-b.priceCents:b.priceCents-a.priceCents);$('#products').replaceChildren();$('#result-count').textContent=`${found.length} ready-made ${found.length===1?'gift':'gifts'}`;$('#empty').hidden=found.length>0;for(const tab of document.querySelectorAll('[data-occasion]'))tab.setAttribute('aria-pressed',String(tab.dataset.occasion===occasion));for(const offer of found){const card=node('article',null,'product'),img=node('img');img.src=offer.mockupUrl;img.alt=`${offer.title} — finished product preview`;img.loading='lazy';const details=node('div',null,'details');details.append(node('h3',offer.title),node('p',`${offer.breed} · ${offer.variantLabel||offer.product}`),node('strong',money(offer.priceCents)));const buy=button('Add to bag',()=>add(offer,true));buy.className='primary';details.append(buy,button('View details',()=>showDetail(offer)));img.onerror=()=>{buy.disabled=true;img.alt='Product preview unavailable';};const imageButton=button('',()=>showDetail(offer));imageButton.className='image-button';imageButton.setAttribute('aria-label',`View ${offer.title}`);imageButton.append(img);card.append(imageButton,details);$('#products').append(card);}}
-function renderCart(){cart=restoreCart(cart,offers);$('#bag-count').textContent=cart.reduce((n,l)=>n+l.quantity,0);$('#subtotal').textContent=money(subtotal(cart,offers));$('#cart-lines').replaceChildren();if(!cart.length)$('#cart-lines').append(node('p','Your bag is empty. Find a pet gift you love.'));for(const line of cart){const offer=offers.find(o=>o.id===line.offerId),row=node('div',null,'line');const thumb=node('img');thumb.src=offer.mockupUrl;thumb.alt=offer.title;thumb.className='bag-thumb';row.append(thumb);row.append(node('h3',offer.title),node('p',`${offer.variantLabel||offer.product} · ${money(offer.priceCents)} each`));for(const [label,delta] of [['−',-1],['+',1]]){const control=button(label,()=>{cart=changeQuantity(cart,offer,delta);save();});control.setAttribute('aria-label',`${delta>0?'Increase':'Decrease'} quantity of ${offer.title}`);if(delta>0)control.disabled=line.quantity>=20;row.append(control);if(delta<0)row.append(node('span',` ${line.quantity} `));}row.append(node('strong',money(offer.priceCents*line.quantity),'line-total'));row.append(button('Remove',()=>{cart=cart.filter(l=>l.offerId!==line.offerId);save();}));$('#cart-lines').append(row);}}
-function showDetail(offer){$('#detail-title').textContent=offer.title;$('#detail-image').src=offer.mockupUrl;$('#detail-image').alt=offer.title+' finished product preview';$('#detail-variant').textContent=offer.variantLabel||offer.product;$('#detail-price').textContent=money(offer.priceCents);$('#detail-add').onclick=()=>{add(offer);$('#product-detail').close();dialog.showModal();};$('#product-detail').showModal();}
-$('#close-detail').onclick=()=>$('#product-detail').close();$('#sort').onchange=render;
-$('#open-cart').onclick=()=>dialog.showModal();$('#close-cart').onclick=$('#continue').onclick=()=>dialog.close();form.addEventListener('submit',e=>e.preventDefault());form.addEventListener('input',e=>{if(e.target.name==='pet')breeds();render();});for(const tab of document.querySelectorAll('[data-occasion]'))tab.onclick=()=>{occasion=tab.dataset.occasion;render();};$('#reset').onclick=()=>{form.reset();breeds();occasion='all';render();};
+async function add(offer,control){
+ if(adding)return;adding=true;control.disabled=true;const label=control.textContent;control.textContent='Adding…';$('#shop-announcement').textContent='Saving your finished gift…';
+ try{await addPremade(offer);$('#product-detail').close();$('#shop-announcement').textContent=offer.title+' added to your cart.';}
+ catch(error){$('#shop-announcement').textContent=error.message;}
+ finally{control.disabled=false;control.textContent=label;adding=false;}
+}
+function render(){
+ const filters={...Object.fromEntries(new FormData(form)),occasion};history.replaceState(null,'',`${location.pathname}?${shopFilterQuery({...filters,sort:$('#sort').value})}${location.hash}`);
+ const found=offers.filter(o=>matches(o,filters));const sort=$('#sort').value;if(sort!=='featured')found.sort((a,b)=>sort==='price-low'?a.priceCents-b.priceCents:b.priceCents-a.priceCents);
+ $('#products').replaceChildren();$('#result-count').textContent=`${found.length} ready-made ${found.length===1?'gift':'gifts'}`;$('#empty').hidden=found.length>0;
+ for(const tab of document.querySelectorAll('[data-occasion]'))tab.setAttribute('aria-pressed',String(tab.dataset.occasion===occasion));
+ if(offers.length&&!found.length){$('#empty h3').textContent='No gifts match these filters yet.';$('#empty p').textContent='Try another breed, product or collection.';}
+ for(const offer of found){
+  const card=node('article',null,'product'),img=node('img');img.src=offer.mockupUrl;img.alt=offer.title+' — exact finished product preview';img.loading='lazy';
+  const details=node('div',null,'details');details.append(node('h3',offer.title),node('p',`${offer.breed} · ${offer.variantLabel||offer.product}`),node('strong',money(offer.priceCents)));
+  const buy=button('Add to cart',()=>add(offer,buy));buy.className='primary';details.append(buy,button('View details',()=>showDetail(offer)));
+  img.onerror=()=>{buy.disabled=true;img.alt='Product preview unavailable';};
+  const view=button('',()=>showDetail(offer));view.className='image-button';view.setAttribute('aria-label','View '+offer.title);view.append(img);card.append(view,details);$('#products').append(card);
+ }
+}
+function showDetail(offer){$('#detail-title').textContent=offer.title;$('#detail-image').src=offer.mockupUrl;$('#detail-image').alt=offer.title+' finished product preview';$('#detail-variant').textContent=offer.variantLabel||offer.product;$('#detail-price').textContent=money(offer.priceCents);$('#detail-add').onclick=()=>add(offer,$('#detail-add'));$('#product-detail').showModal();}
+$('#close-detail').onclick=()=>$('#product-detail').close();$('#sort').onchange=render;$('#open-cart').onclick=openCart;
+form.addEventListener('submit',e=>e.preventDefault());form.addEventListener('input',e=>{if(e.target.name==='pet')breeds();render();});
+for(const tab of document.querySelectorAll('[data-occasion]'))tab.onclick=()=>{occasion=tab.dataset.occasion;render();};
+$('#reset').onclick=()=>{form.reset();breeds();occasion='all';render();};
 form.elements.pet.value=initial.pet;breeds();for(const name of ['breed','product','search'])form.elements[name].value=initial[name];$('#sort').value=initial.sort;
-window.addEventListener('storage',e=>{if(e.key===key){try{cart=restoreCart(JSON.parse(e.newValue||'[]'),offers);renderCart();}catch{}}});
-try{const response=await fetch('/shop-catalog.json',{cache:'no-store'});if(!response.ok)throw new Error('Catalog unavailable');const data=await response.json();if(data.version!==1||!Array.isArray(data.offers))throw new Error('Invalid catalog');offers=data.offers.filter(readyOffer);try{cart=restoreCart(JSON.parse(localStorage.getItem(key)||'[]'),offers);}catch{cart=[];}}
-catch{$('#empty h3').textContent='The collection couldn’t load.';$('#empty p').textContent='Please refresh this page to try again.';}
-// Checkout remains disabled until the server can resolve and freeze every offer
-// independently. A client catalog flag must never authorize checkout.
-render();renderCart();
+try{const response=await fetch('/api/shop/catalog',{cache:'no-store'});const data=await response.json();if(!response.ok||data.version!==1||!Array.isArray(data.offers))throw Error('Catalog unavailable');offers=data.offers.filter(readyOffer);}
+catch{$('#empty h3').textContent='The collection could not load.';$('#empty p').textContent='Please refresh this page to try again.';}
+render();await initialize({launcher:'#open-cart'});

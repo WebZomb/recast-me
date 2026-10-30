@@ -12,6 +12,9 @@
   },
   "vars": {
     "SEASONAL_DISCOUNTS_ENABLED": "false",
+    "BASKET_ENABLED": "true",
+    "SHOPIFY_STOREFRONT_TOKENLESS": "true",
+    "PREMADE_SEED_ENABLED": "true",
     "SHOPIFY_CLIENT_ID": "34095311ef89068f873eb42bfba8e597",
     "SHOPIFY_SHOP": "b2wnfu-7g",
     "PRINTFUL_STORE_ID": "18798877",

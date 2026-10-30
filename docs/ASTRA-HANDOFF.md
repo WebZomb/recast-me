@@ -431,3 +431,6 @@ October 27 pets-only Shop Designs preview — local implementation a424f3f with 
 October 29 staged Shop continuation — dedicated Christmas page, shareable pet collections, clearer bag and isolated authoritative checkout-preflight checks added to PR114 branch. No sellable inventory or live checkout; supplier browser disconnected and local browser installation failed. See [dated session](ASTRA-SESSION-PET-SHOP-2026-10-27.md).
 
 October29 continued PR114 — checkout attempt coordinator/frozen approval line checks, same-origin approved logo,632 Node tests and real Chromium320/393/768/1280 PASS. Added Shop checks to hosted customer-policy CI; WebKit local missing libraries. No live checkout or supplier-approved catalog. [Evidence](ASTRA-SESSION-PET-SHOP-2026-10-27.md).
+
+
+October30 unified shopping: owner requests premade + own-AI designs in one cart. Integrated PR93/PR114 with Christmas main. One server cart, private buyer-specific premade approval, locked printfile reuse and exact per-line fulfillment are implemented; local796tests and mixed-cart Chromium pass. Shopify tokenless unpaid3-line/4-item transport verified. Fixed Golden Retriever starter supplier preparation is gated; no premade stock published yet. See [session](ASTRA-SESSION-UNIFIED-SHOP-2026-10-30.md) for actual release/proof/paid-action state.
