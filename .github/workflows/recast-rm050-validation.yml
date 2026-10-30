@@ -6,9 +6,11 @@ on:
       - 'public/**'
       - 'tests/**'
       - 'scripts/rm050-browser-tests.cjs'
+      - 'scripts/basket-browser-tests.cjs'
       - 'scripts/rm121-model-lab-audit.cjs'
       - 'scripts/community-browser.cjs'
       - 'scripts/app-channel-browser.cjs'
+      - 'scripts/shop-browser.cjs'
       - '.github/workflows/recast-rm050-validation.yml'
   workflow_dispatch:
 permissions:
@@ -39,6 +41,8 @@ jobs:
         run: NODE_PATH=/tmp/recast-browser/node_modules node scripts/rm050-browser-tests.cjs
       - name: Mocked identity Model Lab mobile checks
         run: NODE_PATH=/tmp/recast-browser/node_modules node scripts/rm121-model-lab-audit.cjs
+      - name: Basket recovery mobile browser checks
+        run: NODE_PATH=/tmp/recast-browser/node_modules node scripts/basket-browser-tests.cjs
       - name: Seasonal storefront and owner schedule browser checks
         run: NODE_PATH=/tmp/recast-browser/node_modules node scripts/rm166-seasonal-browser.cjs
       - name: Christmas gift pages Chromium and WebKit checks
@@ -49,10 +53,16 @@ jobs:
         run: NODE_PATH=/tmp/recast-browser/node_modules node scripts/gift-guides-browser.cjs
       - name: Community browsing and consent phone checks
         run: NODE_PATH=/tmp/recast-browser/node_modules node scripts/community-browser.cjs
+      - name: Unified Shop and Christmas mixed-cart Chromium and WebKit checks
+        run: |
+          NODE_PATH=/tmp/recast-browser/node_modules node scripts/shop-browser.cjs
+          NODE_PATH=/tmp/recast-browser/node_modules RECAST_BROWSER=webkit node scripts/shop-browser.cjs
       - name: Retain regression evidence
         uses: actions/upload-artifact@v4
         if: always()
         with:
           name: recast-policy-browser-evidence
-          path: rm050-browser-results/
+          path: |
+            rm050-browser-results/
+            shop-browser-results/
           retention-days: 7

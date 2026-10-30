@@ -1,3 +1,4 @@
+import {digestBytes} from './premade-print.js';
 import {change,read,hash,equal,randomToken,fault,sameOrigin,privateJson,composeMugLayout,composeProductLayout} from './commerce-store.js';
 const designKey=id=>`commerce/designs/${id}.json`;
 const validId=v=>typeof v==='string'&&/^[a-zA-Z0-9._-]{1,180}$/.test(v);
@@ -44,6 +45,7 @@ export async function customerDesignAction(request,env,id,action,services){
   const job=await read(env,`jobs/${id}.json`);
   if(!job)throw fault('order_missing','Order not found.',404);
   const body=await request.json();
+  if(body?.proofToken&&!equal(String(body.proofToken),String(job.approvedPreviewToken||'')))throw fault('order_access','Use the private preview link for this purchased item.',403);
   await authorizedOrderCapability(env,job.requestId,body);
   await services.verifyPaid(env,job);
   const initial=await designFor(env,job),revision=Number(body.revision);
@@ -91,11 +93,13 @@ export async function printDesignFile(request,env,job,verifyPaid){
   if(!d.finalKey||!d.finalHash)throw fault('print_not_ready','Print file not ready.',404);
   const object=await env.ARTWORK.get(d.finalKey);
   if(!object)throw fault('print_not_ready','Print file not ready.',404);
-  return new Response(object.body,{headers:{'content-type':d.finalMime||'image/jpeg','cache-control':'private, no-store','referrer-policy':'no-referrer','x-content-type-options':'nosniff'}});
+  let payload=object.body;
+  if(d.finishMethod==='premade-locked-v1'){payload=await object.arrayBuffer();if(await digestBytes(payload)!==d.finalHash)throw fault('premade_print_changed','The purchased print file could not be verified.',503);}
+  return new Response(payload,{headers:{'content-type':d.finalMime||'image/jpeg','cache-control':'private, no-store','referrer-policy':'no-referrer','x-content-type-options':'nosniff'}});
 }
 export async function finishApprovedDesign(env,job,{ownerRecovery=false}={}){
   const d=await approvedDesign(env,job);
-  if(d.finalKey)return d;
+  if(d.finalKey){if(d.finishMethod==='premade-locked-v1'){const final=await env.ARTWORK.get(d.finalKey);if(!final||await digestBytes(await final.arrayBuffer())!==d.finalHash)throw fault('premade_print_changed','The purchased print file could not be verified.',503);}return d;}
   const stored=await env.ARTWORK.get(d.snapshotKey);
   if(!stored)throw fault('artwork_missing','Approved artwork missing.',404);
   const b64=await stored.text();

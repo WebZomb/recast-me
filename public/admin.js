@@ -1,5 +1,6 @@
 import {initCommunityReview} from './admin-community-panel.js?v=2';
 import {initHolidaySchedule} from './admin-holidays.js?v=166';
+import {initRecoveryCenter} from './admin-recovery.js?v=1';
 import {initOwnerAlerts} from './admin-alerts.js?v=rm068';
 import {initOwnerSettings} from './admin-settings.js?v=rm075-250';
 import {initOwnerCredits} from './admin-credits.js?v=rm111';
@@ -19,6 +20,7 @@ const ownerSettings=initOwnerSettings(api,toast);
 const ownerCredits=initOwnerCredits(api,toast);
 const ownerTraffic=initOwnerTraffic(api);
 const ownerAlerts=initOwnerAlerts(api,toast);
+const recoveryCenter=initRecoveryCenter(api,toast);
 function statusPill(status){const v=String(status||'unknown');const kind=/submitted|ready|completed|paid/i.test(v)?'good':/hold|review|await|needs|draft/i.test(v)?'warn':/fail|error|reject/i.test(v)?'bad':'';return `<span class="pill ${kind}">${escapeText(v.replaceAll('_',' '))}</span>`}
 function empty(text){return `<div class="empty">${text}</div>`}
 function escapeText(value){return String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
