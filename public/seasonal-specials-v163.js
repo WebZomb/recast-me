@@ -1,11 +1,15 @@
 import {renderSeasonalProducts} from './seasonal-products.js?v=167';
+import {christmasCampaign} from './christmas-feature.js?v=1';
 import {seasonalSpotlight,upcomingGiftEvents,daysToEvent,eventDateLabel} from './season-calendar.js?v=166';
 let campaign={active:null,offer:null};
 try{const response=await fetch('/api/seasonal-campaign',{cache:'no-store'});if(response.ok)campaign=await response.json();}catch{}
-const now=new Date(),spot=seasonalSpotlight(now,campaign.active||null);
+const now=new Date();
+campaign=christmasCampaign(campaign,{fixed:document.body.dataset.fixedCollection==='christmas',now});
+const spot=seasonalSpotlight(now,campaign.active||null);
+if(spot?.id==='christmas'){spot.badge='CHRISTMAS MAGIC';spot.title='Make Christmas unforgettable.';spot.intro='Give their favorite face a little Christmas magic. Create festive artwork, then preview it on a gift they can keep.';}
 const by=id=>document.getElementById(id);
 const put=(id,value)=>{const el=by(id);if(el)el.textContent=value};
-const src=(id,value)=>{const el=by(id);if(el)el.src=value};
+const src=(id,value)=>{const image=by(id);if(!image)return;image.src=value;image.alt=value.includes('christmas')?'Illustrated Christmas gift inspiration with festive holiday artwork':value.includes('halloween')?'Illustrated Halloween gift inspiration':value.includes('royal')?'Illustrative royal-style Recast artwork':'Illustrative fantasy-style Recast artwork';};
 const href=(id,value)=>{const el=by(id);if(el)el.href=value};
 const el=(tag,cls,value)=>{
   const node=document.createElement(tag);
@@ -68,7 +72,7 @@ function updateHero(){
       const [badge,title,description,style]=labels[i],link='/?style='+style+'#start',id='season-card-'+codes[i];
       put(id+'-badge',badge);put(id+'-title',title);put(id+'-description',description);
       put(id+'-link','Choose '+title+' →');href(id+'-link',link);
-      if(anchors[i])anchors[i].href=link;
+      if(anchors[i]){anchors[i].href=link;anchors[i].setAttribute('aria-label','Create '+title.toLowerCase());}
     }
   }else{
     src('season-card-one-image','/assets/world-royal-v18.webp');
@@ -86,7 +90,7 @@ function updateHero(){
       const [badge,title,description,style]=labels[i],link='/?style='+style+'#start',id='season-card-'+codes[i];
       put(id+'-badge',badge);put(id+'-title',title);put(id+'-description',description);
       put(id+'-link','Choose '+title+' →');href(id+'-link',link);
-      if(anchors[i])anchors[i].href=link;
+      if(anchors[i]){anchors[i].href=link;anchors[i].setAttribute('aria-label','Create '+title.toLowerCase());}
     }
   }
 }

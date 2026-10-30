@@ -9,5 +9,5 @@ test('RM0510 keeps the approved live three-step assets and current orbit brand',
  const html=readFileSync(new URL('../public/index.html',import.meta.url),'utf8');assert.match(html,/jack-russell-source-v18\.webp/);assert.match(html,/world-game-v18\.webp/);assert.match(html,/recast-neon-mug-cutout-v48\.png/);assert.match(html,/recastmeai-approved-orbit-header-v2\.png/);
 });
 test('RM0510 head contains a real line break, never a visible literal backslash-n',()=>{
- const html=readFileSync(new URL('../public/index.html',import.meta.url),'utf8');assert.doesNotMatch(html,/brand-orbit-v1\.css[^\n]*\\n\s*<link rel="stylesheet" href="\/hero-target-v51\.css/);assert.match(html,/brand-orbit-v1\.css\?v=1">\n\s*<link rel="stylesheet" href="\/hero-target-v51\.css\?v=\d+">/);
+ const html=readFileSync(new URL('../public/index.html',import.meta.url),'utf8');assert.doesNotMatch(html,/brand-orbit-v1\.css[^\n]*\\n\s*<link rel="stylesheet" href="\/hero-target-v51\.css/);assert.match(html,/brand-orbit-v1\.css\?v=1">\r?\n\s*<link rel="stylesheet" href="\/hero-target-v51\.css\?v=\d+">/);
 });

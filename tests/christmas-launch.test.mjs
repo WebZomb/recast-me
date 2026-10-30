@@ -1,0 +1,11 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {readFile} from 'node:fs/promises';
+import {christmasCampaign} from '../public/christmas-feature.js';
+const halloween={active:{id:'halloween'},offer:{id:'halloween',percent:10},checkoutReady:true};
+test('Christmas launch merchandising cannot reuse a Halloween discount',()=>{const x=christmasCampaign(halloween,{now:new Date('2026-10-30T13:00:00Z')});assert.equal(x.active.id,'christmas');assert.equal(x.active.style,'christmas');assert.equal(x.offer,null);assert.equal(x.checkoutReady,false);assert.equal(halloween.active.id,'halloween');});
+test('same Christmas campaign retains only the existing authoritative offer',()=>{const x={active:{id:'christmas'},offer:null,checkoutReady:false};assert.equal(christmasCampaign(x,{now:new Date('2026-11-01T13:00:00Z')}),x);});
+test('specials returns to normal calendar after Christmas',()=>{assert.equal(christmasCampaign(halloween,{now:new Date('2026-12-26T05:00:00Z')}),halloween);});
+test('Eastern launch boundary and last Christmas minute',()=>{assert.equal(christmasCampaign(halloween,{now:new Date('2026-10-30T03:59:59Z')}),halloween);assert.equal(christmasCampaign(halloween,{now:new Date('2026-12-26T04:59:59Z')}).active.id,'christmas');});
+test('fixed Christmas entry survives an unavailable campaign API without promising discounts',()=>{const x=christmasCampaign({}, {fixed:true,now:new Date('2027-01-05T17:00:00Z')});assert.equal(x.active.date,'2027-12-25');assert.equal(x.offer,null);});
+test('Christmas metadata, initial artwork and route are consistent before JavaScript',async()=>{for(const file of ['specials','christmas-gifts']){const h=await readFile(new URL('../public/'+file+'.html',import.meta.url),'utf8');const head=h.split('</head>')[0];assert.match(head, /Christmas Photo Gifts/);assert.doesNotMatch(head,/halloween/i);assert.match(h,/data-season="winter"/);assert.match(h,/seasonal-specials-v163.js\?v=169/);assert.doesNotMatch(h,/style=halloween/);assert.doesNotMatch(h,/10% off/i);}});
