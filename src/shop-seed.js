@@ -8,7 +8,10 @@ import {hashBytes,SHOP_CATALOG_KEY,resolveShopOffer} from './shop-catalog-store.
 export const SEED_DESIGN=Object.freeze({id:'christmas-golden-retriever-winter-lights',requestId:'RC-SHOP-GOLDEN-WINTER-V1',asset:'/shop-assets/christmas-golden-artwork.png',sha256:'a003e979d4a1c2056d37f9c23610399dd83ed82ec0f85cde8733f99fbd1ff0a2',width:1254,height:1254,pet:'dog',breed:'Golden Retriever',occasion:'christmas'});
 export const SEED_ITEMS=Object.freeze([{id:'golden-winter-lights-mug-11oz',sku:'RECAST-MUG-11OZ',title:'Golden Retriever Winter Lights Mug',variantLabel:'White glossy · 11 oz'},{id:'golden-winter-lights-mug-15oz',sku:'RECAST-MUG-15OZ',title:'Golden Retriever Winter Lights Large Mug',variantLabel:'White glossy · 15 oz'}]);
 // Filled only in a reviewed source commit AFTER real supplier proofs are inspected.
-export const REVIEWED_SEED_PROOFS=Object.freeze({});
+export const REVIEWED_SEED_PROOFS=Object.freeze({
+ 'golden-winter-lights-mug-11oz':'f8090f754cbb900078be52d747d4ada902065106407788e1167f7ae66184987f',
+ 'golden-winter-lights-mug-15oz':'ef0206da9e4948595b5d15a754e02317a0f7431fb5b75d242abf0da6b366fc46'
+});
 const key=id=>`shop/preparation/v1/${id}.json`;
 const now=()=>new Date().toISOString();
 const base=env=>String(env.LIVE_APP_URL||env.PUBLIC_APP_URL||'https://recastmeai.com').replace(/\/$/,'');

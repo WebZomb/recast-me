@@ -14,7 +14,7 @@ test('only the exact fictional-pet source file can enter the starter assortment'
  const bytes=await readFile(new URL('../catalog/shop/artwork/golden-winter-lights-v1.png',import.meta.url));
  assert.equal(await hashBytes(bytes),SEED_DESIGN.sha256);assert.equal(bytes.readUInt32BE(16),1254);assert.equal(bytes.readUInt32BE(20),1254);assert.equal(SEED_DESIGN.pet,'dog');
  assert.equal(SEED_ITEMS.length,2);assert.ok(SEED_ITEMS.every(item=>item.sku.startsWith('RECAST-MUG-')));
- assert.deepEqual(REVIEWED_SEED_PROOFS,{});
+ assert.deepEqual(Object.keys(REVIEWED_SEED_PROOFS).sort(),SEED_ITEMS.map(x=>x.id).sort());assert.ok(Object.values(REVIEWED_SEED_PROOFS).every(x=>/^[a-f0-9]{64}$/.test(x)));
 });
 test('a changed source stops preparation without external calls, publication or automatic recreation',async t=>{
  let external=0,assetReads=0;t.mock.method(globalThis,'fetch',async()=>{external++;throw Error('No external calls expected');});

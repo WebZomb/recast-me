@@ -9,11 +9,12 @@ const fs=require('fs'),path=require('path'),assert=require('node:assert/strict')
   const context=await browser.newContext({viewport:{width,height:900}}),page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
   const revision='a'.repeat(64),proof={provider:'printful',approved:true,artworkRevision:revision,printFileHash:'b'.repeat(64),placementHash:'c'.repeat(64)};
   const offers=[{id:'golden-mug',designId:'golden',title:'Golden Retriever Winter Lights Mug',occasion:'christmas',pet:'dog',breed:'Golden Retriever',product:'mug',variantLabel:'White · 11 oz',priceCents:2499,currency:'USD',variantId:'gid://shopify/ProductVariant/1',artworkRevision:revision,status:'verified',proof,mockupUrl:'https://recast.test/shop-assets/christmas-golden-artwork.png'},{id:'cat-mug',designId:'cat',title:'Cat Christmas Mug',occasion:'christmas',pet:'cat',breed:'Orange tabby',product:'mug',variantLabel:'White · 11 oz',priceCents:2499,currency:'USD',variantId:'gid://shopify/ProductVariant/1',artworkRevision:revision,status:'verified',proof,mockupUrl:'https://recast.test/shop-assets/christmas-golden-artwork.png'}];
-  const state={basketId:'test',revision:0,canEdit:true,appliedActions:[],currency:'USD',subtotalCents:0,lines:[],canCheckout:false},bindings={};let counter=0,checkoutCalls=0;
+  let state={basketId:'test',revision:0,canEdit:true,appliedActions:[],currency:'USD',subtotalCents:0,lines:[],canCheckout:false};const initialState=structuredClone(state),states=new Map(),bindings={};let counter=0,checkoutCalls=0;
   const calculate=()=>{state.lines.forEach(l=>l.lineTotalCents=l.unitPriceCents*l.quantity);state.subtotalCents=state.lines.reduce((n,l)=>n+l.lineTotalCents,0);state.canCheckout=state.lines.length>0;};
   await context.route('**/*',async route=>{
    const url=new URL(route.request().url()),p=url.pathname;if(url.hostname!=='recast.test')return route.fulfill({status:204});
    const body=route.request().method()==='POST'?route.request().postDataJSON():null;let data={ok:true};
+   if(p.startsWith('/api/basket')){const id=body?.basketId||url.searchParams.get('id');if(id){if(!states.has(id))states.set(id,{...structuredClone(initialState),basketId:id});state=states.get(id);}}
    if(p==='/api/shop/catalog')data={ok:true,version:1,offers};
    else if(p==='/api/basket/status')data.enabled=true;
    else if(p==='/api/basket/session'){}
@@ -50,6 +51,14 @@ const fs=require('fs'),path=require('path'),assert=require('node:assert/strict')
   await page.getByRole('button',{name:'Continue shopping',exact:true}).click();await page.goto('https://recast.test/christmas.html');await page.waitForFunction(()=>document.querySelectorAll('.product').length===2);await page.locator('#open-cart').click();await page.waitForFunction(()=>document.querySelectorAll('.basket-line').length===3);
   await page.locator('.basket-line').nth(1).getByRole('button',{name:'Remove',exact:true}).click();await page.waitForFunction(()=>document.querySelectorAll('.basket-line').length===2);assert.equal(state.lines[0].artworkId,'golden');assert.equal(state.lines[1].artworkId,'ART-CUSTOM');
   await page.getByRole('button',{name:'Continue shopping',exact:true}).click();await page.screenshot({path:path.join(output,`${engine}-shop-${width}.png`)});
+  await page.locator('#open-cart').click();await page.locator('.recast-basket[open]').waitFor();
+  const savedId=await page.evaluate(()=>localStorage.getItem('recast_basket_id_v1'));
+  await page.locator('.basket-saved-carts summary').click();await page.getByRole('button',{name:'Start separate cart',exact:true}).click();
+  assert.equal(await page.evaluate(()=>localStorage.getItem('recast_basket_id_v1')),savedId);
+  await page.getByRole('button',{name:'Start empty cart',exact:true}).click();await page.waitForFunction(()=>document.querySelectorAll('.basket-line').length===0);
+  assert.notEqual(await page.evaluate(()=>localStorage.getItem('recast_basket_id_v1')),savedId);assert.equal(checkoutCalls,1);
+  await page.locator('[data-saved-carts]').selectOption(savedId);await page.waitForFunction(()=>document.querySelectorAll('.basket-line').length===2);
+  assert.equal(state.lines[0].artworkId,'golden');assert.equal(state.lines[1].artworkId,'ART-CUSTOM');assert.equal(checkoutCalls,1);
   assert.deepEqual(errors,[]);console.log('PASS unified premade + custom cart, filter reload, distinct designs, quantity, removal, retained checkout and layout',engine,width);await context.close();
  }}finally{await browser.close();}
 })().catch(e=>{console.error(e);process.exitCode=1;});

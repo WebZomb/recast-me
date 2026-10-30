@@ -1,4 +1,4 @@
-const ID='recast_basket_id_v1',PENDING='recast_basket_pending_v1';
+const ID='recast_basket_id_v1',PENDING='recast_basket_pending_v1',SAVED='recast_saved_carts_v1';
 let basket=null,basketId=null,pending=null,enabled=false,busy=false,panel=null,status=null,list=null,initializing=null;
 const EDIT_LIMIT='Your basket has reached its edit limit. Your items are saved. You can check out as shown or contact support to change them.';
 const money=c=>new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(c/100);
@@ -11,10 +11,16 @@ function identify(){
  try{basketId=localStorage.getItem(ID);if(!basketId){basketId=crypto.randomUUID();localStorage.setItem(ID,basketId);}pending=JSON.parse(localStorage.getItem(PENDING)||'null');}
  catch{throw Error('This browser could not recover your saved cart. Allow website storage and refresh before adding an item.');}
 }
+function savedCarts(){try{const rows=JSON.parse(localStorage.getItem(SAVED)||'[]');return Array.isArray(rows)?rows.filter(r=>r&&typeof r.id==='string'&&/^[a-zA-Z0-9-]{1,100}$/.test(r.id)&&Number.isFinite(Date.parse(r.savedAt))).slice(0,20):[];}catch{return [];}}
+function rememberCart(){if(!basketId)return;const rows=savedCarts().filter(r=>r.id!==basketId);rows.unshift({id:basketId,savedAt:new Date().toISOString()});localStorage.setItem(SAVED,JSON.stringify(rows.slice(0,20)));}
+async function switchCart(id){
+ if(pending)throw Error('Check the unfinished save before switching carts.');
+ rememberCart();localStorage.setItem(ID,id);identify();basket=null;await refresh();
+}
 function button(text,action){const el=node('button',text);el.type='button';el.className='button ghost';el.onclick=action;return el;}
 function savePending(value){localStorage.setItem(PENDING,JSON.stringify(value));pending=value;}
 async function refresh(){
- basket=(await api('/api/basket?id='+encodeURIComponent(basketId))).basket;
+ basket=(await api('/api/basket?id='+encodeURIComponent(basketId))).basket;rememberCart();
  if(pending&&basket.appliedActions.includes(pending.command.actionId))savePending(null);
  render();return basket;
 }
@@ -41,7 +47,11 @@ function render(){
  for(const launcher of document.querySelectorAll('[data-basket-open]'))launcher.textContent='Cart ('+count+')';
  const badge=document.getElementById('bag-count');if(badge)badge.textContent=String(count);
  window.dispatchEvent(new CustomEvent('recast:cart-change',{detail:{count}}));
- if(!list)return;list.replaceChildren();
+ if(!list)return;
+ const saved=panel.querySelector('[data-saved-carts]');saved.replaceChildren();
+ for(const row of savedCarts()){const option=node('option',row.id===basketId?'Current cart':'Saved '+new Date(row.savedAt).toLocaleString([], {month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}));option.value=row.id;saved.append(option);}saved.value=basketId;saved.disabled=busy||!!pending;
+ panel.querySelector('[data-new-cart]').disabled=busy||!!pending||!basket;
+ list.replaceChildren();
  for(const line of basket?.lines||[]){
   const item=node('article',undefined,'basket-line');
   if(line.thumbnail){const img=node('img');img.src=line.thumbnail;img.alt=(line.sourceKind==='premade'?'Ready-made gift: ':'Your approved design: ')+(line.title||line.product);img.className='basket-thumb';img.loading='lazy';img.onerror=()=>{img.hidden=true;};item.append(img);}
@@ -79,12 +89,17 @@ function ensurePanel(){
   location.assign(result.checkoutUrl);
  }));checkout.dataset.basketCheckout='';checkout.className='button primary';
  const actions=node('div',undefined,'basket-actions');actions.append(checkout,continueButton,reload,retry);
- panel.append(heading,note,limit,list,subtotal,delivery,status,actions);document.body.append(panel);
+ const carts=node('details',undefined,'basket-saved-carts');carts.append(node('summary','Saved carts / start a separate cart'));
+ const label=node('label','Your saved carts'),select=node('select');select.dataset.savedCarts='';select.setAttribute('aria-label','Your saved carts');select.onchange=()=>{const id=select.value;run(()=>switchCart(id));};label.append(select);
+ const confirm=node('div');confirm.hidden=true;confirm.append(node('p','Start a separate empty cart? This cart stays saved. This does not cancel any checkout or order. If payment is processing, check My Orders first.'));
+ const start=button('Start separate cart',()=>{confirm.hidden=false;});start.dataset.newCart='';
+ const yes=button('Start empty cart',()=>run(async()=>{await switchCart(crypto.randomUUID());confirm.hidden=true;})),no=button('Keep current cart',()=>{confirm.hidden=true;});confirm.append(yes,no);carts.append(label,start,confirm);
+ panel.append(heading,note,limit,list,subtotal,delivery,status,actions,carts);document.body.append(panel);
  if(!document.querySelector('link[data-basket-css]')){const css=node('link');css.rel='stylesheet';css.href='/basket.css?v=1';css.dataset.basketCss='';document.head.append(css);}
 }
 export function openCart(){
  if(!enabled){const announcement=document.getElementById('shop-announcement');if(announcement)announcement.textContent='The cart is not available yet.';return;}
- ensurePanel();if(!panel.open)panel.showModal();render();
+ ensurePanel();if(!panel.open){panel.showModal();panel.scrollTop=0;}render();
  run(async()=>{identify();try{await refresh();}catch(e){if(e.code==='basket_session'&&!pending){basket=null;status.textContent='Choose a gift or open your own Recast to start shopping.';render();return;}throw e;}});
 }
 export async function initialize({launcher}={}){
