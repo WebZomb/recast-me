@@ -375,7 +375,11 @@ export function secureApplication(application) {
             data.previewProtection = { configured: Boolean(env.IMAGES?.input && env.IMAGES?.info), serverSide: true };
             data.renderControls = renderControlStatus(env);
           }
-          return json(stripPrivateFields(data), response.status);
+          const protectedResponse=json(stripPrivateFields(data), response.status);
+          if(path==='/api/basket/session'&&request.method==='POST'&&response.ok&&response.headers.has('set-cookie')){
+            protectedResponse.headers.set('set-cookie',response.headers.get('set-cookie'));
+          }
+          return protectedResponse;
         }
         if (response.ok && IMAGE_TYPES.has(mime.split(';')[0])) {
           const bytes = new Uint8Array(await response.arrayBuffer());
