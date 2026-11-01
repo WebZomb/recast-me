@@ -25,7 +25,7 @@ function render(){
  for(const offer of found){
   const card=node('article',null,'product'),img=node('img');img.src=offer.mockupUrl;img.alt=offer.title+' — reviewed supplier product mockup';img.loading='lazy';
   const details=node('div',null,'details');details.append(node('small','READY-MADE · VERIFIED SUPPLIER PROOF','verified-design-tag'),node('h3',offer.title),node('p',`${offer.breed} · ${offer.variantLabel||offer.product}`),node('strong',money(offer.priceCents)));
-  const buy=button('Add to cart',()=>add(offer,buy));buy.className='primary';buy.setAttribute('aria-label','Add '+offer.title+' to cart');details.append(buy,button('View details',()=>showDetail(offer)));
+  const buy=button('Add to cart',()=>add(offer,buy));buy.className='primary';details.append(buy,button('View details',()=>showDetail(offer)));
   img.onerror=()=>{buy.disabled=true;img.alt='Product preview unavailable';};
   const view=button('',()=>showDetail(offer));view.className='image-button';view.setAttribute('aria-label','View '+offer.title);view.append(img);card.append(view,details);$('#products').append(card);
  }
