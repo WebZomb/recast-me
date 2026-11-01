@@ -60,7 +60,11 @@ const pause=ms=>new Promise(resolve=>setTimeout(resolve,ms));
       await page.screenshot({path:out+'/'+name+'-shop.png'});
       await page.goto(base+'/?launch-audit-return='+Date.now(),{waitUntil:'domcontentloaded',timeout:45000});
       await page.waitForFunction(()=>document.querySelectorAll('#product-grid .product').length===18,{}, {timeout:20000});
-      await page.locator('.site-header .nav-cta').click();await pause(300);
+      // Desktop and mobile now use the shared five-tab navigation. The
+      // older header CTA intentionally becomes hidden once that dock mounts.
+      await page.locator('nav.recast-mobile-nav [data-recast-tab="create"]').waitFor({state:'visible',timeout:15000});
+      await page.locator('nav.recast-mobile-nav [data-recast-tab="create"]').click();
+      await pause(300);
       // RM117: Photos is step one; Who is no longer a required customer step.
       const firstStep=await page.locator('[data-create-step="1"]').isVisible()
         &&await page.locator('.creation-progress button').count()===2;
