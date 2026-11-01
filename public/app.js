@@ -196,6 +196,23 @@ if(params.get('style')==='christmas' && /^RECAST-[A-Z0-9-]{1,60}$/.test(params.g
     card.prepend(note);
   }
 }
+// Native webviews can reset the initial fragment scroll after navigation.
+if(params.get('style')==='christmas'){
+  const start=document.getElementById('start');
+  if(start){
+    const back=document.createElement('a');
+    back.href='/christmas-gifts.html#season-shop';
+    back.textContent='← Back to Christmas gifts';
+    back.className='christmas-return-link';
+    back.style.cssText='display:block;padding:16px 0;color:#75e5ff;min-height:44px';
+    start.prepend(back);
+    const showCreator=()=>start.scrollIntoView({block:'start',behavior:'instant'});
+    if(location.hash==='#start'){
+      requestAnimationFrame(showCreator);
+      if(document.readyState!=='complete')window.addEventListener('load',showCreator,{once:true});
+    }
+  }
+}
 if(params.get('source')==='x'&&styleSelect.value==='custom')document.querySelector('#custom-world').value=params.get('request')||'';
 function updateWorldFields(showSelection=false){
   const isCustom=styleSelect.value==='custom';

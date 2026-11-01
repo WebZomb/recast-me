@@ -41,11 +41,19 @@ const fs=require('fs'),path=require('path'),assert=require('node:assert/strict')
     assert.equal(await page.locator('[data-season-offer]:visible').count(),0);
     assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1),false,'overflow '+width+' '+name);
     assert.equal(await page.locator('#season-hero-image').evaluate(x=>x.complete&&x.naturalWidth>0),true);
+    await page.screenshot({path:path.join(out,engine+'-'+name+'-header-'+width+'.png')});
     const poster=page.locator('.season-shop-card[data-christmas-product="poster"]');
     await poster.scrollIntoViewIfNeeded();
-    assert.equal(await poster.locator('.season-christmas-art').evaluate(x=>x.complete&&x.naturalWidth>0),true);
-    assert.match(await poster.locator('.season-christmas-art').getAttribute('alt'),/Holiday Magic/);
-    assert.match(await poster.locator('.season-christmas-product-image').getAttribute('alt'),/Poster product lifestyle/);
+    await poster.locator('.season-christmas-product-image').evaluate(x=>x.decode());
+    assert.equal(await poster.locator('.season-christmas-product-image').evaluate(x=>x.complete&&x.naturalWidth>0),true);
+    assert.match(await poster.locator('.season-christmas-product-image').getAttribute('alt'),/Illustrative Christmas/);
+    assert.match(await poster.locator('.season-christmas-product-image').getAttribute('alt'),/Christmas Poster design/);
+    for(const product of ['mug','pillow','puzzle','blanket','poster','hoodie','frame','canvas','tshirt','tumbler','sticker','case','journal','tote','magnet','coaster']){
+      const image=page.locator('[data-christmas-product="'+product+'"] .season-christmas-product-image');
+      await image.scrollIntoViewIfNeeded();
+      await image.evaluate(img=>img.decode());
+      assert.match(await image.getAttribute('src'),new RegExp('christmas-'+product+'-20261101'));
+    }
     const posterHref=await poster.locator('.season-shop-body a').getAttribute('href'),url=new URL(posterHref,'https://recastmeai.com');
     assert.equal(url.searchParams.get('style'),'christmas');
     assert.equal(url.searchParams.get('gift'),'RECAST-POSTER');
