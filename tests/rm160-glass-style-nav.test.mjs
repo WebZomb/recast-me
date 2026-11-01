@@ -40,7 +40,7 @@ test('native-style black website dock still overrides the old hidden-link rule',
   assert.match(js,/if \(window\.webkit\?\.messageHandlers\?\.recastPreview\) return/);
   assert.match(js,/dock\.children\.length !== 5/);
   assert.match(js,/setProperty\('display', 'flex', 'important'\)/);
-  const labels=['Create','My Recasts','My Orders','Specials','Community'];
+  const labels=['Create','My Recasts','My Orders','Shop','Community'];
   const positions=labels.map(name=>js.indexOf("label:'"+name+"'"));
   assert.ok(positions.every(x=>x!==-1));
   assert.ok(positions.every((x,i)=>i===0||x>positions[i-1]));

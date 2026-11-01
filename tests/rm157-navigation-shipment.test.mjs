@@ -45,7 +45,7 @@ test('customer API, order list and order details jointly refuse premature tracki
 });
 test('four website destinations are accessible while the native app retains its own tabs',()=>{
  const nav=read('public/mobile-bottom-nav.js'),html=read('public/index.html');
- const labels=['Create','My Recasts','My Orders','Specials','Community'];
+ const labels=['Create','My Recasts','My Orders','Shop','Community'];
  for(const label of labels)assert.match(nav,new RegExp("label:'"+label+"'"));
  assert.match(nav,/window\.webkit\?\.messageHandlers\?\.recastPreview/);
  assert.doesNotMatch(nav,/recast-legacy-orders-pill/);
