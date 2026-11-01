@@ -11,7 +11,7 @@
     "binding": "CF_VERSION_METADATA"
   },
   "vars": {
-    "SEASONAL_DISCOUNTS_ENABLED": "false",
+    "SEASONAL_DISCOUNTS_ENABLED": "true",
     "BASKET_ENABLED": "true",
     "SHOPIFY_STOREFRONT_TOKENLESS": "true",
     "PREMADE_SEED_ENABLED": "true",
