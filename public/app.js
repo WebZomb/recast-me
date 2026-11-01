@@ -183,6 +183,19 @@ if (params.get('request')) {
   document.querySelector('#prefill-note').textContent = `Loaded from your social request: “${params.get('request')}”`;
 }
 if (params.get('style') && (STYLES.some(x=>x[0]===params.get('style')) || params.get('style')==='custom')) styleSelect.value=params.get('style');
+if(params.get('style')==='christmas' && /^RECAST-[A-Z0-9-]{1,60}$/.test(params.get('gift')||'')){
+  const card=document.querySelector('#start .create-card')||document.querySelector('.create-card');
+  if(card){
+    const note=document.createElement('div');
+    note.className='christmas-creator-entry';
+    const heading=document.createElement('strong');
+    heading.textContent='🎄 Holiday Magic is selected';
+    const detail=document.createElement('span');
+    detail.textContent='Add your photo to create a Christmas Recast. Your selected product is ready for the preview step. Eligible Christmas-style orders receive 10% off at checkout.';
+    note.append(heading,detail);
+    card.prepend(note);
+  }
+}
 if(params.get('source')==='x'&&styleSelect.value==='custom')document.querySelector('#custom-world').value=params.get('request')||'';
 function updateWorldFields(showSelection=false){
   const isCustom=styleSelect.value==='custom';

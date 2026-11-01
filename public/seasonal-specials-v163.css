@@ -262,3 +262,26 @@ body.seasonal-page[data-season="everyday"]{--season-accent:#a5ecff;--season-seco
  .season-sale-banner .season-offer-number{font-size:64px}.season-offer-copy b{font-size:17px}.season-offer-copy>span{font-size:12px}.season-offer-copy small{font-size:8px;letter-spacing:.13em}
 }
 @media(max-width:350px){.season-sale-banner:not([hidden]){gap:12px;padding:18px 14px}.season-sale-banner .season-offer-number{font-size:53px}.season-offer-copy b{font-size:15px}}
+
+/* Christmas gift campaign: one shared illustrated holiday scene and an honest
+   product photo inset on every card, with visible differences by product. */
+.season-shop-card-christmas{background:linear-gradient(155deg,#1c1830,#100d1d 70%);border-color:#d6ae7838;transition:transform .2s ease,border-color .2s ease,box-shadow .2s ease}
+.season-shop-card-christmas:hover{transform:translateY(-3px);border-color:#ffe0aa94;box-shadow:0 18px 50px #0007}
+.season-shop-image-christmas{isolation:isolate;background:linear-gradient(135deg,#080d25,#1c122a)}
+.season-christmas-art{width:100%;height:100%;object-fit:cover;object-position:66% center;display:block;transform:scale(1.015)}
+.season-shop-card-christmas:nth-child(3n+2) .season-christmas-art{object-position:78% center}
+.season-shop-card-christmas:nth-child(3n+3) .season-christmas-art{object-position:51% center}
+.season-shop-image-christmas:after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(180deg,transparent 45%,#090d1cc9 100%);z-index:1}
+.season-christmas-product-peek{position:absolute;right:12px;bottom:12px;width:43%;height:45%;box-sizing:border-box;border:2px solid #fff9e5d9;border-radius:13px;background:#161323;box-shadow:0 10px 32px #000b;overflow:hidden;z-index:2;display:block}
+.season-christmas-product-image{width:100%!important;height:100%!important;object-fit:cover!important;display:block!important}
+.season-christmas-product-peek small{position:absolute;bottom:0;left:0;right:0;background:#080814d9;color:#fff7ec;letter-spacing:.055em;text-align:center;font-size:9px;font-weight:850;line-height:1.15;padding:6px 3px}
+.season-christmas-art-label{position:absolute;left:13px;bottom:16px;max-width:43%;color:#fff1c9;text-shadow:0 2px 9px #000;letter-spacing:.12em;font-size:10px;font-weight:900;line-height:1.35;z-index:2}
+.season-shop-card-christmas .season-shop-sale{z-index:3;left:12px;top:12px;border:1px solid #ffedbb;color:#311929;background:#ffcb72;box-shadow:0 4px 18px #0007}
+.season-shop-card-christmas .season-shop-body>small{color:#ffd28e}
+.season-shop-card-christmas .season-shop-body>p{min-height:50px}
+.season-christmas-selected{border:1px solid #b4efd159;background:#12362b57;color:#bafbdc;border-radius:9px;padding:8px 10px;font-size:12px;font-weight:700;line-height:1.4}
+.season-shop-card-christmas .season-shop-price small{flex-basis:100%;font-size:11px;color:#ded1c5}
+.season-shop-card-christmas .season-shop-price strong{font-size:26px}
+.season-shop-card-christmas .season-shop-body .season-button{font-size:14px}
+.season-shop-card-christmas:focus-within{border-color:#ffdb93}
+@media(max-width:520px){.season-christmas-product-peek{right:11px;bottom:11px;width:41%;height:43%}.season-shop-card-christmas .season-shop-body>p{min-height:0}}

@@ -22,29 +22,100 @@ export const seasonalProducts = [
   {name:"Recast Pack",price:"$9.99",asset:"pack",image:"/assets/product-pack-v16.webp",badge:"DIGITAL PACK",pitch:"The complete digital set with high-resolution art plus useful crops and formats.",tier:"digital"}
 ];
 const artKeys={'Poster':'poster','Hoodie':'hoodie','Framed Poster':'frame','Canvas':'canvas','T-Shirt':'tshirt','Blanket':'blanket','Tumbler':'tumbler','Sticker Sheet':'sticker','Tough Phone Case':'case','Pillow':'pillow','Hardcover Journal':'journal','Puzzle':'puzzle','Tote Bag':'tote','Magnet 3-Pack':'magnet','Coaster 4-Pack':'coaster'};
+const CHRISTMAS_FIRST=['Mug','Pillow','Puzzle','Blanket','Poster','Canvas','Framed Poster','Hoodie','Tote Bag','Tough Phone Case','T-Shirt','Tumbler','Hardcover Journal','Sticker Sheet','Magnet 3-Pack','Coaster 4-Pack'];
+export const CHRISTMAS_PITCH={
+ 'Mug':'Make their morning magical with a familiar face and a cozy Christmas look.',
+ 'Pillow':'Bring their favorite pet or family memory into the holiday living room.',
+ 'Puzzle':'Give them a Christmas adventure to piece together, one memory at a time.',
+ 'Blanket':'A cozy winter gift featuring the face they love most.',
+ 'Poster':'Turn a festive Recast into personalized Christmas wall art.',
+ 'Canvas':'Give a Christmas portrait a beautiful place on their wall.',
+ 'Framed Poster':'A festive framed keepsake, ready for their favorite spot.',
+ 'Hoodie':'A winter-ready hoodie starring their own Christmas artwork.',
+ 'Tote Bag':'Carry a little holiday magic wherever the season takes you.',
+ 'Tough Phone Case':'Put their favorite Christmas memory on a protective phone case.',
+ 'T-Shirt':'Wear their festive Recast long after the wrapping comes off.',
+ 'Tumbler':'Take their Christmas artwork along for every warm drink or cold sip.',
+ 'Hardcover Journal':'A personal place to write, wrapped in holiday magic.',
+ 'Sticker Sheet':'Six little reminders of a very personal Christmas adventure.',
+ 'Magnet 3-Pack':'Add their Christmas Recast to three everyday little keepsakes.',
+ 'Coaster 4-Pack':'A festive set for their coffee table and holiday gatherings.'
+};
 const node=(tag,cls,text)=>{const x=document.createElement(tag);if(cls)x.className=cls;if(text!==undefined)x.textContent=text;return x;};
+const giftSlug=name=>'christmas_'+name.toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_|_$/g,'').slice(0,20);
+export function seasonalGiftHref({campaign,sku,name}){
+ const christmas=campaign?.active?.id==='christmas';
+ const params=new URLSearchParams({style:christmas?'christmas':campaign?.active?.style||'royal',gift:sku});
+ if(christmas){
+  params.set('utm_source','internal');
+  params.set('utm_medium','christmas_specials');
+  params.set('utm_campaign','christmas_2026');
+  params.set('utm_content',giftSlug(name));
+ }
+ return '/?'+params.toString()+'#start';
+}
 export async function renderSeasonalProducts(campaign){
  const grid=document.getElementById('season-shop-grid'),status=document.getElementById('season-shop-status');if(!grid)return;
  try{
-  const response=await fetch('/api/seasonal-products',{cache:'no-store',headers:appRequestHeaders()});const data=await response.json();if(!response.ok||!data.ok||!Array.isArray(data.products))throw Error('unavailable');
-  const halloween=campaign.active?.id==='halloween';
-  const items=seasonalProducts.filter(item=>!nativeAppPlatform()||!isDigitalArtworkProduct(item)).map(item=>({...item,live:data.products.find(p=>p.name===(item.name==='Tough Phone Case'?'Phone Case':item.name))})).filter(item=>item.live);
+  const response=await fetch('/api/seasonal-products',{cache:'no-store',headers:appRequestHeaders()});
+  const data=await response.json();
+  if(!response.ok||!data.ok||!Array.isArray(data.products))throw Error('unavailable');
+  const halloween=campaign.active?.id==='halloween',christmas=campaign.active?.id==='christmas';
+  const items=seasonalProducts
+   .filter(item=>(!nativeAppPlatform()||!isDigitalArtworkProduct(item))&&(!christmas||item.tier!=='digital'))
+   .map(item=>({...item,live:data.products.find(p=>p.name===(item.name==='Tough Phone Case'?'Phone Case':item.name))}))
+   .filter(item=>item.live&&Number.isFinite(Number(item.live.price))&&item.live.sku);
+  if(christmas)items.sort((a,b)=>CHRISTMAS_FIRST.indexOf(a.name)-CHRISTMAS_FIRST.indexOf(b.name));
   grid.replaceChildren();
+  const offer=campaign.offer&&campaign.offer.percent===10&&campaign.offer.style==='christmas'&&campaign.checkoutReady!==false;
+  const dollars=value=>new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(value);
   for(const item of items){
-   const card=node('article','season-shop-card');
-   const link=node('a','season-shop-image');link.href='/?style='+encodeURIComponent(campaign.active?.style||'royal')+'&gift='+encodeURIComponent(item.live.sku)+'#start';link.setAttribute('aria-label','Create your '+item.name);
-   const img=node('img');img.width=1000;img.height=1000;img.loading='lazy';img.decoding='async';
-   img.src=item.name==='Hoodie'?item.image:halloween?(item.name==='Mug'?'/assets/recast-halloween-mug-approved.jpg':artKeys[item.name]?'/assets/halloween-'+artKeys[item.name]+'-v166.webp':'/assets/recast-halloween-hero-v163.webp'):item.image;
-   img.alt=item.name==='Hoodie'?'Illustrative black hoodie with centered soft-edge chest artwork':(halloween?'Halloween ':'')+item.name+' lifestyle example';link.append(img);
-   if(campaign.offer)link.append(node('span','season-shop-sale','10% OFF'));
-   const body=node('div','season-shop-body');body.append(node('small','',item.tier==='digital'?'DIGITAL ART':'MADE WITH YOUR PHOTO'),node('h3','',item.name),node('p','',item.pitch));
+   const card=node('article','season-shop-card'+(christmas?' season-shop-card-christmas':'')),href=seasonalGiftHref({campaign,sku:item.live.sku,name:item.name});
+   if(christmas)card.dataset.christmasProduct=item.name.toLowerCase().replace(/[^a-z0-9]+/g,'-');
+   const link=node('a','season-shop-image'+(christmas?' season-shop-image-christmas':''));link.href=href;
+   link.setAttribute('aria-label','Create your '+(christmas?'Christmas ':'')+item.name+' using your own photo');
+   if(christmas){
+    // The seasonal artwork and product photograph are separate *examples*.
+    // Never imply a generic catalog photo shows the buyer's actual print.
+    const art=node('img','season-christmas-art');
+    art.src='/assets/recast-christmas-hero-v163.webp';art.width=1536;art.height=1024;
+    art.loading='lazy';art.decoding='async';art.alt='Illustrative Holiday Magic artwork with a dog in a snowy Christmas village';
+    const product=node('span','season-christmas-product-peek');
+    const productImage=node('img','season-christmas-product-image');
+    productImage.src=item.image;productImage.width=600;productImage.height=600;
+    productImage.loading='lazy';productImage.decoding='async';
+    productImage.alt=item.name+' product lifestyle example';
+    product.append(productImage,node('small','',item.name.toUpperCase()+' EXAMPLE'));
+    link.append(art,product,node('span','season-christmas-art-label','HOLIDAY MAGIC ARTWORK'));
+   }else{
+    const img=node('img');img.width=1000;img.height=1000;img.loading='lazy';img.decoding='async';
+    img.src=item.name==='Hoodie'?item.image:halloween?(item.name==='Mug'?'/assets/recast-halloween-mug-approved.jpg':artKeys[item.name]?'/assets/halloween-'+artKeys[item.name]+'-v166.webp':'/assets/recast-halloween-hero-v163.webp'):item.image;
+    img.alt=item.name==='Hoodie'?'Illustrative black hoodie with centered soft-edge chest artwork':(halloween?'Halloween ':'')+item.name+' lifestyle example';
+    link.append(img);
+   }
+   if(offer&&christmas)link.append(node('span','season-shop-sale','10% OFF'));
+   else if(campaign.offer&&!christmas)link.append(node('span','season-shop-sale',campaign.offer.percent+'% OFF'));
+   const body=node('div','season-shop-body');
+   body.append(node('small','',christmas?'YOUR PHOTO · HOLIDAY MAGIC':item.tier==='digital'?'DIGITAL ART':'MADE WITH YOUR PHOTO'));
+   body.append(node('h3','',item.name));
+   body.append(node('p','',christmas?CHRISTMAS_PITCH[item.name]||item.pitch:item.pitch));
+   if(christmas)body.append(node('div','season-christmas-selected','✓ Christmas style preselected · preview before checkout'));
    const price=node('div','season-shop-price');
-   const dollars=value=>new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(value);
-   if(campaign.offer){price.append(node('del','',dollars(item.live.price)),node('strong','',dollars(Math.round(item.live.price*100*(1-campaign.offer.percent/100))/100)),node('small','','with '+campaign.offer.name+' filter'));}
-   else price.append(node('strong','','from '+dollars(item.live.price)));
-   const cta=node('a','season-button season-button-primary','Create yours →');cta.href=link.href;
+   if(offer&&christmas){
+    price.append(node('del','',dollars(Number(item.live.price))));
+    price.append(node('strong','',dollars(Math.round(Number(item.live.price)*90)/100)));
+    price.append(node('small','','Christmas-style artwork only'));
+   }else if(campaign.offer&&!christmas){
+    price.append(node('del','',dollars(Number(item.live.price))));
+    price.append(node('strong','',dollars(Math.round(Number(item.live.price)*(100-campaign.offer.percent))/100)));
+    price.append(node('small','','with '+campaign.offer.name+' filter'));
+   }else price.append(node('strong','','from '+dollars(Number(item.live.price))));
+   const cta=node('a','season-button season-button-primary',christmas?'Create my Christmas '+item.name+' →':'Create yours →');
+   cta.href=href;
    body.append(price,cta);card.append(link,body);grid.append(card);
   }
-  status.textContent=items.length?'Lifestyle examples. Preview your own artwork, size and placement before checkout.':'';
+  status.textContent=christmas
+   ? 'Holiday Magic artwork and product photos are illustrative examples. Your photo becomes the actual design. The 10% offer applies to eligible Christmas-style artwork, not unchanged original photos. Confirm your own preview, variant and delivery estimate before checkout.'
+   :items.length?'Lifestyle examples. Preview your own artwork, size and placement before checkout.':'';
  }catch{status.textContent='The collection could not load. Refresh this page or start with your photo below.';}
 }
