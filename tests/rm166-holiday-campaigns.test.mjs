@@ -9,7 +9,8 @@ const request=(method='GET',body,headers={})=>new Request('https://recast.test/a
 test('campaign uses Eastern boundaries and recurs with a 21-day lead',()=>{
  assert.equal(activeHoliday(rows,at('2026-10-10T03:59:59Z')),null);
  assert.equal(activeHoliday(rows,at('2026-10-10T04:00:00Z')).id,'halloween');
- assert.equal(activeHoliday(rows,at('2026-11-01T03:59:59Z')).id,'halloween');
+ assert.equal(activeHoliday(rows,at('2026-10-31T03:59:59Z')).id,'halloween');
+ assert.equal(activeHoliday(rows,at('2026-10-31T04:00:00Z')).id,'christmas');
  assert.equal(activeHoliday(rows,at('2026-11-01T04:00:00Z')).id,'christmas');
  assert.equal(activeHoliday(rows,at('2027-10-15T12:00:00Z')).id,'halloween');
 });
@@ -18,6 +19,8 @@ test('style-qualified invoice offers recur annually and enforce campaign cutoffs
  assert.equal(holidayOffer(active,at('2026-10-13T20:00:00Z')).percent,10);
  assert.equal(holidayOffer(active,at('2026-11-01T04:00:00Z')),null);
  assert.equal(holidayOffer(active,at('2027-10-15T12:00:00Z')).percent,10);
+ const christmas={id:'christmas'};
+ assert.equal(holidayOffer(christmas,at('2026-10-31T04:00:00Z')).percent,10);
  assert.equal(holidayOffer(null,at('2026-10-15T12:00:00Z')),null);
 });
 test('annual overrides cross New Year and deterministic priority resolves overlaps',()=>{

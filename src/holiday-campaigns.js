@@ -28,7 +28,7 @@ export async function holidaySettings(env){
 export function holidayOffer(active,now=new Date()){
  if(!active||!['halloween','christmas','new-year','valentine'].includes(active.id))return null;
  const today=easternDay(now),year=Number(today.slice(0,4));
- const bounds={halloween:['10-10','11-01',4],christmas:['11-01','12-26',5],valentine:['01-08','02-15',5]};
+ const bounds={halloween:['10-10','11-01',4],christmas:['10-31','12-26',5],valentine:['01-08','02-15',5]};
  let start,end,hour;
  if(active.id==='new-year'){start=today.slice(5)>='12-26'?`${year}-12-26`:`${year-1}-12-26`;end=today.slice(5)>='12-26'?`${year+1}-01-08`:`${year}-01-08`;hour=5;}
  else {const dates=bounds[active.id];start=`${year}-${dates[0]}`;end=`${year}-${dates[1]}`;hour=dates[2];}
