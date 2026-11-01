@@ -49,9 +49,17 @@ const pause=ms=>new Promise(resolve=>setTimeout(resolve,ms));
         return {build:document.body.dataset.launchBuild,title:document.title,width:innerWidth,scrollWidth:document.documentElement.scrollWidth,hero:rect('.hero'),flow:rect('.hero-live-flow'),product:rect('.hero-live-product'),header:rect('.site-header'),styles:[...document.querySelectorAll('link[rel=stylesheet]')].map(x=>x.getAttribute('href')),products:document.querySelectorAll('#product-grid .product').length,worlds:document.querySelectorAll('#style-grid .style-card').length,brokenImages:[...document.images].filter(i=>i.complete&&i.naturalWidth===0).map(i=>({src:i.getAttribute('src'),alt:i.alt})),pendingImages:[...document.images].filter(i=>!i.complete).map(i=>i.getAttribute('src')),duplicateIds:ids.filter((id,i)=>ids.indexOf(id)!==i),badAnchors:[...document.querySelectorAll('a[href^="#"]')].map(a=>a.getAttribute('href')).filter(h=>h.length>1&&!document.getElementById(h.slice(1)))};
       });
       await page.locator('.hero').screenshot({path:out+'/'+name+'-hero.png'});
-      await page.locator('.hero-secondary-cta').click();await pause(300);
-      const shopReached=await page.evaluate(()=>{const b=document.querySelector('#shop').getBoundingClientRect();return b.top<innerHeight&&b.bottom>0});
+      // The hero now leads to the verified ready-made Shop, not the old
+      // product rail on the creator homepage. Audit the actual Shop landing,
+      // then return to Create before testing the wizard.
+      await page.locator('.hero-secondary-cta').click();
+      await page.waitForURL(url=>['/shop','/shop.html'].includes(url.pathname),{timeout:20000});
+      await page.waitForFunction(()=>document.querySelectorAll('#products .product').length>=2,{}, {timeout:20000});
+      const shopReached=await page.evaluate(()=>document.querySelectorAll('#products .product').length>=2
+        &&!!document.querySelector('#open-cart')&&!!document.querySelector('#filters'));
       await page.screenshot({path:out+'/'+name+'-shop.png'});
+      await page.goto(base+'/?launch-audit-return='+Date.now(),{waitUntil:'domcontentloaded',timeout:45000});
+      await page.waitForFunction(()=>document.querySelectorAll('#product-grid .product').length===18,{}, {timeout:20000});
       await page.locator('.site-header .nav-cta').click();await pause(300);
       // RM117: Photos is step one; Who is no longer a required customer step.
       const firstStep=await page.locator('[data-create-step="1"]').isVisible()
