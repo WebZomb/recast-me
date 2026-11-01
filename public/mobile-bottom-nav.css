@@ -215,3 +215,23 @@ nav.recast-mobile-nav > a svg{width:22px;height:22px;flex:0 0 22px}
   }
   nav.recast-mobile-nav > a svg{height:20px;width:20px;flex:0 0 20px}
 }
+
+/* Launch Shop as the fourth shared web tab. Shop pages retain the same five-tab dock. */
+@media(min-width:1060px){
+  body.recast-desktop-header-nav .header{display:flex;align-items:center;gap:12px;justify-content:space-between;min-width:0}
+  body.recast-desktop-header-nav .header > .brand{flex:0 0 140px;max-width:140px;margin:0}
+  body.recast-desktop-header-nav .header > .brand img{width:140px}
+  body.recast-desktop-header-nav .header > nav.recast-mobile-nav{
+    position:relative;left:auto;bottom:auto;transform:none;z-index:2;flex:1 1 530px;
+    margin:0 auto;width:min(100%,560px);min-width:420px;max-width:560px;
+    min-height:55px;grid-template-columns:repeat(5,minmax(0,1fr));
+    border-radius:23px;gap:3px;padding:4px
+  }
+  body.recast-desktop-header-nav .header > nav.recast-mobile-nav > a:not(.nav-cta){
+    flex-direction:row;min-height:45px;gap:5px;padding:5px 3px;border-radius:18px;
+  }
+  body.recast-desktop-header-nav .header > nav.recast-mobile-nav > a svg{width:21px;height:21px;flex:0 0 21px}
+  body.recast-desktop-header-nav .header > .community-help-link{order:6}
+}
+body.recast-web-mobile-nav .header .community-help-link{font-weight:650;white-space:nowrap;z-index:4}
+@media(max-width:700px){body.recast-web-mobile-nav .header .community-help-link{font-size:12px;padding:4px 6px;min-height:36px}}

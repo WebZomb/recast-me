@@ -5,14 +5,14 @@
   // The iOS shell already provides Help and its own navigation.
   if (window.webkit?.messageHandlers?.recastPreview) return;
   const help=document.createElement('a');help.href='/guide.html';help.textContent='Help';help.className='community-help-link';help.setAttribute('aria-label','Help and Guide');
-  const header=document.querySelector('.site-header, .library-header');if(header)header.append(help);
+  const header=document.querySelector('.site-header, .library-header, .header');if(header)header.append(help);
   if (document.querySelector('nav.recast-mobile-nav')) return;
 
   const pages = [
     { path:'/#start',label:'Create', icon:'<path d="m4 19 11-11 4 4L8 23l-4-4Z"/><path d="m13 10 3 3M5 5l1.2-2.5L7.5 5 10 6.2 7.5 7.4 6.2 10 5 7.4 2.5 6.2 5 5ZM19 2l.6 1.6L21 4l-1.4.5L19 6l-.6-1.5L17 4l1.4-.4L19 2Z"/>' },
     { path:'/my-recasts.html',label:'My Recasts', icon:'<rect x="3" y="7" width="15" height="13" rx="2"/><path d="M7 7V4h14v13h-3"/><circle cx="9" cy="11" r="1.4"/><path d="m5 18 5-5 4 3 2-2"/>' },
     { path:'/my-orders.html',label:'My Orders', icon:'<path d="M3 7h18v14H3V7Zm0 0 3-4h12l3 4M12 3v18m-9-8h18"/>' },
-    { path:'/specials.html',label:'Specials', icon:'<path d="M3 9h18v12H3V9Z"/><path d="M2 6h20v3H2zM12 6v15"/><path d="M12 6C9 1 5 1 5 4c0 2 3 2 7 2Zm0 0c3-5 7-5 7-2 0 2-3 2-7 2Z"/>' },
+    { path:'/shop.html',label:'Shop', icon:'<path d="M3 9h18v12H3V9Z"/><path d="M2 6h20v3H2zM12 6v15"/><path d="M12 6C9 1 5 1 5 4c0 2 3 2 7 2Zm0 0c3-5 7-5 7-2 0 2-3 2-7 2Z"/>' },
     { path:'/community.html',label:'Community', icon:'<circle cx="9" cy="8" r="3"/><path d="M3 21v-3a6 6 0 0 1 12 0v3M16 5a3 3 0 0 1 0 6m2 3a5 5 0 0 1 3 5v2"/>' }
   ];
 
@@ -34,6 +34,7 @@
     link.setAttribute('data-recast-tab', page.label.toLowerCase().replaceAll(' ', '-'));
     const selected = page.path === '/#start'
       ? path === '/'
+      : page.label === 'Shop' ? ['/shop','/christmas','/specials','/christmas-gifts'].includes(path)
       : path === route(page.path);
     if (selected) link.setAttribute('aria-current', 'page');
     const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
@@ -54,7 +55,7 @@
 
   const mq = window.matchMedia('(min-width: 1060px)');
   const place = () => {
-    const header = document.querySelector('.site-header');
+    const header = document.querySelector('.site-header, .header');
     if (mq.matches && header) {
       const legacy = header.querySelector('nav:not(.recast-mobile-nav)');
       header.insertBefore(dock, legacy);
@@ -69,11 +70,11 @@
 
   const helpStyle=document.createElement('link');helpStyle.rel='stylesheet';helpStyle.href='/community.css?v=1';document.head.append(helpStyle);
   const old = document.querySelector('link[data-recast-bottom-nav]');
-  if (old) old.href = '/mobile-bottom-nav.css?v=163';
+  if (old) old.href = '/mobile-bottom-nav.css?v=164';
   else {
     const css = document.createElement('link');
     css.rel = 'stylesheet';
-    css.href = '/mobile-bottom-nav.css?v=163';
+    css.href = '/mobile-bottom-nav.css?v=164';
     css.dataset.recastBottomNav = 'v164';
     document.head.append(css);
   }

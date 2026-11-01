@@ -70,9 +70,9 @@ test('all illustrated holiday assets exist and are reasonably optimized',()=>{
  }
  assert.match(read('public/assets/recast-season-bats-v163.svg'),/<svg/);
 });
-test('Specials tab is between My Orders and Guide on web without a second native tab bar',()=>{
+test('Shop tab is between My Orders and Community on web without a second native tab bar',()=>{
  const nav=read('public/mobile-bottom-nav.js');
- const labels=["label:'Create'","label:'My Recasts'","label:'My Orders'","label:'Specials'","label:'Community'"];
+ const labels=["label:'Create'","label:'My Recasts'","label:'My Orders'","label:'Shop'","label:'Community'"];
  const positions=labels.map(x=>nav.indexOf(x));
  assert.ok(positions.every(x=>x>=0));
  assert.ok(positions.every((x,i)=>i===0||x>positions[i-1]));
@@ -81,7 +81,7 @@ test('Specials tab is between My Orders and Guide on web without a second native
  assert.match(read('public/mobile-bottom-nav.css'),/repeat\(5,minmax\(0,1fr\)\)/);
  for(const page of ['specials.html','index.html','my-recasts.html','my-orders.html','guide.html',
                     'gift-ideas.html','privacy.html','support.html','order.html','purchase-demo.html']){
-   assert.match(read('public/'+page),/mobile-bottom-nav\.js\?v=166/,page);
+   assert.match(read('public/'+page),/mobile-bottom-nav\.js\?v=167/,page);
  }
 });
 test('finished preview offers only compact Save and Share while extra tools live in My Recasts',()=>{

@@ -30,7 +30,7 @@ const http=require('node:http'),fs=require('node:fs'),path=require('node:path'),
    assert.match(await page.getByRole('button',{name:'Heart Royal',exact:true}).first().textContent(),/♥/);
    await page.reload({waitUntil:'networkidle'});
    assert.equal(await page.getByRole('button',{name:'Heart Royal',exact:true}).first().getAttribute('aria-pressed'),'true');
-   assert.deepEqual(await page.locator('.recast-mobile-nav span').allTextContents(),native?[]:['Create','My Recasts','My Orders','Specials','Community']);
+   assert.deepEqual(await page.locator('.recast-mobile-nav span').allTextContents(),native?[]:['Create','My Recasts','My Orders','Shop','Community']);
    if(native)assert.equal(await page.locator('.community-help-link').count(),0);
    else assert.equal(await page.locator('.community-help-link').getAttribute('href'),'/guide.html');
    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
