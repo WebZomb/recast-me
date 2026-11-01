@@ -91,7 +91,7 @@ export async function renderSeasonalProducts(campaign){
    if(offer&&physicalChristmas)link.append(node('span','season-shop-sale','10% OFF'));
    else if(campaign.offer&&!christmas)link.append(node('span','season-shop-sale',campaign.offer.percent+'% OFF'));
    const body=node('div','season-shop-body');
-   body.append(node('small','',physicalChristmas?'YOUR PHOTO · HOLIDAY MAGIC':item.tier==='digital'?'DIGITAL ART':'MADE WITH YOUR PHOTO'));
+   body.append(node('small','',physicalChristmas?'YOUR PHOTO · ILLUSTRATIVE EXAMPLE':item.tier==='digital'?'DIGITAL ART':'MADE WITH YOUR PHOTO'));
    body.append(node('h3','',item.name));
    body.append(node('p','',physicalChristmas?CHRISTMAS_PITCH[item.name]||item.pitch:item.pitch));
    if(physicalChristmas)body.append(node('div','season-christmas-selected','✓ Christmas style preselected · preview before checkout'));

@@ -15,3 +15,38 @@ Replaced repeated hero/inset construction with one product image per card. Four 
 
 ### Owner-authorized complete image release
 Owner authorized all remaining images and uploading the website fixes. Added 16 distinct illustrative Christmas product images encoded as WebP. Images are illustrative, not supplier proofs or premade inventory. No customer photos or production orders used. Mobile header uses brand and cart with 44px target. All 798 offline tests and Worker dry-run pass. Managed preview unavailable (wrangler not found by preview daemon); Chromium/WebKit CI required before merge. Git push lacks credentials; connected GitHub API used instead. One zero-byte converted asset was caught by image validation and regenerated. Baseline 0bfc5cd5fc6c54586efad4fb10bb810890acba19; local implementation b656c0b plus corrected asset. Rollback: revert focused PR. Deployment unverified at checkpoint.
+
+### Product fidelity review requested during release
+Held PR121 in draft after owner asked to check every illustration against delivered merchandise. Read current Shopify catalog and source FULFILLMENT, recommendedCheckoutDesign and apparel-finish.js. Identified actual mismatches rather than claiming generated images were supplier proofs.
+
+| Product | Verified mapping / visual decision |
+|---|---|
+| Hoodie | Cotton Heritage M2580 black, Printful380; revise hard rectangle to soft-edged centered front print, flat drawcord/pouch construction. |
+| T-shirt | Bella+Canvas3001 black, Printful71; revise hard rectangle to soft-edged front print. |
+| Tote | Printful84/4533, 15x15 polyester body/black handles; replace beige canvas inset-print illustration. |
+| Tumbler | Printful909/23470, tapered20oz; replace skinny cylinder with 6.77in height, 3.39in top/2.83in bottom, clear press-in lid. |
+| Framed poster | Printful2 black frame, available8x10/12x16/18x24; revise square example to portrait8x10. |
+| Canvas | Printful3, 12x16/18x24/24x36; revise square example to portrait12x16. |
+| Journal | Printful867/22658 matte hardcover5.75x8; reduce glossy appearance. |
+| Poster | Printful1, rectangular paper print; existing tall portrait illustration compatible with24x36 option. |
+| Mug | Printful19 white glossy11/15oz; white handle/interior and printed exterior broadly consistent. |
+| Pillow | Printful83 square pillow; image broadly consistent, production code prints same art front/back. |
+| Blanket | Printful395 polyester throw50x60/60x80; retained fleece illustration, not a knit/embroidered product. |
+| Puzzle | Rectangular252/520piece puzzle; retained illustrative tabletop view. |
+| Tough case | Printful601 supported iPhone models; glossy protective case with camera opening; variant remains chosen during preview. |
+| Sticker sheet | Printful505/12917; six full-picture stickers in2x3 layout; matching-count example only, not an exact provider proof. |
+| Magnet pack | Printful656/16366 quantity3; retained three square illustrated magnets. |
+| Coaster pack | Printful611/15662 quantity4; retained four square cork-backed examples. |
+
+Primary supplier sources checked:
+- https://www.printful.com/custom/mens/hoodies/unisex-premium-hoodie-cotton-heritage-m2580
+- https://www.printful.com/custom/mens/t-shirts/unisex-staple-t-shirt-bella-canvas-3001
+- https://www.printful.com/custom/accessories/all/all-over-print-tote
+- https://www.printful.com/custom/drinkware/personalized/tapered-stainless-steel-tumbler-20oz
+- https://www.printful.com/custom/stationery/notebooks/hardcover-journal-matte
+- https://www.printful.com/custom/blankets/personalized/throw
+- https://www.printful.com/custom/drinkware/personalized/cork-back-coaster
+
+Limit: this is catalog/construction/placement consistency, not physical sample inspection or a provider-generated proof of the fictional artwork. Card copy labels every example illustrative. Never substitute these product photographs as print files or ready-made inventory.
+
+CI41326035607 passed security, offline, app-channel, basket and seasonal checks but Christmas image test had an incorrect selector (frame versus framed-poster). Corrected the test to locate the actual image source, preserving all16 image-decode checks. Added enabled-cart header geometry checks. No merge/deployment at this checkpoint.
