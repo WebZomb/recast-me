@@ -19,6 +19,8 @@ const fs=require('fs'),path=require('path'),assert=require('node:assert/strict')
      {ok:true,active:{id:'christmas',title:'Christmas',date:'2026-12-25',style:'christmas'},offer:{id:'christmas',name:'Christmas',style:'christmas',percent:10,terms:'Eligible Christmas artwork only.'},checkoutReady:true}:
      {ok:true,active:{id:'halloween',title:'Halloween',date:'2026-10-31',style:'halloween'},offer:{id:'halloween',name:'Halloween',percent:10},checkoutReady:true}});
     if(u.pathname==='/api/seasonal-products')return route.fulfill({json:products});
+    if(u.pathname==='/api/basket/status')return route.fulfill({json:{ok:true,enabled:true}});
+    if(u.pathname==='/api/basket')return route.fulfill({json:{ok:true,basket:{revision:0,lines:[],canEdit:true}}});
     if(u.pathname.startsWith('/api/'))return route.fulfill({json:{ok:true}});
     let file=path.join(root,u.pathname==='/'?'index.html':u.pathname.replace(/^\//,''));
     if(!path.extname(file))file+='.html';
@@ -41,11 +43,26 @@ const fs=require('fs'),path=require('path'),assert=require('node:assert/strict')
     assert.equal(await page.locator('[data-season-offer]:visible').count(),0);
     assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1),false,'overflow '+width+' '+name);
     assert.equal(await page.locator('#season-hero-image').evaluate(x=>x.complete&&x.naturalWidth>0),true);
+    await page.locator('.basket-launcher').waitFor();
+    if(width<=760){
+      const brand=await page.locator('.site-header .brand').boundingBox(),cart=await page.locator('.basket-launcher').boundingBox();
+      assert.ok(brand.x+brand.width<=cart.x,'Brand and cart must not overlap');
+      assert.ok(cart.height>=44,'Cart touch target');
+      assert.equal(await page.locator('.site-header .nav-cta').isVisible(),false);
+    }
+    await page.screenshot({path:path.join(out,engine+'-'+name+'-header-'+width+'.png')});
     const poster=page.locator('.season-shop-card[data-christmas-product="poster"]');
     await poster.scrollIntoViewIfNeeded();
-    assert.equal(await poster.locator('.season-christmas-art').evaluate(x=>x.complete&&x.naturalWidth>0),true);
-    assert.match(await poster.locator('.season-christmas-art').getAttribute('alt'),/Holiday Magic/);
-    assert.match(await poster.locator('.season-christmas-product-image').getAttribute('alt'),/Poster product lifestyle/);
+    await poster.locator('.season-christmas-product-image').evaluate(x=>x.decode());
+    assert.equal(await poster.locator('.season-christmas-product-image').evaluate(x=>x.complete&&x.naturalWidth>0),true);
+    assert.match(await poster.locator('.season-christmas-product-image').getAttribute('alt'),/Illustrative Christmas/);
+    assert.match(await poster.locator('.season-christmas-product-image').getAttribute('alt'),/Christmas Poster design/);
+    for(const product of ['mug','pillow','puzzle','blanket','poster','hoodie','frame','canvas','tshirt','tumbler','sticker','case','journal','tote','magnet','coaster']){
+      const image=page.locator('.season-christmas-product-image[src="/assets/christmas-'+product+'-20261101.webp"]');
+      await image.scrollIntoViewIfNeeded();
+      await image.evaluate(img=>img.decode());
+      assert.match(await image.getAttribute('src'),new RegExp('christmas-'+product+'-20261101'));
+    }
     const posterHref=await poster.locator('.season-shop-body a').getAttribute('href'),url=new URL(posterHref,'https://recastmeai.com');
     assert.equal(url.searchParams.get('style'),'christmas');
     assert.equal(url.searchParams.get('gift'),'RECAST-POSTER');

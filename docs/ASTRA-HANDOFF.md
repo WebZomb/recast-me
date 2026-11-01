@@ -434,3 +434,9 @@ October29 continued PR114 — checkout attempt coordinator/frozen approval line 
 
 
 October30 unified shopping: owner requests premade + own-AI designs in one cart. Integrated PR93/PR114 with Christmas main. One server cart, private buyer-specific premade approval, locked printfile reuse and exact per-line fulfillment are implemented; local796tests and mixed-cart Chromium pass. Shopify tokenless unpaid3-line/4-item transport verified. Fixed Golden Retriever starter supplier preparation is gated; no premade stock published yet. See [session](ASTRA-SESSION-UNIFIED-SHOP-2026-10-30.md) for actual release/proof/paid-action state.
+
+November1 initial Christmas flow repair staged, not deployed. See [session](ASTRA-SESSION-CHRISTMAS-FLOW-2026-11-01.md). 161 focused tests pass; device/browser and merchandising replacement pending.
+
+
+### Owner-authorized complete image release
+Owner authorized all remaining images and uploading the website fixes. Added 16 distinct illustrative Christmas product images encoded as WebP. Images are illustrative, not supplier proofs or premade inventory. No customer photos or production orders used. Mobile header uses brand and cart with 44px target. All 798 offline tests and Worker dry-run pass. Managed preview unavailable (wrangler not found by preview daemon); Chromium/WebKit CI required before merge. Git push lacks credentials; connected GitHub API used instead. One zero-byte converted asset was caught by image validation and regenerated. Baseline 0bfc5cd5fc6c54586efad4fb10bb810890acba19; local implementation b656c0b plus corrected asset. Rollback: revert focused PR. Deployment unverified at checkpoint.

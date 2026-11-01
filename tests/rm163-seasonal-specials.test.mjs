@@ -132,8 +132,8 @@ test('Christmas gifts preselect Christmas style and the exact physical SKU with 
 test('Christmas cards distinguish seasonal artwork from product example and protect offer eligibility',()=>{
  const code=read('public/seasonal-products.js');
  const script=read('public/app.js'),checkout=read('public/checkout.js');
- assert.match(code,/season-christmas-product-peek/);
- assert.match(code,/Illustrative Holiday Magic artwork/);
+ assert.doesNotMatch(code,/season-christmas-product-peek/);
+ assert.match(code,/Illustrative Christmas/);
  assert.match(code,/Your photo becomes the actual design/);
  assert.match(code,/Christmas-style artwork, not unchanged original photos/);
  assert.match(code,/campaign\.offer\.style==='christmas'/);
@@ -145,7 +145,7 @@ test('Christmas cards distinguish seasonal artwork from product example and prot
  assert.match(checkout,/select\.options\|\|\[\]/);
  assert.match(checkout,/season-preselected-product-note/);
  for(const page of ['specials.html','christmas-gifts.html']){
-  assert.match(read('public/'+page),/seasonal-specials-v163\.js\?v=170/);
-  assert.match(read('public/'+page),/seasonal-specials-v163\.css\?v=168/);
+  assert.match(read('public/'+page),/seasonal-specials-v163\.js\?v=171/);
+  assert.match(read('public/'+page),/seasonal-specials-v163\.css\?v=171/);
  }
 });

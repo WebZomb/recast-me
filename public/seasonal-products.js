@@ -76,18 +76,12 @@ export async function renderSeasonalProducts(campaign){
    const link=node('a','season-shop-image'+(physicalChristmas?' season-shop-image-christmas':''));link.href=href;
    link.setAttribute('aria-label','Create your '+(physicalChristmas?'Christmas ':'')+item.name+' using your own photo');
    if(physicalChristmas){
-    // The seasonal artwork and product photograph are separate *examples*.
-    // Never imply a generic catalog photo shows the buyer's actual print.
-    const art=node('img','season-christmas-art');
-    art.src='/assets/recast-christmas-hero-v163.webp';art.width=1536;art.height=1024;
-    art.loading='lazy';art.decoding='async';art.alt='Illustrative Holiday Magic artwork with a dog in a snowy Christmas village';
-    const product=node('span','season-christmas-product-peek');
-    const productImage=node('img','season-christmas-product-image');
-    productImage.src=item.image;productImage.width=600;productImage.height=600;
-    productImage.loading='lazy';productImage.decoding='async';
-    productImage.alt=item.name+' product lifestyle example';
-    product.append(productImage,node('small','',item.name.toUpperCase()+' EXAMPLE'));
-    link.append(art,product,node('span','season-christmas-art-label','HOLIDAY MAGIC ARTWORK'));
+    const art=node('img','season-christmas-product-image');
+    const seasonalArt={...artKeys,Mug:'mug'};
+    art.src=seasonalArt[item.name]?'/assets/christmas-'+seasonalArt[item.name]+'-20261101.webp':item.image;
+    art.width=1024;art.height=1024;art.loading='lazy';art.decoding='async';
+    art.alt=seasonalArt[item.name]?'Illustrative Christmas '+item.name+' design; personalize with your own photo':item.name+' product example; choose Christmas for your own design';
+    link.append(art);
    }else{
     const img=node('img');img.width=1000;img.height=1000;img.loading='lazy';img.decoding='async';
     img.src=item.name==='Hoodie'?item.image:halloween?(item.name==='Mug'?'/assets/recast-halloween-mug-approved.jpg':artKeys[item.name]?'/assets/halloween-'+artKeys[item.name]+'-v166.webp':'/assets/recast-halloween-hero-v163.webp'):item.image;
@@ -97,7 +91,7 @@ export async function renderSeasonalProducts(campaign){
    if(offer&&physicalChristmas)link.append(node('span','season-shop-sale','10% OFF'));
    else if(campaign.offer&&!christmas)link.append(node('span','season-shop-sale',campaign.offer.percent+'% OFF'));
    const body=node('div','season-shop-body');
-   body.append(node('small','',physicalChristmas?'YOUR PHOTO · HOLIDAY MAGIC':item.tier==='digital'?'DIGITAL ART':'MADE WITH YOUR PHOTO'));
+   body.append(node('small','',physicalChristmas?'YOUR PHOTO · ILLUSTRATIVE EXAMPLE':item.tier==='digital'?'DIGITAL ART':'MADE WITH YOUR PHOTO'));
    body.append(node('h3','',item.name));
    body.append(node('p','',physicalChristmas?CHRISTMAS_PITCH[item.name]||item.pitch:item.pitch));
    if(physicalChristmas)body.append(node('div','season-christmas-selected','✓ Christmas style preselected · preview before checkout'));
@@ -116,7 +110,7 @@ export async function renderSeasonalProducts(campaign){
    body.append(price,cta);card.append(link,body);grid.append(card);
   }
   status.textContent=christmas
-   ? 'Holiday Magic artwork and product photos are illustrative examples. Your photo becomes the actual design. The 10% offer applies to eligible Christmas-style artwork, not unchanged original photos. Confirm your own preview, variant and delivery estimate before checkout.'
+   ? 'Product images are illustrative examples, not supplier proofs. Your photo becomes the actual design. The 10% offer applies to eligible Christmas-style artwork, not unchanged original photos. Confirm your own preview, variant and delivery estimate before checkout.'
    :items.length?'Lifestyle examples. Preview your own artwork, size and placement before checkout.':'';
  }catch{status.textContent='The collection could not load. Refresh this page or start with your photo below.';}
 }

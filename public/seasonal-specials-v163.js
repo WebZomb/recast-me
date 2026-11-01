@@ -1,4 +1,6 @@
-import {renderSeasonalProducts} from './seasonal-products.js?v=168';
+import {initialize as initializeBasket} from './basket.js?v=3';
+initializeBasket().catch(()=>{});
+import {renderSeasonalProducts} from './seasonal-products.js?v=171';
 import {christmasCampaign} from './christmas-feature.js?v=1';
 import {seasonalSpotlight,upcomingGiftEvents,daysToEvent,eventDateLabel} from './season-calendar.js?v=166';
 let campaign={active:null,offer:null};

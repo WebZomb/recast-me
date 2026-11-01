@@ -95,7 +95,7 @@ function ensurePanel(){
  const start=button('Start separate cart',()=>{confirm.hidden=false;});start.dataset.newCart='';
  const yes=button('Start empty cart',()=>run(async()=>{await switchCart(crypto.randomUUID());confirm.hidden=true;})),no=button('Keep current cart',()=>{confirm.hidden=true;});confirm.append(yes,no);carts.append(label,start,confirm);
  panel.append(heading,note,limit,list,subtotal,delivery,status,actions,carts);document.body.append(panel);
- if(!document.querySelector('link[data-basket-css]')){const css=node('link');css.rel='stylesheet';css.href='/basket.css?v=1';css.dataset.basketCss='';document.head.append(css);}
+ if(!document.querySelector('link[data-basket-css]')){const css=node('link');css.rel='stylesheet';css.href='/basket.css?v=2';css.dataset.basketCss='';document.head.append(css);}
 }
 export function openCart(){
  if(!enabled){const announcement=document.getElementById('shop-announcement');if(announcement)announcement.textContent='The cart is not available yet.';return;}
@@ -105,12 +105,12 @@ export function openCart(){
 export async function initialize({launcher}={}){
  if(!initializing)initializing=(async()=>{try{enabled=(await api('/api/basket/status')).enabled===true;if(enabled)identify();}catch{enabled=false;}return enabled;})();
  await initializing;if(!enabled)return false;
- if(!document.querySelector('link[data-basket-css],link[href^="/basket.css"]')){const css=node('link');css.rel='stylesheet';css.href='/basket.css?v=1';css.dataset.basketCss='';document.head.append(css);}
+ if(!document.querySelector('link[data-basket-css],link[href^="/basket.css"]')){const css=node('link');css.rel='stylesheet';css.href='/basket.css?v=2';css.dataset.basketCss='';document.head.append(css);}
  const target=launcher?document.querySelector(launcher):null;
  if(target){target.onclick=openCart;target.dataset.basketOpen='';target.setAttribute('aria-haspopup','dialog');}
  else if(!document.querySelector('[data-basket-open]')){
   const launch=button('Open cart',openCart);launch.dataset.basketOpen='';launch.setAttribute('aria-haspopup','dialog');launch.classList.add('basket-launcher');
-  const header=document.querySelector('.site-header,.library-header,.header');if(header)header.append(launch);else document.querySelector('#product-grid')?.before(launch);
+  const header=document.querySelector('.site-header,.library-header,.header');if(header){header.classList.add('has-basket-launcher');header.append(launch);}else document.querySelector('#product-grid')?.before(launch);
  }
  try{await refresh();}catch{/* No cart session exists until the first approved item is selected. */}
  return true;
