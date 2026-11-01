@@ -617,8 +617,20 @@ async function loadCheckout(){
     const gift=sessionStorage.getItem('recast_preferred_gift');
     if(gift){
       const selectors=[...grid.querySelectorAll('.recast-variant')];
-      const selector=selectors.find(select=>[...select.options].some(option=>option.value===gift));
-      if(selector){selector.value=gift;const card=selector.closest('.product');grid.classList.add('show-all-products');card.style.order='-1';card.classList.add('season-selected-product');}
+      const selector=selectors.find(select=>select.value===gift || [...(select.options||[])].some(option=>option.value===gift));
+      if(selector){
+        selector.value=gift;
+        const card=selector.closest('.product');
+        if(card){
+          grid.classList.add('show-all-products');
+          card.style.order='-1';
+          card.classList.add('season-selected-product');
+          const note=document.createElement('div');
+          note.className='season-preselected-product-note';
+          note.textContent='Your selected gift · Preview your own artwork and chosen size before checkout.';
+          card.querySelector('.product-body')?.prepend(note);
+        }
+      }
     }
   }catch{}
   grid.querySelectorAll(".product[data-product-index]").forEach(card=>applyCatalogExample(card,card.querySelector(".recast-variant")?.value));

@@ -101,3 +101,51 @@ test('finished preview offers only compact Save and Share while extra tools live
  assert.match(gallery,/Use on a Product/);
  assert.doesNotMatch(gallery,/\/api\/render|\/api\/order-bonus|\/api\/checkout-link/);
 });
+
+test('Christmas gifts preselect Christmas style and the exact physical SKU with creative attribution',async()=>{
+ const {seasonalGiftHref,CHRISTMAS_PITCH,seasonalProducts}=await import('../public/seasonal-products.js');
+ const campaign={active:{id:'christmas',style:'christmas'},offer:{percent:10,style:'christmas',name:'Christmas'},checkoutReady:true};
+ const skus=[
+  ['Poster','RECAST-POSTER-12X16'],['Mug','RECAST-MUG-11OZ'],['Pillow','RECAST-PILLOW-14'],
+  ['Blanket','RECAST-BLANKET-50X60'],['Puzzle','RECAST-PUZZLE-252'],['Hoodie','RECAST-HOODIE-S'],
+  ['Canvas','RECAST-CANVAS-12X16'],['Tote Bag','RECAST-TOTE-BLACK'],
+  ['Tough Phone Case','RECAST-TOUGH-IP15']
+ ];
+ for(const [name,sku] of skus){
+  const url=new URL(seasonalGiftHref({campaign,sku,name}),'https://recastmeai.com');
+  assert.equal(url.pathname,'/');
+  assert.equal(url.searchParams.get('style'),'christmas');
+  assert.equal(url.searchParams.get('gift'),sku);
+  assert.equal(url.searchParams.get('utm_source'),'internal');
+  assert.equal(url.searchParams.get('utm_medium'),'christmas_specials');
+  assert.equal(url.searchParams.get('utm_campaign'),'christmas_2026');
+  assert.match(url.searchParams.get('utm_content'),/^christmas_[a-z0-9_]{2,20}$/);
+  assert.equal(url.hash,'#start');
+  assert.ok(CHRISTMAS_PITCH[name]&&CHRISTMAS_PITCH[name].length>30);
+ }
+ const regular=seasonalGiftHref({campaign:{active:{id:'halloween',style:'halloween'}},sku:'RECAST-MUG-11OZ',name:'Mug'});
+ assert.equal(new URL(regular,'https://recastmeai.com').searchParams.has('utm_campaign'),false);
+ assert.equal(new URL(regular,'https://recastmeai.com').searchParams.get('style'),'halloween');
+ assert.equal(seasonalProducts.filter(p=>p.tier!=='digital').length,16);
+ assert.ok(fs.statSync('public/assets/recast-christmas-hero-v163.webp').size<700000);
+});
+test('Christmas cards distinguish seasonal artwork from product example and protect offer eligibility',()=>{
+ const code=read('public/seasonal-products.js');
+ const script=read('public/app.js'),checkout=read('public/checkout.js');
+ assert.match(code,/season-christmas-product-peek/);
+ assert.match(code,/Illustrative Holiday Magic artwork/);
+ assert.match(code,/Your photo becomes the actual design/);
+ assert.match(code,/Christmas-style artwork, not unchanged original photos/);
+ assert.match(code,/campaign\.offer\.style==='christmas'/);
+ assert.match(code,/physicalChristmas=christmas&&item\.tier!=='digital'/);
+ assert.match(code,/filter\(item=>!nativeAppPlatform\(\)\|\|!isDigitalArtworkProduct\(item\)\)/);
+ assert.match(code,/seasonalGiftHref\(\{campaign,sku:item\.live\.sku/);
+ assert.match(script,/Holiday Magic is selected/);
+ assert.match(script,/selected product is ready for the preview step/);
+ assert.match(checkout,/select\.options\|\|\[\]/);
+ assert.match(checkout,/season-preselected-product-note/);
+ for(const page of ['specials.html','christmas-gifts.html']){
+  assert.match(read('public/'+page),/seasonal-specials-v163\.js\?v=170/);
+  assert.match(read('public/'+page),/seasonal-specials-v163\.css\?v=168/);
+ }
+});
