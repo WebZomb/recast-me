@@ -29,10 +29,13 @@ const fs=require('fs'),path=require('path'),assert=require('node:assert/strict')
    await page.route('**/*cloudflareinsights*',r=>r.abort());
    for(const name of ['specials','christmas-gifts']){
     await page.goto('https://recastmeai.com/'+name+'.html',{waitUntil:'networkidle',timeout:60000});
-    await page.waitForFunction(()=>document.querySelectorAll('.season-shop-card').length===16);
+    await page.waitForFunction(()=>document.querySelectorAll('.season-shop-card').length===18);
     assert.match(await page.locator('#season-title').innerText(),/Christmas/);
     assert.match(await page.locator('#season-primary-cta').getAttribute('href'),/style=christmas/);
     assert.equal(await page.locator('.season-shop-card-christmas').count(),16);
+    assert.equal(await page.locator('.season-shop-card').count(),18);
+    assert.equal(await page.locator('.season-shop-card').last().locator('h3').innerText(),'Recast Pack');
+    assert.equal(await page.locator('.season-shop-card').last().locator('.season-shop-sale').count(),0);
     assert.equal(await page.locator('.season-shop-card h3').first().innerText(),'Mug');
     assert.equal(await page.locator('.season-shop-card[data-christmas-product="poster"]').count(),1);
     assert.equal(await page.locator('[data-season-offer]:visible').count(),0);
@@ -55,8 +58,10 @@ const fs=require('fs'),path=require('path'),assert=require('node:assert/strict')
    if(width===393){
     activeChristmasOffer=true;
     await page.goto('https://recastmeai.com/christmas-gifts.html',{waitUntil:'networkidle',timeout:60000});
-    await page.waitForFunction(()=>document.querySelectorAll('.season-shop-card').length===16);
+    await page.waitForFunction(()=>document.querySelectorAll('.season-shop-card').length===18);
     assert.equal(await page.locator('.season-shop-sale').count(),16);
+    assert.equal(await page.locator('.season-shop-card-christmas').count(),16);
+    assert.equal(await page.locator('.season-shop-card').count(),18);
     const mug=page.locator('.season-shop-card[data-christmas-product="mug"]');
     assert.match(await mug.locator('.season-shop-price').innerText(),/\\$22\.49/);
     assert.match(await mug.locator('.season-shop-price').innerText(),/Christmas-style artwork only/);

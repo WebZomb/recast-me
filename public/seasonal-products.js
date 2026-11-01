@@ -62,19 +62,20 @@ export async function renderSeasonalProducts(campaign){
   if(!response.ok||!data.ok||!Array.isArray(data.products))throw Error('unavailable');
   const halloween=campaign.active?.id==='halloween',christmas=campaign.active?.id==='christmas';
   const items=seasonalProducts
-   .filter(item=>(!nativeAppPlatform()||!isDigitalArtworkProduct(item))&&(!christmas||item.tier!=='digital'))
+   .filter(item=>!nativeAppPlatform()||!isDigitalArtworkProduct(item))
    .map(item=>({...item,live:data.products.find(p=>p.name===(item.name==='Tough Phone Case'?'Phone Case':item.name))}))
    .filter(item=>item.live&&Number.isFinite(Number(item.live.price))&&item.live.sku);
-  if(christmas)items.sort((a,b)=>CHRISTMAS_FIRST.indexOf(a.name)-CHRISTMAS_FIRST.indexOf(b.name));
+  if(christmas)items.sort((a,b)=>{const rank=x=>{const i=CHRISTMAS_FIRST.indexOf(x.name);return i<0?99:i;};return rank(a)-rank(b);});
   grid.replaceChildren();
   const offer=campaign.offer&&campaign.offer.percent===10&&campaign.offer.style==='christmas'&&campaign.checkoutReady!==false;
   const dollars=value=>new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(value);
   for(const item of items){
-   const card=node('article','season-shop-card'+(christmas?' season-shop-card-christmas':'')),href=seasonalGiftHref({campaign,sku:item.live.sku,name:item.name});
-   if(christmas)card.dataset.christmasProduct=item.name.toLowerCase().replace(/[^a-z0-9]+/g,'-');
-   const link=node('a','season-shop-image'+(christmas?' season-shop-image-christmas':''));link.href=href;
-   link.setAttribute('aria-label','Create your '+(christmas?'Christmas ':'')+item.name+' using your own photo');
-   if(christmas){
+   const physicalChristmas=christmas&&item.tier!=='digital';
+   const card=node('article','season-shop-card'+(physicalChristmas?' season-shop-card-christmas':'')),href=seasonalGiftHref({campaign,sku:item.live.sku,name:item.name});
+   if(physicalChristmas)card.dataset.christmasProduct=item.name.toLowerCase().replace(/[^a-z0-9]+/g,'-');
+   const link=node('a','season-shop-image'+(physicalChristmas?' season-shop-image-christmas':''));link.href=href;
+   link.setAttribute('aria-label','Create your '+(physicalChristmas?'Christmas ':'')+item.name+' using your own photo');
+   if(physicalChristmas){
     // The seasonal artwork and product photograph are separate *examples*.
     // Never imply a generic catalog photo shows the buyer's actual print.
     const art=node('img','season-christmas-art');
@@ -93,15 +94,15 @@ export async function renderSeasonalProducts(campaign){
     img.alt=item.name==='Hoodie'?'Illustrative black hoodie with centered soft-edge chest artwork':(halloween?'Halloween ':'')+item.name+' lifestyle example';
     link.append(img);
    }
-   if(offer&&christmas)link.append(node('span','season-shop-sale','10% OFF'));
+   if(offer&&physicalChristmas)link.append(node('span','season-shop-sale','10% OFF'));
    else if(campaign.offer&&!christmas)link.append(node('span','season-shop-sale',campaign.offer.percent+'% OFF'));
    const body=node('div','season-shop-body');
-   body.append(node('small','',christmas?'YOUR PHOTO · HOLIDAY MAGIC':item.tier==='digital'?'DIGITAL ART':'MADE WITH YOUR PHOTO'));
+   body.append(node('small','',physicalChristmas?'YOUR PHOTO · HOLIDAY MAGIC':item.tier==='digital'?'DIGITAL ART':'MADE WITH YOUR PHOTO'));
    body.append(node('h3','',item.name));
-   body.append(node('p','',christmas?CHRISTMAS_PITCH[item.name]||item.pitch:item.pitch));
-   if(christmas)body.append(node('div','season-christmas-selected','✓ Christmas style preselected · preview before checkout'));
+   body.append(node('p','',physicalChristmas?CHRISTMAS_PITCH[item.name]||item.pitch:item.pitch));
+   if(physicalChristmas)body.append(node('div','season-christmas-selected','✓ Christmas style preselected · preview before checkout'));
    const price=node('div','season-shop-price');
-   if(offer&&christmas){
+   if(offer&&physicalChristmas){
     price.append(node('del','',dollars(Number(item.live.price))));
     price.append(node('strong','',dollars(Math.round(Number(item.live.price)*90)/100)));
     price.append(node('small','','Christmas-style artwork only'));
@@ -110,7 +111,7 @@ export async function renderSeasonalProducts(campaign){
     price.append(node('strong','',dollars(Math.round(Number(item.live.price)*(100-campaign.offer.percent))/100)));
     price.append(node('small','','with '+campaign.offer.name+' filter'));
    }else price.append(node('strong','','from '+dollars(Number(item.live.price))));
-   const cta=node('a','season-button season-button-primary',christmas?'Create my Christmas '+item.name+' →':'Create yours →');
+   const cta=node('a','season-button season-button-primary',physicalChristmas?'Create my Christmas '+item.name+' →':'Create yours →');
    cta.href=href;
    body.append(price,cta);card.append(link,body);grid.append(card);
   }

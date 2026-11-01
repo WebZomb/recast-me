@@ -137,7 +137,8 @@ test('Christmas cards distinguish seasonal artwork from product example and prot
  assert.match(code,/Your photo becomes the actual design/);
  assert.match(code,/Christmas-style artwork, not unchanged original photos/);
  assert.match(code,/campaign\.offer\.style==='christmas'/);
- assert.match(code,/item\.tier!=='digital'/);
+ assert.match(code,/physicalChristmas=christmas&&item\.tier!=='digital'/);
+ assert.match(code,/filter\(item=>!nativeAppPlatform\(\)\|\|!isDigitalArtworkProduct\(item\)\)/);
  assert.match(code,/seasonalGiftHref\(\{campaign,sku:item\.live\.sku/);
  assert.match(script,/Holiday Magic is selected/);
  assert.match(script,/selected product is ready for the preview step/);
