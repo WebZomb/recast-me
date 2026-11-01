@@ -63,7 +63,7 @@ const fs=require('fs'),path=require('path'),assert=require('node:assert/strict')
     assert.equal(await page.locator('.season-shop-card-christmas').count(),16);
     assert.equal(await page.locator('.season-shop-card').count(),18);
     const mug=page.locator('.season-shop-card[data-christmas-product="mug"]');
-    assert.match(await mug.locator('.season-shop-price').innerText(),/\\$22\.49/);
+    assert.match(await mug.locator('.season-shop-price').innerText(),/\$22\.49/);
     assert.match(await mug.locator('.season-shop-price').innerText(),/Christmas-style artwork only/);
     assert.match(await page.locator('#season-shop-status').innerText(),/not unchanged original photos/);
     assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1),false,'Christmas sale overflow');
