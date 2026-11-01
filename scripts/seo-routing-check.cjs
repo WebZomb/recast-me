@@ -14,7 +14,15 @@ const {chromium}=require('playwright');
   assert.equal((await fetch(base+'/api/definitely-missing')).status,404);
   assert.equal((await fetch(base+'/proof/not-a-token')).status,404);
   for(const path of ['/specials.html','/christmas-gifts.html']){const r=await fetch(base+path);assert.equal(r.status,200);assert.ok(!r.url.endsWith('.html'));assert.ok((await r.text()).includes('href="https://recastmeai.com'+path.replace('.html','')+'"'));}
-  assert.match(await (await fetch(base+'/shop')).text(),/name="robots" content="noindex"/);
+  for(const route of ['/shop','/christmas']){
+    const html=await (await fetch(base+route)).text();
+    assert.match(html,/name="robots" content="index,follow"/,'Public verified premade Shop must be indexable: '+route);
+    assert.match(html,new RegExp('rel="canonical" href="https://recastmeai.com'+route+'"'));
+  }
+  for(const route of ['/my-orders','/my-recasts']){
+    const html=await (await fetch(base+route)).text();
+    assert.match(html,/noindex/,'Private customer pages stay unindexed');
+  }
   browser=await chromium.launch({headless:true});fs.mkdirSync('rm050-browser-results',{recursive:true});
   for(const width of [320,393,1280]){const page=await browser.newPage({viewport:{width,height:850}});const response=await page.goto(base+'/definitely-missing-seo-check');assert.equal(response.status(),404);assert.equal(await page.locator('h1').count(),1);assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));for(const a of await page.locator('nav a').all())assert.ok((await a.boundingBox()).height>=44);await page.screenshot({path:`rm050-browser-results/seo-404-${width}.png`});await page.close();}
   console.log('SEO routes, private exclusions and 404 mobile layouts PASS');
