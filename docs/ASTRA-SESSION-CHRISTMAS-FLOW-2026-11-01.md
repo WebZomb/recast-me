@@ -50,3 +50,11 @@ Primary supplier sources checked:
 Limit: this is catalog/construction/placement consistency, not physical sample inspection or a provider-generated proof of the fictional artwork. Card copy labels every example illustrative. Never substitute these product photographs as print files or ready-made inventory.
 
 CI41326035607 passed security, offline, app-channel, basket and seasonal checks but Christmas image test had an incorrect selector (frame versus framed-poster). Corrected the test to locate the actual image source, preserving all16 image-decode checks. Added enabled-cart header geometry checks. No merge/deployment at this checkpoint.
+
+
+## Released — 2026-11-01
+PR121 merged as 81ad55ec8fd55747642a59caeae441d404e52231. Final source head156a8c12e6eff688a58ea664c4594d88b1527f2d: 798 local tests passed; all16 assets decoded; security41327259625 and customer-policy41327259574 passed. Chromium/WebKit Christmas, app-channel, seasonal, basket and shop checks passed. Artifact13091374935 inspected at320px: separated logo/cart, no header overlap, distinct labeled product card.
+
+Cloudflare workflow41328023992 completed successfully including production read-only smoke. Worker version b9291005-aeda-4e3b-a32a-f084d05c7185. No paid render or order; no native binary release. Additional local urllib live-byte sweep was blocked by HTTP403, so it is not claimed as verification. Production smoke is the live release evidence. Supplier fidelity remains construction/placement review, not physical sample approval. Rollback: revert81ad55ec through normal tested deployment.
+
+Follow-up curl verified live seasonal-products.js SHA256 exactly matches release: e5f29b3b2fc946aed689056f612aede8b061448d96b94a16392c49571ed00699.
