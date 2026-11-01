@@ -42,7 +42,8 @@ export function recommendedCheckoutDesign(map={}){
  if(product==='Canvas')Object.assign(base,{layout:'fit',fill:'ambient',scale:90});
  if(['Poster','Framed Poster','Canvas','Puzzle'].includes(product))base.orientation='portrait';
  if(product==='Puzzle'||product==='Sticker')Object.assign(base,{layout:'cover',fill:'full-bleed'});
- if(product==='Hardcover Journal'||(product==='Phone Case'&&map.caseType!=='tough'))base.version=7;
+ if(product==='Hardcover Journal')Object.assign(base,{version:14,layout:'cover',fill:'full-bleed',scale:100});
+ if(product==='Phone Case'&&map.caseType!=='tough')base.version=7;
  return normalizeProductDesign(map,base);
 }
 export function normalizeProductDesign(map,raw={}){
@@ -56,6 +57,7 @@ export function normalizeProductDesign(map,raw={}){
     const fill=['ambient','dark','light'].includes(raw.fill)?raw.fill:'ambient';
     return {version:rawVersion,layout:'fit',background:fill,fill,x:'center',scale,spacing:'standard',product};
   }
+  if(rawVersion===14&&product==='Hardcover Journal')return {version:14,layout:'cover',background:'full-bleed',fill:'full-bleed',x:'center',scale:100,spacing:'standard',product};
   if(rawVersion===7&&['Hardcover Journal','Phone Case'].includes(product)){
     const n=Number(raw.scale),scale=Math.round(Math.max(70,Math.min(100,Number.isFinite(n)?n:100)));
     const fill=['ambient','dark','light'].includes(raw.fill)?raw.fill:'ambient';
@@ -221,6 +223,17 @@ export async function composeProductLayout(env,sourceBytes,sourceSize,area,map={
     const box={left:Math.round((outWidth-fitted.width)/2),top:Math.round(outHeight*.32+(outHeight*.59-fitted.height)/2),...fitted};
     chain=chain.draw(env.IMAGES.input(stream()).transform({width:box.width,height:box.height,fit:'contain'}),{left:box.left,top:box.top});
     return {bytes:await jpegBytes(chain),design,outputSize:{width:outWidth,height:outHeight},artworkBox:box,method:'phone-v7-camera-safe'};
+  }
+  if(design.version===14&&design.product==='Hardcover Journal'){
+    // Supplier 867/22658: 4065x2850 casewrap, including turn-in/bleed.
+    // Two full-height copies meet inside the spine; no margins or stretch.
+    // A new version keeps every previously approved v7 print unchanged.
+    if(Math.abs(area.width/area.height-4065/2850)>.001)throw fault('journal_template_changed','The journal template needs a supplier review.',503);
+    const split=Math.floor(outWidth/2);
+    const boxes=[{left:0,top:0,width:split,height:outHeight},{left:split,top:0,width:outWidth-split,height:outHeight}];
+    let chain=env.IMAGES.input(new Blob([MUG_BG_PNG],{type:'image/png'}).stream()).transform({width:outWidth,height:outHeight,fit:'cover'});
+    for(const box of boxes)chain=chain.draw(env.IMAGES.input(stream()).transform({width:box.width,height:box.height,fit:'cover',gravity:{x:0.5,y:0.35}}),{left:box.left,top:box.top});
+    return {bytes:await jpegBytes(chain),design,outputSize:{width:outWidth,height:outHeight},artworkBoxes:boxes,method:'journal-v14-full-covers'};
   }
   if(design.version===7&&design.product==='Hardcover Journal'){
     // Supplier 867/22658: one 4065×2850 wrap sheet around two 5.75×8 covers.

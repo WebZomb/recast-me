@@ -123,3 +123,26 @@ test('new mug lowers both cropped pictures in preview and production; approved v
  const legacy=await composeProductLayout(env,new Uint8Array([1]),{width:1122,height:1402},{width:2700,height:1050},map,{...d,version:11},2400);
  assert.equal(legacy.method,'mug-v11-two-panel-wrap');assert.ok(transforms.every(t=>!t.gravity));
 });
+
+test('journal full covers fill the complete verified wrap at preview and print resolution',async()=>{
+ const {recommendedCheckoutDesign,normalizeProductDesign,composeProductLayout}=await import('../src/commerce-store.js');
+ const map=FULFILLMENT['RECAST-JOURNAL-HC'],design=recommendedCheckoutDesign(map);
+ assert.equal(design.version,14);
+ assert.equal(normalizeProductDesign({product:'Hardcover Journal'},design).version,14);
+ for(const targetWidth of [2400,4065,4096])for(const sourceSize of [{width:900,height:1600},{width:1600,height:900},{width:1000,height:1000}]){
+  const transforms=[],draws=[];
+  const env={IMAGES:{input(){const chain={transform(t){transforms.push(t);return chain},draw(_,p){draws.push(p);return chain},async output(){return {response:()=>new Response(new Uint8Array([255,216,255,...Array(100).fill(0)]))}}};return chain}}};
+  const out=await composeProductLayout(env,new Uint8Array([1]),sourceSize,{width:4065,height:2850},{product:'Hardcover Journal'},design,targetWidth);
+  const [back,front]=out.artworkBoxes;
+  assert.equal(out.method,'journal-v14-full-covers');
+  assert.equal(back.left,0);assert.equal(back.left+back.width,front.left);assert.equal(front.left+front.width,out.outputSize.width);
+  for(const box of [back,front]){assert.equal(box.top,0);assert.equal(box.height,out.outputSize.height);}
+  assert.equal(draws.length,2);
+  assert.equal(transforms.filter(t=>t.fit==='cover'&&t.gravity?.y===.35).length,2,'Each cover crops independently without stretching');
+  assert.deepEqual(out.design,design);
+ }
+ const env={IMAGES:{input(){throw Error('must reject before composing')}}};
+ await assert.rejects(()=>composeProductLayout(env,new Uint8Array([1]),{width:900,height:1600},{width:3000,height:3000},map,design),/supplier review/);
+ const old=normalizeProductDesign(map,{version:7,layout:'fit',fill:'ambient',scale:90});
+ assert.equal(old.version,7);assert.equal(old.scale,90);assert.equal(old.layout,'fit');
+});
