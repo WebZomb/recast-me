@@ -268,7 +268,7 @@ body.seasonal-page[data-season="everyday"]{--season-accent:#a5ecff;--season-seco
 .season-shop-card-christmas{background:linear-gradient(155deg,#1c1830,#100d1d 70%);border-color:#d6ae7838;transition:transform .2s ease,border-color .2s ease,box-shadow .2s ease}
 .season-shop-card-christmas:hover{transform:translateY(-3px);border-color:#ffe0aa94;box-shadow:0 18px 50px #0007}
 .season-shop-image-christmas{isolation:isolate;background:linear-gradient(135deg,#080d25,#1c122a)}
-.season-christmas-art{width:100%;height:100%;object-fit:cover;object-position:66% center;display:block;transform:scale(1.015)}
+.season-shop-image-christmas > .season-christmas-art{width:100%;height:100%;object-fit:cover;object-position:66% center;display:block;transform:scale(1.015)}
 .season-shop-card-christmas:nth-child(3n+2) .season-christmas-art{object-position:78% center}
 .season-shop-card-christmas:nth-child(3n+3) .season-christmas-art{object-position:51% center}
 .season-shop-image-christmas:after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(180deg,transparent 45%,#090d1cc9 100%);z-index:1}
