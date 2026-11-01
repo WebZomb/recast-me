@@ -1,7 +1,7 @@
 import {annualGiftEvents} from './season-calendar.js';
 const windows={
  halloween:{start:'10-10',end:'10-31',priority:100},
- christmas:{start:'11-01',end:'12-25',priority:120},
+ christmas:{start:'10-31',end:'12-25',priority:120},
  'new-year':{start:'12-26',end:'01-07',priority:120},
  valentine:{start:'01-08',end:'02-14',priority:110},
  easter:{priority:100},'mothers-day':{priority:105},'fathers-day':{priority:105},
