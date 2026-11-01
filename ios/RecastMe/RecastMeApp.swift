@@ -1,6 +1,6 @@
 import SwiftUI
 
-private enum RecastTab: Hashable { case create, recasts, orders, specials, community }
+private enum RecastTab: Hashable { case create, recasts, orders, shop, community }
 
 @main
 struct RecastMeApp: App {
@@ -26,9 +26,9 @@ struct RecastMeApp: App {
                 StudioView(gallery: gallery, initialURL: StudioView.origin.appendingPathComponent("my-orders.html"))
                     .tabItem { Label("My Orders", systemImage: "shippingbox.fill") }
                     .tag(RecastTab.orders)
-                StudioView(gallery: gallery, initialURL: StudioView.origin.appendingPathComponent("specials.html"))
-                    .tabItem { Label("Specials", systemImage: "gift.fill") }
-                    .tag(RecastTab.specials)
+                StudioView(gallery: gallery, initialURL: StudioView.origin.appendingPathComponent("shop.html"))
+                    .tabItem { Label("Shop", systemImage: "bag.fill") }
+                    .tag(RecastTab.shop)
                 StudioView(gallery: gallery, initialURL: StudioView.origin.appendingPathComponent("community"))
                     .tabItem { Label("Community", systemImage: "person.3.fill") }
                     .tag(RecastTab.community)

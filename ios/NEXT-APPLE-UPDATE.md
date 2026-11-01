@@ -16,3 +16,10 @@ Owner screenshots confirm Recast Me iOS1.0 build1002 Waiting for Review, submitt
 - [ ] Before signing, inspect Apple for highest existing build and choose a new unused number. Do not reuse the build1002 pinned release branch. Verify signed upload, processing, internal install and final App Review receipt separately.
 
 These are tracked acceptance items, not claims that the work is implemented or live. No paid order/render/test purchase required or authorized by this checklist. Android setup is paused at owner's request pending access to a real qualifying Android device.
+
+
+## November 1, 2026 — Shop tab and compact Help for version 1.1
+- Next binary changes native Specials tab to Shop and opens the live /shop.html verified ready-made catalog, retaining Christmas Specials within the Shop website.
+- Native full-height Help top inset replaced by the compact website-style Help chip with a 44pt tappable target and secure recastHelp bridge into existing native RecastGuideView; fallback Help remains on loading/consent errors.
+- Website Shop page and cart can update independently. The installed App Store 1.0 build 1002 retains its previous tab labels and Help until a newer signed binary is uploaded and reviewed.
+- Build, sign and submit only after simulator/phone checks; verify an unused Apple build number greater than 1002. The release is *not* automatically submitted by the site deployment.
