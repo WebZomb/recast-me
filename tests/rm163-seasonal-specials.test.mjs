@@ -42,7 +42,7 @@ test('US Thanksgiving and movable Mothers and Fathers Days are calculated for ea
 test('seasonal page is indexable, themed to the bottom and honest about made-to-order shipping',()=>{
  const html=read('public/specials.html'),css=read('public/seasonal-specials-v163.css'),code=read('public/seasonal-specials-v163.js');
  assert.match(html,/Christmas Photo Gifts &amp; Seasonal Specials/);
- assert.match(html,/rel="canonical" href="https:\/\/recastmeai.com\/specials.html"/);
+ assert.match(html,/rel="canonical" href="https:\/\/recastmeai.com\/specials"/);
  assert.match(html,/data-season="winter"/);
  assert.match(html,/id="season-hero-image"/);
  assert.match(html,/id="season-gift-image"/);
