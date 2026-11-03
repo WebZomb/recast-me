@@ -35,7 +35,17 @@ const fs=require('fs'),path=require('path'),assert=require('node:assert/strict')
    else{let file=path.resolve(root,'.'+p);if(!path.extname(file))file+='.html';if(!file.startsWith(root+path.sep)||!fs.existsSync(file))return route.fulfill({status:404});const mime={'.html':'text/html','.js':'application/javascript','.css':'text/css','.png':'image/png','.webp':'image/webp','.svg':'image/svg+xml'};return route.fulfill({body:fs.readFileSync(file),contentType:mime[path.extname(file)]||'application/octet-stream'});}
    return route.fulfill({json:data});
   });
-  await page.goto('https://recast.test/shop.html');await page.waitForFunction(()=>document.querySelectorAll('.product').length===2);
+  await page.goto('https://recast.test/shop.html');await page.waitForFunction(()=>document.querySelectorAll('.product').length===2&&document.querySelectorAll('.concept-product').length===13);
+  const concept=page.locator('.concept-product').first();assert.equal(await concept.getAttribute('data-offer-status'),'preview');
+  assert.equal(await concept.getByRole('button',{name:'Add to cart'}).count(),0,'Unapproved artwork must never create cart actions');
+  const initialImage=await concept.locator('img').getAttribute('src');
+  await concept.getByRole('button',{name:'See artwork'}).click();assert.notEqual(await concept.locator('img').getAttribute('src'),initialImage);
+  await concept.getByRole('button',{name:'View larger'}).click();
+  assert.match(await page.locator('#detail-variant').innerText(),/Original artwork/);
+  assert.equal(await page.locator('#detail-add').isVisible(),false);
+  await page.locator('#close-detail').click();
+  await concept.getByRole('button',{name:'See mug'}).click();assert.equal(await concept.locator('img').getAttribute('src'),initialImage);
+
   assert.equal(await page.locator('dialog#cart').count(),0,'Do not keep a separate disabled premade bag');
   assert.equal(await page.locator('#filters').count(),0);
   await page.locator('.product').first().getByRole('combobox').selectOption('golden-large');
@@ -59,7 +69,7 @@ const fs=require('fs'),path=require('path'),assert=require('node:assert/strict')
   await page.getByRole('button',{name:'Checkout',exact:true}).click();await page.getByText('Checkout paused in this isolated browser test. Your cart is saved.',{exact:true}).waitFor();assert.equal(checkoutCalls,1);
   assert.equal(state.lines.length,3);assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),true);assert.deepEqual(errors,[]);
   await page.screenshot({path:path.join(output,`${engine}-mixed-cart-${width}.png`)});
-  await page.getByRole('button',{name:'Continue shopping',exact:true}).click();await page.goto('https://recast.test/christmas.html');await page.waitForFunction(()=>document.querySelectorAll('.product').length===2);await page.locator('#open-cart').click();await page.waitForFunction(()=>document.querySelectorAll('.basket-line').length===3);
+  await page.getByRole('button',{name:'Continue shopping',exact:true}).click();await page.goto('https://recast.test/christmas.html');await page.waitForFunction(()=>document.querySelectorAll('.product').length===2&&document.querySelectorAll('.concept-product').length===13);await page.locator('#open-cart').click();await page.waitForFunction(()=>document.querySelectorAll('.basket-line').length===3);
   await page.locator('.basket-line').nth(1).getByRole('button',{name:'Remove',exact:true}).click();await page.waitForFunction(()=>document.querySelectorAll('.basket-line').length===2);assert.equal(state.lines[0].artworkId,'golden');assert.equal(state.lines[1].artworkId,'ART-CUSTOM');
   await page.getByRole('button',{name:'Continue shopping',exact:true}).click();await page.screenshot({path:path.join(output,`${engine}-shop-${width}.png`)});
   await page.locator('#open-cart').click();await page.locator('.recast-basket[open]').waitFor();
