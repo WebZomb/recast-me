@@ -163,6 +163,248 @@ export const EXPANSION_DESIGNS=Object.freeze([
     "pet": "dog",
     "breed": "Dachshund",
     "occasion": "christmas"
+  },
+  {
+    "id": "christmas-archive-ragdoll-ice-palace",
+    "requestId": "RC-SHOP-ARCHIVE-RAGDOLL-ICE-PALACE-V1",
+    "asset": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-christmas-archive-ragdoll-ice-palace-art-20261103.png?v=1793748611",
+    "sha256": "dbbfaab622fefaaf9638a2509d6efcc2086df6e6e1592f496f09888e7b27248d",
+    "width": 1254,
+    "height": 1254,
+    "pet": "cat",
+    "breed": "Ragdoll Cat",
+    "occasion": "christmas"
+  },
+  {
+    "id": "christmas-archive-poodle-lavender",
+    "requestId": "RC-SHOP-ARCHIVE-POODLE-LAVENDER-V1",
+    "asset": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-christmas-archive-poodle-lavender-art-20261103.png?v=1793748619",
+    "sha256": "e38df25789a4023b3ad561df0702081015d1de3f1d862864c75a5a51247116d3",
+    "width": 1254,
+    "height": 1254,
+    "pet": "dog",
+    "breed": "Poodle",
+    "occasion": "christmas"
+  },
+  {
+    "id": "christmas-archive-beagle-santa-mail",
+    "requestId": "RC-SHOP-ARCHIVE-BEAGLE-SANTA-MAIL-V1",
+    "asset": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-christmas-archive-beagle-santa-mail-art-20261103.png?v=1793748626",
+    "sha256": "c9cc78b803f9a7d598acafd1dc3bfea435b22890683f9e38933e7e2c0283bb89",
+    "width": 1254,
+    "height": 1254,
+    "pet": "dog",
+    "breed": "Beagle",
+    "occasion": "christmas"
+  },
+  {
+    "id": "christmas-archive-maine-coon-snowfall",
+    "requestId": "RC-SHOP-ARCHIVE-MAINE-COON-SNOWFALL-V1",
+    "asset": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-christmas-archive-maine-coon-snowfall-art-20261103.png?v=1793748633",
+    "sha256": "f188e500d8ce9e7d5853af4af8d747557ddcf28dfcc5e017433fd84f029d15e7",
+    "width": 1254,
+    "height": 1254,
+    "pet": "cat",
+    "breed": "Maine Coon",
+    "occasion": "christmas"
+  },
+  {
+    "id": "christmas-archive-white-persian-rose",
+    "requestId": "RC-SHOP-ARCHIVE-WHITE-PERSIAN-ROSE-V1",
+    "asset": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-christmas-archive-white-persian-rose-art-20261103.png?v=1793748641",
+    "sha256": "179a94dfc8d5c0dc8d7e08992ef1f10cc8adba8a5e3328811a6574d2ce27f36a",
+    "width": 1254,
+    "height": 1254,
+    "pet": "cat",
+    "breed": "White Persian Cat",
+    "occasion": "christmas"
+  },
+  {
+    "id": "christmas-archive-english-bulldog-gifts",
+    "requestId": "RC-SHOP-ARCHIVE-ENGLISH-BULLDOG-GIFTS-V1",
+    "asset": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-christmas-archive-english-bulldog-gifts-art-20261103.png?v=1793748648",
+    "sha256": "6231f26073a4bc814993fb61a8d8ae51a7af630c7c8e15d99bde4c259f8afb14",
+    "width": 1254,
+    "height": 1254,
+    "pet": "dog",
+    "breed": "English Bulldog",
+    "occasion": "christmas"
+  },
+  {
+    "id": "christmas-archive-silver-tabby-toy-train",
+    "requestId": "RC-SHOP-ARCHIVE-SILVER-TABBY-TOY-TRAIN-V1",
+    "asset": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-christmas-archive-silver-tabby-toy-train-art-20261103.png?v=1793748655",
+    "sha256": "2aed0e383b6abd8941c2bef6740da26475da0b26535ebdf9a241e18c0c609e0a",
+    "width": 1254,
+    "height": 1254,
+    "pet": "cat",
+    "breed": "Silver Tabby Cat",
+    "occasion": "christmas"
+  },
+  {
+    "id": "christmas-archive-german-shepherd-snowy-street",
+    "requestId": "RC-SHOP-ARCHIVE-GERMAN-SHEPHERD-SNOWY-STREET-V1",
+    "asset": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-christmas-archive-german-shepherd-snowy-street-art-20261103.png?v=1793748661",
+    "sha256": "75344d5bb79049fda7a7f16eda7e323181bc3e4949929416471a00026f224a2e",
+    "width": 1254,
+    "height": 1254,
+    "pet": "dog",
+    "breed": "German Shepherd",
+    "occasion": "christmas"
+  },
+  {
+    "id": "christmas-archive-russian-blue-midnight",
+    "requestId": "RC-SHOP-ARCHIVE-RUSSIAN-BLUE-MIDNIGHT-V1",
+    "asset": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-christmas-archive-russian-blue-midnight-art-20261103.png?v=1793748668",
+    "sha256": "7880618e39b51f249d5ddd82c8d8fbe906888a7dc4d6f2019e85cedf6a2f4641",
+    "width": 1254,
+    "height": 1254,
+    "pet": "cat",
+    "breed": "Russian Blue Cat",
+    "occasion": "christmas"
+  },
+  {
+    "id": "christmas-archive-maine-coon-fireside",
+    "requestId": "RC-SHOP-ARCHIVE-MAINE-COON-FIRESIDE-V1",
+    "asset": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-christmas-archive-maine-coon-fireside-art-20261103.png?v=1793748675",
+    "sha256": "c8d2e410f123ffc45e24e1d217def1892dfbf5d92037857884e32d21d9fb0fc8",
+    "width": 1254,
+    "height": 1254,
+    "pet": "cat",
+    "breed": "Maine Coon",
+    "occasion": "christmas"
+  },
+  {
+    "id": "christmas-archive-british-shorthair-red-velvet",
+    "requestId": "RC-SHOP-ARCHIVE-BRITISH-SHORTHAIR-RED-VELVET-V1",
+    "asset": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-christmas-archive-british-shorthair-red-velvet-art-20261103.png?v=1793748682",
+    "sha256": "b66e6dad89495b703dc740cec0ee677f0d5450546eb5281ab557ecde1cae7e75",
+    "width": 1254,
+    "height": 1254,
+    "pet": "cat",
+    "breed": "British Shorthair Cat",
+    "occasion": "christmas"
+  },
+  {
+    "id": "christmas-archive-pointer-winter-woods",
+    "requestId": "RC-SHOP-ARCHIVE-POINTER-WINTER-WOODS-V1",
+    "asset": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-christmas-archive-pointer-winter-woods-art-20261103.png?v=1793748698",
+    "sha256": "e4ab13bb1cff8dd064058e4c3c7ea69afcd9bf40a80d72a0c1410decf7668f50",
+    "width": 1254,
+    "height": 1254,
+    "pet": "dog",
+    "breed": "German Shorthaired Pointer",
+    "occasion": "christmas"
+  },
+  {
+    "id": "christmas-archive-french-bulldog-toy-shop",
+    "requestId": "RC-SHOP-ARCHIVE-FRENCH-BULLDOG-TOY-SHOP-V1",
+    "asset": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-christmas-archive-french-bulldog-toy-shop-art-20261103.png?v=1793748705",
+    "sha256": "7be3a366dbd6e4d79c1f120a37716adf93f10b3192c36a501fd8b4a9029e37f3",
+    "width": 1254,
+    "height": 1254,
+    "pet": "dog",
+    "breed": "French Bulldog",
+    "occasion": "christmas"
+  },
+  {
+    "id": "christmas-archive-abyssinian-evergreen",
+    "requestId": "RC-SHOP-ARCHIVE-ABYSSINIAN-EVERGREEN-V1",
+    "asset": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-christmas-archive-abyssinian-evergreen-art-20261103.png?v=1793748713",
+    "sha256": "28d2cfd78d35500e4c8c8de98ce0ab8cbe28f2a31eaf46cc16832b12961665a7",
+    "width": 1254,
+    "height": 1254,
+    "pet": "cat",
+    "breed": "Abyssinian Cat",
+    "occasion": "christmas"
+  },
+  {
+    "id": "christmas-archive-chihuahua-holiday-gold",
+    "requestId": "RC-SHOP-ARCHIVE-CHIHUAHUA-HOLIDAY-GOLD-V1",
+    "asset": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-christmas-archive-chihuahua-holiday-gold-art-20261103.png?v=1793748721",
+    "sha256": "05c939d4a2c931123cd21e536d9b1d519432316f25552814f055ed635cf880ea",
+    "width": 1254,
+    "height": 1254,
+    "pet": "dog",
+    "breed": "Chihuahua",
+    "occasion": "christmas"
+  },
+  {
+    "id": "christmas-archive-orange-persian-cozy-fire",
+    "requestId": "RC-SHOP-ARCHIVE-ORANGE-PERSIAN-COZY-FIRE-V1",
+    "asset": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-christmas-archive-orange-persian-cozy-fire-art-20261103.png?v=1793748729",
+    "sha256": "536564decec538123c5155893bd48a204485c6b008011d2bac7f8b9da4dcec5e",
+    "width": 1254,
+    "height": 1254,
+    "pet": "cat",
+    "breed": "Orange Persian Cat",
+    "occasion": "christmas"
+  },
+  {
+    "id": "christmas-archive-chocolate-labrador-chalet",
+    "requestId": "RC-SHOP-ARCHIVE-CHOCOLATE-LABRADOR-CHALET-V1",
+    "asset": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-christmas-archive-chocolate-labrador-chalet-art-20261103.png?v=1793748736",
+    "sha256": "9549746496e4082415b07d18b6d176fc52d5d1447f4ad368eedfd7bcee349daf",
+    "width": 1254,
+    "height": 1254,
+    "pet": "dog",
+    "breed": "Chocolate Labrador",
+    "occasion": "christmas"
+  },
+  {
+    "id": "christmas-archive-dalmatian-christmas-engine",
+    "requestId": "RC-SHOP-ARCHIVE-DALMATIAN-CHRISTMAS-ENGINE-V1",
+    "asset": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-christmas-archive-dalmatian-christmas-engine-art-20261103.png?v=1793748743",
+    "sha256": "8169c0ffe573cc860f0cad06400ed041edc59f23f4d5792ff59aba03a8bb0125",
+    "width": 1254,
+    "height": 1254,
+    "pet": "dog",
+    "breed": "Dalmatian",
+    "occasion": "christmas"
+  },
+  {
+    "id": "christmas-archive-sphynx-present-surprise",
+    "requestId": "RC-SHOP-ARCHIVE-SPHYNX-PRESENT-SURPRISE-V1",
+    "asset": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-christmas-archive-sphynx-present-surprise-art-20261103.png?v=1793748749",
+    "sha256": "0e0e788355c2a4822cfa65c6f4fc95fc0b05759550d3a700d1e4c78b24ca153f",
+    "width": 1254,
+    "height": 1254,
+    "pet": "cat",
+    "breed": "Sphynx Cat",
+    "occasion": "christmas"
+  },
+  {
+    "id": "christmas-archive-dachshund-gingerbread-village",
+    "requestId": "RC-SHOP-ARCHIVE-DACHSHUND-GINGERBREAD-VILLAGE-V1",
+    "asset": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-christmas-archive-dachshund-gingerbread-village-art-20261103.png?v=1793748757",
+    "sha256": "df47ff3c2f66ef67cbb877bf1e748719a1bed651aa09d105e054cd206d0ae3b3",
+    "width": 1254,
+    "height": 1254,
+    "pet": "dog",
+    "breed": "Dachshund",
+    "occasion": "christmas"
+  },
+  {
+    "id": "christmas-archive-rottweiler-fireside",
+    "requestId": "RC-SHOP-ARCHIVE-ROTTWEILER-FIRESIDE-V1",
+    "asset": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-christmas-archive-rottweiler-fireside-art-20261103.png?v=1793748765",
+    "sha256": "a73011f1bd01c40e746ae39f221d3dbd5beaec1a31d65925f912cbb6dc654c71",
+    "width": 1254,
+    "height": 1254,
+    "pet": "dog",
+    "breed": "Rottweiler",
+    "occasion": "christmas"
+  },
+  {
+    "id": "christmas-archive-jack-russell-snowy-sleigh",
+    "requestId": "RC-SHOP-ARCHIVE-JACK-RUSSELL-SNOWY-SLEIGH-V1",
+    "asset": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-christmas-archive-jack-russell-snowy-sleigh-art-20261103.png?v=1793748774",
+    "sha256": "40abfd26ae849ff65ef081fb7771fd2709513263bc806efc902009cca9783615",
+    "width": 1254,
+    "height": 1254,
+    "pet": "dog",
+    "breed": "Jack Russell Terrier",
+    "occasion": "christmas"
   }
 ]);
 export const EXPANSION_ITEMS=Object.freeze(EXPANSION_DESIGNS.flatMap(d=>[
