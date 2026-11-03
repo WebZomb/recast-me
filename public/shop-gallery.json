@@ -3,7 +3,7 @@
   "collection": "christmas",
   "type": "pet-mugs",
   "status": "previews-awaiting-supplier-approval",
-  "note": "Source artwork is pinned to the exact bytes served by the Shopify CDN; the separate originalMasterSha256 records generated files before Shopify image optimization. Illustrative mug images are not Printful proofs.",
+  "note": "13 Christmas Village pet designs plus 22 restored original Christmas scenes. Decorated mug scenes are illustrations; actual 11oz/15oz Printful previews are shown only from the verified server catalog. Six classic designs are awaiting styled mug scenes and can still be viewed as original art. No unverified design is buyable.",
   "designs": [
     {
       "id": "village-golden-retriever",
@@ -264,6 +264,446 @@
         "15 oz"
       ],
       "originalMasterSha256": "7303cca5cbe4b65208c92563e4e262e434efb617d58d440e737ed31962e622bb"
+    },
+    {
+      "id": "archive-ragdoll-ice-palace",
+      "designId": "christmas-archive-ragdoll-ice-palace",
+      "pet": "cat",
+      "breed": "Ragdoll Cat",
+      "title": "Ragdoll · Winter Crystal Palace Mug",
+      "product": "mug",
+      "occasion": "christmas",
+      "status": "preview",
+      "artworkRevision": "dbbfaab622fefaaf9638a2509d6efcc2086df6e6e1592f496f09888e7b27248d",
+      "artworkImage": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-christmas-archive-ragdoll-ice-palace-art-20261103.png?v=1793748611",
+      "salesImage": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-christmas-archive-ragdoll-ice-palace-mug-scene-20261103.webp?v=1793748788",
+      "artworkWidth": 1254,
+      "artworkHeight": 1254,
+      "plannedSizes": [
+        "11 oz",
+        "15 oz"
+      ],
+      "collection": "classic-christmas"
+    },
+    {
+      "id": "archive-poodle-lavender",
+      "designId": "christmas-archive-poodle-lavender",
+      "pet": "dog",
+      "breed": "Poodle",
+      "title": "Poodle · Lavender Christmas Mug",
+      "product": "mug",
+      "occasion": "christmas",
+      "status": "preview",
+      "artworkRevision": "e38df25789a4023b3ad561df0702081015d1de3f1d862864c75a5a51247116d3",
+      "artworkImage": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-christmas-archive-poodle-lavender-art-20261103.png?v=1793748619",
+      "salesImage": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-christmas-archive-poodle-lavender-mug-scene-20261103.webp?v=1793748794",
+      "artworkWidth": 1254,
+      "artworkHeight": 1254,
+      "plannedSizes": [
+        "11 oz",
+        "15 oz"
+      ],
+      "collection": "classic-christmas"
+    },
+    {
+      "id": "archive-beagle-santa-mail",
+      "designId": "christmas-archive-beagle-santa-mail",
+      "pet": "dog",
+      "breed": "Beagle",
+      "title": "Beagle · Letters to Santa Mug",
+      "product": "mug",
+      "occasion": "christmas",
+      "status": "preview",
+      "artworkRevision": "c9cc78b803f9a7d598acafd1dc3bfea435b22890683f9e38933e7e2c0283bb89",
+      "artworkImage": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-christmas-archive-beagle-santa-mail-art-20261103.png?v=1793748626",
+      "salesImage": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-christmas-archive-beagle-santa-mail-mug-scene-20261103.webp?v=1793748798",
+      "artworkWidth": 1254,
+      "artworkHeight": 1254,
+      "plannedSizes": [
+        "11 oz",
+        "15 oz"
+      ],
+      "collection": "classic-christmas"
+    },
+    {
+      "id": "archive-maine-coon-snowfall",
+      "designId": "christmas-archive-maine-coon-snowfall",
+      "pet": "cat",
+      "breed": "Maine Coon",
+      "title": "Maine Coon · Winter Snowfall Mug",
+      "product": "mug",
+      "occasion": "christmas",
+      "status": "preview",
+      "artworkRevision": "f188e500d8ce9e7d5853af4af8d747557ddcf28dfcc5e017433fd84f029d15e7",
+      "artworkImage": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-christmas-archive-maine-coon-snowfall-art-20261103.png?v=1793748633",
+      "salesImage": null,
+      "artworkWidth": 1254,
+      "artworkHeight": 1254,
+      "plannedSizes": [
+        "11 oz",
+        "15 oz"
+      ],
+      "collection": "classic-christmas"
+    },
+    {
+      "id": "archive-white-persian-rose",
+      "designId": "christmas-archive-white-persian-rose",
+      "pet": "cat",
+      "breed": "White Persian Cat",
+      "title": "White Persian · Rosy Christmas Mug",
+      "product": "mug",
+      "occasion": "christmas",
+      "status": "preview",
+      "artworkRevision": "179a94dfc8d5c0dc8d7e08992ef1f10cc8adba8a5e3328811a6574d2ce27f36a",
+      "artworkImage": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-christmas-archive-white-persian-rose-art-20261103.png?v=1793748641",
+      "salesImage": null,
+      "artworkWidth": 1254,
+      "artworkHeight": 1254,
+      "plannedSizes": [
+        "11 oz",
+        "15 oz"
+      ],
+      "collection": "classic-christmas"
+    },
+    {
+      "id": "archive-english-bulldog-gifts",
+      "designId": "christmas-archive-english-bulldog-gifts",
+      "pet": "dog",
+      "breed": "English Bulldog",
+      "title": "English Bulldog · Under the Tree Mug",
+      "product": "mug",
+      "occasion": "christmas",
+      "status": "preview",
+      "artworkRevision": "6231f26073a4bc814993fb61a8d8ae51a7af630c7c8e15d99bde4c259f8afb14",
+      "artworkImage": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-christmas-archive-english-bulldog-gifts-art-20261103.png?v=1793748648",
+      "salesImage": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-christmas-archive-english-bulldog-gifts-mug-scene-20261103.webp?v=1793748803",
+      "artworkWidth": 1254,
+      "artworkHeight": 1254,
+      "plannedSizes": [
+        "11 oz",
+        "15 oz"
+      ],
+      "collection": "classic-christmas"
+    },
+    {
+      "id": "archive-silver-tabby-toy-train",
+      "designId": "christmas-archive-silver-tabby-toy-train",
+      "pet": "cat",
+      "breed": "Silver Tabby Cat",
+      "title": "Silver Tabby · Christmas Express Mug",
+      "product": "mug",
+      "occasion": "christmas",
+      "status": "preview",
+      "artworkRevision": "2aed0e383b6abd8941c2bef6740da26475da0b26535ebdf9a241e18c0c609e0a",
+      "artworkImage": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-christmas-archive-silver-tabby-toy-train-art-20261103.png?v=1793748655",
+      "salesImage": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-christmas-archive-silver-tabby-toy-train-mug-scene-20261103.webp?v=1793748807",
+      "artworkWidth": 1254,
+      "artworkHeight": 1254,
+      "plannedSizes": [
+        "11 oz",
+        "15 oz"
+      ],
+      "collection": "classic-christmas"
+    },
+    {
+      "id": "archive-german-shepherd-snowy-street",
+      "designId": "christmas-archive-german-shepherd-snowy-street",
+      "pet": "dog",
+      "breed": "German Shepherd",
+      "title": "German Shepherd · Snowy Village Mug",
+      "product": "mug",
+      "occasion": "christmas",
+      "status": "preview",
+      "artworkRevision": "75344d5bb79049fda7a7f16eda7e323181bc3e4949929416471a00026f224a2e",
+      "artworkImage": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-christmas-archive-german-shepherd-snowy-street-art-20261103.png?v=1793748661",
+      "salesImage": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-christmas-archive-german-shepherd-snowy-street-mug-scene-20261103.webp?v=1793748812",
+      "artworkWidth": 1254,
+      "artworkHeight": 1254,
+      "plannedSizes": [
+        "11 oz",
+        "15 oz"
+      ],
+      "collection": "classic-christmas"
+    },
+    {
+      "id": "archive-russian-blue-midnight",
+      "designId": "christmas-archive-russian-blue-midnight",
+      "pet": "cat",
+      "breed": "Russian Blue Cat",
+      "title": "Russian Blue · Moonlit Christmas Mug",
+      "product": "mug",
+      "occasion": "christmas",
+      "status": "preview",
+      "artworkRevision": "7880618e39b51f249d5ddd82c8d8fbe906888a7dc4d6f2019e85cedf6a2f4641",
+      "artworkImage": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-christmas-archive-russian-blue-midnight-art-20261103.png?v=1793748668",
+      "salesImage": null,
+      "artworkWidth": 1254,
+      "artworkHeight": 1254,
+      "plannedSizes": [
+        "11 oz",
+        "15 oz"
+      ],
+      "collection": "classic-christmas"
+    },
+    {
+      "id": "archive-maine-coon-fireside",
+      "designId": "christmas-archive-maine-coon-fireside",
+      "pet": "cat",
+      "breed": "Maine Coon",
+      "title": "Maine Coon · Fireside Christmas Mug",
+      "product": "mug",
+      "occasion": "christmas",
+      "status": "preview",
+      "artworkRevision": "c8d2e410f123ffc45e24e1d217def1892dfbf5d92037857884e32d21d9fb0fc8",
+      "artworkImage": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-christmas-archive-maine-coon-fireside-art-20261103.png?v=1793748675",
+      "salesImage": null,
+      "artworkWidth": 1254,
+      "artworkHeight": 1254,
+      "plannedSizes": [
+        "11 oz",
+        "15 oz"
+      ],
+      "collection": "classic-christmas"
+    },
+    {
+      "id": "archive-british-shorthair-red-velvet",
+      "designId": "christmas-archive-british-shorthair-red-velvet",
+      "pet": "cat",
+      "breed": "British Shorthair Cat",
+      "title": "British Shorthair · Velvet Christmas Mug",
+      "product": "mug",
+      "occasion": "christmas",
+      "status": "preview",
+      "artworkRevision": "b66e6dad89495b703dc740cec0ee677f0d5450546eb5281ab557ecde1cae7e75",
+      "artworkImage": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-christmas-archive-british-shorthair-red-velvet-art-20261103.png?v=1793748682",
+      "salesImage": null,
+      "artworkWidth": 1254,
+      "artworkHeight": 1254,
+      "plannedSizes": [
+        "11 oz",
+        "15 oz"
+      ],
+      "collection": "classic-christmas"
+    },
+    {
+      "id": "archive-pointer-winter-woods",
+      "designId": "christmas-archive-pointer-winter-woods",
+      "pet": "dog",
+      "breed": "German Shorthaired Pointer",
+      "title": "Pointer · Winter Woods Mug",
+      "product": "mug",
+      "occasion": "christmas",
+      "status": "preview",
+      "artworkRevision": "e4ab13bb1cff8dd064058e4c3c7ea69afcd9bf40a80d72a0c1410decf7668f50",
+      "artworkImage": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-christmas-archive-pointer-winter-woods-art-20261103.png?v=1793748698",
+      "salesImage": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-christmas-archive-pointer-winter-woods-mug-scene-20261103.webp?v=1793748817",
+      "artworkWidth": 1254,
+      "artworkHeight": 1254,
+      "plannedSizes": [
+        "11 oz",
+        "15 oz"
+      ],
+      "collection": "classic-christmas"
+    },
+    {
+      "id": "archive-french-bulldog-toy-shop",
+      "designId": "christmas-archive-french-bulldog-toy-shop",
+      "pet": "dog",
+      "breed": "French Bulldog",
+      "title": "French Bulldog · Christmas Toy Shop Mug",
+      "product": "mug",
+      "occasion": "christmas",
+      "status": "preview",
+      "artworkRevision": "7be3a366dbd6e4d79c1f120a37716adf93f10b3192c36a501fd8b4a9029e37f3",
+      "artworkImage": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-christmas-archive-french-bulldog-toy-shop-art-20261103.png?v=1793748705",
+      "salesImage": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-christmas-archive-french-bulldog-toy-shop-mug-scene-20261103.webp?v=1793748821",
+      "artworkWidth": 1254,
+      "artworkHeight": 1254,
+      "plannedSizes": [
+        "11 oz",
+        "15 oz"
+      ],
+      "collection": "classic-christmas"
+    },
+    {
+      "id": "archive-abyssinian-evergreen",
+      "designId": "christmas-archive-abyssinian-evergreen",
+      "pet": "cat",
+      "breed": "Abyssinian Cat",
+      "title": "Abyssinian · Evergreen Glow Mug",
+      "product": "mug",
+      "occasion": "christmas",
+      "status": "preview",
+      "artworkRevision": "28d2cfd78d35500e4c8c8de98ce0ab8cbe28f2a31eaf46cc16832b12961665a7",
+      "artworkImage": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-christmas-archive-abyssinian-evergreen-art-20261103.png?v=1793748713",
+      "salesImage": null,
+      "artworkWidth": 1254,
+      "artworkHeight": 1254,
+      "plannedSizes": [
+        "11 oz",
+        "15 oz"
+      ],
+      "collection": "classic-christmas"
+    },
+    {
+      "id": "archive-chihuahua-holiday-gold",
+      "designId": "christmas-archive-chihuahua-holiday-gold",
+      "pet": "dog",
+      "breed": "Chihuahua",
+      "title": "Chihuahua · Holiday Gold Mug",
+      "product": "mug",
+      "occasion": "christmas",
+      "status": "preview",
+      "artworkRevision": "05c939d4a2c931123cd21e536d9b1d519432316f25552814f055ed635cf880ea",
+      "artworkImage": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-christmas-archive-chihuahua-holiday-gold-art-20261103.png?v=1793748721",
+      "salesImage": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-christmas-archive-chihuahua-holiday-gold-mug-scene-20261103.webp?v=1793748833",
+      "artworkWidth": 1254,
+      "artworkHeight": 1254,
+      "plannedSizes": [
+        "11 oz",
+        "15 oz"
+      ],
+      "collection": "classic-christmas"
+    },
+    {
+      "id": "archive-orange-persian-cozy-fire",
+      "designId": "christmas-archive-orange-persian-cozy-fire",
+      "pet": "cat",
+      "breed": "Orange Persian Cat",
+      "title": "Orange Persian · Cozy Fireside Mug",
+      "product": "mug",
+      "occasion": "christmas",
+      "status": "preview",
+      "artworkRevision": "536564decec538123c5155893bd48a204485c6b008011d2bac7f8b9da4dcec5e",
+      "artworkImage": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-christmas-archive-orange-persian-cozy-fire-art-20261103.png?v=1793748729",
+      "salesImage": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-christmas-archive-orange-persian-cozy-fire-mug-scene-20261103.webp?v=1793748838",
+      "artworkWidth": 1254,
+      "artworkHeight": 1254,
+      "plannedSizes": [
+        "11 oz",
+        "15 oz"
+      ],
+      "collection": "classic-christmas"
+    },
+    {
+      "id": "archive-chocolate-labrador-chalet",
+      "designId": "christmas-archive-chocolate-labrador-chalet",
+      "pet": "dog",
+      "breed": "Chocolate Labrador",
+      "title": "Chocolate Labrador · Winter Chalet Mug",
+      "product": "mug",
+      "occasion": "christmas",
+      "status": "preview",
+      "artworkRevision": "9549746496e4082415b07d18b6d176fc52d5d1447f4ad368eedfd7bcee349daf",
+      "artworkImage": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-christmas-archive-chocolate-labrador-chalet-art-20261103.png?v=1793748736",
+      "salesImage": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-christmas-archive-chocolate-labrador-chalet-mug-scene-20261103.webp?v=1793748842",
+      "artworkWidth": 1254,
+      "artworkHeight": 1254,
+      "plannedSizes": [
+        "11 oz",
+        "15 oz"
+      ],
+      "collection": "classic-christmas"
+    },
+    {
+      "id": "archive-dalmatian-christmas-engine",
+      "designId": "christmas-archive-dalmatian-christmas-engine",
+      "pet": "dog",
+      "breed": "Dalmatian",
+      "title": "Dalmatian · Christmas Fire Engine Mug",
+      "product": "mug",
+      "occasion": "christmas",
+      "status": "preview",
+      "artworkRevision": "8169c0ffe573cc860f0cad06400ed041edc59f23f4d5792ff59aba03a8bb0125",
+      "artworkImage": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-christmas-archive-dalmatian-christmas-engine-art-20261103.png?v=1793748743",
+      "salesImage": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-christmas-archive-dalmatian-christmas-engine-mug-scene-20261103.webp?v=1793748846",
+      "artworkWidth": 1254,
+      "artworkHeight": 1254,
+      "plannedSizes": [
+        "11 oz",
+        "15 oz"
+      ],
+      "collection": "classic-christmas"
+    },
+    {
+      "id": "archive-sphynx-present-surprise",
+      "designId": "christmas-archive-sphynx-present-surprise",
+      "pet": "cat",
+      "breed": "Sphynx Cat",
+      "title": "Sphynx · Christmas Present Mug",
+      "product": "mug",
+      "occasion": "christmas",
+      "status": "preview",
+      "artworkRevision": "0e0e788355c2a4822cfa65c6f4fc95fc0b05759550d3a700d1e4c78b24ca153f",
+      "artworkImage": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-christmas-archive-sphynx-present-surprise-art-20261103.png?v=1793748749",
+      "salesImage": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-christmas-archive-sphynx-present-surprise-mug-scene-20261103.webp?v=1793748850",
+      "artworkWidth": 1254,
+      "artworkHeight": 1254,
+      "plannedSizes": [
+        "11 oz",
+        "15 oz"
+      ],
+      "collection": "classic-christmas"
+    },
+    {
+      "id": "archive-dachshund-gingerbread-village",
+      "designId": "christmas-archive-dachshund-gingerbread-village",
+      "pet": "dog",
+      "breed": "Dachshund",
+      "title": "Dachshund · Gingerbread Village Mug",
+      "product": "mug",
+      "occasion": "christmas",
+      "status": "preview",
+      "artworkRevision": "df47ff3c2f66ef67cbb877bf1e748719a1bed651aa09d105e054cd206d0ae3b3",
+      "artworkImage": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-christmas-archive-dachshund-gingerbread-village-art-20261103.png?v=1793748757",
+      "salesImage": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-christmas-archive-dachshund-gingerbread-village-mug-scene-20261103.webp?v=1793748853",
+      "artworkWidth": 1254,
+      "artworkHeight": 1254,
+      "plannedSizes": [
+        "11 oz",
+        "15 oz"
+      ],
+      "collection": "classic-christmas"
+    },
+    {
+      "id": "archive-rottweiler-fireside",
+      "designId": "christmas-archive-rottweiler-fireside",
+      "pet": "dog",
+      "breed": "Rottweiler",
+      "title": "Rottweiler · Fireside Christmas Mug",
+      "product": "mug",
+      "occasion": "christmas",
+      "status": "preview",
+      "artworkRevision": "a73011f1bd01c40e746ae39f221d3dbd5beaec1a31d65925f912cbb6dc654c71",
+      "artworkImage": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-christmas-archive-rottweiler-fireside-art-20261103.png?v=1793748765",
+      "salesImage": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-christmas-archive-rottweiler-fireside-mug-scene-20261103.webp?v=1793748858",
+      "artworkWidth": 1254,
+      "artworkHeight": 1254,
+      "plannedSizes": [
+        "11 oz",
+        "15 oz"
+      ],
+      "collection": "classic-christmas"
+    },
+    {
+      "id": "archive-jack-russell-snowy-sleigh",
+      "designId": "christmas-archive-jack-russell-snowy-sleigh",
+      "pet": "dog",
+      "breed": "Jack Russell Terrier",
+      "title": "Jack Russell · Snowy Sleigh Mug",
+      "product": "mug",
+      "occasion": "christmas",
+      "status": "preview",
+      "artworkRevision": "40abfd26ae849ff65ef081fb7771fd2709513263bc806efc902009cca9783615",
+      "artworkImage": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-christmas-archive-jack-russell-snowy-sleigh-art-20261103.png?v=1793748774",
+      "salesImage": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-christmas-archive-jack-russell-snowy-sleigh-mug-scene-20261103.webp?v=1793748862",
+      "artworkWidth": 1254,
+      "artworkHeight": 1254,
+      "plannedSizes": [
+        "11 oz",
+        "15 oz"
+      ],
+      "collection": "classic-christmas"
     }
   ]
 }
