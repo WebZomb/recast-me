@@ -6,7 +6,7 @@ const productNames={mug:'Mugs',blanket:'Blankets',canvas:'Canvas',tumbler:'Tumbl
 let adding=false;
 function node(tag,text,cls){const el=document.createElement(tag);if(text)el.textContent=text;if(cls)el.className=cls;return el;}
 function button(text,fn){const el=node('button',text);el.type='button';el.addEventListener('click',fn);return el;}
-function salesImage(offer){return offer.designId==='christmas-golden-retriever-winter-lights'&&offer.product==='mug'&&offer.artworkRevision==='a003e979d4a1c2056d37f9c23610399dd83ed82ec0f85cde8733f99fbd1ff0a2'?'/shop-assets/golden-mug-sales.webp':null;}
+function salesImage(offer){return offer.designId==='christmas-golden-retriever-winter-lights'&&offer.product==='mug'&&offer.artworkRevision==='a003e979d4a1c2056d37f9c23610399dd83ed82ec0f85cde8733f99fbd1ff0a2'?({'golden-winter-lights-mug-11oz':'/shop-assets/golden-mug-sales.webp','golden-winter-lights-mug-15oz':'/shop-assets/golden-mug-15oz-sales.webp'}[offer.id]||null):null;}
 async function add(offer,control){
  if(adding)return;adding=true;control.disabled=true;const label=control.textContent;control.textContent='Adding…';$('#shop-announcement').textContent='';
  try{await addPremade(offer);$('#product-detail').close();$('#shop-announcement').textContent='Added to your cart.';}
