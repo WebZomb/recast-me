@@ -9,7 +9,8 @@ const fs=require('fs'),path=require('path'),assert=require('node:assert/strict')
   const context=await browser.newContext({viewport:{width,height:900}}),page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
   const revision='a'.repeat(64),proof={provider:'printful',approved:true,artworkRevision:revision,printFileHash:'b'.repeat(64),placementHash:'c'.repeat(64)};
   const offers=[{id:'golden-mug',designId:'golden',title:'Golden Retriever Winter Lights Mug',occasion:'christmas',pet:'dog',breed:'Golden Retriever',product:'mug',variantLabel:'White · 11 oz',priceCents:2499,currency:'USD',variantId:'gid://shopify/ProductVariant/1',artworkRevision:revision,status:'verified',proof,mockupUrl:'https://recast.test/shop-assets/christmas-golden-artwork.png'},{id:'cat-mug',designId:'cat',title:'Cat Christmas Mug',occasion:'christmas',pet:'cat',breed:'Orange tabby',product:'mug',variantLabel:'White · 11 oz',priceCents:2499,currency:'USD',variantId:'gid://shopify/ProductVariant/1',artworkRevision:revision,status:'verified',proof,mockupUrl:'https://recast.test/shop-assets/christmas-golden-artwork.png'}];
-  let state={basketId:'test',revision:0,canEdit:true,appliedActions:[],currency:'USD',subtotalCents:0,lines:[],canCheckout:false};const initialState=structuredClone(state),states=new Map(),bindings={};let counter=0,checkoutCalls=0;
+  offers.push({...offers[0],id:'golden-large',variantId:'gid://shopify/ProductVariant/2',variantLabel:'White · 15 oz',priceCents:2999});
+  let state={basketId:'test',revision:0,canEdit:true,appliedActions:[],currency:'USD',subtotalCents:0,lines:[],canCheckout:false};const initialState=structuredClone(state),states=new Map(),bindings={};let counter=0,checkoutCalls=0;const requestedOffers=[];
   const calculate=()=>{state.lines.forEach(l=>l.lineTotalCents=l.unitPriceCents*l.quantity);state.subtotalCents=state.lines.reduce((n,l)=>n+l.lineTotalCents,0);state.canCheckout=state.lines.length>0;};
   await context.route('**/*',async route=>{
    const url=new URL(route.request().url()),p=url.pathname;if(url.hostname!=='recast.test')return route.fulfill({status:204});
@@ -19,7 +20,7 @@ const fs=require('fs'),path=require('path'),assert=require('node:assert/strict')
    else if(p==='/api/basket/status')data.enabled=true;
    else if(p==='/api/basket/session'){}
    else if(p==='/api/basket')data.basket=state;
-   else if(p==='/api/basket/premade'){const offer=offers.find(o=>o.id===body.offerId);const token=String(++counter).padStart(48,'0');bindings[token]={sourceKind:'premade',artworkId:offer.designId,product:'Mug',title:offer.title,variantLabel:offer.variantLabel,sku:'RECAST-MUG-11OZ',unitPriceCents:offer.priceCents,thumbnail:offer.mockupUrl};data.approvalToken=token;}
+   else if(p==='/api/basket/premade'){requestedOffers.push(body.offerId);const offer=offers.find(o=>o.id===body.offerId);const token=String(++counter).padStart(48,'0');bindings[token]={sourceKind:'premade',artworkId:offer.designId,product:'Mug',title:offer.title,variantLabel:offer.variantLabel,sku:'RECAST-MUG-11OZ',unitPriceCents:offer.priceCents,thumbnail:offer.mockupUrl};data.approvalToken=token;}
    else if(p==='/api/basket/approve'){const token=String(++counter).padStart(48,'0');bindings[token]={sourceKind:'custom',artworkId:'ART-CUSTOM',product:'Mug',title:'My own Recast mug',variantLabel:'White · 11 oz',sku:'RECAST-MUG-11OZ',unitPriceCents:2499,thumbnail:'/shop-assets/christmas-golden-artwork.png'};data.approvalToken=token;}
    else if(p==='/api/basket/action'){
     const c=body.command;if(!state.appliedActions.includes(c.actionId)){
@@ -36,15 +37,22 @@ const fs=require('fs'),path=require('path'),assert=require('node:assert/strict')
   });
   await page.goto('https://recast.test/shop.html');await page.waitForFunction(()=>document.querySelectorAll('.product').length===2);
   assert.equal(await page.locator('dialog#cart').count(),0,'Do not keep a separate disabled premade bag');
-  await page.locator('[name="pet"]').selectOption('dog');await page.waitForFunction(()=>document.querySelectorAll('.product').length===1);await page.reload();await page.waitForFunction(()=>document.querySelectorAll('.product').length===1);assert.match(page.url(),/pet=dog/);
-  await page.getByRole('button',{name:'View details',exact:true}).click();await page.locator('#product-detail').waitFor({state:'visible'});await page.locator('#close-detail').click();
-  await page.locator('.product').getByRole('button',{name:'Add to cart',exact:true}).click();await page.locator('.recast-basket[open]').waitFor();await page.waitForFunction(()=>document.querySelectorAll('.basket-line').length===1);
-  assert.equal(state.lines[0].sourceKind,'premade');assert.match(await page.locator('[data-basket-subtotal]').innerText(),/24.99/);
-  await page.getByRole('button',{name:'Continue shopping',exact:true}).click();await page.locator('[name="pet"]').selectOption('all');await page.waitForFunction(()=>document.querySelectorAll('.product').length===2);
+  assert.equal(await page.locator('#filters').count(),0);
+  await page.locator('.product').first().getByRole('combobox').selectOption('golden-large');
+  assert.match(await page.locator('.product').first().innerText(),/29.99/);
+  await page.getByRole('button',{name:'See real product',exact:true}).first().click();
+  assert.match(await page.locator('#detail-variant').innerText(),/15 oz/);
+  await page.locator('#close-detail').click();
+
+
+  await page.getByRole('button',{name:'See real product',exact:true}).first().click();await page.locator('#product-detail').waitFor({state:'visible'});await page.locator('#close-detail').click();
+  await page.locator('.product').first().getByRole('button',{name:'Add to cart',exact:true}).click();await page.locator('.recast-basket[open]').waitFor();await page.waitForFunction(()=>document.querySelectorAll('.basket-line').length===1);
+  assert.equal(requestedOffers[0],'golden-large');assert.equal(state.lines[0].sourceKind,'premade');assert.match(await page.locator('[data-basket-subtotal]').innerText(),/29.99/);
+  await page.getByRole('button',{name:'Continue shopping',exact:true}).click();await page.waitForFunction(()=>document.querySelectorAll('.product').length===2);
   await page.locator('.product').nth(1).getByRole('button',{name:'Add to cart',exact:true}).click();await page.waitForFunction(()=>document.querySelectorAll('.basket-line').length===2);await page.getByRole('button',{name:'Continue shopping',exact:true}).click();
   await page.goto('https://recast.test/custom-fixture.html');await page.waitForFunction(()=>window.ready);await page.getByRole('button',{name:'Approve & add to cart',exact:true}).click();await page.waitForFunction(()=>document.querySelectorAll('.basket-line').length===3);
-  assert.equal(state.lines.filter(l=>l.sourceKind==='premade').length,2);assert.equal(state.lines.filter(l=>l.sourceKind==='custom').length,1);assert.equal(state.subtotalCents,7497);
-  await page.locator('.basket-line').last().getByRole('combobox').selectOption('2');await page.waitForFunction(()=>document.querySelector('[data-basket-open]').textContent==='Cart (4)');assert.equal(state.subtotalCents,9996);
+  assert.equal(state.lines.filter(l=>l.sourceKind==='premade').length,2);assert.equal(state.lines.filter(l=>l.sourceKind==='custom').length,1);assert.equal(state.subtotalCents,7997);
+  await page.locator('.basket-line').last().getByRole('combobox').selectOption('2');await page.waitForFunction(()=>document.querySelector('[data-basket-open]').textContent==='Cart (4)');assert.equal(state.subtotalCents,10496);
   await page.getByRole('button',{name:'Checkout',exact:true}).click();await page.getByText('Checkout paused in this isolated browser test. Your cart is saved.',{exact:true}).waitFor();assert.equal(checkoutCalls,1);
   assert.equal(state.lines.length,3);assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),true);assert.deepEqual(errors,[]);
   await page.screenshot({path:path.join(output,`${engine}-mixed-cart-${width}.png`)});
@@ -59,6 +67,6 @@ const fs=require('fs'),path=require('path'),assert=require('node:assert/strict')
   assert.notEqual(await page.evaluate(()=>localStorage.getItem('recast_basket_id_v1')),savedId);assert.equal(checkoutCalls,1);
   await page.locator('[data-saved-carts]').selectOption(savedId);await page.waitForFunction(()=>document.querySelectorAll('.basket-line').length===2);
   assert.equal(state.lines[0].artworkId,'golden');assert.equal(state.lines[1].artworkId,'ART-CUSTOM');assert.equal(checkoutCalls,1);
-  assert.deepEqual(errors,[]);console.log('PASS unified premade + custom cart, filter reload, distinct designs, quantity, removal, retained checkout and layout',engine,width);await context.close();
+  assert.deepEqual(errors,[]);console.log('PASS unified premade + custom cart, product sections, distinct designs, quantity, removal, retained checkout and layout',engine,width);await context.close();
  }}finally{await browser.close();}
 })().catch(e=>{console.error(e);process.exitCode=1;});
