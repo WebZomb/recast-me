@@ -7,12 +7,12 @@ import {validateOffer} from '../src/shop-offers.js';
 const manifest=JSON.parse(readFileSync(new URL('../public/shop-gallery.json',import.meta.url),'utf8'));
 const designs=manifest.designs;
 
-test('Christmas mug gallery contains ten distinct artwork and lifestyle pairs',()=>{
+test('Christmas mug gallery contains thirteen distinct artwork and lifestyle pairs',()=>{
  assert.equal(manifest.version,1);
- assert.equal(designs.length,10);
- assert.equal(designs.filter(d=>d.pet==='dog').length,7);
+ assert.equal(designs.length,13);
+ assert.equal(designs.filter(d=>d.pet==='dog').length,10);
  assert.equal(designs.filter(d=>d.pet==='cat').length,3);
- for(const field of ['id','designId','artworkImage','salesImage','artworkRevision'])assert.equal(new Set(designs.map(d=>d[field])).size,10,field);
+ for(const field of ['id','designId','artworkImage','salesImage','artworkRevision'])assert.equal(new Set(designs.map(d=>d[field])).size,13,field);
  for(const design of designs){
   assert.equal(design.product,'mug');assert.equal(design.occasion,'christmas');assert.equal(design.status,'preview');
   assert.match(design.artworkRevision,/^[0-9a-f]{64}$/);
