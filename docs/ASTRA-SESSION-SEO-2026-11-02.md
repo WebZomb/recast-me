@@ -49,3 +49,8 @@ Direct HTTP / and /shop?seo_probe=nov3 still return200 with no Location header; 
 App Store tracked separately: the quick-shop session records owner agreement acceptance and submission of1.1(1003), Waiting for Review observed. This supersedes the earlier build-not-submitted note, but is a recorded observation, not a fresh App Store Connect read. Current public US Apple search still returns Recast Me version1.0, released2026-11-01T16:32:47Z (app6822107649). Name Recast Me: AI Photo Gifts / subtitle Personalized Pet & Family Art are not claimed live. No legal agreement accepted by this audit.
 
 Only this audit record and handoff were updated; no runtime modifications/deployment, spending, render, order or provider writes. HTTP redirect, authorized Search Console/CWV evidence and Apple public release remain open, so daily checks stay active. Documentation rollback: revert the audit documentation commits; runtime unchanged.
+
+
+## November 3 owner-enabled HTTPS — verified live
+
+Owner supplied Cloudflare screenshot showing Always Use HTTPS enabled. Subsequent independent curl GETs confirm HTTP /, /shop?seo_check=https-enabled and /christmas each return301 to the equivalent HTTPS URL. Path and query are preserved; following each redirect ends at200 with exactly one redirect, no loop. This supersedes the earlier same-day HTTP200 finding and closes the public-page HTTPS enforcement gate. No edge setting was changed by the assistant, no webhook POST/order was sent, and webhook semantics were not tested. Only this evidence record changed; no runtime deployment or paid action. Search Console/indexing, field CWV and final Apple public1.1 release remain open. Rollback for documentation is reverting this receipt; owner controls the reversible edge toggle.
