@@ -1,5 +1,5 @@
 const ID='recast_basket_id_v1',PENDING='recast_basket_pending_v1',SAVED='recast_saved_carts_v1';
-let basket=null,basketId=null,pending=null,enabled=false,busy=false,panel=null,status=null,list=null,initializing=null;
+let basket=null,basketId=null,pending=null,enabled=false,busy=false,panel=null,status=null,list=null,initializing=null,initialFetchDone=false;
 const EDIT_LIMIT='Your basket has reached its edit limit. Your items are saved. You can check out as shown or contact support to change them.';
 const money=c=>new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(c/100);
 const node=(tag,text,cls)=>{const el=document.createElement(tag);if(text!==undefined)el.textContent=text;if(cls)el.className=cls;return el;};
@@ -97,9 +97,13 @@ function ensurePanel(){
  panel.append(heading,note,limit,list,subtotal,delivery,status,actions,carts);document.body.append(panel);
  if(!document.querySelector('link[data-basket-css]')){const css=node('link');css.rel='stylesheet';css.href='/basket.css?v=2';css.dataset.basketCss='';document.head.append(css);}
 }
+function showCart(){
+ if(!enabled){const announcement=document.getElementById('shop-announcement');if(announcement)announcement.textContent='The cart is not available yet.';return false;}
+ ensurePanel();if(!panel.open){panel.showModal();panel.scrollTop=0;}render();return true;
+}
 export function openCart(){
- if(!enabled){const announcement=document.getElementById('shop-announcement');if(announcement)announcement.textContent='The cart is not available yet.';return;}
- ensurePanel();if(!panel.open){panel.showModal();panel.scrollTop=0;}render();
+ if(!showCart())return;
+ // Manual opens still reconcile with the server; an add just received that authoritative state.
  run(async()=>{identify();try{await refresh();}catch(e){if(e.code==='basket_session'&&!pending){basket=null;status.textContent='Choose a gift or open your own Recast to start shopping.';render();return;}throw e;}});
 }
 export async function initialize({launcher}={}){
@@ -112,7 +116,10 @@ export async function initialize({launcher}={}){
   const launch=button('Open cart',openCart);launch.dataset.basketOpen='';launch.setAttribute('aria-haspopup','dialog');launch.classList.add('basket-launcher');
   const header=document.querySelector('.site-header,.library-header,.header');if(header){header.classList.add('has-basket-launcher');header.append(launch);}else document.querySelector('#product-grid')?.before(launch);
  }
- try{await refresh();}catch{/* No cart session exists until the first approved item is selected. */}
+ if(!initialFetchDone){
+  initialFetchDone=true;
+  try{await refresh();}catch{/* No cart session exists until the first approved item is selected. */}
+ }
  return true;
 }
 export async function addPremade(offer){
@@ -122,7 +129,7 @@ export async function addPremade(offer){
  if(basket.canEdit===false)throw Error(EDIT_LIMIT);
  const approval=await api('/api/basket/premade',{basketId,offerId:offer.id,revision:offer.artworkRevision});
  savePending({basketId,approvalToken:approval.approvalToken,command:{type:'add',actionId:crypto.randomUUID(),expectedRevision:basket.revision,lineId:crypto.randomUUID(),quantity:1}});
- await sendPending();render();openCart();
+ await sendPending();showCart();
 }
 export function addReviewAction(modal,req,getApproval,closeReview){
  if(!enabled||req.shareId)return;
@@ -134,7 +141,7 @@ export function addReviewAction(modal,req,getApproval,closeReview){
    if(pending)throw Error('Open your cart and check its unfinished save first.');if(basket.canEdit===false)throw Error(EDIT_LIMIT);
    const approval=await api('/api/basket/approve',{basketId,designApproval});
    savePending({basketId,approvalToken:approval.approvalToken,command:{type:'add',actionId:crypto.randomUUID(),expectedRevision:basket.revision,lineId:crypto.randomUUID(),quantity:1}});
-   await sendPending();closeReview();openCart();
+   await sendPending();closeReview();showCart();
   }catch(cause){error.textContent=cause.message;error.hidden=false;}finally{add.disabled=false;}
  });actions.prepend(add);
 }
