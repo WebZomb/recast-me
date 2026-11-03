@@ -7,21 +7,24 @@ import {validateOffer} from '../src/shop-offers.js';
 const manifest=JSON.parse(readFileSync(new URL('../public/shop-gallery.json',import.meta.url),'utf8'));
 const designs=manifest.designs;
 
-test('Christmas mug gallery contains thirteen distinct artwork and lifestyle pairs',()=>{
+test('Christmas mug gallery includes newly recovered original artworks and labeled product illustrations',()=>{
  assert.equal(manifest.version,1);
- assert.equal(designs.length,13);
- assert.equal(designs.filter(d=>d.pet==='dog').length,10);
- assert.equal(designs.filter(d=>d.pet==='cat').length,3);
- for(const field of ['id','designId','artworkImage','salesImage','artworkRevision'])assert.equal(new Set(designs.map(d=>d[field])).size,13,field);
+ assert.equal(designs.length,35);
+ assert.equal(designs.filter(d=>d.pet==='dog').length,22);
+ assert.equal(designs.filter(d=>d.pet==='cat').length,13);
+ for(const field of ['id','designId','artworkImage','artworkRevision'])assert.equal(new Set(designs.map(d=>d[field])).size,35,field);
+ assert.equal(new Set(designs.filter(d=>d.salesImage).map(d=>d.salesImage)).size,29);
+ assert.equal(designs.filter(d=>!d.salesImage).length,6,'Six original archive artworks do not yet have a matched styled mug scene');
  for(const design of designs){
   assert.equal(design.product,'mug');assert.equal(design.occasion,'christmas');assert.equal(design.status,'preview');
   assert.match(design.artworkRevision,/^[0-9a-f]{64}$/);
   assert.deepEqual([design.artworkWidth,design.artworkHeight],[1254,1254]);
   assert.deepEqual(design.plannedSizes,['11 oz','15 oz']);
   assert.match(design.artworkImage,/^https:\/\/cdn\.shopify\.com\//);
-  assert.match(design.salesImage,/^https:\/\/cdn\.shopify\.com\//);
+  if(design.salesImage)assert.match(design.salesImage,/^https:\/\/cdn\.shopify\.com\//);
+  else assert.equal(design.salesImage,null);
   assert.match(design.artworkImage,/\.png\?v=\d+$/);
-  assert.match(design.salesImage,/\.webp\?v=\d+$/);
+  if(design.salesImage)assert.match(design.salesImage,/\.webp\?v=\d+$/);
  }
 });
 
