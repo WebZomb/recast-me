@@ -20,7 +20,7 @@ function detailViews({scene,artwork,proof11,proof15},initial,details){
  tabs.replaceChildren();
  const views=[
   {id:'scene',name:'Mug scene',url:scene,description:'Decorated mug illustration — not a supplier proof'},
-  {id:'artwork',name:'Artwork',url:artwork,description:'Original pet artwork — the design to be printed'},
+  {id:'artwork',name:'Artwork',url:artwork,description:'Original artwork — the pet design to be printed'},
   {id:'proof11',name:'Actual 11 oz',url:proof11,description:'11 oz — verified Printful supplier preview'},
   {id:'proof15',name:'Actual 15 oz',url:proof15,description:'15 oz — verified Printful supplier preview'}
  ];
