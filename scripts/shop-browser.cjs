@@ -9,6 +9,7 @@ const fs=require('fs'),path=require('path'),assert=require('node:assert/strict')
   const context=await browser.newContext({viewport:{width,height:900}}),page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
   const revision='a'.repeat(64),proof={provider:'printful',approved:true,artworkRevision:revision,printFileHash:'b'.repeat(64),placementHash:'c'.repeat(64)};
   const offers=[{id:'golden-mug',designId:'golden',title:'Golden Retriever Winter Lights Mug',occasion:'christmas',pet:'dog',breed:'Golden Retriever',product:'mug',variantLabel:'White · 11 oz',priceCents:2499,currency:'USD',variantId:'gid://shopify/ProductVariant/1',artworkRevision:revision,status:'verified',proof,mockupUrl:'https://recast.test/shop-assets/christmas-golden-artwork.png'},{id:'cat-mug',designId:'cat',title:'Cat Christmas Mug',occasion:'christmas',pet:'cat',breed:'Orange tabby',product:'mug',variantLabel:'White · 11 oz',priceCents:2499,currency:'USD',variantId:'gid://shopify/ProductVariant/1',artworkRevision:revision,status:'verified',proof,mockupUrl:'https://recast.test/shop-assets/christmas-golden-artwork.png'}];
+  offers.push({...offers[0],id:'golden-large',variantId:'gid://shopify/ProductVariant/2',variantLabel:'White · 15 oz',priceCents:2999});
   let state={basketId:'test',revision:0,canEdit:true,appliedActions:[],currency:'USD',subtotalCents:0,lines:[],canCheckout:false};const initialState=structuredClone(state),states=new Map(),bindings={};let counter=0,checkoutCalls=0;
   const calculate=()=>{state.lines.forEach(l=>l.lineTotalCents=l.unitPriceCents*l.quantity);state.subtotalCents=state.lines.reduce((n,l)=>n+l.lineTotalCents,0);state.canCheckout=state.lines.length>0;};
   await context.route('**/*',async route=>{
@@ -36,11 +37,18 @@ const fs=require('fs'),path=require('path'),assert=require('node:assert/strict')
   });
   await page.goto('https://recast.test/shop.html');await page.waitForFunction(()=>document.querySelectorAll('.product').length===2);
   assert.equal(await page.locator('dialog#cart').count(),0,'Do not keep a separate disabled premade bag');
-  await page.locator('[name="pet"]').selectOption('dog');await page.waitForFunction(()=>document.querySelectorAll('.product').length===1);await page.reload();await page.waitForFunction(()=>document.querySelectorAll('.product').length===1);assert.match(page.url(),/pet=dog/);
-  await page.getByRole('button',{name:'View details',exact:true}).click();await page.locator('#product-detail').waitFor({state:'visible'});await page.locator('#close-detail').click();
-  await page.locator('.product').getByRole('button',{name:'Add to cart',exact:true}).click();await page.locator('.recast-basket[open]').waitFor();await page.waitForFunction(()=>document.querySelectorAll('.basket-line').length===1);
+  assert.equal(await page.locator('#filters').count(),0);
+  await page.locator('.product').first().getByRole('combobox').selectOption('golden-large');
+  assert.match(await page.locator('.product').first().innerText(),/29.99/);
+  await page.getByRole('button',{name:'See real product',exact:true}).first().click();
+  assert.match(await page.locator('#detail-variant').innerText(),/15 oz/);
+  await page.locator('#close-detail').click();
+  await page.locator('.product').first().getByRole('combobox').selectOption('golden-mug');
+
+  await page.getByRole('button',{name:'See real product',exact:true}).first().click();await page.locator('#product-detail').waitFor({state:'visible'});await page.locator('#close-detail').click();
+  await page.locator('.product').first().getByRole('button',{name:'Add to cart',exact:true}).click();await page.locator('.recast-basket[open]').waitFor();await page.waitForFunction(()=>document.querySelectorAll('.basket-line').length===1);
   assert.equal(state.lines[0].sourceKind,'premade');assert.match(await page.locator('[data-basket-subtotal]').innerText(),/24.99/);
-  await page.getByRole('button',{name:'Continue shopping',exact:true}).click();await page.locator('[name="pet"]').selectOption('all');await page.waitForFunction(()=>document.querySelectorAll('.product').length===2);
+  await page.getByRole('button',{name:'Continue shopping',exact:true}).click();await page.waitForFunction(()=>document.querySelectorAll('.product').length===2);
   await page.locator('.product').nth(1).getByRole('button',{name:'Add to cart',exact:true}).click();await page.waitForFunction(()=>document.querySelectorAll('.basket-line').length===2);await page.getByRole('button',{name:'Continue shopping',exact:true}).click();
   await page.goto('https://recast.test/custom-fixture.html');await page.waitForFunction(()=>window.ready);await page.getByRole('button',{name:'Approve & add to cart',exact:true}).click();await page.waitForFunction(()=>document.querySelectorAll('.basket-line').length===3);
   assert.equal(state.lines.filter(l=>l.sourceKind==='premade').length,2);assert.equal(state.lines.filter(l=>l.sourceKind==='custom').length,1);assert.equal(state.subtotalCents,7497);
@@ -59,6 +67,6 @@ const fs=require('fs'),path=require('path'),assert=require('node:assert/strict')
   assert.notEqual(await page.evaluate(()=>localStorage.getItem('recast_basket_id_v1')),savedId);assert.equal(checkoutCalls,1);
   await page.locator('[data-saved-carts]').selectOption(savedId);await page.waitForFunction(()=>document.querySelectorAll('.basket-line').length===2);
   assert.equal(state.lines[0].artworkId,'golden');assert.equal(state.lines[1].artworkId,'ART-CUSTOM');assert.equal(checkoutCalls,1);
-  assert.deepEqual(errors,[]);console.log('PASS unified premade + custom cart, filter reload, distinct designs, quantity, removal, retained checkout and layout',engine,width);await context.close();
+  assert.deepEqual(errors,[]);console.log('PASS unified premade + custom cart, product sections, distinct designs, quantity, removal, retained checkout and layout',engine,width);await context.close();
  }}finally{await browser.close();}
 })().catch(e=>{console.error(e);process.exitCode=1;});

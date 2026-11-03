@@ -42,6 +42,6 @@ export function resolveBag(lines, catalog, fulfillment) {
 }
 // Deliberate allow-list: never expose private master keys or fulfillment data.
 export function publicOffer(offer) {
-  const fields=['id','title','occasion','pet','breed','product','variantLabel','variantId','priceCents','currency','artworkRevision','mockupUrl','status'];
+  const fields=['id','designId','title','occasion','pet','breed','product','variantLabel','variantId','priceCents','currency','artworkRevision','mockupUrl','status'];
   return {...Object.fromEntries(fields.map(k=>[k,offer[k]])),proof:{provider:'printful',approved:true,artworkRevision:offer.artworkRevision}};
 }

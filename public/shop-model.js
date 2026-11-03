@@ -67,3 +67,14 @@ export function shopFilterQuery(filters) {
   if(filters.occasion === 'all') params.set('occasion','all');
   return params.toString();
 }
+
+// Group exact artwork variants without merging unrelated designs or revisions.
+export function groupShopOffers(offers){
+ const groups=new Map();
+ for(const offer of offers.filter(readyOffer)){
+  const key=JSON.stringify([offer.product,offer.designId||offer.id,offer.artworkRevision]);
+  if(!groups.has(key))groups.set(key,[]);
+  groups.get(key).push(offer);
+ }
+ return [...groups.values()].map(variants=>variants.sort((a,b)=>a.priceCents-b.priceCents));
+}

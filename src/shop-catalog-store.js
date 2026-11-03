@@ -49,7 +49,13 @@ export async function publicShopCatalog(env){
  const catalog=await readShopCatalog(env);if(!catalog.offers.length)return {version:1,offers:[]};
  const products=await shopifyCatalog(env),offers=[];
  for(const offer of catalog.offers){
-  try{const checked=await resolveShopOffer(env,offer.id,offer.artworkRevision,{catalog,products,integrity:false});offers.push({...publicOffer(offer),priceCents:checked.priceCents});}catch{/* Unapproved, retired or unavailable merchandise is never advertised. */}
+  try{const checked=await resolveShopOffer(env,offer.id,offer.artworkRevision,{catalog,products,integrity:false});offers.push({...publicOffer(offer),priceCents:checked.priceCents,productPreviewUrl:preferredShopPreview(offer,checked.record)});}catch{/* Unapproved, retired or unavailable merchandise is never advertised. */}
  }
  return {version:1,offers};
+}
+
+// Only use a view from the already frozen approval; never synthesize a proof URL.
+export function preferredShopPreview(offer,record){
+ const views=(record.images||[]).filter(v=>typeof v.url==='string'&&v.url.startsWith(offer.mockupUrl+'/')&&/^[0-9]$/.test(v.url.slice(offer.mockupUrl.length+1)));
+ return (offer.product==='mug'?views.find(v=>/handle on (left|right)/i.test(v.title)):null)?.url||offer.mockupUrl;
 }

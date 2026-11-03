@@ -54,9 +54,9 @@ const pause=ms=>new Promise(resolve=>setTimeout(resolve,ms));
       // then return to Create before testing the wizard.
       await page.locator('.hero-secondary-cta').click();
       await page.waitForURL(url=>['/shop','/shop.html'].includes(url.pathname),{timeout:20000});
-      await page.waitForFunction(()=>document.querySelectorAll('#products .product').length>=2,{}, {timeout:20000});
-      const shopReached=await page.evaluate(()=>document.querySelectorAll('#products .product').length>=2
-        &&!!document.querySelector('#open-cart')&&!!document.querySelector('#filters'));
+      await page.waitForFunction(()=>document.querySelectorAll('#products .product').length>=1,{}, {timeout:20000});
+      const shopReached=await page.evaluate(()=>document.querySelectorAll('#products .product').length>=1
+        &&!!document.querySelector('#open-cart')&&!!document.querySelector('#product-nav'));
       await page.screenshot({path:out+'/'+name+'-shop.png'});
       await page.goto(base+'/?launch-audit-return='+Date.now(),{waitUntil:'domcontentloaded',timeout:45000});
       await page.waitForFunction(()=>document.querySelectorAll('#product-grid .product').length===18,{}, {timeout:20000});
