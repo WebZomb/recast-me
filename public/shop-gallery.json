@@ -204,6 +204,66 @@
         "15 oz"
       ],
       "originalMasterSha256": "ec8bb18f88673696238e9183d743debc47c7763402d7c843bd1514e864ddd7f3"
+    },
+    {
+      "id": "village-jack-russell",
+      "designId": "christmas-village-jack-russell",
+      "title": "Jack Russell Terrier Christmas Village Mug",
+      "pet": "dog",
+      "breed": "Jack Russell Terrier",
+      "product": "mug",
+      "occasion": "christmas",
+      "status": "preview",
+      "artworkRevision": "6f416806d0fb34a4190cced090da3cc494e15a5e00a64e01f9ebf49c5149c70a",
+      "artworkImage": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-village-jack-russell-original-20261103.png?v=1793745496",
+      "salesImage": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-village-jack-russell-mug-20261103.webp?v=1793745501",
+      "artworkWidth": 1254,
+      "artworkHeight": 1254,
+      "plannedSizes": [
+        "11 oz",
+        "15 oz"
+      ],
+      "originalMasterSha256": "5deac5f34dc4294be434c80671e2076748064c20bdd693f884d64b01fd6ce289"
+    },
+    {
+      "id": "village-chihuahua",
+      "designId": "christmas-village-chihuahua",
+      "title": "Chihuahua Christmas Village Mug",
+      "pet": "dog",
+      "breed": "Chihuahua",
+      "product": "mug",
+      "occasion": "christmas",
+      "status": "preview",
+      "artworkRevision": "e9720b0aea70a46756d75d12789ccf9cf02b1b434da3496af440d8160aade8e2",
+      "artworkImage": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-village-chihuahua-original-20261103.png?v=1793745506",
+      "salesImage": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-village-chihuahua-mug-20261103.webp?v=1793745511",
+      "artworkWidth": 1254,
+      "artworkHeight": 1254,
+      "plannedSizes": [
+        "11 oz",
+        "15 oz"
+      ],
+      "originalMasterSha256": "d1df44a927cf16bc63e95d17676213f682fb4787144a242551c987edd108393f"
+    },
+    {
+      "id": "village-dachshund",
+      "designId": "christmas-village-dachshund",
+      "title": "Dachshund Christmas Village Mug",
+      "pet": "dog",
+      "breed": "Dachshund",
+      "product": "mug",
+      "occasion": "christmas",
+      "status": "preview",
+      "artworkRevision": "4299b3b3020d74cb7e48a835a7a8252a70a86e1ad75eca0229032f302789b2a8",
+      "artworkImage": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-village-dachshund-original-20261103.png?v=1793745516",
+      "salesImage": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-village-dachshund-mug-20261103.webp?v=1793745521",
+      "artworkWidth": 1254,
+      "artworkHeight": 1254,
+      "plannedSizes": [
+        "11 oz",
+        "15 oz"
+      ],
+      "originalMasterSha256": "7303cca5cbe4b65208c92563e4e262e434efb617d58d440e737ed31962e622bb"
     }
   ]
 }
