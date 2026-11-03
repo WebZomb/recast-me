@@ -30,3 +30,14 @@ Revert the gallery PR and redeploy the Worker. The prior live Golden Retriever o
 - `src/shop-expansion.js` defines both existing Shopify mug sizes per new source, with server-bound checks and explicit `REVIEWED_EXPANSION_PROOFS` allowlist, still empty. `PREMADE_EXPANSION_ENABLED=false`: no supplier jobs/orders/pricing/fulfillment were initiated by this gallery release. Do not claim these new illustrations are purchasable.
 - CI and deployment receipts to be appended only after they succeed; baseline and rollback are unchanged.
 
+
+## Verified live release (November 3, 2026)
+
+- Source PR130 head `a1c133a1d19672db1de2849dec29f2c5ad34a0e6` passed Recast security validation run `41733694956` and customer-policy Chromium/WebKit run `41733695201`. Merged into main via squash `63738f53e1fe034c43d7c2a4ea37e9034335f11d`.
+- Cloudflare production deploy `41734842179` **success**, including offline tests/dry run and read-only smoke, Worker version `9357de01-3122-42c5-a9fb-6a5877f10a6b`.
+- Read-only public browser audit `41734842374` **success**. Independently queried `https://recastmeai.com/shop-gallery.json` after deployment: **13** preview records, **10** dogs and **3** cats (ending Jack Russell Terrier, Chihuahua, Dachshund). `/shop.html` imports `/shop.js?v=6`; published module includes `concept-product` gallery; `/api/shop/catalog` still returns exactly **2** approved buyable Golden Retriever offers; `/api/basket/status` enabled=true.
+- Connected Opera live accessibility tree confirms new mug designs appear in the existing Mugs section, each labeled **Print preview pending / Not yet available to buy**, with **See artwork** and **View larger** controls; the prior verified Golden Retriever product retains its size selector, supplier preview, and Add to Cart.
+- Shopify Files search for Rottweiler found **no** separate high-resolution file. User-provided screenshot shows the older fireplace scene but is not an authoritative master or verified supplier mockup. Do not include that older asset as present or ready to sell.
+- No live cart mutation, payment, production order, Printful mockup task or new supplier-approved print file was created during release. `PREMADE_EXPANSION_ENABLED=false` until the 26 variant mockups/print placements are prepared and inspected; `REVIEWED_EXPANSION_PROOFS` remains empty. Hence new illustrated products are preview-only.
+- Reversion: revert squash `63738f53e1fe034c43d7c2a4ea37e9034335f11d` and rerun guarded deployment; existing approved two-offer Golden Retriever catalog and saved baskets need no data rollback.
+
