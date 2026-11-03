@@ -86,7 +86,7 @@ function previewCard(design){
   toggle.disabled=!mugScene;
   if(!mugScene)toggle.title='Mug scene pending; original artwork is shown';
  }
- img.onerror=()=>{if(!showingArtwork&&mugScene){showingArtwork=true;updateImage();}else img.alt='Artwork image unavailable';};
+ img.onerror=()=>{img.alt='Preview temporarily unavailable — try the other view';};
  visual.append(img,badge);details.append(title,note,sizes,actions);card.append(visual,details);updateImage();
  return card;
 }
