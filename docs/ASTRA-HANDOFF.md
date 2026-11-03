@@ -457,3 +457,5 @@ November3 quick-select Shop LIVE: PR128 main3967f90d, Worker31df0587-d96d-4201-9
 
 
 November3 SEO audit: live shop/Christmas canonicals and sitemap remain correct; private orders/admin noindex and true404 preserved. PR128 deployment/browser receipts verified; two approved mug sizes remain current inventory. HTTP still200 without redirect; Search Console absent, PageSpeed429. Quick-shop receipt records1.1(1003) Waiting for Review, but fresh public Apple lookup remains1.0. No runtime or commerce writes. Audit documentation commit43601407; see [SEO gates](ASTRA-SESSION-SEO-2026-11-02.md).
+
+Latest: [November 3 quick-shop cart responsiveness](ASTRA-SESSION-QUICK-CART-2026-11-03.md). Reduce redundant basket reads after adding verified gifts and custom artworks. Test and deployment state in session note.
