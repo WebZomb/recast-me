@@ -127,6 +127,42 @@ export const EXPANSION_DESIGNS=Object.freeze([
     "pet": "cat",
     "breed": "Tuxedo",
     "occasion": "christmas"
+  },
+  {
+    "id": "christmas-village-jack-russell",
+    "requestId": "RC-SHOP-JACK-RUSSELL-V1",
+    "asset": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-village-jack-russell-original-20261103.png?v=1793745496",
+    "sha256": "6f416806d0fb34a4190cced090da3cc494e15a5e00a64e01f9ebf49c5149c70a",
+    "originalMasterSha256": "5deac5f34dc4294be434c80671e2076748064c20bdd693f884d64b01fd6ce289",
+    "width": 1254,
+    "height": 1254,
+    "pet": "dog",
+    "breed": "Jack Russell Terrier",
+    "occasion": "christmas"
+  },
+  {
+    "id": "christmas-village-chihuahua",
+    "requestId": "RC-SHOP-CHIHUAHUA-V1",
+    "asset": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-village-chihuahua-original-20261103.png?v=1793745506",
+    "sha256": "e9720b0aea70a46756d75d12789ccf9cf02b1b434da3496af440d8160aade8e2",
+    "originalMasterSha256": "d1df44a927cf16bc63e95d17676213f682fb4787144a242551c987edd108393f",
+    "width": 1254,
+    "height": 1254,
+    "pet": "dog",
+    "breed": "Chihuahua",
+    "occasion": "christmas"
+  },
+  {
+    "id": "christmas-village-dachshund",
+    "requestId": "RC-SHOP-DACHSHUND-V1",
+    "asset": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-village-dachshund-original-20261103.png?v=1793745516",
+    "sha256": "4299b3b3020d74cb7e48a835a7a8252a70a86e1ad75eca0229032f302789b2a8",
+    "originalMasterSha256": "7303cca5cbe4b65208c92563e4e262e434efb617d58d440e737ed31962e622bb",
+    "width": 1254,
+    "height": 1254,
+    "pet": "dog",
+    "breed": "Dachshund",
+    "occasion": "christmas"
   }
 ]);
 export const EXPANSION_ITEMS=Object.freeze(EXPANSION_DESIGNS.flatMap(d=>[
