@@ -8,8 +8,8 @@ import {shopRoutes} from '../src/shop-routes.js';
 const manifest=JSON.parse(readFileSync(new URL('../public/shop-gallery.json',import.meta.url),'utf8'));
 
 test('server-side Christmas mug designs match the exact pinned public art and both existing sizes',()=>{
- assert.equal(EXPANSION_DESIGNS.length,10);
- assert.equal(EXPANSION_ITEMS.length,20);
+ assert.equal(EXPANSION_DESIGNS.length,13);
+ assert.equal(EXPANSION_ITEMS.length,26);
  assert.equal(new Set(EXPANSION_ITEMS.map(x=>x.id)).size,20);
  for(const design of EXPANSION_DESIGNS){
   const visual=manifest.designs.find(d=>d.designId===design.id);
@@ -42,7 +42,7 @@ test('tampered remote artwork never creates a supplier preview or a purchasable 
  assert.deepEqual(response,{enabled:true,created:0,polled:0,ready:0});
  const report=await shopExpansionStatus(env);
  assert.ok(report.items.every(item=>item.status==='needs_review'));
- assert.equal(external,10,'Each distinct source is tried once, never replaced by another image');
+ assert.equal(external,13,'Each distinct source is tried once, never replaced by another image');
  assert.equal(await env.ARTWORK.get('shop/catalog/v1.json'),null);
  assert.doesNotMatch(JSON.stringify(report),/accessToken|approvalToken|snapshotKey|PRINTFUL_API_TOKEN/);
 });
