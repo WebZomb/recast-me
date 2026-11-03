@@ -173,7 +173,8 @@ export const EXPANSION_DESIGNS=Object.freeze([
     "height": 1254,
     "pet": "cat",
     "breed": "Ragdoll Cat",
-    "occasion": "christmas"
+    "occasion": "christmas",
+    "title": "Ragdoll · Winter Crystal Palace Mug"
   },
   {
     "id": "christmas-archive-poodle-lavender",
@@ -184,7 +185,8 @@ export const EXPANSION_DESIGNS=Object.freeze([
     "height": 1254,
     "pet": "dog",
     "breed": "Poodle",
-    "occasion": "christmas"
+    "occasion": "christmas",
+    "title": "Poodle · Lavender Christmas Mug"
   },
   {
     "id": "christmas-archive-beagle-santa-mail",
@@ -195,7 +197,8 @@ export const EXPANSION_DESIGNS=Object.freeze([
     "height": 1254,
     "pet": "dog",
     "breed": "Beagle",
-    "occasion": "christmas"
+    "occasion": "christmas",
+    "title": "Beagle · Letters to Santa Mug"
   },
   {
     "id": "christmas-archive-maine-coon-snowfall",
@@ -206,7 +209,8 @@ export const EXPANSION_DESIGNS=Object.freeze([
     "height": 1254,
     "pet": "cat",
     "breed": "Maine Coon",
-    "occasion": "christmas"
+    "occasion": "christmas",
+    "title": "Maine Coon · Winter Snowfall Mug"
   },
   {
     "id": "christmas-archive-white-persian-rose",
@@ -217,7 +221,8 @@ export const EXPANSION_DESIGNS=Object.freeze([
     "height": 1254,
     "pet": "cat",
     "breed": "White Persian Cat",
-    "occasion": "christmas"
+    "occasion": "christmas",
+    "title": "White Persian · Rosy Christmas Mug"
   },
   {
     "id": "christmas-archive-english-bulldog-gifts",
@@ -228,7 +233,8 @@ export const EXPANSION_DESIGNS=Object.freeze([
     "height": 1254,
     "pet": "dog",
     "breed": "English Bulldog",
-    "occasion": "christmas"
+    "occasion": "christmas",
+    "title": "English Bulldog · Under the Tree Mug"
   },
   {
     "id": "christmas-archive-silver-tabby-toy-train",
@@ -239,7 +245,8 @@ export const EXPANSION_DESIGNS=Object.freeze([
     "height": 1254,
     "pet": "cat",
     "breed": "Silver Tabby Cat",
-    "occasion": "christmas"
+    "occasion": "christmas",
+    "title": "Silver Tabby · Christmas Express Mug"
   },
   {
     "id": "christmas-archive-german-shepherd-snowy-street",
@@ -250,7 +257,8 @@ export const EXPANSION_DESIGNS=Object.freeze([
     "height": 1254,
     "pet": "dog",
     "breed": "German Shepherd",
-    "occasion": "christmas"
+    "occasion": "christmas",
+    "title": "German Shepherd · Snowy Village Mug"
   },
   {
     "id": "christmas-archive-russian-blue-midnight",
@@ -261,7 +269,8 @@ export const EXPANSION_DESIGNS=Object.freeze([
     "height": 1254,
     "pet": "cat",
     "breed": "Russian Blue Cat",
-    "occasion": "christmas"
+    "occasion": "christmas",
+    "title": "Russian Blue · Moonlit Christmas Mug"
   },
   {
     "id": "christmas-archive-maine-coon-fireside",
@@ -272,7 +281,8 @@ export const EXPANSION_DESIGNS=Object.freeze([
     "height": 1254,
     "pet": "cat",
     "breed": "Maine Coon",
-    "occasion": "christmas"
+    "occasion": "christmas",
+    "title": "Maine Coon · Fireside Christmas Mug"
   },
   {
     "id": "christmas-archive-british-shorthair-red-velvet",
@@ -283,7 +293,8 @@ export const EXPANSION_DESIGNS=Object.freeze([
     "height": 1254,
     "pet": "cat",
     "breed": "British Shorthair Cat",
-    "occasion": "christmas"
+    "occasion": "christmas",
+    "title": "British Shorthair · Velvet Christmas Mug"
   },
   {
     "id": "christmas-archive-pointer-winter-woods",
@@ -294,7 +305,8 @@ export const EXPANSION_DESIGNS=Object.freeze([
     "height": 1254,
     "pet": "dog",
     "breed": "German Shorthaired Pointer",
-    "occasion": "christmas"
+    "occasion": "christmas",
+    "title": "Pointer · Winter Woods Mug"
   },
   {
     "id": "christmas-archive-french-bulldog-toy-shop",
@@ -305,7 +317,8 @@ export const EXPANSION_DESIGNS=Object.freeze([
     "height": 1254,
     "pet": "dog",
     "breed": "French Bulldog",
-    "occasion": "christmas"
+    "occasion": "christmas",
+    "title": "French Bulldog · Christmas Toy Shop Mug"
   },
   {
     "id": "christmas-archive-abyssinian-evergreen",
@@ -316,7 +329,8 @@ export const EXPANSION_DESIGNS=Object.freeze([
     "height": 1254,
     "pet": "cat",
     "breed": "Abyssinian Cat",
-    "occasion": "christmas"
+    "occasion": "christmas",
+    "title": "Abyssinian · Evergreen Glow Mug"
   },
   {
     "id": "christmas-archive-chihuahua-holiday-gold",
@@ -327,7 +341,8 @@ export const EXPANSION_DESIGNS=Object.freeze([
     "height": 1254,
     "pet": "dog",
     "breed": "Chihuahua",
-    "occasion": "christmas"
+    "occasion": "christmas",
+    "title": "Chihuahua · Holiday Gold Mug"
   },
   {
     "id": "christmas-archive-orange-persian-cozy-fire",
@@ -338,7 +353,8 @@ export const EXPANSION_DESIGNS=Object.freeze([
     "height": 1254,
     "pet": "cat",
     "breed": "Orange Persian Cat",
-    "occasion": "christmas"
+    "occasion": "christmas",
+    "title": "Orange Persian · Cozy Fireside Mug"
   },
   {
     "id": "christmas-archive-chocolate-labrador-chalet",
@@ -349,7 +365,8 @@ export const EXPANSION_DESIGNS=Object.freeze([
     "height": 1254,
     "pet": "dog",
     "breed": "Chocolate Labrador",
-    "occasion": "christmas"
+    "occasion": "christmas",
+    "title": "Chocolate Labrador · Winter Chalet Mug"
   },
   {
     "id": "christmas-archive-dalmatian-christmas-engine",
@@ -360,7 +377,8 @@ export const EXPANSION_DESIGNS=Object.freeze([
     "height": 1254,
     "pet": "dog",
     "breed": "Dalmatian",
-    "occasion": "christmas"
+    "occasion": "christmas",
+    "title": "Dalmatian · Christmas Fire Engine Mug"
   },
   {
     "id": "christmas-archive-sphynx-present-surprise",
@@ -371,7 +389,8 @@ export const EXPANSION_DESIGNS=Object.freeze([
     "height": 1254,
     "pet": "cat",
     "breed": "Sphynx Cat",
-    "occasion": "christmas"
+    "occasion": "christmas",
+    "title": "Sphynx · Christmas Present Mug"
   },
   {
     "id": "christmas-archive-dachshund-gingerbread-village",
@@ -382,7 +401,8 @@ export const EXPANSION_DESIGNS=Object.freeze([
     "height": 1254,
     "pet": "dog",
     "breed": "Dachshund",
-    "occasion": "christmas"
+    "occasion": "christmas",
+    "title": "Dachshund · Gingerbread Village Mug"
   },
   {
     "id": "christmas-archive-rottweiler-fireside",
@@ -393,7 +413,8 @@ export const EXPANSION_DESIGNS=Object.freeze([
     "height": 1254,
     "pet": "dog",
     "breed": "Rottweiler",
-    "occasion": "christmas"
+    "occasion": "christmas",
+    "title": "Rottweiler · Fireside Christmas Mug"
   },
   {
     "id": "christmas-archive-jack-russell-snowy-sleigh",
@@ -404,12 +425,13 @@ export const EXPANSION_DESIGNS=Object.freeze([
     "height": 1254,
     "pet": "dog",
     "breed": "Jack Russell Terrier",
-    "occasion": "christmas"
+    "occasion": "christmas",
+    "title": "Jack Russell · Snowy Sleigh Mug"
   }
 ]);
 export const EXPANSION_ITEMS=Object.freeze(EXPANSION_DESIGNS.flatMap(d=>[
- {id:d.id.replace(/^christmas-/,'')+'-mug-11oz',designId:d.id,sku:'RECAST-MUG-11OZ',title:d.breed+' Christmas Village Mug',variantLabel:'White glossy · 11 oz'},
- {id:d.id.replace(/^christmas-/,'')+'-mug-15oz',designId:d.id,sku:'RECAST-MUG-15OZ',title:d.breed+' Christmas Village Large Mug',variantLabel:'White glossy · 15 oz'}
+ {id:d.id.replace(/^christmas-/,'')+'-mug-11oz',designId:d.id,sku:'RECAST-MUG-11OZ',title:d.title||d.breed+' Christmas Village Mug',variantLabel:'White glossy · 11 oz'},
+ {id:d.id.replace(/^christmas-/,'')+'-mug-15oz',designId:d.id,sku:'RECAST-MUG-15OZ',title:d.title?d.title+' · 15 oz':d.breed+' Christmas Village Large Mug',variantLabel:'White glossy · 15 oz'}
 ]));
 const byDesign=new Map(EXPANSION_DESIGNS.map(d=>[d.id,d]));
 // DO NOT add a proof hash until both Printful image and frozen print placement
