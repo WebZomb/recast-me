@@ -3,7 +3,7 @@
   "collection": "christmas",
   "type": "pet-mugs",
   "status": "previews-awaiting-supplier-approval",
-  "note": "Sales illustrations are not Printful supplier proofs. No price or checkout is offered for unverified artwork.",
+  "note": "Source artwork is pinned to the exact bytes served by the Shopify CDN; the separate originalMasterSha256 records generated files before Shopify image optimization. Illustrative mug images are not Printful proofs.",
   "designs": [
     {
       "id": "village-golden-retriever",
@@ -14,15 +14,16 @@
       "product": "mug",
       "occasion": "christmas",
       "status": "preview",
-      "artworkRevision": "582bc22115b2475f2ec6e15d4198c2071a69729dc619695dcaa23a1396e89137",
-      "artworkImage": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-christmas-village-golden-retriever-art-20261103.png?v=1793743769",
+      "artworkRevision": "6e0a3f4c45a33cb4cc002344c95139d4712d1c6dc98566340dd41172e09e015f",
+      "artworkImage": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-christmas-village-golden-retriever-artwork-approved-20261103.png?v=1793745022",
       "salesImage": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-christmas-village-golden-retriever-mug-sales-20261103.webp?v=1793743891",
       "artworkWidth": 1254,
       "artworkHeight": 1254,
       "plannedSizes": [
         "11 oz",
         "15 oz"
-      ]
+      ],
+      "originalMasterSha256": "582bc22115b2475f2ec6e15d4198c2071a69729dc619695dcaa23a1396e89137"
     },
     {
       "id": "village-labrador-retriever",
@@ -33,7 +34,7 @@
       "product": "mug",
       "occasion": "christmas",
       "status": "preview",
-      "artworkRevision": "cc1f562f615f63cac4748f78bf091bc05bfdc8e9c9118007cc01176d30a91b0e",
+      "artworkRevision": "2fe1cef7ace1ed368b16e49b53f93c93928c377d6d8550427c3288d51bae114e",
       "artworkImage": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-christmas-village-labrador-retriever-art-20261103.png?v=1793743824",
       "salesImage": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-christmas-village-labrador-retriever-mug-sales-20261103.webp?v=1793743895",
       "artworkWidth": 1254,
@@ -41,7 +42,8 @@
       "plannedSizes": [
         "11 oz",
         "15 oz"
-      ]
+      ],
+      "originalMasterSha256": "cc1f562f615f63cac4748f78bf091bc05bfdc8e9c9118007cc01176d30a91b0e"
     },
     {
       "id": "village-german-shepherd",
@@ -52,7 +54,7 @@
       "product": "mug",
       "occasion": "christmas",
       "status": "preview",
-      "artworkRevision": "db4d5801ca9cdb62f47022ae1ab0bc4f99cfcf0a4e983fa6d749c473e4b030d0",
+      "artworkRevision": "eeeb9c399993eae5cc8ebfada27b893171fe25c8e39dff118bd90b8b68eb3382",
       "artworkImage": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-christmas-village-german-shepherd-art-20261103.png?v=1793743831",
       "salesImage": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-christmas-village-german-shepherd-mug-sales-20261103.webp?v=1793743899",
       "artworkWidth": 1254,
@@ -60,7 +62,8 @@
       "plannedSizes": [
         "11 oz",
         "15 oz"
-      ]
+      ],
+      "originalMasterSha256": "db4d5801ca9cdb62f47022ae1ab0bc4f99cfcf0a4e983fa6d749c473e4b030d0"
     },
     {
       "id": "village-french-bulldog",
@@ -71,7 +74,7 @@
       "product": "mug",
       "occasion": "christmas",
       "status": "preview",
-      "artworkRevision": "f70ecbf69db44fbb8cabad1a29137bca024e9d07c72777404c82565f19cbfb92",
+      "artworkRevision": "8463dab4746cdeb6ac9ff86110c1ed69b56b99b3784e71a904433f5de67a6de3",
       "artworkImage": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-christmas-village-french-bulldog-art-20261103.png?v=1793743838",
       "salesImage": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-christmas-village-french-bulldog-mug-sales-20261103.webp?v=1793743904",
       "artworkWidth": 1254,
@@ -79,7 +82,8 @@
       "plannedSizes": [
         "11 oz",
         "15 oz"
-      ]
+      ],
+      "originalMasterSha256": "f70ecbf69db44fbb8cabad1a29137bca024e9d07c72777404c82565f19cbfb92"
     },
     {
       "id": "village-beagle",
@@ -90,7 +94,7 @@
       "product": "mug",
       "occasion": "christmas",
       "status": "preview",
-      "artworkRevision": "f6c066a9cc15124126d37cc173df7c4a2df6a20c7522efc59e57df4e9a5a9c24",
+      "artworkRevision": "c16994403a42d4887b17860c26734cf19071f15dd2f66789bb5a7a7a5d99728d",
       "artworkImage": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-christmas-village-beagle-art-20261103.png?v=1793743845",
       "salesImage": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-christmas-village-beagle-mug-sales-20261103.webp?v=1793743908",
       "artworkWidth": 1254,
@@ -98,7 +102,8 @@
       "plannedSizes": [
         "11 oz",
         "15 oz"
-      ]
+      ],
+      "originalMasterSha256": "f6c066a9cc15124126d37cc173df7c4a2df6a20c7522efc59e57df4e9a5a9c24"
     },
     {
       "id": "village-poodle",
@@ -109,7 +114,7 @@
       "product": "mug",
       "occasion": "christmas",
       "status": "preview",
-      "artworkRevision": "26aa77ff72df8e01b48c2fd5e22a6890b62e4398177327eda66feb056240e6e6",
+      "artworkRevision": "404cc348114c8d1c3b66007a0c785f09abee818f4a495c8666d35524a92f6428",
       "artworkImage": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-christmas-village-poodle-art-20261103.png?v=1793743853",
       "salesImage": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-christmas-village-poodle-mug-sales-20261103.webp?v=1793743915",
       "artworkWidth": 1254,
@@ -117,7 +122,8 @@
       "plannedSizes": [
         "11 oz",
         "15 oz"
-      ]
+      ],
+      "originalMasterSha256": "26aa77ff72df8e01b48c2fd5e22a6890b62e4398177327eda66feb056240e6e6"
     },
     {
       "id": "village-husky",
@@ -128,7 +134,7 @@
       "product": "mug",
       "occasion": "christmas",
       "status": "preview",
-      "artworkRevision": "de90e9ead88b054f344dcaeab20169d3efb92e35bdc9046bea8d9638ad994cd4",
+      "artworkRevision": "c5a2531cd402cfa39db4f047f9b3e4f96e454795821bb5721618a54f2ad48ea8",
       "artworkImage": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-christmas-village-husky-art-20261103.png?v=1793743860",
       "salesImage": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-christmas-village-husky-mug-sales-20261103.webp?v=1793743920",
       "artworkWidth": 1254,
@@ -136,7 +142,8 @@
       "plannedSizes": [
         "11 oz",
         "15 oz"
-      ]
+      ],
+      "originalMasterSha256": "de90e9ead88b054f344dcaeab20169d3efb92e35bdc9046bea8d9638ad994cd4"
     },
     {
       "id": "village-siamese-cat",
@@ -147,7 +154,7 @@
       "product": "mug",
       "occasion": "christmas",
       "status": "preview",
-      "artworkRevision": "84608cef086ab9acc4c585a3ce7d731f436d225ef0051d6e142ddb34d8671ece",
+      "artworkRevision": "3afbbac01b6fd3e16f1888a20f4b52855dca45949895f286a14126cdde4956ef",
       "artworkImage": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-christmas-village-siamese-cat-art-20261103.png?v=1793743866",
       "salesImage": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-christmas-village-siamese-cat-mug-sales-20261103.webp?v=1793743924",
       "artworkWidth": 1254,
@@ -155,7 +162,8 @@
       "plannedSizes": [
         "11 oz",
         "15 oz"
-      ]
+      ],
+      "originalMasterSha256": "84608cef086ab9acc4c585a3ce7d731f436d225ef0051d6e142ddb34d8671ece"
     },
     {
       "id": "village-orange-tabby",
@@ -166,7 +174,7 @@
       "product": "mug",
       "occasion": "christmas",
       "status": "preview",
-      "artworkRevision": "3148db65251b1a10418ef54d1e21d749512f245ef20a36c895c34512169d1492",
+      "artworkRevision": "4c78cbac43d317c06364ade65c2247daf48c91c9d329af7893f1c49556f72055",
       "artworkImage": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-christmas-village-orange-tabby-art-20261103.png?v=1793743872",
       "salesImage": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-christmas-village-orange-tabby-mug-sales-20261103.webp?v=1793743929",
       "artworkWidth": 1254,
@@ -174,7 +182,8 @@
       "plannedSizes": [
         "11 oz",
         "15 oz"
-      ]
+      ],
+      "originalMasterSha256": "3148db65251b1a10418ef54d1e21d749512f245ef20a36c895c34512169d1492"
     },
     {
       "id": "village-tuxedo-cat",
@@ -185,7 +194,7 @@
       "product": "mug",
       "occasion": "christmas",
       "status": "preview",
-      "artworkRevision": "ec8bb18f88673696238e9183d743debc47c7763402d7c843bd1514e864ddd7f3",
+      "artworkRevision": "a65640bcc3f22ea17791de4781a6d87ceaa065da44098e17a1c9cd111d8683e1",
       "artworkImage": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-christmas-village-tuxedo-cat-art-20261103.png?v=1793743880",
       "salesImage": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-christmas-village-tuxedo-cat-mug-sales-20261103.webp?v=1793743933",
       "artworkWidth": 1254,
@@ -193,7 +202,8 @@
       "plannedSizes": [
         "11 oz",
         "15 oz"
-      ]
+      ],
+      "originalMasterSha256": "ec8bb18f88673696238e9183d743debc47c7763402d7c843bd1514e864ddd7f3"
     }
   ]
 }
