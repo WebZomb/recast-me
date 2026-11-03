@@ -20,3 +20,13 @@ Pending hosted CI + deployment and read-only smoke. Branch `recast/christmas-mug
 
 ## Rollback
 Revert the gallery PR and redeploy the Worker. The prior live Golden Retriever offers and all saved carts/orders remain intact. Shopify Files can remain as an asset archive; no order rollback needed.
+
+## November 3 additional mug image recovery and completion
+
+- Added **three more original artwork/decorated mug pairs** from this conversation: Jack Russell Terrier, Chihuahua and Dachshund. They join the 10 already staged, giving **13 preview designs** (10 dogs, 3 cats) plus the existing approved Golden Retriever Winter Lights mug in 11/15 oz. The existing page layout and basket are preserved.
+- The six additional images were uploaded to Recast Me's Shopify Files; public `shop-gallery.json` contains exact permanent URLs, optimized CDN SHA-256 hashes, and original generated-file hashes. All artwork PNGs measure 1254x1254 and show a face/scene; sales images are separate 960x960 WebP mug scenes.
+- Newly downloaded CDN sources and dimensions were independently checked from a connected computer: Jack Russell `6f416806d0fb34a4190cced090da3cc494e15a5e00a64e01f9ebf49c5149c70a`, Chihuahua `e9720b0aea70a46756d75d12789ccf9cf02b1b434da3496af440d8160aade8e2`, Dachshund `4299b3b3020d74cb7e48a835a7a8252a70a86e1ad75eca0229032f302789b2a8`.
+- The user's screenshot includes an older **Rottweiler mug with a fireplace** and small thumbnails of additional previous designs. That screenshot is visual evidence, **not** possession of their full-resolution artwork or Printful proofs; those exact earlier assets remain unverified. The earlier Golden Retriever artwork *is* already recovered and live.
+- `src/shop-expansion.js` defines both existing Shopify mug sizes per new source, with server-bound checks and explicit `REVIEWED_EXPANSION_PROOFS` allowlist, still empty. `PREMADE_EXPANSION_ENABLED=false`: no supplier jobs/orders/pricing/fulfillment were initiated by this gallery release. Do not claim these new illustrations are purchasable.
+- CI and deployment receipts to be appended only after they succeed; baseline and rollback are unchanged.
+
