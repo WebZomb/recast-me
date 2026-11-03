@@ -10,7 +10,7 @@ const manifest=JSON.parse(readFileSync(new URL('../public/shop-gallery.json',imp
 test('server-side Christmas mug designs match the exact pinned public art and both existing sizes',()=>{
  assert.equal(EXPANSION_DESIGNS.length,13);
  assert.equal(EXPANSION_ITEMS.length,26);
- assert.equal(new Set(EXPANSION_ITEMS.map(x=>x.id)).size,20);
+ assert.equal(new Set(EXPANSION_ITEMS.map(x=>x.id)).size,26);
  for(const design of EXPANSION_DESIGNS){
   const visual=manifest.designs.find(d=>d.designId===design.id);
   assert.ok(visual,'Every server-design must have a preview');
