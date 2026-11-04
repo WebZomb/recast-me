@@ -113,3 +113,21 @@ test('35-design preview staging remains bounded and does not imply automatic sal
  assert.equal(Object.keys(REVIEWED_EXPANSION_PROOFS).length,2);
  assert.equal(EXPANSION_ITEMS.length,70);
 });
+
+import {claimMugPreviewRateSlot} from '../src/shop-expansion.js';
+test('two mocked Printful create tasks per rolling 65 seconds, stored across cron rounds',async()=>{
+ const env={ARTWORK:new Bucket()};
+ assert.equal(await claimMugPreviewRateSlot(env,1793740000000),true);
+ assert.equal(await claimMugPreviewRateSlot(env,1793740001000),true);
+ assert.equal(await claimMugPreviewRateSlot(env,1793740061000),false);
+ assert.equal(await claimMugPreviewRateSlot(env,1793740066000),true);
+ assert.equal(await claimMugPreviewRateSlot(env,1793740067000),true);
+ assert.equal(await claimMugPreviewRateSlot(env,1793740068000),false);
+ const o=await env.ARTWORK.get('shop/preparation/v3/mockup-create-rate.json');
+ assert.equal((await o.json()).timestamps.length,2);
+});
+test('corrupt rate history stays fail closed and submits no new preview task',async()=>{
+ const env={ARTWORK:new Bucket()};
+ await env.ARTWORK.put('shop/preparation/v3/mockup-create-rate.json','{"timestamps":"corrupted"}');
+ assert.equal(await claimMugPreviewRateSlot(env,1793740000000),false);
+});
