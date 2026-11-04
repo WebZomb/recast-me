@@ -1,4 +1,5 @@
 import {groupShopOffers} from './shop-model.js?v=4';
+import {SHOP_COLLECTIONS} from './shop-collections.js?v=1';
 import {initialize,addPremade,openCart} from './basket.js?v=3';
 const $=s=>document.querySelector(s);
 const money=c=>new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(c/100);
@@ -111,11 +112,17 @@ function render(offers,previews=[]){
  previews=previews.filter(d=>!availableDesigns.has(d.designId+'|'+d.artworkRevision));
  const groups=groupShopOffers(offers),types=[...new Set([...groups.map(v=>v[0].product),...previews.map(v=>v.product)])];
  const order=Object.keys(productNames);types.sort((a,b)=>(order.indexOf(a)<0?99:order.indexOf(a))-(order.indexOf(b)<0?99:order.indexOf(b)));
- $('#products').replaceChildren();$('#product-nav').replaceChildren();$('#empty').hidden=groups.length>0||previews.length>0;
+ $('#products').replaceChildren();
+ $('#product-nav').replaceChildren(...SHOP_COLLECTIONS.map(collection=>{
+  const link=node('a',collection.label);
+  link.href=collection.url;
+  if(collection.slug==='mugs')link.setAttribute('aria-current','page');
+  return link;
+ }));
+ $('#empty').hidden=groups.length>0||previews.length>0;
  types.forEach((type,index)=>{
   const section=node('section',null,'product-section');section.id='product-'+index;
   const heading=node('h2',productNames[type]||type);section.append(heading);
-  const link=node('a',productNames[type]||type);link.href='#'+section.id;$('#product-nav').append(link);
   for(const [pet,label] of [['dog','Dog favorites'],['cat','Cat favorites'],['other','More to love']]){
    const items=groups.filter(v=>v[0].product===type&&(pet==='other'?!['dog','cat'].includes(v[0].pet):v[0].pet===pet));
    const pending=previews.filter(v=>v.product===type&&(pet==='other'?!['dog','cat'].includes(v.pet):v.pet===pet));
