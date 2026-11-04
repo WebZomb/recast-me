@@ -128,8 +128,10 @@ export async function runMagnetPilot(env,{create=createMockup,poll=mockupStatus,
 }
 export async function magnetPilotStatus(env){
  const state=await read(env,KEY);
+ const template=!state&&enabled(env)?await read(env,'shop/preparation/printfile-audit/v1/656.json'):null;
+ const visibleStatus=state?.status||(!enabled(env)?'not_started':!template||template.status==='checking'?'awaiting_template_audit':'not_started');
  return {enabled:enabled(env),id:MAGNET_PILOT.id,sourceDesign:master.id,
-  sku:MAGNET_PILOT.sku,status:state?.status||'not_started',
+  sku:MAGNET_PILOT.sku,status:visibleStatus,
   proofOnly:true,checkoutEnabled:false,automaticApproval:false,
   providerViewCount:state?.providerViewCount||0,
   code:state?.status==='needs_review'?state.code||'manual_review':null};
