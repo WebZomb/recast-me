@@ -206,3 +206,51 @@ for(const [name,change] of changedRemote)test('editing cannot bypass previous ch
  await assert.rejects(f.run(),e=>e.code==='basket_checkout_unknown');
  assert.equal(f.calls.remote,1);assert.equal(f.calls.writes,0);
 });
+
+import {isLegacyPreflightOnlyPending} from '../src/basket-checkout.js';
+const legacyPending=()=>({...identity,revision:2,status:'pending',startedAt:'2026-11-03T22:00:00Z',lines:structuredClone(lines)});
+test('only exact pre-fix preflight pending with same owner, basket, revision and lines qualifies',()=>{
+ const p=legacyPending(),expected=JSON.stringify(lines.map(l=>JSON.stringify([l.merchandiseId,l.quantity,[...l.attributes].map(a=>[a.key,a.value]).sort((a,b)=>a[0]<b[0]?-1:a[0]>b[0]?1:0)])));
+ assert.equal(isLegacyPreflightOnlyPending(p,identity,2,expected),true);
+ const cases=[
+  {...p,status:'ready'}, {...p,startedAt:'2026-11-04T03:08:37Z'},
+  {...p,startedAt:'2026-11-04T04:00:00Z'}, {...p,startedAt:'2026-10-01T01:00:00Z'},
+  {...p,ownerId:'another'}, {...p,basketId:'another'}, {...p,revision:1},
+  {...p,cartId:'gid://shopify/Cart/uncertain?key=possible'}, {...p,startedAt:'bad'},
+  {...p,lines:[{...p.lines[0],quantity:3}]},
+  {...p,attempt:'unknown'},null
+ ];
+ for(const record of cases)assert.equal(isLegacyPreflightOnlyPending(record,identity,2,expected),false);
+});
+test('one historical workerd preflight-only claim archives before exactly one Shopify cartCreate',async()=>{
+ const key=await checkoutAttemptKey(identity),prior=legacyPending(),original=JSON.stringify(prior),events=[];
+ const history=key.replace('commerce/basket-checkouts/v1/','commerce/basket-checkout-history/v1/').replace(/\\.json$/,'/2.json');
+ const objects=new Map([[key,{etag:'old-claim',body:original}]]);let serial=0,remote=0;
+ const bucket={
+  async get(k){const obj=objects.get(k);return obj?{etag:obj.etag,json:async()=>JSON.parse(obj.body)}:null;},
+  async put(k,body,options){
+   const was=objects.get(k),only=options?.onlyIf;
+   if(only instanceof Headers){assert.equal(only.get('If-None-Match'),'*');if(was)return null;}
+   else if(was?.etag!==only?.etagMatches)return null;
+   events.push(k===history?'archive':'current');
+   const record={etag:'v'+(++serial),body};objects.set(k,record);return {etag:record.etag};
+  }
+ };
+ const env={BASKET_ENABLED:'true',SHOPIFY_SHOP:'fixture',SHOPIFY_STOREFRONT_TOKEN:'fixture-token',ARTWORK:bucket};
+ const fetcher=async(_url,opts)=>{
+  remote++;assert.equal(opts.redirect,'manual');
+  assert.match(JSON.parse(opts.body).query,/cartCreate/);
+  return Response.json({data:{cartCreate:{cart:{
+   id:'gid://shopify/Cart/new?key=private-recovered',
+   checkoutUrl:'https://fixture.myshopify.com/checkouts/recovered',
+   lines:{nodes:lines.map(l=>({quantity:l.quantity,attributes:l.attributes,merchandise:{id:l.merchandiseId}}))}
+  },userErrors:[],warnings:[]}}});
+ };
+ const result=await beginBasketCheckout(env,identity,state,lines,{fetcher});
+ assert.equal(result.reused,false);assert.equal(remote,1);
+ assert.deepEqual(events,['archive','current','current']);
+ assert.equal(objects.get(history).body,original);
+ const ready=JSON.parse(objects.get(key).body);
+ assert.equal(ready.status,'ready');assert.equal(ready.checkoutUrl,'https://fixture.myshopify.com/checkouts/recovered');
+ assert.equal(ready.revision,2);assert.ok(ready.cartId.includes('key=private-recovered'));
+});
