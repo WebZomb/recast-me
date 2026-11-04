@@ -437,8 +437,18 @@ const byDesign=new Map(EXPANSION_DESIGNS.map(d=>[d.id,d]));
 // DO NOT add a proof hash until both Printful image and frozen print placement
 // have been independently inspected and compared to the pinned source artwork.
 export const REVIEWED_EXPANSION_PROOFS=Object.freeze({});
+// Separate v3 namespace preserves all v2 attempted records. No deletion, no blind supplier retries.
+export function approvedMugSourceMime(bytes){
+ if(bytes?.[0]===255&&bytes?.[1]===216&&bytes?.[2]===255)return 'image/jpeg';
+ if(bytes?.[0]===137&&bytes?.[1]===80&&bytes?.[2]===78&&bytes?.[3]===71&&bytes?.[4]===13&&bytes?.[5]===10&&bytes?.[6]===26&&bytes?.[7]===10)return 'image/png';
+ throw fault('seed_asset_format','The saved Christmas artwork is not a supported image format.',503);
+}
+export function canaryDesignCount(env){
+ const count=Number(env?.PREMADE_EXPANSION_CANARY_COUNT??35);
+ return Number.isInteger(count)&&count>=0&&count<=EXPANSION_DESIGNS.length?count:0;
+}
 
-const key=id=>`shop/preparation/v2/${id}.json`;
+const key=id=>`shop/preparation/v3/${id}.json`;
 const now=()=>new Date().toISOString();
 const base=env=>String(env.LIVE_APP_URL||env.PUBLIC_APP_URL||'https://recastmeai.com').replace(/\/$/,'');
 const inner=(env,path,body)=>new Request(base(env)+path,{method:body?'POST':'GET',headers:{'x-recast-request':'1',origin:base(env),...(body?{'content-type':'application/json'}:{})},body:body?JSON.stringify(body):undefined});
@@ -446,7 +456,7 @@ const b64=bytes=>{let out='';for(let i=0;i<bytes.length;i+=16384)out+=String.fro
 async function source(env,design){
  const meta=await read(env,`requests/${design.requestId}/request.json`);
  if(meta){if(meta.source!=='premade-catalog'||meta.catalogDesignId!==design.id||meta.catalogMasterHash!==design.sha256)throw fault('seed_identity','The catalog source needs review.',503);return meta;}
- const claim=`shop/preparation/v2/source-${design.id}.claim`;
+ const claim=`shop/preparation/v3/source-${design.id}.claim`;
  if(!await env.ARTWORK.put(claim,JSON.stringify({startedAt:now()}),{onlyIf:new Headers({'If-None-Match':'*'})}))throw fault('seed_source_pending','The original catalog import needs review before retrying.',503);
  if(!design.asset.startsWith('https://cdn.shopify.com/s/files/1/0854/3810/3796/files/'))throw fault('seed_asset','The source URL is not from the approved Recast Me media library.',503);
  // Workerd implements only manual/follow, not redirect:'error'. Reject 3xx explicitly.
@@ -458,13 +468,17 @@ async function source(env,design){
  if(!response.ok)throw fault('seed_asset','The approved catalog artwork could not load.',503);
  const bytes=new Uint8Array(await response.arrayBuffer());
  if(await hashBytes(bytes)!==design.sha256)throw fault('seed_asset_changed','The catalog artwork does not match its approved source.',503);
- const info=await env.IMAGES.info(new Blob([bytes],{type:'image/png'}).stream());
+ // Shopify Files may optimize PNG uploads into JPEG bytes while retaining a .png URL.
+ // SHA-256 is pinned to the actual delivered bytes; declare the actual MIME to Images and moderation.
+ const mime=approvedMugSourceMime(bytes);
+ const info=await env.IMAGES.info(new Blob([bytes],{type:mime}).stream());
  if(info.width!==design.width||info.height!==design.height)throw fault('seed_dimensions','The catalog artwork dimensions changed.',503);
  const notes=`Original fictional ${design.breed} Christmas Village — premade catalog`,text=notes+' ';
- const screened=await moderateContent(env,{text,images:[new File([bytes],design.id+'.png',{type:'image/png'})],required:true});
+ const screened=await moderateContent(env,{text,images:[new File([bytes],design.id+(mime==='image/jpeg'?'.jpg':'.png'),{type:mime})],required:true});
  const encoded=b64(bytes),createdAt=now(),requestId=design.requestId;
- const saved={requestId,accessToken:randomToken(),previewMime:'image/png',source:'premade-catalog',catalogDesignId:design.id,catalogMasterHash:design.sha256,catalogRightsConfirmedAt:createdAt,contentSafety:screened,notes,styleId:'christmas',styleName:'Christmas Village',subjectType:'pet',qualityMode:'original',modelUsed:null,status:'preview_ready',paid:false,fulfillment:'not_started',createdAt,updatedAt:createdAt,width:info.width,height:info.height};
- await env.ARTWORK.put(`shop/masters/${design.id}/${design.sha256}.png`,bytes,{onlyIf:new Headers({'If-None-Match':'*'}),httpMetadata:{contentType:'image/png'}});
+ const masterKey=`shop/masters/${design.id}/${design.sha256}.${mime==='image/jpeg'?'jpg':'png'}`;
+ const saved={requestId,accessToken:randomToken(),previewMime:mime,catalogMasterKey:masterKey,source:'premade-catalog',catalogDesignId:design.id,catalogMasterHash:design.sha256,catalogRightsConfirmedAt:createdAt,contentSafety:screened,notes,styleId:'christmas',styleName:'Christmas Village',subjectType:'pet',qualityMode:'original',modelUsed:null,status:'preview_ready',paid:false,fulfillment:'not_started',createdAt,updatedAt:createdAt,width:info.width,height:info.height};
+ await env.ARTWORK.put(masterKey,bytes,{onlyIf:new Headers({'If-None-Match':'*'}),httpMetadata:{contentType:mime}});
  await env.ARTWORK.put(`requests/${requestId}/preview.b64`,encoded,{onlyIf:new Headers({'If-None-Match':'*'})});
  await env.ARTWORK.put(`security/content-screening/${requestId}.json`,JSON.stringify({...screened,hash:await hash(encoded+'|'+text)}));
  const stored=await env.ARTWORK.put(`requests/${requestId}/request.json`,JSON.stringify(saved),{onlyIf:new Headers({'If-None-Match':'*'})});
@@ -495,7 +509,7 @@ async function freezeOffer(env,item,meta,state,design){
   return {...old,premadePrint};
  });
  const mockupUrl=prepared.approvedPreview.imageUrl,proof={provider:'printful',approved:true,artworkRevision:design.sha256,printfulVariantId:FULFILLMENT[item.sku].printfulVariantId,printFileHash:finalHash,placementHash,taskId:String(task.taskKey),checkedAt:now()};
- const offer={...item,designId:design.id,occasion:design.occasion,pet:design.pet,breed:design.breed,product:'mug',variantId:prepared.row.variantId,priceCents:Math.round(Number(prepared.row.price)*100),currency:'USD',status:'verified',artworkRevision:design.sha256,artworkKey:`shop/masters/${design.id}/${design.sha256}.png`,requestId:meta.requestId,sourceHash:record.sourceHash,proofHash:record.proofHash,mockupId:record.mockupId,approvalToken:record.token,approvalRecordHash:await hash(JSON.stringify(full)),mockupUrl,proof};
+ const offer={...item,designId:design.id,occasion:design.occasion,pet:design.pet,breed:design.breed,product:'mug',variantId:prepared.row.variantId,priceCents:Math.round(Number(prepared.row.price)*100),currency:'USD',status:'verified',artworkRevision:design.sha256,artworkKey:meta.catalogMasterKey||`shop/masters/${design.id}/${design.sha256}.png`,requestId:meta.requestId,sourceHash:record.sourceHash,proofHash:record.proofHash,mockupId:record.mockupId,approvalToken:record.token,approvalRecordHash:await hash(JSON.stringify(full)),mockupUrl,proof};
  await env.ARTWORK.put(`shop/proofs/${item.id}.json`,JSON.stringify({...proof,mockupUrl}));
  return {id:item.id,status:'ready_for_review',title:item.title,variantLabel:item.variantLabel,offer,views:prepared.approvedPreview.images,preparedAt:now()};
 }
@@ -516,7 +530,7 @@ async function publishReviewed(env,item,state){
 
 export async function runShopExpansion(env){
  if(env.PREMADE_EXPANSION_ENABLED!=='true'||!env.ARTWORK||!env.IMAGES)return {enabled:false};
- const lock='shop/preparation/v2/expansion.lock',existing=await env.ARTWORK.get(lock);
+ const lock='shop/preparation/v3/expansion.lock',existing=await env.ARTWORK.get(lock);
  if(existing&&Date.parse((await existing.json()).until)>Date.now())return {busy:true};
  const locked=await env.ARTWORK.put(lock,JSON.stringify({until:new Date(Date.now()+180000).toISOString()}),{onlyIf:existing?{etagMatches:existing.etag}:new Headers({'If-None-Match':'*'})});
  if(!locked)return {busy:true};
@@ -524,6 +538,7 @@ export async function runShopExpansion(env){
  try{
   for(const item of EXPANSION_ITEMS){
    const design=byDesign.get(item.designId);
+   if(!design||EXPANSION_DESIGNS.indexOf(design)>=canaryDesignCount(env))continue;
    let state=await read(env,key(item.id));
    if(state?.status==='published'||state?.status==='needs_review')continue;
    if(state?.status==='ready_for_review'){
@@ -575,5 +590,5 @@ export async function shopExpansionStatus(env){
   items.push({id:item.id,designId:item.designId,title:item.title,variantLabel:item.variantLabel,status:state?.status||'not_started',code:state?.code||null,diagnostic:state?.status==='needs_review'?safeExpansionFailureClass(state.message):null,
    ...(offer?{views:state.views,previewUrl:offer.mockupUrl,reviewSignature:await hash(JSON.stringify([offer.approvalRecordHash,offer.proofHash,offer.proof.printFileHash,offer.proof.placementHash]))}:{})});
  }
- return {enabled:env.PREMADE_EXPANSION_ENABLED==='true',items};
+ return {enabled:env.PREMADE_EXPANSION_ENABLED==='true',canaryDesigns:canaryDesignCount(env),queue:'v3',items};
 }
