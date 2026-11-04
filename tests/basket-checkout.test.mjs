@@ -224,7 +224,7 @@ test('only exact pre-fix preflight pending with same owner, basket, revision and
 });
 test('one historical workerd preflight-only claim archives before exactly one Shopify cartCreate',async()=>{
  const key=await checkoutAttemptKey(identity),prior=legacyPending(),original=JSON.stringify(prior),events=[];
- const history=key.replace('commerce/basket-checkouts/v1/','commerce/basket-checkout-history/v1/').replace(/\.json$,'/2.json');
+ const history=key.replace('commerce/basket-checkouts/v1/','commerce/basket-checkout-history/v1/').replace(/\.json$/,'/2.json');
  const objects=new Map([[key,{etag:'old-claim',body:original}]]);let serial=0,remote=0;
  const bucket={
   async get(k){const obj=objects.get(k);return obj?{etag:obj.etag,json:async()=>JSON.parse(obj.body)}:null;},
