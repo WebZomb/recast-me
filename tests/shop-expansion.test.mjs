@@ -29,7 +29,11 @@ test('server-side Christmas mug designs match the exact pinned public art and bo
  'village-german-shepherd-mug-11oz':'bcb075fd4fe0d8fdbe5b509b974013f3e931b8c064104676d614cc087ccdde85',
  'village-german-shepherd-mug-15oz':'a487bde8c62f69f0a942705f256d49e2a957663c3ddab82d019eac847a7f5c8d',
  'village-french-bulldog-mug-11oz':'a61b3871c29c252af5a485bde2e7b4b204232fd9ce6ce7f2268cadd5a5d131be',
- 'village-french-bulldog-mug-15oz':'427f93b08b399626afd2db2c599960c200867b0bc3e6b9d051ff7502e20e119f'
+ 'village-french-bulldog-mug-15oz':'427f93b08b399626afd2db2c599960c200867b0bc3e6b9d051ff7502e20e119f',
+ 'village-beagle-mug-11oz':'f6f5094f66f6ac1122f96d8ec0d5d1b10047d4399f975a4f5739b23145304af2',
+ 'village-beagle-mug-15oz':'9c97106fbd086f851a23a8a1990892c97cc54cc32991a03f20f9c6bb5b4d2dea',
+ 'village-poodle-mug-11oz':'e94acc028ce9e0f9e4505530bbe3f68daf88a486f41e0e49601d99000982947a',
+ 'village-poodle-mug-15oz':'dd1deb81c0d364c56b8c901ce66024fdf0773b08ebc8802caf50ad3f2d1abf6f'
  });
 });
 
