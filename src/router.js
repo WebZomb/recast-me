@@ -2,6 +2,7 @@ import {runShopSeed} from './shop-seed.js';
 import {runShopExpansion} from './shop-expansion.js';
 import {runPrintfileAudit} from './shop-printfile-audit.js';
 import {runCoasterPilot} from './shop-coaster-pilot.js';
+import {runMagnetPilot} from './shop-magnet-pilot.js';
 import {shopRoutes} from './shop-routes.js';
 import {expireSeasonalCheckouts} from './seasonal-checkout.js';
 import {basketRoutes} from './basket-routes.js';
@@ -78,6 +79,7 @@ const application = {
     ctx.waitUntil(runShopExpansion(env).catch(()=>console.error('Christmas Village mug preparation needs review.')));
     ctx.waitUntil(runPrintfileAudit(env).catch(()=>console.error('Physical product printfile audit needs review.')));
     ctx.waitUntil(runCoasterPilot(env).catch(()=>console.error('Coaster preview canary needs review.')));
+    ctx.waitUntil(runMagnetPilot(env).catch(()=>console.error('Magnet supplier-proof canary needs review.')));
     ctx.waitUntil(expireSeasonalCheckouts(env).catch(error=>console.error("Seasonal invoice expiry failed:",error.message)));
     return scheduledWorkflow(controller, env, ctx);
   }
