@@ -10,7 +10,7 @@ test('control center includes a read-only supplier QA tab without checkout or ap
  assert.match(html,/id="coaster-proof-status"/);
  assert.match(html,/id="coaster-proof-grid"/);
  assert.match(html,/admin-coaster-qa\.css\?v=1/);
- assert.match(html,/admin\.js\?v=coaster1/);
+ assert.match(html,/admin\.js\?v=magnet1/);
  const panel=html.slice(html.indexOf('data-panel="ready-made-qa"'),html.indexOf('data-panel="community"'));
  assert.doesNotMatch(panel,/send.production|approve.product|add.to.cart|pay.now/i);
 });
@@ -19,7 +19,7 @@ test('QA fetch remains owner scoped, and locking the admin clears supplier signe
  const qa=read('public/admin-coaster-qa.js');
  assert.match(main,/initCoasterReview\(api\)/);
  assert.match(main,/coasterReview\.load\(\)/);
- assert.match(main,/function lock\(\)\{coasterReview\.clear\(\)/);
+ assert.match(main,/function lock\(\)\{magnetReview\.clear\(\);coasterReview\.clear\(\)/);
  assert.match(qa,/api\('\/api\/shop\/coaster-pilot\/qa'\)/);
  assert.match(qa,/api\('\/api\/shop\/coaster-pilot'\)/);
  assert.match(qa,/u\.origin!==location\.origin/);
