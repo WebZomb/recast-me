@@ -8,7 +8,7 @@ test('Ready-Made QA includes protected magnet image comparison without checkout 
  assert.match(html,/id="magnet-proof-status"/);
  assert.match(html,/id="magnet-proof-grid"/);
  assert.match(html,/admin-magnet-qa\.css\?v=1/);
- assert.match(html,/admin\.js\?v=magnet1/);
+ assert.match(html,/admin\.js\?v=sheet1/);
  assert.match(js,/initMagnetReview/);
  assert.match(js,/\/api\/shop\/magnet-pilot\/qa/);
  assert.match(js,/\/api\/shop\/magnet-pilot/);
@@ -25,7 +25,7 @@ test('same existing admin session loads both coaster and magnet proof panels and
  assert.match(js,/const magnetReview=initMagnetReview\(api\)/);
  assert.match(js,/coasterReview\.load\(\)/);
  assert.match(js,/magnetReview\.load\(\)/);
- assert.match(js,/function lock\(\)\{magnetReview\.clear\(\);coasterReview\.clear\(\)/);
+ assert.match(js,/function lock\(\)\{stickerSheetReview\.clear\(\);magnetReview\.clear\(\);coasterReview\.clear\(\)/);
  assert.match(read('src/router.js'),/runMagnetPilot\(env\)/);
  assert.match(read('src/shop-routes.js'),/magnetPilotOwnerProof/);
 });
