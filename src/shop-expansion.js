@@ -557,12 +557,17 @@ export async function runShopExpansion(env){
   return {enabled:true,created,polled,ready};
  }finally{await env.ARTWORK.delete(lock);}
 }
+const SAFE_FAILURE_WORDS=new Set(['cannot','read','reading','property','properties','of','undefined','null','fetch','failed','failure','network','connection','dns','timeout','timed','out','image','images','format','decode','info','png','webp','moderation','screen','screening','safety','credits','quota','permission','denied','source','asset','file','error','not','supported','response','body','already','consumed','too','many','subrequests','invalid','hash','resource','limit','missing','unavailable','service','inference','request','binding','method','function','typeerror','referenceerror']);
+export function safeExpansionFailureClass(message){
+ const words=String(message||'').toLowerCase().match(/[a-z]{2,18}/g)||[];
+ return words.filter(w=>SAFE_FAILURE_WORDS.has(w)).slice(0,7).join('_')||'unclassified';
+}
 export async function shopExpansionStatus(env){
  const items=[];
  for(const item of EXPANSION_ITEMS){
   const state=await read(env,key(item.id));
   const offer=state?.offer;
-  items.push({id:item.id,designId:item.designId,title:item.title,variantLabel:item.variantLabel,status:state?.status||'not_started',code:state?.code||null,
+  items.push({id:item.id,designId:item.designId,title:item.title,variantLabel:item.variantLabel,status:state?.status||'not_started',code:state?.code||null,diagnostic:state?.status==='needs_review'?safeExpansionFailureClass(state.message):null,
    ...(offer?{views:state.views,previewUrl:offer.mockupUrl,reviewSignature:await hash(JSON.stringify([offer.approvalRecordHash,offer.proofHash,offer.proof.printFileHash,offer.proof.placementHash]))}:{})});
  }
  return {enabled:env.PREMADE_EXPANSION_ENABLED==='true',items};
