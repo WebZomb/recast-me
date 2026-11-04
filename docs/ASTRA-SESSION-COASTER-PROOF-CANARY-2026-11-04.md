@@ -28,3 +28,6 @@ This is an *actual Printful mockup-only trial*, not a blanket/cart/paid order ac
 5. Do not automatically roll this canary out to all 35 coasters or other products. Confirm image quality and fulfillment mapping first.
 
 This pilot does not imply that the other 16 ready-made product pages are purchasable. The earlier verified custom Shopify products remain available to the user’s existing custom-design workflow.
+
+## Owner-only supplier proof inspection
+The added read-only GET `/api/shop/coaster-pilot/qa` requires the existing owner Bearer admin secret (same authorization mechanism as other admin tools). It reads only the exact saved completed Printful coaster task and returns up to four saved Recast-hosted, signed supplier image views; third-party or malformed URLs are filtered. It never fetches a customer source or approves anything. Unauthorized requests return 401 and cannot obtain the protected picture links. Public `/api/shop/coaster-pilot` never exposes these protected image tokens. Inspect the original pet source and authentic front/side supplier views before any separate signed approval release.
