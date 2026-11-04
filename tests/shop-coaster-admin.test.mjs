@@ -1,0 +1,32 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+const read=path=>readFileSync(new URL('../'+path,import.meta.url),'utf8');
+test('control center includes a read-only supplier QA tab without checkout or approval buttons',()=>{
+ const html=read('public/admin.html');
+ assert.match(html,/data-tab="ready-made-qa"/);
+ assert.match(html,/data-panel="ready-made-qa"/);
+ assert.match(html,/id="coaster-proof-refresh"/);
+ assert.match(html,/id="coaster-proof-status"/);
+ assert.match(html,/id="coaster-proof-grid"/);
+ assert.match(html,/admin-coaster-qa\.css\?v=1/);
+ assert.match(html,/admin\.js\?v=coaster1/);
+ const panel=html.slice(html.indexOf('data-panel="ready-made-qa"'),html.indexOf('data-panel="community"'));
+ assert.doesNotMatch(panel,/send.production|approve.product|add.to.cart|pay.now/i);
+});
+test('QA fetch remains owner scoped, and locking the admin clears supplier signed images',()=>{
+ const main=read('public/admin.js');
+ const qa=read('public/admin-coaster-qa.js');
+ assert.match(main,/initCoasterReview\(api\)/);
+ assert.match(main,/coasterReview\.load\(\)/);
+ assert.match(main,/function lock\(\)\{coasterReview\.clear\(\)/);
+ assert.match(qa,/api\('\/api\/shop\/coaster-pilot\/qa'\)/);
+ assert.match(qa,/api\('\/api\/shop\/coaster-pilot'\)/);
+ assert.match(qa,/u\.origin!==location\.origin/);
+ assert.match(qa,/u\.pathname\.startsWith\('\/api\/mockup\/image\/'\)/);
+ assert.match(qa,/referrerPolicy='no-referrer'/);
+ assert.doesNotMatch(qa,/localStorage|sessionStorage|window\.open\(|approvalAction|paymentIntent/);
+ const css=read('public/admin-coaster-qa.css');
+ assert.match(css,/grid-template-columns:repeat\(3/);
+ assert.match(css,/@media\(max-width:480px\)/);
+});
