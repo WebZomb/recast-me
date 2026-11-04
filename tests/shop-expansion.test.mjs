@@ -21,7 +21,10 @@ test('server-side Christmas mug designs match the exact pinned public art and bo
   const variants=EXPANSION_ITEMS.filter(x=>x.designId===design.id);
   assert.deepEqual(variants.map(x=>x.sku),['RECAST-MUG-11OZ','RECAST-MUG-15OZ']);
  }
- assert.deepEqual(REVIEWED_EXPANSION_PROOFS,{});
+ assert.deepEqual(REVIEWED_EXPANSION_PROOFS,{
+  'village-golden-retriever-mug-11oz':'b114d98c685bd48caa8d0cedd9a890714fc4936273b1a4d85d75e9c36cc5669b',
+  'village-golden-retriever-mug-15oz':'ef15ee055e30aeb1f121cec08a1e7200aed283f6d7e17985f51b56b32661049d'
+ });
 });
 
 test('new supplier preparation is disabled by default and cannot be started by a public POST',async()=>{
