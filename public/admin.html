@@ -7,6 +7,7 @@
   <meta name="robots" content="noindex,nofollow">
   <title>Recast Me — Control Center</title>
   <link rel="stylesheet" href="/admin.css?v=community2">
+  <link rel="stylesheet" href="/admin-coaster-qa.css?v=1">
 </head>
 <body>
   <div class="aurora aurora-a"></div><div class="aurora aurora-b"></div>
@@ -44,6 +45,7 @@
 
       <nav class="admin-tabs" aria-label="Control center sections">
         <button class="active" data-tab="orders">Orders</button>
+        <button data-tab="ready-made-qa">Ready-Made QA</button>
         <button data-tab="community">Community Review <span id="community-pending">—</span></button>
         <button data-tab="social">X Requests</button>
         <button data-tab="trends">Trend Review</button>
@@ -59,6 +61,20 @@
         <div class="panel-heading"><div><div class="eyebrow">FULFILLMENT</div><h2>Orders & production</h2><p>New paid orders can auto-print after the customer confirms the exact design before checkout. Legacy orders and holds may need review. Syncing orders may advance already-authorized jobs.</p></div><button id="sync-orders">Sync paid Shopify orders</button></div>
         <div class="glass op-card"><h3>Order alerts &amp; recovery</h3><p id="order-sync-health" role="status">Checking automatic sync…</p><p id="order-audit-health" class="muted"></p><p class="muted">Dashboard alerts are always available here. Set your email or phone destination in the Alerts tab.</p><button id="audit-orders" type="button">Check last 30 days for missing orders</button><p class="muted">Checks purchase records without submitting production. Newly recovered jobs stay on hold for inspection.</p><div id="order-issues-list" class="card-list"></div><button id="more-order-issues" type="button" hidden>Load more issue records</button></div>
         <p id="jobs-page-status" class="muted"></p><div id="jobs-list" class="card-list"></div><button type="button" id="more-jobs" hidden>Load more orders</button>
+      </section>
+
+      <section class="tab-panel" data-panel="ready-made-qa">
+        <div class="panel-heading"><div>
+          <div class="eyebrow">READY-MADE SHOP · SUPPLIER PROOFS</div>
+          <h2>Christmas coaster product review</h2>
+          <p>Compare the exact source artwork with actual saved Printful product previews. This is a read-only quality review. It never approves a product or creates an order.</p>
+        </div><button id="coaster-proof-refresh" type="button">Refresh coaster proof</button></div>
+        <div class="glass op-card">
+          <h3>Golden Retriever · Christmas Village · Coaster 4-Pack</h3>
+          <p id="coaster-proof-status" class="muted" role="status">Unlock the Control Center to view saved supplier previews.</p>
+          <div id="coaster-proof-grid" class="coaster-proof-grid" aria-label="Original artwork and authentic Printful coaster views"></div>
+          <p class="muted">Release gate: confirm breed, artwork placement, crop, four-coaster SKU, final print resolution and a physical sample. Images shown here are supplier previews, not an authorization to sell or print.</p>
+        </div>
       </section>
 
       <section class="tab-panel" data-panel="community">
@@ -252,6 +268,6 @@
       <div id="toast" class="toast hidden"></div>
     </section>
   </main>
-  <script src="/admin.js?v=community2" type="module"></script>
+  <script src="/admin.js?v=coaster1" type="module"></script>
 </body>
 </html>
