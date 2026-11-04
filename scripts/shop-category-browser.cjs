@@ -48,16 +48,34 @@ const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('n
    await page.locator('.collection-card').first().getByRole('button',{name:'See artwork'}).click();
    assert.equal(await page.locator('#collection-detail').isVisible(),true);
    assert.equal(await page.locator('#collection-detail-add').isVisible(),false);
-   assert.equal(await page.getByRole('button',{name:'Actual Blankets pending'}).isDisabled(),true);
+   assert.equal(await page.getByRole('button',{name:'Real Printful pending'}).isDisabled(),true);
+   assert.equal(await page.locator('#collection-detail-concept .collection-preview').getAttribute('data-preview-size'),'50 × 60 in');
+   const shortRatio=await page.locator('#collection-detail-concept .collection-artwork').evaluate(el=>Number.parseFloat(getComputedStyle(el).aspectRatio));
+   assert.ok(Math.abs(shortRatio-5/6)<0.02,'The actual 50×60 blanket outline needs the right proportions');
+   await page.getByRole('button',{name:'Layout 60 × 80 in'}).click();
+   assert.equal(await page.locator('#collection-detail-concept .collection-preview').getAttribute('data-preview-size'),'60 × 80 in');
+   const tallRatio=await page.locator('#collection-detail-concept .collection-artwork').evaluate(el=>Number.parseFloat(getComputedStyle(el).aspectRatio));
+   assert.ok(Math.abs(tallRatio-3/4)<0.02,'The actual 60×80 blanket outline needs the right proportions');
+   await page.getByRole('button',{name:'Original artwork'}).click();
+   assert.equal(await page.locator('#collection-detail-image').isVisible(),true);
+   assert.equal(await page.locator('#collection-detail-concept').isVisible(),false);
+   assert.equal(await page.locator('#collection-detail-add').isVisible(),false);
    await page.locator('#close-collection-detail').click();
    await page.evaluate(()=>window.scrollTo(0,0));
    await page.screenshot({path:path.join(out,`${engine}-blankets-${width}.png`)});
    if(width===393){
-    await page.goto('https://recast.test/shop-phone-cases.html');
-    await page.waitForFunction(()=>document.querySelectorAll('.collection-card').length===35);
-    assert.equal(await page.locator('#collection-nav a[aria-current="page"]').innerText(),'Phone Cases');
-    assert.equal(await page.getByRole('button',{name:'Add to cart'}).count(),0);
-    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),true);
+    const additional=['pillows','canvas','tumblers','hoodies','t-shirts','tote-bags','phone-cases','sticker-sheets','stickers','posters','framed-prints','journals','coaster-sets','magnet-sets','puzzles'];
+    for(const slug of additional){
+     await page.goto('https://recast.test/shop-'+slug+'.html');
+     await page.waitForFunction(()=>document.querySelectorAll('.collection-card').length===35);
+     assert.equal(await page.locator('.collection-card .collection-preview--'+slug).count(),35,'All '+slug+' concepts need their own honest silhouette');
+     assert.equal(await page.getByRole('button',{name:'Add to cart'}).count(),0,'Unapproved '+slug+' concepts cannot be purchased');
+     assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),true,'No '+slug+' phone overflow');
+     if(['pillows','tumblers','hoodies','phone-cases'].includes(slug)){
+      await page.locator('.collection-card').first().scrollIntoViewIfNeeded();
+      await page.screenshot({path:path.join(out,`${engine}-${slug}-393.png`)});
+     }
+    }
     await page.goto('https://recast.test/shop.html');
     await page.waitForFunction(()=>document.querySelectorAll('.concept-product').length===35);
     assert.equal(await page.locator('#product-nav a[href="/shop-blankets.html"]').count(),1);
