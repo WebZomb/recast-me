@@ -37,8 +37,8 @@ test('product pages cover all 17 configured physical categories with one canonic
   assert.match(html,new RegExp('data-collection="'+c.slug+'"'));
   assert.match(html,new RegExp('https://recastmeai.com/shop-'+c.slug+'\\.html'));
   assert.match(html,/name="robots" content="noindex,follow"/,'New preview-only product pages are not indexed before buyability proof');
-  assert.match(html,/shop-category\.js\?v=1/);
-  assert.match(html,/shop-category\.css\?v=1/);
+  assert.match(html,/shop-category\.js\?v=2/);
+  assert.match(html,/shop-category\.css\?v=2/);
   assert.match(html,/id="collection-dog"/);
   assert.match(html,/id="collection-cat"/);
   assert.match(html,/id="collection-availability"/);
@@ -74,7 +74,7 @@ test('page renderer shows no cart when supplier is not certified and never uses 
  assert.match(code,/if\(offer\)/);
  assert.match(read('public/shop-collections.js'),/status==='verified'/);
  assert.match(code,/readyOffer\(o\)/);
- assert.match(code,/real product preview pending/);
+ assert.match(code,/High-resolution blanket artwork in preparation/);
  assert.match(code,/addPremade\(offer\)/);
  assert.doesNotMatch(code,/\.salesImage/,'Mug sales illustration must not be misrepresented as blanket image');
  assert.match(css,/collection-preview--blanket/);
