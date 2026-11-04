@@ -8,6 +8,7 @@
   <title>Recast Me — Control Center</title>
   <link rel="stylesheet" href="/admin.css?v=community2">
   <link rel="stylesheet" href="/admin-coaster-qa.css?v=1">
+  <link rel="stylesheet" href="/admin-printfile-audit.css?v=1">
 </head>
 <body>
   <div class="aurora aurora-a"></div><div class="aurora aurora-b"></div>
@@ -74,6 +75,13 @@
           <p id="coaster-proof-status" class="muted" role="status">Unlock the Control Center to view saved supplier previews.</p>
           <div id="coaster-proof-grid" class="coaster-proof-grid" aria-label="Original artwork and authentic Printful coaster views"></div>
           <p class="muted">Release gate: confirm breed, artwork placement, crop, four-coaster SKU, final print resolution and a physical sample. Images shown here are supplier previews, not an authorization to sell or print.</p>
+        </div>
+        <div class="glass op-card">
+          <div class="panel-heading"><div><h3>Printful print-area readiness</h3>
+          <p>Read-only checks of actual Printful print templates across all gift categories. Source size alone never approves an item for printing.</p></div>
+          <button id="printfile-audit-refresh" type="button">Refresh print areas</button></div>
+          <p id="printfile-audit-status" class="muted" role="status">Open Ready-Made QA to check supplier print dimensions.</p>
+          <div id="printfile-audit-list" class="printfile-audit-list"></div>
         </div>
       </section>
 
@@ -269,5 +277,6 @@
     </section>
   </main>
   <script src="/admin.js?v=coaster1" type="module"></script>
+  <script src="/admin-printfile-audit.js?v=1" type="module"></script>
 </body>
 </html>
