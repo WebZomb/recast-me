@@ -38,7 +38,7 @@ export function createProductConcept(design,{slug='blankets',size='50 × 60 in',
  const source=previewImageUrl(design?.artworkImage,large?1000:640);
  if(!source)throw new TypeError('An original approved pet illustration is required for this preview.');
  const type=conceptStyle(slug);
- const root=el('div','collection-preview collection-preview--'+type);
+ const root=el('div','collection-preview collection-preview--'+type+(type==='blankets'?' collection-preview--blanket':''));
  root.dataset.previewKind='illustration';
  root.dataset.sourceDesign=design.designId;
  root.dataset.artworkRevision=design.artworkRevision;
