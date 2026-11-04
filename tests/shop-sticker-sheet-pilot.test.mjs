@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {Bucket} from './security-helpers.mjs';
-import {STICKER_SHEET_PILOT,runStickerSheetPilot,stickerSheetPilotStatus} from '../src/shop-sheet-pilot.js';
+import {STICKER_SHEET_PILOT,runStickerSheetPilot,stickerSheetPilotStatus} from '../src/shop-sticker-sheet-pilot.js';
 import {EXPANSION_DESIGNS} from '../src/shop-expansion.js';
 import {shopRoutes} from '../src/shop-routes.js';
 import {FULFILLMENT} from '../src/entry.js';
@@ -98,13 +98,13 @@ test('single supplier preview canary creates one task and later polls same job w
  const saved=await (await e.ARTWORK.get(key)).json();
  assert.equal(saved.manualApprovalRequired,true);
  assert.equal(await e.ARTWORK.get('shop/catalog/v1.json')!==null,true);
- const readOnly=await shopRoutes(new Request('https://recast.test/api/shop/sheet-pilot'),e);
+ const readOnly=await shopRoutes(new Request('https://recast.test/api/shop/sticker-sheet-pilot'),e);
  assert.equal(readOnly.status,200);
  assert.equal(readOnly.headers.get('x-robots-tag'),'noindex, nofollow');
  const data=await readOnly.json();
  assert.equal(data.status,'ready_for_review');
  assert.equal(data.checkoutEnabled,false);
- const post=await shopRoutes(new Request('https://recast.test/api/shop/sheet-pilot',{method:'POST'}),e);
+ const post=await shopRoutes(new Request('https://recast.test/api/shop/sticker-sheet-pilot',{method:'POST'}),e);
  assert.equal(post.status,405);
 });
 test('provider create failures stop permanently for manual reconciliation without new tasks',async()=>{
@@ -145,12 +145,12 @@ test('manufacturer proof links require the owner bearer secret and never leak in
   status:'completed',requestId:approved.requestId,sku:'RECAST-STICKER-PACK',mockupId,
   images:[{title:'Product side view',url:privateImage},{title:'Untrusted',url:'https://unsafe.example/mockup?token=private'}]
  }));
- const unauth=await shopRoutes(new Request('https://recast.test/api/shop/sheet-pilot/qa'),e);
+ const unauth=await shopRoutes(new Request('https://recast.test/api/shop/sticker-sheet-pilot/qa'),e);
  assert.equal(unauth.status,401);
  assert.doesNotMatch(await unauth.text(),/single-use-supplier-view|Product side view|owner-token-for-test-only/);
- const wrong=await shopRoutes(new Request('https://recast.test/api/shop/sheet-pilot/qa',{headers:{authorization:'Bearer incorrect'}}),e);
+ const wrong=await shopRoutes(new Request('https://recast.test/api/shop/sticker-sheet-pilot/qa',{headers:{authorization:'Bearer incorrect'}}),e);
  assert.equal(wrong.status,401);
- const valid=await shopRoutes(new Request('https://recast.test/api/shop/sheet-pilot/qa',{headers:{authorization:'Bearer owner-token-for-test-only'}}),e);
+ const valid=await shopRoutes(new Request('https://recast.test/api/shop/sticker-sheet-pilot/qa',{headers:{authorization:'Bearer owner-token-for-test-only'}}),e);
  assert.equal(valid.status,200);
  assert.equal(valid.headers.get('x-robots-tag'),'noindex, nofollow');
  const d=await valid.json();
@@ -158,7 +158,7 @@ test('manufacturer proof links require the owner bearer secret and never leak in
  assert.equal(d.checkoutEnabled,false);
  assert.equal(d.automaticApproval,false);
  assert.equal(d.reviewStatus,'manual_review_required');
- const publicStatus=await shopRoutes(new Request('https://recast.test/api/shop/sheet-pilot'),e);
+ const publicStatus=await shopRoutes(new Request('https://recast.test/api/shop/sticker-sheet-pilot'),e);
  assert.equal(publicStatus.status,200);
  assert.doesNotMatch(await publicStatus.text(),/single-use-supplier-view|mockupId|owner-token-for-test-only/);
 });
