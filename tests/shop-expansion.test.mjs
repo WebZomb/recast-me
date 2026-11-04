@@ -29,7 +29,15 @@ test('server-side Christmas mug designs match the exact pinned public art and bo
  'village-german-shepherd-mug-11oz':'bcb075fd4fe0d8fdbe5b509b974013f3e931b8c064104676d614cc087ccdde85',
  'village-german-shepherd-mug-15oz':'a487bde8c62f69f0a942705f256d49e2a957663c3ddab82d019eac847a7f5c8d',
  'village-french-bulldog-mug-11oz':'a61b3871c29c252af5a485bde2e7b4b204232fd9ce6ce7f2268cadd5a5d131be',
- 'village-french-bulldog-mug-15oz':'427f93b08b399626afd2db2c599960c200867b0bc3e6b9d051ff7502e20e119f'
+ 'village-french-bulldog-mug-15oz':'427f93b08b399626afd2db2c599960c200867b0bc3e6b9d051ff7502e20e119f',
+ 'village-beagle-mug-11oz':'f6f5094f66f6ac1122f96d8ec0d5d1b10047d4399f975a4f5739b23145304af2',
+ 'village-beagle-mug-15oz':'9c97106fbd086f851a23a8a1990892c97cc54cc32991a03f20f9c6bb5b4d2dea',
+ 'village-poodle-mug-11oz':'e94acc028ce9e0f9e4505530bbe3f68daf88a486f41e0e49601d99000982947a',
+ 'village-poodle-mug-15oz':'dd1deb81c0d364c56b8c901ce66024fdf0773b08ebc8802caf50ad3f2d1abf6f',
+ 'village-husky-mug-11oz':'1dded23da0468e08365a89384e5c9485e4142cc4f36c79dc2af6097c6ff77d36',
+ 'village-husky-mug-15oz':'87f50dc89f7050a7cacd474de2d0eed846c4f4cba598077aeff1ffca61ae363a',
+ 'village-orange-tabby-mug-11oz':'35f17e2c03f47a97902db01ff97b2a5049f9c3f8d7b5d487cd6cbe88cb1f5f24',
+ 'village-orange-tabby-mug-15oz':'0b2b5caf21625b213d492b4a024d3aed4fc7a734ebfa42e8ea018944f381dda4'
  });
 });
 
@@ -115,7 +123,7 @@ test('35-design preview staging remains bounded and does not imply automatic sal
  assert.match(settings,/"PREMADE_EXPANSION_CANARY_COUNT":\s*"35"/);
  assert.match(settings,/"PREMADE_EXPANSION_PREVIEW_BATCH_SIZE":\s*"2"/);
  assert.match(settings,/"PREMADE_EXPANSION_ENABLED":\s*"true"/);
- assert.equal(Object.keys(REVIEWED_EXPANSION_PROOFS).length,8);
+ assert.equal(Object.keys(REVIEWED_EXPANSION_PROOFS).length,16);
  assert.equal(EXPANSION_ITEMS.length,70);
 });
 
