@@ -104,3 +104,12 @@ test('source preview batch bounds remain safe and explicit',()=>{
  assert.equal(sourcePreviewBatchSize({PREMADE_EXPANSION_PREVIEW_BATCH_SIZE:'9'}),2);
  assert.equal(sourcePreviewBatchSize({PREMADE_EXPANSION_PREVIEW_BATCH_SIZE:'0'}),2);
 });
+
+test('35-design preview staging remains bounded and does not imply automatic sale approval',()=>{
+ const settings=readFileSync(new URL('../wrangler.jsonc',import.meta.url),'utf8');
+ assert.match(settings,/"PREMADE_EXPANSION_CANARY_COUNT":\s*"35"/);
+ assert.match(settings,/"PREMADE_EXPANSION_PREVIEW_BATCH_SIZE":\s*"6"/);
+ assert.match(settings,/"PREMADE_EXPANSION_ENABLED":\s*"true"/);
+ assert.equal(Object.keys(REVIEWED_EXPANSION_PROOFS).length,2);
+ assert.equal(EXPANSION_ITEMS.length,70);
+});
