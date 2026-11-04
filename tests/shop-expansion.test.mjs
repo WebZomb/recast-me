@@ -68,3 +68,27 @@ test('source redirect is explicitly rejected without a mockup or storefront publ
  assert.ok(status.items.every(x=>x.status==='needs_review'));
  assert.equal(await env.ARTWORK.get('shop/catalog/v1.json'),null);
 });
+
+import {approvedMugSourceMime,canaryDesignCount} from '../src/shop-expansion.js';
+test('v3 canary limits number of mug designs and source types match bytes',()=>{
+ assert.equal(approvedMugSourceMime(new Uint8Array([0xff,0xd8,0xff,0xe0])),'image/jpeg');
+ assert.equal(approvedMugSourceMime(new Uint8Array([137,80,78,71,13,10,26,10])),'image/png');
+ assert.throws(()=>approvedMugSourceMime(new Uint8Array([71,73,70,56])),e=>e.code==='seed_asset_format');
+ assert.equal(canaryDesignCount({PREMADE_EXPANSION_CANARY_COUNT:'1'}),1);
+ assert.equal(canaryDesignCount({PREMADE_EXPANSION_CANARY_COUNT:'35'}),35);
+ assert.equal(canaryDesignCount({PREMADE_EXPANSION_CANARY_COUNT:'500'}),0);
+});
+test('one canary allows only its 2 SKUs, never creates supplier mockups on bad source',async t=>{
+ let calls=0;
+ t.mock.method(globalThis,'fetch',async(_url,options)=>{
+  assert.equal(options.redirect,'manual');calls++;return new Response('invalid asset');
+ });
+ const env={PREMADE_EXPANSION_ENABLED:'true',PREMADE_EXPANSION_CANARY_COUNT:'1',ARTWORK:new Bucket(),IMAGES:{}};
+ await runShopExpansion(env);
+ const status=await shopExpansionStatus(env);
+ assert.equal(status.canaryDesigns,1);
+ assert.equal(status.items.filter(x=>x.status==='needs_review').length,2);
+ assert.equal(status.items.filter(x=>x.status==='not_started').length,68);
+ assert.equal(calls,1);
+ assert.equal(await env.ARTWORK.get('shop/catalog/v1.json'),null);
+});
