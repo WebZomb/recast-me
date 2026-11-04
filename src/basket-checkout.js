@@ -93,10 +93,10 @@ async function refreshCheckout(env,bucket,key,etag,prior,lines,fetcher){
  // Read only: a missing cart may have expired OR already completed checkout.
  // Never infer permission to recreate it from null, a timeout, or an error.
  try{
-  const response=await fetcher(`https://${basketShop(env)}/api/2026-10/graphql.json`,{method:'POST',redirect:'error',signal:AbortSignal.timeout(20000),
+  const response=await fetcher(`https://${basketShop(env)}/api/2026-10/graphql.json`,{method:'POST',redirect:'manual',signal:AbortSignal.timeout(20000),
    headers:storefrontHeaders(env),
    body:JSON.stringify({query:CART_REFRESH,variables:{id:prior.cartId}})});
-  if(!response.ok)throw unavailable();
+  if((response.status>=300&&response.status<400)||response.redirected||response.type==='opaqueredirect'||!response.ok)throw unavailable();
   const data=await response.json(),cart=data.data?.cart;
   if(data.errors?.length||!cart||cart.id!==prior.cartId||cart.lines?.pageInfo?.hasNextPage!==false)throw unavailable();
   const verified=verifiedCart({cart},lines,basketShop(env));
@@ -138,10 +138,10 @@ export async function beginBasketCheckout(env,identity,state,lines,{fetcher=fetc
  if(!claim?.etag)throw unavailable();
  let response,data;
  try{
-  response=await fetcher(`https://${basketShop(env)}/api/2026-10/graphql.json`,{method:'POST',redirect:'error',signal:AbortSignal.timeout(20000),
+  response=await fetcher(`https://${basketShop(env)}/api/2026-10/graphql.json`,{method:'POST',redirect:'manual',signal:AbortSignal.timeout(20000),
    headers:storefrontHeaders(env),
    body:JSON.stringify({query:CART_CREATE,variables:{input:{lines}}})});
-  if(!response.ok)throw unavailable();data=await response.json();
+  if((response.status>=300&&response.status<400)||response.redirected||response.type==='opaqueredirect'||!response.ok)throw unavailable();data=await response.json();
   if(data.errors?.length)throw unavailable();
   const verified=verifiedCart(data.data?.cartCreate,lines,basketShop(env));
   const saved=await bucket.put(key,JSON.stringify({...attempt,...verified,status:'ready',completedAt:new Date().toISOString()}),{onlyIf:{etagMatches:claim.etag},httpMetadata:{contentType:'application/json',cacheControl:'private, no-store'}});
