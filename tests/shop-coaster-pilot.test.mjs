@@ -130,3 +130,30 @@ test('ambiguous creating_preview claim never retries provider, and failed polls 
  const res=await runCoasterPilot(e,{create:async()=>{throw Error('should not retry')}});
  assert.equal(res.status,'creating_preview');assert.equal(res.created,0);
 });
+
+test('manufacturer proof links require the owner bearer secret and never leak in public status',async()=>{
+ const e=await prepare(env());e.ADMIN_TOKEN='owner-token-for-test-only';
+ const mockupId='coaster-preview-one';
+ await e.ARTWORK.put(key,JSON.stringify({id:COASTER_PILOT.id,status:'ready_for_review',mockupId,providerViewCount:1}));
+ const privateImage=`https://recastmeai.com/api/mockup/image/${encodeURIComponent(approved.requestId)}/RECAST-COASTER-SET/0?token=single-use-supplier-view`;
+ await e.ARTWORK.put(`mockups/${approved.requestId}/RECAST-COASTER-SET/${mockupId}/task.json`,JSON.stringify({
+  status:'completed',requestId:approved.requestId,sku:'RECAST-COASTER-SET',mockupId,
+  images:[{title:'Product side view',url:privateImage},{title:'Untrusted',url:'https://unsafe.example/mockup?token=private'}]
+ }));
+ const unauth=await shopRoutes(new Request('https://recast.test/api/shop/coaster-pilot/qa'),e);
+ assert.equal(unauth.status,401);
+ assert.doesNotMatch(await unauth.text(),/single-use-supplier-view|Product side view|owner-token-for-test-only/);
+ const wrong=await shopRoutes(new Request('https://recast.test/api/shop/coaster-pilot/qa',{headers:{authorization:'Bearer incorrect'}}),e);
+ assert.equal(wrong.status,401);
+ const valid=await shopRoutes(new Request('https://recast.test/api/shop/coaster-pilot/qa',{headers:{authorization:'Bearer owner-token-for-test-only'}}),e);
+ assert.equal(valid.status,200);
+ assert.equal(valid.headers.get('x-robots-tag'),'noindex, nofollow');
+ const d=await valid.json();
+ assert.deepEqual(d.supplierPictures,[{title:'Product side view',url:privateImage}]);
+ assert.equal(d.checkoutEnabled,false);
+ assert.equal(d.automaticApproval,false);
+ assert.equal(d.reviewStatus,'manual_review_required');
+ const publicStatus=await shopRoutes(new Request('https://recast.test/api/shop/coaster-pilot'),e);
+ assert.equal(publicStatus.status,200);
+ assert.doesNotMatch(await publicStatus.text(),/single-use-supplier-view|mockupId|owner-token-for-test-only/);
+});
