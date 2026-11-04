@@ -1,5 +1,6 @@
 import {runShopSeed} from './shop-seed.js';
 import {runShopExpansion} from './shop-expansion.js';
+import {runCoasterPilot} from './shop-coaster-pilot.js';
 import {shopRoutes} from './shop-routes.js';
 import {expireSeasonalCheckouts} from './seasonal-checkout.js';
 import {basketRoutes} from './basket-routes.js';
@@ -74,6 +75,7 @@ const application = {
   async scheduled(controller, env, ctx) {
     ctx.waitUntil(runShopSeed(env).catch(()=>console.error('Premade catalog preparation needs review.')));
     ctx.waitUntil(runShopExpansion(env).catch(()=>console.error('Christmas Village mug preparation needs review.')));
+    ctx.waitUntil(runCoasterPilot(env).catch(()=>console.error('Coaster preview canary needs review.')));
     ctx.waitUntil(expireSeasonalCheckouts(env).catch(error=>console.error("Seasonal invoice expiry failed:",error.message)));
     return scheduledWorkflow(controller, env, ctx);
   }
