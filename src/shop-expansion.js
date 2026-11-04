@@ -580,7 +580,7 @@ export async function runShopExpansion(env){
  if(existing&&Date.parse((await existing.json()).until)>Date.now())return {busy:true};
  const locked=await env.ARTWORK.put(lock,JSON.stringify({until:new Date(Date.now()+180000).toISOString()}),{onlyIf:existing?{etagMatches:existing.etag}:new Headers({'If-None-Match':'*'})});
  if(!locked)return {busy:true};
- let created=0,polled=0,ready=0;
+ let created=0,polled=0,ready=0,previewRateExhausted=false;
  try{
   for(const item of EXPANSION_ITEMS){
    const design=byDesign.get(item.designId);
@@ -592,12 +592,14 @@ export async function runShopExpansion(env){
     catch(error){await env.ARTWORK.put(key(item.id),JSON.stringify({...state,status:'needs_review',code:error.code||'expansion_review',message:String(error.message).slice(0,180),checkedAt:now()}));}
     continue;
    }
-   if(!state&&created>=sourcePreviewBatchSize(env))continue;
+   if(!state&&(created>=sourcePreviewBatchSize(env)||previewRateExhausted))continue;
    if(state?.status==='pending_preview'&&polled>=Math.max(6,sourcePreviewBatchSize(env)*3))continue;
    try{
+    // Reserve provider capacity before importing and screening new artwork.
+    // Rate exhaustion defers new sources while allowing existing preview polls.
+    if(!state&&!await claimMugPreviewRateSlot(env)){previewRateExhausted=true;continue;}
     const meta=await source(env,design),layout=recommendedCheckoutDesign(FULFILLMENT[item.sku]);
     if(!state){
-     if(!await claimMugPreviewRateSlot(env))continue;
      state={id:item.id,status:'creating_preview',startedAt:now()};
      if(!await env.ARTWORK.put(key(item.id),JSON.stringify(state),{onlyIf:new Headers({'If-None-Match':'*'})}))continue;
      created++;
