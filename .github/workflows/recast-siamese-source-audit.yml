@@ -40,6 +40,7 @@ jobs:
           for i in "${!paths[@]}"; do
             if npx --no-install wrangler r2 object get "recast-me-artwork/${paths[$i]}" --remote --file "$RUNNER_TEMP/siamese-$i.json" > "$RUNNER_TEMP/siamese-$i.stderr" 2>&1; then
               echo "SIAMESE_R2_GET_$i=ok"
+              touch "$RUNNER_TEMP/siamese-$i.ok"
             else
               echo "SIAMESE_R2_GET_$i=failed"
             fi
@@ -54,9 +55,11 @@ jobs:
           const check=(v)=>typeof v==='string'&&/^[a-z0-9_]{1,60}$/i.test(v)?v:'redacted';
           for(let i=0;i<4;i++){
             const file=path.join(dir,'siamese-'+i+'.json'),log=path.join(dir,'siamese-'+i+'.stderr');
-            if(!fs.existsSync(file)){
+            if(!fs.existsSync(path.join(dir,'siamese-'+i+'.ok'))){
               const error=fs.existsSync(log)?fs.readFileSync(log,'utf8'):'';
-              const category=/not found|does not exist|404|no such key/i.test(error)?'missing':/auth|permission|forbidden|access denied|not authorized|403|401/i.test(error)?'access_denied':'other_failure';
+              const category=/not found|does not exist|404|no such key/i.test(error)?'missing':/auth|permission|forbidden|access denied|not authorized|invalid token|403|401|10000/i.test(error)?'access_denied':/unknown arguments|command not found|unexpected argument|invalid option/i.test(error)?'cli_usage':'other_failure';
+              const numeric=error.match(/\b(?:code|error)\s*[:#]?\s*(\d{3,6})\b/i)?.[1]||'none';
+              console.log(labels[i].toUpperCase()+'_ERROR_CODE='+numeric);
               console.log(labels[i].toUpperCase()+'_READ='+category);
               continue;
             }
