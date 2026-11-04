@@ -58,7 +58,7 @@ jobs:
             if(!fs.existsSync(path.join(dir,'siamese-'+i+'.ok'))){
               const error=fs.existsSync(log)?fs.readFileSync(log,'utf8'):'';
               const category=/not found|does not exist|404|no such key/i.test(error)?'missing':/auth|permission|forbidden|access denied|not authorized|invalid token|403|401|10000/i.test(error)?'access_denied':/unknown arguments|command not found|unexpected argument|invalid option/i.test(error)?'cli_usage':'other_failure';
-              const numeric=error.match(/\\b(?:code|error)\\s*[:#]?\\s*(\\d{3,6})\\b/i)?.[1]||'none';
+              const numeric=error.match(/\b(?:code|error)\s*[:#]?\s*(\d{3,6})\b/i)?.[1]||'none';
               console.log(labels[i].toUpperCase()+'_ERROR_CODE='+numeric);
               console.log(labels[i].toUpperCase()+'_READ='+category);
               continue;
