@@ -93,7 +93,7 @@ function card(design,allOffers){
  article.dataset.offerStatus=offer?'verified':'preview';
  displayPreview(visual,design);
  const name=el('h3',null,shortTitle(design));
- const note=el('p','collection-card-note',offer?'Verified product · ready to buy':'Actual '+collection.label.toLowerCase()+' preview in preparation');
+ const note=el('p','collection-card-note',offer?'Verified product · ready to buy':'Coming soon · real product preview pending');
  const actions=el('div','collection-card-actions');
  const show=btn(offer?'See real product':'See artwork',()=>detail(design,offers,offer),'collection-secondary');
  actions.append(show);
@@ -110,8 +110,7 @@ function card(design,allOffers){
   if(!photoPreview(visual,offer))displayPreview(visual,design);
   info.append(name,note,price,size,actions,buy);
  }else{
-  const caption=el('p','collection-card-caption','Design ready · '+collection.label.toLowerCase()+' proof pending');
-  info.append(name,note,caption,actions);
+  info.append(name,note,actions);
  }
  article.append(visual,info);
  return article;
