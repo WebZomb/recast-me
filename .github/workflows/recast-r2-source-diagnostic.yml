@@ -1,0 +1,46 @@
+name: Read-only Recast mug source failure diagnostic
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/recast-r2-source-diagnostic.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  inspect-failed-import:
+    runs-on: ubuntu-latest
+    environment: production
+    timeout-minutes: 6
+    env:
+      WRANGLER_SEND_METRICS: 'false'
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Read one R2 metadata record (no artwork, orders or mutation)
+        run: |
+          test -n "$CLOUDFLARE_API_TOKEN" && test -n "$CLOUDFLARE_ACCOUNT_ID"
+          npx --no-install wrangler r2 object get 'recast-me-artwork/shop/preparation/v2/village-golden-retriever-mug-11oz.json' --remote --file "$RUNNER_TEMP/recast-preview-status.json"
+      - name: Show only sanitized error category, never private storage content
+        run: |
+          node <<'NODE'
+          const fs=require('node:fs');
+          const file=process.env.RUNNER_TEMP+'/recast-preview-status.json';
+          const state=JSON.parse(fs.readFileSync(file,'utf8'));
+          const m=String(state.message||'').replace(/https?:\/\/[^\s]+/gi,'[url]');
+          const words=m.split(/\s+/).map(x=>x.replace(/[a-zA-Z0-9_\-\/+=]{19,}/g,'[token]')).filter(Boolean).slice(0,22).join(' ').slice(0,190);
+          const categories={network:/fetch|network|connection|dns|hostname|resolve/i,image:/image|format|decode|info|png|webp/i,content:/moderation|screen|safety|policy/i,r2:/bucket|storage|put|object|r2/i,resource:/limit|subrequest|timeout|quota/i,platform:/unsupported|not a function|undefined|missing/i};
+          const matched=Object.entries(categories).filter(([,r])=>r.test(m)).map(([k])=>k);
+          console.log('PREVIEW_STATUS='+String(state.status||'unknown').replace(/[^a-z_-]/gi,''));
+          console.log('PREVIEW_CODE='+String(state.code||'none').replace(/[^a-z_-]/gi,''));
+          console.log('FAILURE_CATEGORY='+(matched.join(',')||'unclassified'));
+          console.log('SAFE_ERROR_WORDS='+words);
+          NODE
