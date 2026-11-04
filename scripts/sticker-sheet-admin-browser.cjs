@@ -10,12 +10,12 @@ const fs=require('node:fs'),path=require('node:path'),assert=require('node:asser
  const d=gallery.designs[0];
  const picture='https://recast.test/api/mockup/image/RC-SHOP-GOLDEN-RETRIEVER-V1/RECAST-STICKER-PACK/0?token=protected-fixture-only';
  const html=`<!doctype html><meta name="viewport" content="width=device-width,initial-scale=1">
- <link rel="stylesheet" href="/admin-sticker sheet-qa.css?v=1">
+ <link rel="stylesheet" href="/admin-sticker-sheet-qa.css?v=1">
  <h2>Ready-Made QA</h2><p id="sticker-sheet-proof-status"></p>
  <button id="sticker-sheet-proof-refresh">Refresh sticker sheet proof</button>
  <div id="sticker-sheet-proof-grid" class="sticker-sheet-proof-grid"></div>
  <script type="module">
- import {initStickerSheetReview} from '/admin-sticker sheet-qa.js?v=1';
+ import {initStickerSheetReview} from '/admin-sticker-sheet-qa.js?v=1';
  window.denied=false; window.requests=[];
  const api=async path=>{
   window.requests.push(path);
