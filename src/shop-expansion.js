@@ -453,6 +453,28 @@ export function sourcePreviewBatchSize(env){
  const count=Number(env?.PREMADE_EXPANSION_PREVIEW_BATCH_SIZE??2);
  return Number.isInteger(count)&&count>=1&&count<=8?count:2;
 }
+// Printful's new-store Mockup Generator may allow only 2 create-task calls per
+// rolling 60 seconds. Persist a 65-second token bucket across cron executions.
+// Losing a response consumes capacity conservatively; it NEVER triggers an unsafe retry.
+export async function claimMugPreviewRateSlot(env,stamp=Date.now()){
+ const key='shop/preparation/v3/mockup-create-rate.json',obj=await env.ARTWORK.get(key);
+ if(obj&&!obj.etag)return false;
+ let timestamps=[];
+ if(obj){try{
+   const data=await obj.json();
+   if(!Array.isArray(data?.timestamps)||data.timestamps.length>100||
+      data.timestamps.some(x=>!Number.isSafeInteger(x)||x<0))return false;
+   timestamps=data.timestamps;
+  }catch{return false;}
+ }
+ const recent=timestamps.filter(x=>x>stamp-65000&&x<=stamp);
+ if(recent.length>=2)return false;
+ const saved=await env.ARTWORK.put(key,JSON.stringify({timestamps:[...recent,stamp]}),{
+  onlyIf:obj?{etagMatches:obj.etag}:new Headers({'If-None-Match':'*'}),
+  httpMetadata:{contentType:'application/json',cacheControl:'private, no-store'}
+ });
+ return Boolean(saved?.etag);
+}
 export function canaryDesignCount(env){
  const count=Number(env?.PREMADE_EXPANSION_CANARY_COUNT??35);
  return Number.isInteger(count)&&count>=0&&count<=EXPANSION_DESIGNS.length?count:0;
@@ -561,6 +583,7 @@ export async function runShopExpansion(env){
    try{
     const meta=await source(env,design),layout=recommendedCheckoutDesign(FULFILLMENT[item.sku]);
     if(!state){
+     if(!await claimMugPreviewRateSlot(env))continue;
      state={id:item.id,status:'creating_preview',startedAt:now()};
      if(!await env.ARTWORK.put(key(item.id),JSON.stringify(state),{onlyIf:new Headers({'If-None-Match':'*'})}))continue;
      created++;
