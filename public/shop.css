@@ -21,3 +21,7 @@ dialog button[hidden]{display:none!important}
 .concept-product .details h3{font-size:14px;font-weight:700}
 .concept-product .preview-actions button{font-size:12px}
 @media(max-width:540px){.concept-product .details h3{font-size:13px}#detail-views button{font-size:11px}}
+
+/* Per-item shop aisles, distinct from filters. */
+#product-nav a[aria-current="page"]{background:#e7d2a3;color:#161412;border-color:#e7d2a3;font-weight:800}
+#product-nav{scrollbar-width:thin;overscroll-behavior-inline:contain}
