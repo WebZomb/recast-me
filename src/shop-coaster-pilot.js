@@ -3,7 +3,7 @@
 // Never convert the already-approved mug proof into coaster fulfillment.
 import {read,recommendedCheckoutDesign,privateJson,fault} from './commerce-store.js';
 import {FULFILLMENT} from './entry.js';
-import {createMockup,mockupStatus} from './workflow.js';
+import {createMockup,mockupStatus,requireAdmin} from './workflow.js';
 import {EXPANSION_DESIGNS,claimMugPreviewRateSlot} from './shop-expansion.js';
 
 const master=EXPANSION_DESIGNS[0];
@@ -124,3 +124,31 @@ export async function coasterPilotStatus(env){
   code:state?.status==='needs_review'?state.code||'manual_review':null};
 }
 export async function coasterPilotRoute(_request,env){return privateJson({ok:true,...await coasterPilotStatus(env)});}
+
+// Owner-only inspection endpoint. A bearer admin token is required to see
+// saved, manufacturer-produced image views for a particular completed task.
+// No token, customer link or provider secret is returned by the public status.
+export async function coasterPilotOwnerProof(request,env){
+ try{requireAdmin(request,env);}
+ catch(error){return privateJson({ok:false,error:'Owner authorization required.'},error.status||401)}
+ const state=await read(env,KEY);
+ if(!state||state.status!=='ready_for_review'||!state.mockupId)
+  return privateJson({ok:false,error:'No completed coaster proof is ready for owner review.'},409);
+ const task=await read(env,`mockups/${master.requestId}/${COASTER_PILOT.sku}/${state.mockupId}/task.json`);
+ if(task?.status!=='completed'||task.requestId!==master.requestId||task.sku!==COASTER_PILOT.sku||
+  task.mockupId!==state.mockupId||!Array.isArray(task.images)||!task.images.length)
+  return privateJson({ok:false,error:'The saved Printful preview needs reconciliation.'},409);
+ const images=[];
+ for(const view of task.images.slice(0,4)){
+  try{
+   const url=new URL(view.url);
+   const prefix=`/api/mockup/image/${encodeURIComponent(master.requestId)}/${encodeURIComponent(COASTER_PILOT.sku)}/`;
+   if(url.origin!==base(env)||!url.pathname.startsWith(prefix)||!url.searchParams.get('token'))continue;
+   images.push({title:String(view.title||'Printful product preview').slice(0,100),url:url.href});
+  }catch{/* Unsupported or corrupt preview link cannot be shown. */}
+ }
+ if(!images.length)return privateJson({ok:false,error:'No authenticated supplier pictures were available.'},409);
+ return privateJson({ok:true,id:COASTER_PILOT.id,designId:master.id,
+  artworkRevision:master.sha256,sku:COASTER_PILOT.sku,reviewStatus:'manual_review_required',
+  supplierPictures:images,checkoutEnabled:false,automaticApproval:false});
+}
