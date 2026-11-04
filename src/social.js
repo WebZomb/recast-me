@@ -110,7 +110,8 @@ async function referencePhoto(env,url,index,original=false) {
   const u=new URL(url);
   if(u.protocol!=='https:'||u.hostname!=='pbs.twimg.com'||!u.pathname.startsWith('/media/'))throw new Error('Unsupported source photo URL.');
   u.searchParams.set('name',original?'large':'small');u.searchParams.set('format','jpg');
-  const photo=await fetch(u,{redirect:'error',signal:AbortSignal.timeout(15000)});
+  const photo=await fetch(u,{redirect:'manual',signal:AbortSignal.timeout(15000)});
+ if((photo.status>=300&&photo.status<400)||photo.redirected||photo.type==='opaqueredirect')throw new Error('The attached X photo redirected and is unavailable.');
   if(!photo.ok||!photo.headers.get('content-type')?.startsWith('image/'))throw new Error('The attached X photo is unavailable.');
   const prepared=(await env.IMAGES.input(photo.body).transform({width:original?2048:500,height:original?2048:500,fit:'scale-down'}).output({format:'image/jpeg',quality:90})).response();
   return new File([await prepared.arrayBuffer()],`reference-${index}.jpg`,{type:'image/jpeg'});
