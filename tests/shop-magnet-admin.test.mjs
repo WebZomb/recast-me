@@ -1,0 +1,31 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+const read=p=>readFileSync(new URL('../'+p,import.meta.url),'utf8');
+test('Ready-Made QA includes protected magnet image comparison without checkout controls',()=>{
+ const html=read('public/admin.html'),js=read('public/admin-magnet-qa.js');
+ assert.match(html,/id="magnet-proof-refresh"/);
+ assert.match(html,/id="magnet-proof-status"/);
+ assert.match(html,/id="magnet-proof-grid"/);
+ assert.match(html,/admin-magnet-qa\.css\?v=1/);
+ assert.match(html,/admin\.js\?v=magnet1/);
+ assert.match(js,/initMagnetReview/);
+ assert.match(js,/\/api\/shop\/magnet-pilot\/qa/);
+ assert.match(js,/\/api\/shop\/magnet-pilot/);
+ assert.match(js,/u\.origin!==location\.origin/);
+ assert.match(js,/referrerPolicy='no-referrer'/);
+ assert.match(js,/window\.|document\.createElement/);
+ assert.doesNotMatch(js,/\.innerHTML\s*=|localStorage|approveProduct|sendToProduction|cartAction/);
+ const css=read('public/admin-magnet-qa.css');
+ assert.match(css,/@media\(max-width:480px\)/);
+});
+test('same existing admin session loads both coaster and magnet proof panels and removes photos on lock',()=>{
+ const js=read('public/admin.js');
+ assert.match(js,/const coasterReview=initCoasterReview\(api\)/);
+ assert.match(js,/const magnetReview=initMagnetReview\(api\)/);
+ assert.match(js,/coasterReview\.load\(\)/);
+ assert.match(js,/magnetReview\.load\(\)/);
+ assert.match(js,/function lock\(\)\{magnetReview\.clear\(\);coasterReview\.clear\(\)/);
+ assert.match(read('src/router.js'),/runMagnetPilot\(env\)/);
+ assert.match(read('src/shop-routes.js'),/magnetPilotOwnerProof/);
+});
