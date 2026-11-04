@@ -48,7 +48,18 @@ const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('n
    await page.locator('.collection-card').first().getByRole('button',{name:'See artwork'}).click();
    assert.equal(await page.locator('#collection-detail').isVisible(),true);
    assert.equal(await page.locator('#collection-detail-add').isVisible(),false);
-   assert.equal(await page.getByRole('button',{name:'Actual Blankets pending'}).isDisabled(),true);
+   assert.equal(await page.getByRole('button',{name:'Real Printful pending'}).isDisabled(),true);
+   assert.equal(await page.locator('#collection-detail-concept .collection-preview').getAttribute('data-preview-size'),'50 × 60 in');
+   const shortRatio=await page.locator('#collection-detail-concept .collection-artwork').evaluate(el=>Number.parseFloat(getComputedStyle(el).aspectRatio));
+   assert.ok(Math.abs(shortRatio-5/6)<0.02,'The actual 50×60 blanket outline needs the right proportions');
+   await page.getByRole('button',{name:'Layout 60 × 80 in'}).click();
+   assert.equal(await page.locator('#collection-detail-concept .collection-preview').getAttribute('data-preview-size'),'60 × 80 in');
+   const tallRatio=await page.locator('#collection-detail-concept .collection-artwork').evaluate(el=>Number.parseFloat(getComputedStyle(el).aspectRatio));
+   assert.ok(Math.abs(tallRatio-3/4)<0.02,'The actual 60×80 blanket outline needs the right proportions');
+   await page.getByRole('button',{name:'Original artwork'}).click();
+   assert.equal(await page.locator('#collection-detail-image').isVisible(),true);
+   assert.equal(await page.locator('#collection-detail-concept').isVisible(),false);
+   assert.equal(await page.locator('#collection-detail-add').isVisible(),false);
    await page.locator('#close-collection-detail').click();
    await page.evaluate(()=>window.scrollTo(0,0));
    await page.screenshot({path:path.join(out,`${engine}-blankets-${width}.png`)});
@@ -56,6 +67,7 @@ const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('n
     await page.goto('https://recast.test/shop-phone-cases.html');
     await page.waitForFunction(()=>document.querySelectorAll('.collection-card').length===35);
     assert.equal(await page.locator('#collection-nav a[aria-current="page"]').innerText(),'Phone Cases');
+    assert.equal(await page.locator('.collection-card').first().locator('.collection-preview--phone-cases').count(),1,'Phone case must be visually distinct from blankets');
     assert.equal(await page.getByRole('button',{name:'Add to cart'}).count(),0);
     assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),true);
     await page.goto('https://recast.test/shop.html');
