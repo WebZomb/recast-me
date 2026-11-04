@@ -454,7 +454,11 @@ export const REVIEWED_EXPANSION_PROOFS=Object.freeze({
  'village-husky-mug-11oz':'1dded23da0468e08365a89384e5c9485e4142cc4f36c79dc2af6097c6ff77d36',
  'village-husky-mug-15oz':'87f50dc89f7050a7cacd474de2d0eed846c4f4cba598077aeff1ffca61ae363a',
  'village-orange-tabby-mug-11oz':'35f17e2c03f47a97902db01ff97b2a5049f9c3f8d7b5d487cd6cbe88cb1f5f24',
- 'village-orange-tabby-mug-15oz':'0b2b5caf21625b213d492b4a024d3aed4fc7a734ebfa42e8ea018944f381dda4'
+ 'village-orange-tabby-mug-15oz':'0b2b5caf21625b213d492b4a024d3aed4fc7a734ebfa42e8ea018944f381dda4',
+ 'village-tuxedo-cat-mug-11oz':'c820ad43f05a6cd6b1e30325d9a58bae69fae04a17fc356d05374d90df314ca2',
+ 'village-tuxedo-cat-mug-15oz':'4a0d52ad627abf9d963bed195bba3187384c717c5a897921b1a44f800f724d78',
+ 'village-jack-russell-mug-11oz':'82e96b6a9248a835b43a35eb3d9b6b5d9dac74cd55c81e4aca4c0f46f9a4a256',
+ 'village-jack-russell-mug-15oz':'3b566030164e8bdcbef873507a831f503b3d6708f6b1bd97f8f3c2944aff200c'
 });
 // Separate v3 namespace preserves all v2 attempted records. No deletion, no blind supplier retries.
 export function approvedMugSourceMime(bytes){
