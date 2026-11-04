@@ -17,3 +17,12 @@
 After successful full tests, security, customer-policy and guarded Worker deploy, owner can open `https://recastmeai.com/admin.html`, unlock the Control Center with existing Admin credentials, and choose Ready-Made QA to inspect the saved manufacturer photos. Do **not** judge a product print-approved until the real Printful print area, file dimensions, bleed, original pet identity, supplier view and actual sample are checked. Separate immutable signed proof and one-time checkout mapping are needed to sell it.
 
 Rollback: revert this admin-only change and redeploy. All saved Printful coaster proof tasks, existing mug sales, user carts and provider secrets remain untouched.
+
+
+## Verified November 4 production release
+- PR #157 merged as `cd530018313533d01b05350a6911f4c7eddeed84` after 842/842 local Node tests, successful Wrangler dry run, successful Cloudflare Workers preview build, and isolated WebKit owner-gallery tests at 393 and 1280 pixels. Hosted customer-policy browser CI remained in the browser-install step at merge time, so no hosted browser success is claimed for that PR.
+- Guarded Cloudflare production deployment: GitHub Actions run `41855415002` **SUCCESS**, including offline tests/dry-run and read-only deploy smoke.
+- Independent HTTP production check from authorized Recast desktop: `GET /admin.html` HTTP 200 with `data-tab="ready-made-qa"` and `/admin.js?v=coaster1`; `GET /admin-coaster-qa.js` and `/admin-coaster-qa.css` both HTTP 200; existing `/shop.html` HTTP 200. No unauthenticated owner view is available.
+- Supplier status `GET /api/shop/coaster-pilot` remains **ready_for_review**, **2 real Printful supplier views**, `checkoutEnabled=false`, `automaticApproval=false`. Anonymous `GET /api/shop/coaster-pilot/qa` returns HTTP **401**. Private owner image rendering has not been checked in an authenticated production browser; owner must unlock Control Center and visually confirm the real views.
+- No print file approved, no new coaster product offer, no Shopify charge/order or Printful paid production. Admin review is a read-only inspection aid.
+- Rollback: revert PR #157 release commit and redeploy the Worker/assets; preserve the completed supplier task and all saved historic customer/carts.
