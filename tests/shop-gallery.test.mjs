@@ -43,7 +43,8 @@ test('published original Golden Retriever remains a separate approved design',()
  assert.ok(golden);assert.notEqual(golden.designId,'christmas-golden-retriever-winter-lights');
  const page=readFileSync(new URL('../public/shop.js',import.meta.url),'utf8');
  assert.ok(page.includes('groupShopOffers(offers)'));
- assert.ok(page.includes('pending.map(previewCard)'));
+ assert.ok(page.includes('closeups.map(previewCard)'));
+ assert.ok(page.includes('classics.map(previewCard)'));
  assert.ok(page.includes('showPreview(design,showingArtwork)'));
  assert.ok(page.includes("$('#detail-add').hidden=true"));
  assert.ok(page.includes("$('#detail-add').hidden=false"));
