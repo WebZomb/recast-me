@@ -436,7 +436,12 @@ export const EXPANSION_ITEMS=Object.freeze(EXPANSION_DESIGNS.flatMap(d=>[
 const byDesign=new Map(EXPANSION_DESIGNS.map(d=>[d.id,d]));
 // DO NOT add a proof hash until both Printful image and frozen print placement
 // have been independently inspected and compared to the pinned source artwork.
-export const REVIEWED_EXPANSION_PROOFS=Object.freeze({});
+// Reviewed against the exact Printful 11 oz and 15 oz handle-left and 3D previews.
+// The source-revision, saved clean print file and position remain immutable.
+export const REVIEWED_EXPANSION_PROOFS=Object.freeze({
+ 'village-golden-retriever-mug-11oz':'b114d98c685bd48caa8d0cedd9a890714fc4936273b1a4d85d75e9c36cc5669b',
+ 'village-golden-retriever-mug-15oz':'ef15ee055e30aeb1f121cec08a1e7200aed283f6d7e17985f51b56b32661049d'
+});
 // Separate v3 namespace preserves all v2 attempted records. No deletion, no blind supplier retries.
 export function approvedMugSourceMime(bytes){
  if(bytes?.[0]===255&&bytes?.[1]===216&&bytes?.[2]===255)return 'image/jpeg';
