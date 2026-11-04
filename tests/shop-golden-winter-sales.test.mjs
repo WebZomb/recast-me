@@ -12,7 +12,7 @@ test('Only the original Golden Retriever 11 oz sales illustration gets the riche
   assert.ok(source.includes("offer.designId==='christmas-golden-retriever-winter-lights'"));
   assert.ok(source.includes("offer.artworkRevision==='a003e979d4a1c2056d37f9c23610399dd83ed82ec0f85cde8733f99fbd1ff0a2'"));
   assert.ok(source.includes("salesForApproved.get(offer.designId+'|'+offer.artworkRevision)"));
-  assert.match(shop,/src="\/shop\.js\?v=8"/);
-  assert.match(christmas,/src="\/shop\.js\?v=8"/);
+  assert.match(shop,/src="\/shop\.js\?v=9"/);
+  assert.match(christmas,/src="\/shop\.js\?v=9"/);
   assert.doesNotMatch(source,/christmas-village-golden-retriever-mug-sales-v2/);
 });
