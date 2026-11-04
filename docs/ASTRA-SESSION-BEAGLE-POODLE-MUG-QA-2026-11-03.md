@@ -12,3 +12,13 @@ User authorized completing all 35 ready-made pet mugs so they can be purchased i
 ## Release controls
 - Run full Node and Chromium/WebKit CI before deployment. Verify four new offers are visible in `/api/shop/catalog` after cron, with correct prices and no customer-produced images. Test safe isolated cart creation and handoff without placing a paid order. Other designs remain pending proof review and separate Shopify product drafts remain unpublished pending compatible standalone fulfillment.
 - Roll back only the new four approvals if any proof is invalidated; do not touch existing four reviewed Christmas Village designs, original Golden Winter Lights or private saved customer carts.
+
+## Further visually inspected pairs in the same reviewed release
+The source-locked `christmas-village-husky` and `christmas-village-orange-tabby` also reached **ready_for_review** for both 11oz and 15oz. The original artworks and authentic watermarked Printful 3D handle-right images were visually compared at `RecastMugProofQA/review-6-2.jpg`. The Husky's blue eyes, black-and-white face, red scarf and Santa hat match its supplier previews; the Orange Tabby's brown tabby pattern, green eyes, red scarf and village background match. No swapped breed or cropped face.
+- Husky 11oz `1dded23da0468e08365a89384e5c9485e4142cc4f36c79dc2af6097c6ff77d36`
+- Husky 15oz `87f50dc89f7050a7cacd474de2d0eed846c4f4cba598077aeff1ffca61ae363a`
+- Orange Tabby 11oz `35f17e2c03f47a97902db01ff97b2a5049f9c3f8d7b5d487cd6cbe88cb1f5f24`
+- Orange Tabby 15oz `0b2b5caf21625b213d492b4a024d3aed4fc7a734ebfa42e8ea018944f381dda4`
+
+The reviewed signature allowlist is now 16 variants (8 Christmas Village designs), out of 70 new mug sizes. All others stay pending exact supplier proof QA.
+**Known transient blocker:** Siamese cat source import recorded Cloudflare Images binding code `9502`; its second SKU failed only because an immutable source claim already existed. No Siamese supplier mockup was created or made buyable. Preserve its prior R2 error/claim records and investigate safe *pre-provider-only* recovery; do not silently reset unknown provider tasks.
