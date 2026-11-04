@@ -60,6 +60,22 @@ function checkedReady(prior,identity,revision,shop){
  checkedCartId(prior.cartId);
  return {checkoutUrl:checkedUrl(prior.checkoutUrl,shop),lines:canonicalLines(prior.lines)};
 }
+// Legacy production Workers passed unsupported redirect:'error' to the native Request
+// constructor, causing a deterministic preflight TypeError BEFORE Shopify was called.
+// Only the exact old pending shape created before the fix was merged (UTC 03:08:37)
+// can be archived and re-claimed, once. Any ambiguity remains locked for owner review.
+const LEGACY_PREFLIGHT_CUTOFF=Date.parse('2026-11-04T03:08:37Z');
+const LEGACY_BASKET_START=Date.parse('2026-10-18T00:00:00Z');
+export function isLegacyPreflightOnlyPending(prior,identity,revision,expectedLines){
+ if(!prior||typeof prior!=='object'||Array.isArray(prior))return false;
+ const keys=Object.keys(prior).sort();
+ if(JSON.stringify(keys)!==JSON.stringify(['basketId','lines','ownerId','revision','startedAt','status']))return false;
+ if(prior.status!=='pending'||prior.ownerId!==identity.ownerId||prior.basketId!==identity.basketId||
+  !Number.isSafeInteger(prior.revision)||prior.revision!==revision||revision<0)return false;
+ const when=typeof prior.startedAt==='string'?Date.parse(prior.startedAt):NaN;
+ if(!Number.isFinite(when)||when<LEGACY_BASKET_START||when>=LEGACY_PREFLIGHT_CUTOFF)return false;
+ try{return canonicalLines(prior.lines)===expectedLines;}catch{return false;}
+}
 async function retainCheckoutHistory(bucket,key,prior){
  // A changed basket may start another checkout, but must not erase the old
  // private reconciliation evidence. Never overwrite an existing history slot.
@@ -121,15 +137,21 @@ export async function beginBasketCheckout(env,identity,state,lines,{fetcher=fetc
  try{priorObject=await bucket.get(key);prior=priorObject?await priorObject.json():null;}catch{throw unavailable();}
  if(priorObject){
   if(!priorObject.etag)throw unavailable();
-  const saved=checkedReady(prior,identity,revision,shop);
-  if(prior.revision===revision){
-   if(saved.lines!==expectedLines)throw unavailable();
-   return refreshCheckout(env,bucket,key,priorObject.etag,prior,lines,fetcher);
+  if(isLegacyPreflightOnlyPending(prior,identity,revision,expectedLines)){
+   // This exact historical record could not have contacted Shopify in workerd.
+   // Preserve the original attempt as immutable evidence BEFORE a new CAS claim.
+   await retainCheckoutHistory(bucket,key,prior);
+  }else{
+   const saved=checkedReady(prior,identity,revision,shop);
+   if(prior.revision===revision){
+    if(saved.lines!==expectedLines)throw unavailable();
+    return refreshCheckout(env,bucket,key,priorObject.etag,prior,lines,fetcher);
+   }
+   // Editing cannot bypass an expired, completed, or unconfirmed checkout.
+   // Verify the previous remote cart against ITS frozen lines before replacing it.
+   await refreshCheckout(env,bucket,key,priorObject.etag,prior,prior.lines,fetcher);
+   await retainCheckoutHistory(bucket,key,prior);
   }
-  // Editing cannot bypass an expired, completed, or unconfirmed checkout.
-  // Verify the previous remote cart against ITS frozen lines before replacing it.
-  await refreshCheckout(env,bucket,key,priorObject.etag,prior,prior.lines,fetcher);
-  await retainCheckoutHistory(bucket,key,prior);
  }
  const attempt={ownerId:identity.ownerId,basketId:identity.basketId,revision,
   status:'pending',startedAt:new Date().toISOString(),lines:structuredClone(lines)};
