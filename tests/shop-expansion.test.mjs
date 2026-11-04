@@ -119,7 +119,7 @@ test('35-design preview staging remains bounded and does not imply automatic sal
  assert.match(settings,/"PREMADE_EXPANSION_CANARY_COUNT":\s*"35"/);
  assert.match(settings,/"PREMADE_EXPANSION_PREVIEW_BATCH_SIZE":\s*"2"/);
  assert.match(settings,/"PREMADE_EXPANSION_ENABLED":\s*"true"/);
- assert.equal(Object.keys(REVIEWED_EXPANSION_PROOFS).length,8);
+ assert.equal(Object.keys(REVIEWED_EXPANSION_PROOFS).length,12);
  assert.equal(EXPANSION_ITEMS.length,70);
 });
 
