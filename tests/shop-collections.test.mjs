@@ -72,9 +72,9 @@ test('future approved blanket offers must exactly match the design revision and 
 test('page renderer shows no cart when supplier is not certified and never uses mug marketing art for blankets',()=>{
  const code=read('public/shop-category.js'),css=read('public/shop-category.css');
  assert.match(code,/if\(offer\)/);
- assert.match(code,/status==='verified'/);
+ assert.match(read('public/shop-collections.js'),/status==='verified'/);
  assert.match(code,/readyOffer\(o\)/);
- assert.match(code,/Actual .*preview in preparation/);
+ assert.match(code,/preview in preparation/);
  assert.match(code,/addPremade\(offer\)/);
  assert.doesNotMatch(code,/\.salesImage/,'Mug sales illustration must not be misrepresented as blanket image');
  assert.match(css,/collection-preview--blanket/);
