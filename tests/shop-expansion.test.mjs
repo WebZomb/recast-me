@@ -53,7 +53,44 @@ test('server-side Christmas mug designs match the exact pinned public art and bo
  'archive-pointer-winter-woods-mug-11oz':'6c86a9a19c74a83d998b49516811f0f4d286b2b2078fa999bcc510b9102e82c2',
  'archive-pointer-winter-woods-mug-15oz':'2a9d5ee0901a57eda500f5d051266372dbb1eb7f286e0abfa7b4b253b3a564ad',
  'archive-abyssinian-evergreen-mug-11oz':'3b925ecd598e8f0f4bc2c4ffec1f78cd691c4bc8db987e86893732f1cd770b40',
- 'archive-abyssinian-evergreen-mug-15oz':'cbe46b9637a5cb6a5628bcfee6daa4471eb2cec95cfe7d8fe704904647f0fe30'
+ 'archive-abyssinian-evergreen-mug-15oz':'cbe46b9637a5cb6a5628bcfee6daa4471eb2cec95cfe7d8fe704904647f0fe30',
+ 'archive-ragdoll-ice-palace-mug-11oz':'fd80d197219d06b5d7237e9f78c8d04f10414149b24aebd658f21d604e53e7be',
+ 'archive-ragdoll-ice-palace-mug-15oz':'80b098d2ae37e0727f345a831152c478e5dd496fb0e5e28ff0e8f5f0c632367d',
+ 'archive-beagle-santa-mail-mug-11oz':'cfbbc309ab78b13a20b7253e4b73f57f36acdec2bf637bd2e124a2457c8990e4',
+ 'archive-beagle-santa-mail-mug-15oz':'23c5cf5f9044d7d127a969d91c3147ff1e2e1d0b2bb5a31de026570d870478bc',
+ 'archive-maine-coon-snowfall-mug-11oz':'8830b74ec28d14c909046014d40c08b11824c22cae55436c6568e83d6487fc95',
+ 'archive-maine-coon-snowfall-mug-15oz':'96afffe35ce01aa3563a75b975721257c0552219701297f0e52ecc31df06c3ed',
+ 'archive-white-persian-rose-mug-11oz':'5263e732b73d2d852875c05734cd9d238f8051879651adbba2a73856bf4d3132',
+ 'archive-white-persian-rose-mug-15oz':'afe52fdca4dd791f5e49ee1a4f9f542c781c0baab90bb66a6fb636a217161753',
+ 'archive-english-bulldog-gifts-mug-11oz':'0f4b651c58fbdf86f68ea501d2dc6f8be15b59bd51bc56eac17c9b17b1ae47e6',
+ 'archive-english-bulldog-gifts-mug-15oz':'ef413280ebf23904d29e9f806d25858141f87b6dbde4359ef6d20ae7856944cc',
+ 'archive-silver-tabby-toy-train-mug-11oz':'afd6c188f76dad403cbb6cd6abd7f82942ae9ec13c64e25a577c91b3a77d7a0e',
+ 'archive-silver-tabby-toy-train-mug-15oz':'6bb51d9682142e3a4cfb5a5932f4044f754f425a0d7190b60b0750c2530b0b40',
+ 'archive-german-shepherd-snowy-street-mug-11oz':'f4b3693eb7bc4493efe53d1dcd348462658513376ebf8c6a74f664f7e8cb2ff0',
+ 'archive-german-shepherd-snowy-street-mug-15oz':'405f19fa8a981a352874e052e8221a1c8ede4d92349cc73d0fca0f0f11e388b2',
+ 'archive-russian-blue-midnight-mug-11oz':'e6c07fdc882e9faff54d820d8e1a969b6ce48bad77b77559b70aa71331ab300e',
+ 'archive-russian-blue-midnight-mug-15oz':'b2a13e4001e6ff391aa5c7d7b85106b4785a0504c0d20906242300bdc06b15a3',
+ 'archive-maine-coon-fireside-mug-11oz':'c862628a7345870165aa202d77c946c9b18ec7ece00adf2d08a66569cf4cbf2d',
+ 'archive-maine-coon-fireside-mug-15oz':'a072dd5e92d115f760faca1f56372d14452e8c53ae36b3ee490daa401e46860a',
+ 'archive-french-bulldog-toy-shop-mug-11oz':'54f683e681d1e31b158744024e88806b9accc57b05adb92175790b3f9b4dccdd',
+ 'archive-french-bulldog-toy-shop-mug-15oz':'417a373369302abf58f7c08b7deed33e2aacf8e065a004ad9cba513e1013f86d',
+ 'archive-chihuahua-holiday-gold-mug-11oz':'c65880590f7bb7047d5d6ab220e28a2ac680283cee7a99f092c36287593e6f6e',
+ 'archive-chihuahua-holiday-gold-mug-15oz':'946dede56c05b02af2ed0bc24353db2f3698ee92e751fbdb1e52ff88ac928fdd',
+ 'archive-orange-persian-cozy-fire-mug-11oz':'f7b804993e06e84dc92592ae202046c16cafc1ccba91691502c330812bd215ec',
+ 'archive-orange-persian-cozy-fire-mug-15oz':'b7608a03fdebe9e405a0fa2f51ab012bedd10ee867b766fe630b98881d1c3d91',
+ 'archive-chocolate-labrador-chalet-mug-11oz':'797e9ab77bae5306fef6859f27ce1498e2327d243fa3ded5d089ef438f875072',
+ 'archive-chocolate-labrador-chalet-mug-15oz':'e0e08a2e56a89aa12230e3d0fe96bb3a782f9882ea9bbf77a688fb696b9edfe1',
+ 'archive-dalmatian-christmas-engine-mug-11oz':'bdae32c0505869a0ffa3ce93de053af83bf3812554134861aa6987e5cf15d995',
+ 'archive-dalmatian-christmas-engine-mug-15oz':'dbed926e17633b9c666a201e78c919140bb51856511018465ae8d720d64a2eb8',
+ 'archive-sphynx-present-surprise-mug-11oz':'71aa69b76979742303906f606795667854e7cec8127da547bcf427f8b711af6c',
+ 'archive-sphynx-present-surprise-mug-15oz':'7992ad2b21433b2a89a947d2148b8c2242ae0f443ee151f4aacca272732a8a39',
+ 'archive-dachshund-gingerbread-village-mug-11oz':'566e159b8cbc7386428cb627cc5dc4e61486ba52b8b22aae279f6d3679d6fca0',
+ 'archive-dachshund-gingerbread-village-mug-15oz':'2b3d67b9b806e7f5e97ee50f1dd3606de82677959abe1d5a56f873c6696efa51',
+ 'archive-rottweiler-fireside-mug-11oz':'c8c427c00c1e28fdef40f28aff39ee9d7925462137aa55fb76901ce9a973bde4',
+ 'archive-rottweiler-fireside-mug-15oz':'b52f26308af8dbe34089fb8cd5ff1e4b3b5e7055dade39fa062ab599ffa89aed',
+ 'archive-jack-russell-snowy-sleigh-mug-11oz':'70b84a089652cf1227751030cd0b4c2e8fa73bcdeb1bc45255826957414b44e9',
+ 'archive-jack-russell-snowy-sleigh-mug-15oz':'3cdb21f5c6b0b517f92220a22f074023eb1f9ee7cc68dd096502f5c86b3a8c71'
+
  });
 });
 
@@ -141,7 +178,7 @@ test('35-design preview staging remains bounded and does not imply automatic sal
  assert.match(settings,/"PREMADE_EXPANSION_CANARY_COUNT":\s*"35"/);
  assert.match(settings,/"PREMADE_EXPANSION_PREVIEW_BATCH_SIZE":\s*"2"/);
  assert.match(settings,/"PREMADE_EXPANSION_ENABLED":\s*"true"/);
- assert.equal(Object.keys(REVIEWED_EXPANSION_PROOFS).length,32);
+ assert.equal(Object.keys(REVIEWED_EXPANSION_PROOFS).length,68);
  assert.equal(EXPANSION_ITEMS.length,70);
 });
 
