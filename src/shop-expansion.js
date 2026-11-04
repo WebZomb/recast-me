@@ -449,7 +449,12 @@ async function source(env,design){
  const claim=`shop/preparation/v2/source-${design.id}.claim`;
  if(!await env.ARTWORK.put(claim,JSON.stringify({startedAt:now()}),{onlyIf:new Headers({'If-None-Match':'*'})}))throw fault('seed_source_pending','The original catalog import needs review before retrying.',503);
  if(!design.asset.startsWith('https://cdn.shopify.com/s/files/1/0854/3810/3796/files/'))throw fault('seed_asset','The source URL is not from the approved Recast Me media library.',503);
- const response=await fetch(design.asset,{redirect:'error',headers:{accept:'image/png'}});
+ // Workerd implements only manual/follow, not redirect:'error'. Reject 3xx explicitly.
+ const response=await fetch(design.asset,{redirect:'manual',headers:{accept:'image/png'}});
+ if((response.status>=300&&response.status<400)||response.redirected||response.type==='opaqueredirect'){
+  await response.body?.cancel().catch(()=>{});
+  throw fault('seed_asset_redirect','The catalog artwork source redirected and needs review.',503);
+ }
  if(!response.ok)throw fault('seed_asset','The approved catalog artwork could not load.',503);
  const bytes=new Uint8Array(await response.arrayBuffer());
  if(await hashBytes(bytes)!==design.sha256)throw fault('seed_asset_changed','The catalog artwork does not match its approved source.',503);
