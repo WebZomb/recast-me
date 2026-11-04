@@ -52,9 +52,10 @@ const fs=require('fs'),path=require('path'),assert=require('node:assert/strict')
   const rottweiler=page.locator('.concept-product[data-design-id="archive-rottweiler-fireside"]');
   assert.equal(await rottweiler.count(),1,'Recovered Rottweiler fireplace art and decorated mug appear in the same shop');
   const noScene=page.locator('.concept-product[data-design-id="archive-maine-coon-fireside"]');
-  assert.equal(await noScene.count(),1,'An original with no styled mug stays visible instead of being dropped');
+  assert.equal(await noScene.count(),1,'Previously missing Maine Coon styled mug now has its matching artwork and mug scene');
   await noScene.getByRole('button',{name:'View 4 options'}).click();
-  assert.equal(await page.locator('#detail-views button').nth(0).isDisabled(),true);
+  assert.equal(await page.locator('#detail-views button').nth(0).isDisabled(),false,'Mug scene must now be available');
+  assert.equal(await page.locator('#detail-views button').nth(2).isDisabled(),true,'An illustration must not impersonate an 11 oz supplier proof');
   await page.locator('#close-detail').click();
   assert.equal(await page.locator('dialog#cart').count(),0,'Do not keep a separate disabled premade bag');
   assert.equal(await page.locator('#filters').count(),0);
