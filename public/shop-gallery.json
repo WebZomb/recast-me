@@ -3,7 +3,7 @@
   "collection": "christmas",
   "type": "pet-mugs",
   "status": "previews-awaiting-supplier-approval",
-  "note": "13 Christmas Village pet designs plus 22 restored original Christmas scenes. Decorated mug scenes are illustrations; actual 11oz/15oz Printful previews are shown only from the verified server catalog. Six classic designs are awaiting styled mug scenes and can still be viewed as original art. No unverified design is buyable.",
+  "note": "35 Christmas pet mug designs in the existing Shop: 22 dogs and 13 cats, all with individual original artwork and matching decorated-mug lifestyle images. These studio sales illustrations are NOT actual Printful supplier proofs. The original Golden Retriever Winter Lights 11/15 oz offers remain buyable; other designs await exact signed Printful preview and proof authorization.",
   "designs": [
     {
       "id": "village-golden-retriever",
@@ -336,7 +336,7 @@
       "status": "preview",
       "artworkRevision": "f188e500d8ce9e7d5853af4af8d747557ddcf28dfcc5e017433fd84f029d15e7",
       "artworkImage": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-christmas-archive-maine-coon-snowfall-art-20261103.png?v=1793748633",
-      "salesImage": null,
+      "salesImage": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-christmas-archive-maine-coon-snowfall-mug-scene-v2-20261103.webp?v=1793758691",
       "artworkWidth": 1254,
       "artworkHeight": 1254,
       "plannedSizes": [
@@ -356,7 +356,7 @@
       "status": "preview",
       "artworkRevision": "179a94dfc8d5c0dc8d7e08992ef1f10cc8adba8a5e3328811a6574d2ce27f36a",
       "artworkImage": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-christmas-archive-white-persian-rose-art-20261103.png?v=1793748641",
-      "salesImage": null,
+      "salesImage": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-christmas-archive-white-persian-rose-mug-scene-v2-20261103.webp?v=1793758695",
       "artworkWidth": 1254,
       "artworkHeight": 1254,
       "plannedSizes": [
@@ -436,7 +436,7 @@
       "status": "preview",
       "artworkRevision": "7880618e39b51f249d5ddd82c8d8fbe906888a7dc4d6f2019e85cedf6a2f4641",
       "artworkImage": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-christmas-archive-russian-blue-midnight-art-20261103.png?v=1793748668",
-      "salesImage": null,
+      "salesImage": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-christmas-archive-russian-blue-midnight-mug-scene-v2-20261103.webp?v=1793758699",
       "artworkWidth": 1254,
       "artworkHeight": 1254,
       "plannedSizes": [
@@ -456,7 +456,7 @@
       "status": "preview",
       "artworkRevision": "c8d2e410f123ffc45e24e1d217def1892dfbf5d92037857884e32d21d9fb0fc8",
       "artworkImage": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-christmas-archive-maine-coon-fireside-art-20261103.png?v=1793748675",
-      "salesImage": null,
+      "salesImage": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-christmas-archive-maine-coon-fireside-mug-scene-v2-20261103.webp?v=1793758703",
       "artworkWidth": 1254,
       "artworkHeight": 1254,
       "plannedSizes": [
@@ -476,7 +476,7 @@
       "status": "preview",
       "artworkRevision": "b66e6dad89495b703dc740cec0ee677f0d5450546eb5281ab557ecde1cae7e75",
       "artworkImage": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-christmas-archive-british-shorthair-red-velvet-art-20261103.png?v=1793748682",
-      "salesImage": null,
+      "salesImage": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-christmas-archive-british-shorthair-red-velvet-mug-scene-v2-20261103.webp?v=1793758707",
       "artworkWidth": 1254,
       "artworkHeight": 1254,
       "plannedSizes": [
@@ -536,7 +536,7 @@
       "status": "preview",
       "artworkRevision": "28d2cfd78d35500e4c8c8de98ce0ab8cbe28f2a31eaf46cc16832b12961665a7",
       "artworkImage": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-christmas-archive-abyssinian-evergreen-art-20261103.png?v=1793748713",
-      "salesImage": null,
+      "salesImage": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-christmas-archive-abyssinian-evergreen-mug-scene-v2-20261103.webp?v=1793758712",
       "artworkWidth": 1254,
       "artworkHeight": 1254,
       "plannedSizes": [

@@ -120,7 +120,13 @@ function render(offers,previews=[]){
    const items=groups.filter(v=>v[0].product===type&&(pet==='other'?!['dog','cat'].includes(v[0].pet):v[0].pet===pet));
    const pending=previews.filter(v=>v.product===type&&(pet==='other'?!['dog','cat'].includes(v.pet):v.pet===pet));
    if(!items.length&&!pending.length)continue;
-   const grid=node('div',null,'products');grid.append(...items.map(card),...pending.map(previewCard));section.append(node('h3',label,'pet-heading'),grid);
+   const grid=node('div',null,'products');
+   // Keep the close-up Christmas Village collection together first.
+   // The approved original Golden Retriever then introduces the full-scene classics.
+   const closeups=pending.filter(d=>d.collection!=='classic-christmas');
+   const classics=pending.filter(d=>d.collection==='classic-christmas');
+   grid.append(...closeups.map(previewCard),...items.map(card),...classics.map(previewCard));
+   section.append(node('h3',label,'pet-heading'),grid);
   }
   $('#products').append(section);
  });
