@@ -1,3 +1,5 @@
+import {createProductConcept,conceptSizeOptions} from './shop-product-concepts.js?v=1';
+import {blanketPrintAudit} from './shop-print-readiness.js?v=1';
 import {SHOP_COLLECTIONS,collectionBySlug,collectionDesigns,categoryOffers} from './shop-collections.js?v=1';
 import {readyOffer} from './shop-model.js?v=4';
 import {initialize,addPremade,openCart} from './basket.js?v=3';
@@ -16,21 +18,8 @@ const artworkFor=d=>d.artworkImage;
 function verifiedByDesign(offers,design){
  return offers.filter(o=>o.designId===design.designId&&o.artworkRevision===design.artworkRevision&&readyOffer(o));
 }
-function displayPreview(visual,design){
- const preview=el('div','collection-preview '+(item==='blankets'?'collection-preview--blanket':''));
- if(item==='blankets')preview.style.setProperty('--recast-art','url("'+artworkFor(design)+'")');
- const artwork=el('div','collection-artwork');
- artwork.append(viewImage(artworkFor(design),shortTitle(design)+' original Christmas pet artwork'));
- preview.append(artwork);
- if(item==='blankets'){
-  const hem=el('span','collection-hem');
-  hem.setAttribute('aria-hidden','true');
-  preview.append(hem);
- }
- const label=el('span','collection-preview-label',item==='blankets'?'Illustrative blanket layout':'Original artwork');
- preview.append(label);
- preview.title=item==='blankets'?'Concept composition only; not a Printful-approved blanket mockup':'Art concept. Real product preview not yet verified.';
- visual.replaceChildren(preview);
+function displayPreview(visual,design,{size}={}){
+ visual.replaceChildren(createProductConcept(design,{slug:item,size,large:false}));
 }
 function photoPreview(visual,offer){
  const url=safeUrl(offer.productPreviewUrl)||safeUrl(offer.mockupUrl);
@@ -41,8 +30,19 @@ function photoPreview(visual,offer){
  return true;
 }
 function chooseDetailPhoto(url,label,alt){
- const image=$('#collection-detail-image');image.src=url;image.alt=alt;
+ const concept=$('#collection-detail-concept');
+ if(concept)concept.hidden=true;
+ const image=$('#collection-detail-image');
+ image.hidden=false;image.src=url;image.alt=alt;
  $('#collection-detail-description').textContent=label;
+}
+function showDetailConcept(design,size){
+ const concept=$('#collection-detail-concept');
+ concept.replaceChildren(createProductConcept(design,{slug:item,size,large:true}));
+ concept.hidden=false;
+ $('#collection-detail-image').hidden=true;
+ const sizeText=item==='blankets'?' · '+size:'';
+ $('#collection-detail-description').textContent='Design concept'+sizeText+' — this is not a manufacturer preview. Original art and print placement require approval before sale.';
 }
 function detail(design,offers,selected){
  selectedOffer=selected||offers[0]||null;
@@ -50,29 +50,46 @@ function detail(design,offers,selected){
  $('#collection-detail-title').textContent=title+' '+collection.label;
  const options=$('#collection-detail-views');options.replaceChildren();
  const price=$('#collection-detail-price'),add=$('#collection-detail-add');
- const art=artworkFor(design),artBtn=btn('Original artwork',()=>chooseDetailPhoto(art,'Original artwork — product-specific proof still required',title+' source artwork'),'detail-view-option');
- options.append(artBtn);
+ const controls=[];
+ function control(label,action,{disabled=false}={}){
+  const b=btn(label,()=>{
+   if(disabled)return;
+   action();
+   controls.forEach(v=>v.setAttribute('aria-pressed',String(v===b)));
+  },'detail-view-option');
+  b.disabled=disabled;b.setAttribute('aria-pressed','false');options.append(b);controls.push(b);return b;
+ }
+ const art=artworkFor(design);
+ const selectOriginal=()=>chooseDetailPhoto(art,'Original approved pet illustration. This original source is not necessarily a print-ready file for '+collection.label+'.',title+' original artwork');
  if(offers.length){
+  let initial=null;
   for(const o of offers){
    const src=safeUrl(o.productPreviewUrl)||safeUrl(o.mockupUrl);
    if(!src)continue;
-   options.append(btn('Real '+o.variantLabel,()=>{
+   const b=control('Actual '+o.variantLabel,()=>{
     selectedOffer=o;
-    chooseDetailPhoto(src,'Verified Printful '+collection.label+' — '+o.variantLabel,o.title+' real supplier preview');
+    chooseDetailPhoto(src,'Real Printful '+collection.label+' proof — '+o.variantLabel,o.title+' actual supplier preview');
     price.textContent=money(o.priceCents);add.hidden=false;
-   },'detail-view-option'));
+   });
+   if(o.id===selectedOffer?.id)initial=b;
   }
-  const photo=selectedOffer&&(safeUrl(selectedOffer.productPreviewUrl)||safeUrl(selectedOffer.mockupUrl));
-  if(photo)chooseDetailPhoto(photo,'Verified Printful '+collection.label+' — '+selectedOffer.variantLabel,title+' actual supplier preview');
-  else chooseDetailPhoto(art,'Original artwork — supplier image unavailable',title+' source artwork');
-  price.textContent=money(selectedOffer.priceCents);add.hidden=false;
+  control('Original artwork',selectOriginal);
+  if(initial){initial.click();}
+  else{selectOriginal();price.textContent=money(selectedOffer.priceCents);add.hidden=false;}
  }else{
-  const pending=btn('Actual '+collection.label+' pending',()=>{},'detail-view-option');
-  pending.disabled=true;pending.title='Available only after a real product and print file are approved';
-  options.append(pending);
-  chooseDetailPhoto(art,'Original artwork. No real '+collection.label.toLowerCase()+' supplier preview has been approved for this design.',title+' source artwork');
-  price.textContent='Print preview pending · not available to buy';
-  add.hidden=true;
+  const sizes=conceptSizeOptions(item,collection.sizes);
+  const optionsToShow=sizes.length?sizes:[null];
+  let first=null;
+  for(const size of optionsToShow){
+   const b=control(size?'Layout '+size:'Illustrated concept',()=>showDetailConcept(design,size));
+   if(!first)first=b;
+  }
+  control('Original artwork',selectOriginal);
+  const pending=control('Real Printful pending',()=>{},{disabled:true});
+  pending.title='An actual product-specific Printful proof has not been approved for this design.';
+  price.textContent='Product-specific print file and supplier proof pending · not yet available to buy';
+  add.hidden=true;add.onclick=null;
+  first.click();
  }
  $('#collection-detail').showModal();
 }
@@ -94,7 +111,9 @@ function card(design,allOffers){
  article.dataset.offerStatus=offer?'verified':'preview';
  displayPreview(visual,design);
  const name=el('h3',null,shortTitle(design));
- const note=el('p','collection-card-note',offer?'Verified product · ready to buy':'Coming soon · real product preview pending');
+ const blanketCheck=item==='blankets'?blanketPrintAudit({width:design.artworkWidth,height:design.artworkHeight},'50 × 60 in'):null;
+ const pendingMessage=blanketCheck&&!blanketCheck.fullBleedReady?'High-resolution blanket artwork in preparation':'Real product preview in preparation';
+ const note=el('p','collection-card-note',offer?'Verified product · ready to buy':pendingMessage);
  const actions=el('div','collection-card-actions');
  const show=btn(offer?'See real product':'See artwork',()=>detail(design,offers,offer),'collection-secondary');
  actions.append(show);
@@ -145,6 +164,8 @@ if(collection){
   if(c.slug===collection.slug){link.setAttribute('aria-current','page');}
   return link;
  }));
+ const stage=el('div','collection-detail-concept');stage.id='collection-detail-concept';stage.hidden=true;
+ $('#collection-detail-image').before(stage);
  $('#close-collection-detail').addEventListener('click',()=>$('#collection-detail').close());
  $('#collection-detail-add').addEventListener('click',()=>{if(selectedOffer)add(selectedOffer,$('#collection-detail-add'));});
  $('#open-cart').addEventListener('click',openCart);
