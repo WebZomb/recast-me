@@ -23,3 +23,5 @@ Set `PREMADE_EXPANSION_ENABLED=false` or restore canary count 4 and batch size 4
 
 ## Conservative Printful rate cap
 Official Printful API documentation states 2 mockup generator task creation requests per minute for new stores and up to 10 for established stores. This deployment uses a hard cap of **2** per cron; the provider's actual response headers/rate limit take precedence. No blind retry or duplicate task creation on a 429. Reference: https://developers.printful.com/docs/ 
+
+**Rate-window safeguard:** A private R2 record at `shop/preparation/v3/mockup-create-rate.json` enforces no more than 2 supplier mockup task creations per rolling 65 seconds, even across cron executions. A missing/invalid record or failed compare-and-swap fails closed rather than sending duplicate requests. This conservative 65-second window is stricter than Printful's 2-per-60-seconds new-store limit; it may slow preparation but protects against permanent needs-review failures caused by 429 responses. Unit tests cover rollover and corrupted history.
