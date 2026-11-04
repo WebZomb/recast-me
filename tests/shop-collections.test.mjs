@@ -74,7 +74,7 @@ test('page renderer shows no cart when supplier is not certified and never uses 
  assert.match(code,/if\(offer\)/);
  assert.match(read('public/shop-collections.js'),/status==='verified'/);
  assert.match(code,/readyOffer\(o\)/);
- assert.match(code,/preview in preparation/);
+ assert.match(code,/real product preview pending/);
  assert.match(code,/addPremade\(offer\)/);
  assert.doesNotMatch(code,/\.salesImage/,'Mug sales illustration must not be misrepresented as blanket image');
  assert.match(css,/collection-preview--blanket/);
