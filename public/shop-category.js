@@ -18,6 +18,7 @@ function verifiedByDesign(offers,design){
 }
 function displayPreview(visual,design){
  const preview=el('div','collection-preview '+(item==='blankets'?'collection-preview--blanket':''));
+ if(item==='blankets')preview.style.setProperty('--recast-art','url("'+artworkFor(design)+'")');
  const artwork=el('div','collection-artwork');
  artwork.append(viewImage(artworkFor(design),shortTitle(design)+' original Christmas pet artwork'));
  preview.append(artwork);
