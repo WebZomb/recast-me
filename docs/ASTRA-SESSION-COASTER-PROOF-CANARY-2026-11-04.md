@@ -31,3 +31,9 @@ This pilot does not imply that the other 16 ready-made product pages are purchas
 
 ## Owner-only supplier proof inspection
 The added read-only GET `/api/shop/coaster-pilot/qa` requires the existing owner Bearer admin secret (same authorization mechanism as other admin tools). It reads only the exact saved completed Printful coaster task and returns up to four saved Recast-hosted, signed supplier image views; third-party or malformed URLs are filtered. It never fetches a customer source or approves anything. Unauthorized requests return 401 and cannot obtain the protected picture links. Public `/api/shop/coaster-pilot` never exposes these protected image tokens. Inspect the original pet source and authentic front/side supplier views before any separate signed approval release.
+
+
+## Verified live supplier canary receipt
+- PR #156 merged as `570c9445a640e6cf5f9f36f1467ba8a5ef1a032c` after full unit/browser CI, 840 local Node tests and Worker dry-run; guarded Cloudflare production deployment succeeded.
+- Production `/api/shop/coaster-pilot` read-only status progressed from `not_started` to `pending_preview` and then **`ready_for_review` with `providerViewCount=2`**, confirming one real Printful mockup generator task completed with two saved supplier image views. No duplicate creation task or production order was undertaken by the rollout.
+- Owner-only proof QA is now exposed under the private Control Center Ready-Made QA tab (PR #157); anonymous photo route returns HTTP 401. The trial remains `checkoutEnabled=false`, `automaticApproval=false`, pending owner visual QA and a separate exact signed printfile publication.
