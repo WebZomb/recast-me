@@ -1,12 +1,9 @@
+# Current deployment token cannot read R2 objects. Do not retry automatically
+# or alter its permissions. The existing authenticated owner Control Center
+# provides the supported review path for native print files.
 name: Recast small-gift visual release evidence
 on:
   workflow_dispatch:
-  push:
-    branches: [main]
-    paths:
-      - 'src/shop-small-gift-release.js'
-      - 'scripts/small-gift-review-export.mjs'
-      - '.github/workflows/recast-small-gift-review.yml'
 permissions:
   contents: read
 concurrency:
@@ -32,18 +29,6 @@ jobs:
           node-version: '24'
           cache: npm
       - run: npm ci --ignore-scripts --no-audit --no-fund
-      - name: Classify authorized storage-read failure without exposing values
-        run: |
-          node --input-type=module <<'JS'
-          import {spawnSync} from 'node:child_process';
-          import {existsSync,rmSync} from 'node:fs';
-          const file='/tmp/recast-proof-diagnostic.json';
-          const cli='node_modules/wrangler/bin/wrangler.js';
-          const r=spawnSync(process.execPath,[cli,'r2','object','get','recast-me-artwork/shop/preparation/coasters/v1/golden-retriever-4pack.json','--remote','--file',file],{encoding:'utf8',timeout:45000});
-          const text=String(r.stdout||'')+' '+String(r.stderr||'');
-          console.log(JSON.stringify({exitCode:r.status,cliExists:existsSync(cli),downloaded:existsSync(file),providerCodes:[...text.matchAll(/code[:\s]+([0-9]{3,7})/gi)].map(m=>m[1]),authentication:/authentication|unauthorized|forbidden/i.test(text),permission:/permission|scope/i.test(text),missingObject:/not found|does not exist|not exist/i.test(text),badArgument:/unknown argument|unrecognized/i.test(text),missingModule:/cannot find module/i.test(text),configError:/configuration|config file/i.test(text)}));
-          if(existsSync(file))rmSync(file);
-          JS
       - run: node --check scripts/small-gift-review-export.mjs
       - run: node scripts/small-gift-review-export.mjs
       - name: Retain only commercial images and sanitized review hashes
