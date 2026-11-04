@@ -95,3 +95,12 @@ test('one canary allows only its 2 SKUs, never creates supplier mockups on bad s
  assert.equal(calls,1);
  assert.equal(await env.ARTWORK.get('shop/catalog/v1.json'),null);
 });
+
+import {sourcePreviewBatchSize} from '../src/shop-expansion.js';
+test('source preview batch bounds remain safe and explicit',()=>{
+ assert.equal(sourcePreviewBatchSize({}),2);
+ assert.equal(sourcePreviewBatchSize({PREMADE_EXPANSION_PREVIEW_BATCH_SIZE:'4'}),4);
+ assert.equal(sourcePreviewBatchSize({PREMADE_EXPANSION_PREVIEW_BATCH_SIZE:'8'}),8);
+ assert.equal(sourcePreviewBatchSize({PREMADE_EXPANSION_PREVIEW_BATCH_SIZE:'9'}),2);
+ assert.equal(sourcePreviewBatchSize({PREMADE_EXPANSION_PREVIEW_BATCH_SIZE:'0'}),2);
+});
