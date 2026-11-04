@@ -23,7 +23,13 @@ test('server-side Christmas mug designs match the exact pinned public art and bo
  }
  assert.deepEqual(REVIEWED_EXPANSION_PROOFS,{
   'village-golden-retriever-mug-11oz':'b114d98c685bd48caa8d0cedd9a890714fc4936273b1a4d85d75e9c36cc5669b',
-  'village-golden-retriever-mug-15oz':'ef15ee055e30aeb1f121cec08a1e7200aed283f6d7e17985f51b56b32661049d'
+  'village-golden-retriever-mug-15oz':'ef15ee055e30aeb1f121cec08a1e7200aed283f6d7e17985f51b56b32661049d',
+ 'village-labrador-retriever-mug-11oz':'859163145a6650e7e9e092047ada6d25077cf90a76837ac2ee1927e170ec5f33',
+ 'village-labrador-retriever-mug-15oz':'d571679afef663d389116bc51abbaf441eefc12981f74a0cd4e78e7e439de941',
+ 'village-german-shepherd-mug-11oz':'bcb075fd4fe0d8fdbe5b509b974013f3e931b8c064104676d614cc087ccdde85',
+ 'village-german-shepherd-mug-15oz':'a487bde8c62f69f0a942705f256d49e2a957663c3ddab82d019eac847a7f5c8d',
+ 'village-french-bulldog-mug-11oz':'a61b3871c29c252af5a485bde2e7b4b204232fd9ce6ce7f2268cadd5a5d131be',
+ 'village-french-bulldog-mug-15oz':'427f93b08b399626afd2db2c599960c200867b0bc3e6b9d051ff7502e20e119f'
  });
 });
 
