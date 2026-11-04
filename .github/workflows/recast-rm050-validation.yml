@@ -14,6 +14,7 @@ on:
       - 'scripts/shop-category-browser.cjs'
       - 'scripts/coaster-admin-browser.cjs'
       - 'scripts/magnet-admin-browser.cjs'
+      - 'scripts/sticker-sheet-admin-browser.cjs'
       - 'scripts/admin-printfile-browser.cjs'
       - '.github/workflows/recast-rm050-validation.yml'
   workflow_dispatch:
@@ -77,6 +78,10 @@ jobs:
         run: |
           NODE_PATH=/tmp/recast-browser/node_modules node scripts/magnet-admin-browser.cjs
           NODE_PATH=/tmp/recast-browser/node_modules RECAST_BROWSER=webkit node scripts/magnet-admin-browser.cjs
+      - name: Supplier six-sticker proof owner panel in Chromium and WebKit
+        run: |
+          NODE_PATH=/tmp/recast-browser/node_modules node scripts/sticker-sheet-admin-browser.cjs
+          NODE_PATH=/tmp/recast-browser/node_modules RECAST_BROWSER=webkit node scripts/sticker-sheet-admin-browser.cjs
       - name: SEO asset routing and 404 phone layouts
         run: NODE_PATH=/tmp/recast-browser/node_modules node scripts/seo-routing-check.cjs
       - name: Retain regression evidence
