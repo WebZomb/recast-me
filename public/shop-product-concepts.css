@@ -61,3 +61,18 @@
  .collection-preview--tote-bags .collection-artwork::before,.collection-preview--tote-bags .collection-artwork::after{border-width:4px}
  .collection-detail-concept .collection-preview{padding:6%}
 }
+
+/* Both real blanket sizes change the ratio of the fabric in the concept.
+   Never change the locked source artwork or crop the pet in this preview. */
+.collection-preview--blanket.collection-preview--blankets .collection-artwork{
+ width:72%;height:auto;max-height:78%;
+ aspect-ratio:var(--recast-blanket-ratio,0.833333);
+ overflow:hidden;transform:rotate(-3deg) skewY(.5deg)
+}
+.collection-preview--blanket.collection-preview--blankets .collection-artwork img{
+ display:block;position:relative;z-index:1;width:94%;height:90%;
+ margin:5% auto 0;object-fit:contain
+}
+@media(max-width:600px){
+ .collection-preview--blanket.collection-preview--blankets .collection-artwork{width:80%;max-height:80%}
+}
