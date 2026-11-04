@@ -50,8 +50,9 @@ test('tampered remote artwork never creates a supplier preview or a purchasable 
  const response=await runShopExpansion(env);
  assert.deepEqual(response,{enabled:true,created:0,polled:0,ready:0});
  const report=await shopExpansionStatus(env);
- assert.ok(report.items.every(item=>item.status==='needs_review'));
- assert.equal(external,35,'Each distinct source is tried once, never replaced by another image');
+ assert.equal(report.items.filter(item=>item.status==='needs_review').length,2);
+ assert.equal(report.items.filter(item=>item.status==='not_started').length,68);
+ assert.equal(external,1,'Rate-limited source screening does not fan out across the catalog');
  assert.equal(await env.ARTWORK.get('shop/catalog/v1.json'),null);
  assert.doesNotMatch(JSON.stringify(report),/accessToken|approvalToken|snapshotKey|PRINTFUL_API_TOKEN/);
 });
@@ -73,8 +74,9 @@ test('source redirect is explicitly rejected without a mockup or storefront publ
  const result=await runShopExpansion(env);
  assert.deepEqual(result,{enabled:true,created:0,polled:0,ready:0});
  const status=await shopExpansionStatus(env);
- assert.equal(redirects,35);
- assert.ok(status.items.every(x=>x.status==='needs_review'));
+ assert.equal(redirects,1);
+ assert.equal(status.items.filter(x=>x.status==='needs_review').length,2);
+ assert.equal(status.items.filter(x=>x.status==='not_started').length,68);
  assert.equal(await env.ARTWORK.get('shop/catalog/v1.json'),null);
 });
 
@@ -135,4 +137,18 @@ test('corrupt rate history stays fail closed and submits no new preview task',as
  const env={ARTWORK:new Bucket()};
  await env.ARTWORK.put('shop/preparation/v3/mockup-create-rate.json','{"timestamps":"corrupted"}');
  assert.equal(await claimMugPreviewRateSlot(env,1793740000000),false);
+});
+
+test('corrupted supplier rate state prevents unbounded new source imports',async t=>{
+ let external=0;
+ t.mock.method(globalThis,'fetch',async()=>{external++;throw Error('Unexpected provider request');});
+ const store=new Bucket();
+ await store.put('shop/preparation/v3/mockup-create-rate.json','{"timestamps":"invalid"}');
+ const env={PREMADE_EXPANSION_ENABLED:'true',PREMADE_EXPANSION_CANARY_COUNT:'35',ARTWORK:store,IMAGES:{}};
+ const result=await runShopExpansion(env);
+ assert.deepEqual(result,{enabled:true,created:0,polled:0,ready:0});
+ assert.equal(external,0,'Do not import or screen art without available provider capacity');
+ const report=await shopExpansionStatus(env);
+ assert.equal(report.items.filter(x=>x.status==='not_started').length,70);
+ assert.equal(await store.get('shop/catalog/v1.json'),null);
 });
