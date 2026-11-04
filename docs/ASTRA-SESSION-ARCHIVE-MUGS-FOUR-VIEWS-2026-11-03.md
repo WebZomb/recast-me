@@ -31,3 +31,8 @@ Both actual tabs are disabled and labeled pending until supplier proofs exist; i
 
 ## Rollback
 Revert the PR and redeploy guarded Worker. No production SKU, print file, customer cart, payment or order data was modified by the gallery itself. Shopify Files uploaded for these designs remain as an unlinked media archive.
+
+## Production preview preparation incident — November 3, 2026
+- The 35-design gallery/verified existing two-offer cart deployment passed smoke. `PREMADE_EXPANSION_ENABLED=true` initially started preparation, but supplier mockup tasks did **not** begin: all 70 variants were marked `needs_review` before task creation. Codes were 35 `expansion_failed` and 35 `seed_source_pending` (a rejected source import for the first SKU followed by an existing-claim guard for the second SKU). No new provider orders, payments, approved variants, or print jobs were created.
+- R2 read via existing Cloudflare deployment token was denied (403 R2 object read); no token scope was widened. A safe allowlisted diagnostic category is added to existing read-only status; original error messages remain private.
+- **Preview preparation is paused** with `PREMADE_EXPANSION_ENABLED=false` to avoid repeated scans. Source data, previously approved Golden Retriever products and all gallery images remain preserved. Retry only after exact stage is identified and stale source claims/needs-review states are safely reconciled (prefer isolated versioned migration, no blind deletion or duplicate supplier tasks).

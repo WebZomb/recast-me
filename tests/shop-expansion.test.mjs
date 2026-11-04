@@ -46,3 +46,10 @@ test('tampered remote artwork never creates a supplier preview or a purchasable 
  assert.equal(await env.ARTWORK.get('shop/catalog/v1.json'),null);
  assert.doesNotMatch(JSON.stringify(report),/accessToken|approvalToken|snapshotKey|PRINTFUL_API_TOKEN/);
 });
+
+import {safeExpansionFailureClass} from '../src/shop-expansion.js';
+test('source error classification exposes only fixed safe words, never URLs, tokens or provider responses',()=>{
+ assert.equal(safeExpansionFailureClass('TypeError: fetch failed to https://cdn.example/?token=sk-project-secret12345'), 'typeerror_fetch_failed');
+ assert.equal(safeExpansionFailureClass('Cannot read properties of undefined (reading info)'), 'cannot_read_properties_of_undefined_reading_info');
+ assert.equal(safeExpansionFailureClass('someuniqueusersecrettoken'), 'unclassified');
+});
