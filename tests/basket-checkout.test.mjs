@@ -25,7 +25,7 @@ function fixture(prior){
   put:async()=>{calls.writes++;throw Error('Unexpected write');}
  }};
  const run=(input=lines)=>beginBasketCheckout(env,identity,state,input,{fetcher:async(url,options)=>{
-  calls.remote++;assert.equal(url,'https://fixture.myshopify.com/api/2026-10/graphql.json');assert.equal(options.redirect,'error');
+  calls.remote++;assert.equal(url,'https://fixture.myshopify.com/api/2026-10/graphql.json');assert.equal(options.redirect,'manual');
   assert.deepEqual(JSON.parse(options.body),{query:CART_REFRESH,variables:{id:ready().cartId}});
   if(control.fail)throw Error('private provider error');
   await control.beforeResponse?.();
@@ -111,6 +111,7 @@ const changedRemote=[
  ['missing pagination evidence',f=>{delete f.remoteCart.lines.pageInfo;}],
  ['GraphQL error',f=>{f.control.data.errors=[{message:'private error'}];}],
  ['HTTP failure',f=>{f.control.status=503;}],
+ ['unsafe redirect',f=>{f.control.status=302;}],
  ['network failure',f=>{f.control.fail=true;}]
 ];
 for(const [name,change] of changedRemote)test('remote checkout fails closed without replacement: '+name,async()=>{
