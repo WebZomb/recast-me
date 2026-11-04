@@ -17,3 +17,9 @@ Owner request: finish Mugs visual catalog first, use the last approved set of si
 
 ## Rollback
 Revert the gallery PR and redeploy guarded Worker. Previous 29 sales-image pairs and 35 original art sources remain intact in the earlier release; Shopify Files remain as unlinked media archive. Existing purchase data is untouched.
+
+## Production release — verified November 3, 2026
+- [PR #135](https://github.com/WebZomb/recast-me/pull/135) head `9bc0047d57f46033c2711e65aa80e7cc43c9153f` passed CI security + Chromium/WebKit customer-policy checks (workflow runs `41760415835`, `41760415787`). Squash merged as main `672b42c38fdf8e59ac94ea1fcfe6eb3bbd65bad4`.
+- Guarded Cloudflare deploy run `41761344305` **success** including npm tests, dry-run and guarded deployment.
+- Independently verified live site HTTP 200: `/shop.html` imports `/shop.js?v=9`; `/shop.js?v=9` contains the close-up vs classic-style grouping; `/shop-gallery.json` reports 35 entries and 35 nonempty decorated mug image URLs (22 dog, 13 cat). Existing `/api/shop/catalog` still reports 2 purchasable **original Golden Retriever** size variants; cart enabled=true. No other designs were made buyable by this release.
+- Exact 35 print masters and 35 decorated sales images are now ready for *supplier proof generation* and subsequent distribution. The stored source IDs/revisions are immutable. Printful mockup and print-file authorization is still paused until safe import and checkout uncertainty are fixed. Do not advertise this visual completion as 35 finished shippable SKUs.
