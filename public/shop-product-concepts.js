@@ -58,6 +58,6 @@ export function createProductConcept(design,{slug='blankets',size='50 × 60 in',
  artwork.append(img);
  root.append(artwork);
  if(type==='blankets')root.append(el('span','collection-hem'));
- root.append(el('span','collection-preview-label','Design concept · not a print proof'));
+ root.append(el('span','collection-preview-label','Design illustration'));
  return root;
 }
