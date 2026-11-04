@@ -36,7 +36,7 @@ test('new supplier preparation is disabled by default and cannot be started by a
 });
 
 test('tampered remote artwork never creates a supplier preview or a purchasable offer',async t=>{
- let external=0;t.mock.method(globalThis,'fetch',async()=>{external++;return new Response('not the pinned artwork');});
+ let external=0;t.mock.method(globalThis,'fetch',async(_url,options)=>{assert.equal(options.redirect,'manual');external++;return new Response('not the pinned artwork');});
  const env={PREMADE_EXPANSION_ENABLED:'true',ARTWORK:new Bucket(),IMAGES:{}};
  const response=await runShopExpansion(env);
  assert.deepEqual(response,{enabled:true,created:0,polled:0,ready:0});
@@ -52,4 +52,19 @@ test('source error classification exposes only fixed safe words, never URLs, tok
  assert.equal(safeExpansionFailureClass('TypeError: fetch failed to https://cdn.example/?token=sk-project-secret12345'), 'typeerror_fetch_failed');
  assert.equal(safeExpansionFailureClass('Cannot read properties of undefined (reading info)'), 'cannot_read_properties_of_undefined_reading_info');
  assert.equal(safeExpansionFailureClass('someuniqueusersecrettoken'), 'unclassified');
+});
+
+test('source redirect is explicitly rejected without a mockup or storefront publication',async t=>{
+ let redirects=0;
+ t.mock.method(globalThis,'fetch',async(_url,opts)=>{
+  assert.equal(opts.redirect,'manual');redirects++;
+  return new Response(null,{status:302,headers:{location:'https://untrusted.invalid/surprise.png'}});
+ });
+ const env={PREMADE_EXPANSION_ENABLED:'true',ARTWORK:new Bucket(),IMAGES:{}};
+ const result=await runShopExpansion(env);
+ assert.deepEqual(result,{enabled:true,created:0,polled:0,ready:0});
+ const status=await shopExpansionStatus(env);
+ assert.equal(redirects,35);
+ assert.ok(status.items.every(x=>x.status==='needs_review'));
+ assert.equal(await env.ARTWORK.get('shop/catalog/v1.json'),null);
 });
