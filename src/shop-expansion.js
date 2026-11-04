@@ -448,6 +448,11 @@ export function approvedMugSourceMime(bytes){
  if(bytes?.[0]===137&&bytes?.[1]===80&&bytes?.[2]===78&&bytes?.[3]===71&&bytes?.[4]===13&&bytes?.[5]===10&&bytes?.[6]===26&&bytes?.[7]===10)return 'image/png';
  throw fault('seed_asset_format','The saved Christmas artwork is not a supported image format.',503);
 }
+// Bound provider requests on every cron invocation; tasks are idempotent and persisted.
+export function sourcePreviewBatchSize(env){
+ const count=Number(env?.PREMADE_EXPANSION_PREVIEW_BATCH_SIZE??2);
+ return Number.isInteger(count)&&count>=1&&count<=8?count:2;
+}
 export function canaryDesignCount(env){
  const count=Number(env?.PREMADE_EXPANSION_CANARY_COUNT??35);
  return Number.isInteger(count)&&count>=0&&count<=EXPANSION_DESIGNS.length?count:0;
@@ -551,8 +556,8 @@ export async function runShopExpansion(env){
     catch(error){await env.ARTWORK.put(key(item.id),JSON.stringify({...state,status:'needs_review',code:error.code||'expansion_review',message:String(error.message).slice(0,180),checkedAt:now()}));}
     continue;
    }
-   if(!state&&created>=2)continue;
-   if(state?.status==='pending_preview'&&polled>=6)continue;
+   if(!state&&created>=sourcePreviewBatchSize(env))continue;
+   if(state?.status==='pending_preview'&&polled>=Math.max(6,sourcePreviewBatchSize(env)*3))continue;
    try{
     const meta=await source(env,design),layout=recommendedCheckoutDesign(FULFILLMENT[item.sku]);
     if(!state){
@@ -595,5 +600,5 @@ export async function shopExpansionStatus(env){
   items.push({id:item.id,designId:item.designId,title:item.title,variantLabel:item.variantLabel,status:state?.status||'not_started',code:state?.code||null,diagnostic:state?.status==='needs_review'?safeExpansionFailureClass(state.message):null,
    ...(offer?{views:state.views,previewUrl:offer.mockupUrl,reviewSignature:await hash(JSON.stringify([offer.approvalRecordHash,offer.proofHash,offer.proof.printFileHash,offer.proof.placementHash]))}:{})});
  }
- return {enabled:env.PREMADE_EXPANSION_ENABLED==='true',canaryDesigns:canaryDesignCount(env),queue:'v3',items};
+ return {enabled:env.PREMADE_EXPANSION_ENABLED==='true',canaryDesigns:canaryDesignCount(env),maxNewTasksPerRun:sourcePreviewBatchSize(env),queue:'v3',items};
 }
