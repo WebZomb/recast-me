@@ -50,6 +50,7 @@ const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('n
    assert.equal(await page.locator('#collection-detail-add').isVisible(),false);
    assert.equal(await page.getByRole('button',{name:'Actual Blankets pending'}).isDisabled(),true);
    await page.locator('#close-collection-detail').click();
+   await page.evaluate(()=>window.scrollTo(0,0));
    await page.screenshot({path:path.join(out,`${engine}-blankets-${width}.png`)});
    if(width===393){
     await page.goto('https://recast.test/shop-phone-cases.html');
