@@ -19,7 +19,7 @@ async function inspect(env,item){
  const locked=await verifiedPremadePrint(env,record);
  if(locked.finalHash!==offer.proof.printFileHash)throw Error('file');
  const task=await read(env,`mockups/${master.requestId}/${item.sku}/${offer.mockupId}/task.json`);
- if(task?.status!=='completed'||task.requestId!==master.requestId||task.sku!==item.sku||task.printfulVariantId!==item.variantId||task.sourceHash!==record.proofHash||JSON.stringify(task.position)!==JSON.stringify(record.position))throw Error('supplier');
+ if(task?.status!=='completed'||task.requestId!==master.requestId||task.sku!==item.sku||task.mockupId!==offer.mockupId||task.printfulVariantId!==item.variantId||task.sourceHash!==record.proofHash||String(task.taskKey)!==String(offer.proof.taskId)||JSON.stringify(task.position)!==JSON.stringify(record.position)||JSON.stringify(task.design)!==JSON.stringify(record.design))throw Error('supplier');
  return {item,state,offer,record,locked,task,ready:true};
 }
 export async function smallGiftOwnerReview(request,env){
@@ -35,7 +35,7 @@ export async function smallGiftOwnerReview(request,env){
     if(!row.ready){items.push({id:item.id,sku:item.sku,status:row.state?.status||'not_started',code:row.state?.code||null});continue;}
     const origin=String(env.LIVE_APP_URL||env.PUBLIC_APP_URL||'https://recastmeai.com').replace(/\/$/,'');
     const supplierPictures=[];
-    for(const image of row.task.images||[]){
+    for(const image of (row.task.images||[]).slice(0,4)){
      try{const u=new URL(image.url);if(u.origin!==origin||!u.pathname.startsWith(`/api/mockup/image/${master.requestId}/${item.sku}/`)||!u.searchParams.get('token'))continue;supplierPictures.push({title:String(image.title||'Printful product view').slice(0,100),url:u.href});}catch{}
     }
     items.push({id:item.id,sku:item.sku,title:item.title,status:row.state.status,priceCents:row.offer.priceCents,reviewSignature:row.state.reviewSignature,printFileHash:row.locked.finalHash,mime:row.locked.finalMime,printSize:row.state.printSize,sourceRevision:master.sha256,design:row.record.design,placement:row.record.position,supplierPictures,cleanPrintUrl:basePath+'/'+item.id+'/print',checkoutEnabled:row.state.status==='published'});
