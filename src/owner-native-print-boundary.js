@@ -1,15 +1,12 @@
-// The three existing private native-print GETs must remain byte-exact.
+// Native print inspection is restricted to the fixed approved-artwork registry.
 // Public/customer images STILL pass through securePreviews and its watermark.
-// No new storage permission, file selector, approval, task or publication route.
+// No arbitrary storage path, query credential or unauthenticated image access.
 import {secureApplication as securePreviews} from './preview-security.js';
 import {smallGiftOwnerReview} from './shop-small-gift-qa.js';
+import {ALL_SMALL_GIFTS} from './shop-gift-definitions.js';
 import {requireAdmin} from './workflow.js';
 import {privateJson} from './commerce-store.js';
-const nativePaths=new Set([
- '/api/shop/small-gift-review/christmas-village-golden-retriever-coaster-4pack/print',
- '/api/shop/small-gift-review/christmas-village-golden-retriever-magnet-3pack/print',
- '/api/shop/small-gift-review/christmas-village-golden-retriever-sticker-sheet-six/print'
-]);
+const nativePaths=new Set(ALL_SMALL_GIFTS.map(item=>'/api/shop/small-gift-review/'+item.id+'/print'));
 export function isOwnerNativePrintPath(request){
  return request.method==='GET'&&nativePaths.has(new URL(request.url).pathname);
 }
@@ -31,8 +28,7 @@ export function secureApplication(application){
    headers.set('referrer-policy','no-referrer');
    headers.set('x-content-type-options','nosniff');
    headers.set('x-robots-tag','noindex, nofollow');
-   // Applying a public watermark here would corrupt the expected SHA and turn
-   // the transparent sticker PNG into JPEG. Do not resize or re-encode it.
+   // Re-encoding would corrupt the inspected SHA and transparent sticker PNG.
    return new Response(response.body,{status:response.status,headers});
   }
  };
