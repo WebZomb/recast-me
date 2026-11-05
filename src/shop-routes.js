@@ -6,10 +6,13 @@ import {stickerSheetPilotRoute,stickerSheetPilotOwnerProof} from './shop-sticker
 import {printfileAuditRoute} from './shop-printfile-audit.js';
 import {smallGiftReleaseStatus} from './shop-small-gift-release.js';
 import {smallGiftOwnerReview} from './shop-small-gift-qa.js';
+import {smallGiftOwnerPublish} from './shop-small-gift-publish.js';
 import {privateJson} from './commerce-store.js';
 import {publicShopCatalog} from './shop-catalog-store.js';
 export async function shopRoutes(request,env){
  const path=new URL(request.url).pathname;
+ const ownerPublication=await smallGiftOwnerPublish(request,env);
+ if(ownerPublication)return ownerPublication;
  const ownerReview=await smallGiftOwnerReview(request,env);
  if(ownerReview)return ownerReview;
  if(!['/api/shop/catalog','/api/shop/preparation','/api/shop/expansion','/api/shop/coaster-pilot','/api/shop/coaster-pilot/qa','/api/shop/printfile-audit','/api/shop/magnet-pilot','/api/shop/magnet-pilot/qa','/api/shop/sticker-sheet-pilot','/api/shop/sticker-sheet-pilot/qa','/api/shop/small-gifts'].includes(path))return null;

@@ -4,6 +4,7 @@ import {FULFILLMENT,flattenShopifyProducts} from './entry.js';
 import {shopifyCatalog} from './index.js';
 import {checkStoredArtwork} from './content-safety.js';
 import {validateOffer,publicOffer} from './shop-offers.js';
+import {collectVerifiedShopOffers} from './shop-catalog-verification.js';
 export const SHOP_CATALOG_KEY='shop/catalog/v1.json';
 export async function hashBytes(bytes){return [...new Uint8Array(await crypto.subtle.digest('SHA-256',bytes))].map(n=>n.toString(16).padStart(2,'0')).join('');}
 const reject=()=>{throw fault('shop_offer_unavailable','This finished gift is not available. Please choose another design.',409);};
@@ -47,10 +48,11 @@ export function shopOfferProperties(offer,record){
 }
 export async function publicShopCatalog(env){
  const catalog=await readShopCatalog(env);if(!catalog.offers.length)return {version:1,offers:[]};
- const products=await shopifyCatalog(env),offers=[];
- for(const offer of catalog.offers){
-  try{const checked=await resolveShopOffer(env,offer.id,offer.artworkRevision,{catalog,products,integrity:false});offers.push({...publicOffer(offer),priceCents:checked.priceCents,productPreviewUrl:preferredShopPreview(offer,checked.record)});}catch{/* Unapproved, retired or unavailable merchandise is never advertised. */}
- }
+ const products=await shopifyCatalog(env);
+ const offers=await collectVerifiedShopOffers(catalog.offers,async offer=>{
+  const checked=await resolveShopOffer(env,offer.id,offer.artworkRevision,{catalog,products,integrity:false});
+  return {...publicOffer(offer),priceCents:checked.priceCents,productPreviewUrl:preferredShopPreview(offer,checked.record)};
+ });
  return {version:1,offers};
 }
 

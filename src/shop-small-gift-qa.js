@@ -1,5 +1,6 @@
-// Existing Admin Bearer authentication is mandatory for both metadata and pixels.
-// These routes never publish, approve, mutate, generate, or submit an order.
+// Existing Admin Bearer authentication is mandatory for metadata and pixels.
+// These GET routes remain read-only. The separate owner publication action
+// reuses inspectSmallGift only AFTER authenticating and confirming exact hashes.
 import {requireAdmin} from './workflow.js';
 import {read,hash,privateJson} from './commerce-store.js';
 import {SMALL_GIFTS,smallGiftKey,smallGiftSignature} from './shop-small-gift-release.js';
@@ -8,7 +9,8 @@ import {EXPANSION_DESIGNS} from './shop-expansion.js';
 const basePath='/api/shop/small-gift-review';
 const master=EXPANSION_DESIGNS[0];
 const headers={'cache-control':'private, no-store','x-robots-tag':'noindex, nofollow','referrer-policy':'no-referrer','x-content-type-options':'nosniff'};
-async function inspect(env,item){
+// Internal only: callers must require existing owner authorization before reading.
+export async function inspectSmallGift(env,item){
  const state=await read(env,smallGiftKey(item.id));
  if(!state?.offer||!['ready_for_review','published'].includes(state.status))return {item,state,ready:false};
  const offer=state.offer;
@@ -31,7 +33,7 @@ export async function smallGiftOwnerReview(request,env){
   if(pathname===basePath){
    const items=[];
    for(const item of SMALL_GIFTS){
-    const row=await inspect(env,item);
+    const row=await inspectSmallGift(env,item);
     if(!row.ready){items.push({id:item.id,sku:item.sku,status:row.state?.status||'not_started',code:row.state?.code||null});continue;}
     const origin=String(env.LIVE_APP_URL||env.PUBLIC_APP_URL||'https://recastmeai.com').replace(/\/$/,'');
     const supplierPictures=[];
@@ -45,7 +47,7 @@ export async function smallGiftOwnerReview(request,env){
   const match=pathname.match(/^\/api\/shop\/small-gift-review\/([a-z0-9-]+)\/print$/);
   const item=match&&SMALL_GIFTS.find(x=>x.id===match[1]);
   if(!item)return privateJson({ok:false,error:'Unknown product review.'},404);
-  const row=await inspect(env,item);
+  const row=await inspectSmallGift(env,item);
   if(!row.ready)return privateJson({ok:false,error:'The clean print file is not ready.'},409);
   const bytes=await env.ARTWORK.get(row.locked.finalKey);
   if(!bytes)return privateJson({ok:false,error:'The clean print file is unavailable.'},409);
