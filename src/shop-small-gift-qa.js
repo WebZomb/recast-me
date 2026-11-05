@@ -1,16 +1,16 @@
 // Existing Admin Bearer authentication is mandatory for metadata and pixels.
-// These GET routes remain read-only. The separate owner publication action
-// reuses inspectSmallGift only AFTER authenticating and confirming exact hashes.
+// These GET routes remain read-only. Source and file IDs come from the fixed registry.
 import {requireAdmin} from './workflow.js';
 import {read,hash,privateJson} from './commerce-store.js';
-import {SMALL_GIFTS,smallGiftKey,smallGiftSignature} from './shop-small-gift-release.js';
+import {smallGiftKey,smallGiftSignature} from './shop-small-gift-release.js';
+import {giftDefinition,giftMaster,giftsForArtwork,GIFT_COLLECTION_PATHS} from './shop-gift-definitions.js';
 import {verifiedPremadePrint} from './premade-print.js';
 import {EXPANSION_DESIGNS} from './shop-expansion.js';
 const basePath='/api/shop/small-gift-review';
-const master=EXPANSION_DESIGNS[0];
 const headers={'cache-control':'private, no-store','x-robots-tag':'noindex, nofollow','referrer-policy':'no-referrer','x-content-type-options':'nosniff'};
 // Internal only: callers must require existing owner authorization before reading.
 export async function inspectSmallGift(env,item){
+ const master=giftMaster(item);
  const state=await read(env,smallGiftKey(item.id));
  if(!state?.offer||!['ready_for_review','published'].includes(state.status))return {item,state,ready:false};
  const offer=state.offer;
@@ -25,27 +25,31 @@ export async function inspectSmallGift(env,item){
  return {item,state,offer,record,locked,task,ready:true};
 }
 export async function smallGiftOwnerReview(request,env){
- const pathname=new URL(request.url).pathname;
+ const url=new URL(request.url),pathname=url.pathname;
  if(pathname!==basePath&&!pathname.startsWith(basePath+'/'))return null;
  try{requireAdmin(request,env);}catch(e){return privateJson({ok:false,error:'Owner authorization required.'},e.status||401);}
  if(request.method!=='GET')return privateJson({ok:false,error:'This inspection is read-only.'},405);
  try{
   if(pathname===basePath){
-   const items=[];
-   for(const item of SMALL_GIFTS){
+   const selected=url.searchParams.get('design')||EXPANSION_DESIGNS[0].id;
+   const gifts=giftsForArtwork(selected);
+   if(!gifts||url.searchParams.getAll('design').length>1)return privateJson({ok:false,error:'Unknown approved artwork.'},404);
+   const master=giftMaster(gifts[0]),items=[];
+   for(const item of gifts){
     const row=await inspectSmallGift(env,item);
-    if(!row.ready){items.push({id:item.id,sku:item.sku,status:row.state?.status||'not_started',code:row.state?.code||null});continue;}
+    const identity={id:item.id,sku:item.sku,title:item.title,product:item.product,storePath:GIFT_COLLECTION_PATHS[item.product]};
+    if(!row.ready){items.push({...identity,status:row.state?.status||'not_started',code:row.state?.code||null});continue;}
     const origin=String(env.LIVE_APP_URL||env.PUBLIC_APP_URL||'https://recastmeai.com').replace(/\/$/,'');
     const supplierPictures=[];
     for(const image of (row.task.images||[]).slice(0,4)){
      try{const u=new URL(image.url);if(u.origin!==origin||!u.pathname.startsWith(`/api/mockup/image/${master.requestId}/${item.sku}/`)||!u.searchParams.get('token'))continue;supplierPictures.push({title:String(image.title||'Printful product view').slice(0,100),url:u.href});}catch{}
     }
-    items.push({id:item.id,sku:item.sku,title:item.title,status:row.state.status,priceCents:row.offer.priceCents,reviewSignature:row.state.reviewSignature,printFileHash:row.locked.finalHash,mime:row.locked.finalMime,printSize:row.state.printSize,sourceRevision:master.sha256,design:row.record.design,placement:row.record.position,supplierPictures,cleanPrintUrl:basePath+'/'+item.id+'/print',checkoutEnabled:row.state.status==='published'});
+    items.push({...identity,status:row.state.status,priceCents:row.offer.priceCents,reviewSignature:row.state.reviewSignature,printFileHash:row.locked.finalHash,mime:row.locked.finalMime,printSize:row.state.printSize,sourceRevision:master.sha256,design:row.record.design,placement:row.record.position,supplierPictures,cleanPrintUrl:basePath+'/'+item.id+'/print',checkoutEnabled:row.state.status==='published'});
    }
-   const response=privateJson({ok:true,readOnly:true,originalArtwork:master.asset,items});for(const [k,v] of Object.entries(headers))response.headers.set(k,v);return response;
+   const response=privateJson({ok:true,readOnly:true,sourceDesign:master.id,sourceRequestId:master.requestId,originalArtwork:master.asset,items});for(const [k,v] of Object.entries(headers))response.headers.set(k,v);return response;
   }
   const match=pathname.match(/^\/api\/shop\/small-gift-review\/([a-z0-9-]+)\/print$/);
-  const item=match&&SMALL_GIFTS.find(x=>x.id===match[1]);
+  const item=match&&giftDefinition(match[1]);
   if(!item)return privateJson({ok:false,error:'Unknown product review.'},404);
   const row=await inspectSmallGift(env,item);
   if(!row.ready)return privateJson({ok:false,error:'The clean print file is not ready.'},409);
