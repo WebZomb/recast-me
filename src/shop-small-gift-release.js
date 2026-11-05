@@ -3,15 +3,10 @@
 // Publication requires a separately visually reviewed four-hash signature.
 import {read,hash,change,fault,composeProductLayout,stickerSheetBoxes} from './commerce-store.js';
 import {FULFILLMENT,prepareCheckout} from './entry.js';
-import {EXPANSION_DESIGNS} from './shop-expansion.js';
+import {SMALL_GIFTS,giftMaster} from './shop-gift-definitions.js';
 import {hashBytes,SHOP_CATALOG_KEY,resolveShopOffer} from './shop-catalog-store.js';
-const master=EXPANSION_DESIGNS[0];
+export {SMALL_GIFTS} from './shop-gift-definitions.js';
 const root='shop/preparation/small-gifts/v1/';
-export const SMALL_GIFTS=Object.freeze([
- {id:'christmas-village-golden-retriever-coaster-4pack',sku:'RECAST-COASTER-SET',product:'coaster',title:'Golden Retriever Christmas Village Coaster Set',variantLabel:'4 matching coasters',catalogId:611,variantId:15662,width:1181,height:1181,mime:'image/jpeg',pilot:'shop/preparation/coasters/v1/golden-retriever-4pack.json'},
- {id:'christmas-village-golden-retriever-magnet-3pack',sku:'RECAST-MAGNET-SET',product:'magnet',title:'Golden Retriever Christmas Village Magnet Set',variantLabel:'3 matching magnets',catalogId:656,variantId:16366,width:900,height:900,mime:'image/jpeg',pilot:'shop/preparation/magnets/v1/golden-retriever-3pack.json'},
- {id:'christmas-village-golden-retriever-sticker-sheet-six',sku:'RECAST-STICKER-PACK',product:'sticker-sheet',title:'Golden Retriever Christmas Village Sticker Sheet',variantLabel:'6 stickers · 5.83 × 8.27 in',catalogId:505,variantId:12917,width:1750,height:2482,mime:'image/png',pilot:'shop/preparation/sticker-sheets/v1/golden-retriever-six.json'}
-].map(Object.freeze));
 // Empty until authentic supplier pictures AND clean native print files are inspected.
 // A readiness flag, admin button or browser payload can never add a signature here.
 export const REVIEWED_SMALL_GIFT_SIGNATURES=Object.freeze({});
@@ -33,6 +28,7 @@ export function verifySmallGiftArea(item,report,source){
  return {width:item.width,height:item.height};
 }
 export async function freezeSmallGift(env,item,pilot,{prepare=prepareCheckout,compose=composeProductLayout}={}){
+ const master=giftMaster(item);
  const map=FULFILLMENT[item.sku];
  if(map?.printfulProductId!==item.catalogId||map?.printfulVariantId!==item.variantId)fail('gift_mapping_changed');
  const meta=await read(env,`requests/${master.requestId}/request.json`);
