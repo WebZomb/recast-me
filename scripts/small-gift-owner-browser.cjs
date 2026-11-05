@@ -14,6 +14,9 @@ const fs=require('node:fs'),path=require('node:path'),assert=require('node:asser
   page.on('pageerror',e=>errors.push(e.message));
   await context.route('**/*',async route=>{
    const req=route.request(),url=new URL(req.url());
+   // WebKit routes blob URLs too. They are private in-memory image bytes,
+   // not external hosts, and must be decoded by the browser normally.
+   if(url.protocol==='blob:')return route.continue();
    if(url.hostname==='cdn.shopify.com'){
     if(req.headers().authorization)foreignToken++;
     return route.fulfill({contentType:'image/png',body:sample});
