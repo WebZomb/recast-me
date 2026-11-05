@@ -1,0 +1,47 @@
+name: Recast owner-reviewed gift publication validation
+on:
+  pull_request:
+    paths:
+      - 'src/shop-small-gift*'
+      - 'src/shop-catalog*'
+      - 'src/shop-routes.js'
+      - 'public/admin-small-gift*'
+      - 'public/admin-printfile-audit.js'
+      - 'tests/shop-small-gift-publish.test.mjs'
+      - 'tests/shop-catalog-verification.test.mjs'
+      - 'scripts/small-gift-owner-browser.cjs'
+      - '.github/workflows/recast-owner-publication-validation.yml'
+permissions:
+  contents: read
+jobs:
+  owner-publication-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    env:
+      WRANGLER_SEND_METRICS: 'false'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - name: All regression tests, no live API calls
+        run: npm ci --ignore-scripts --no-audit --no-fund && npm test
+      - name: Worker bundle only
+        run: npx --no-install wrangler deploy --dry-run --outdir /tmp/recast-owner-bundle
+      - name: Install isolated Chromium and WebKit test runtimes
+        run: |
+          mkdir -p /tmp/recast-owner-browser && cd /tmp/recast-owner-browser
+          npm init -y >/dev/null
+          npm install --ignore-scripts --no-audit --no-fund playwright
+          npx playwright install --with-deps chromium webkit >/tmp/recast-owner-browser-install.log 2>&1
+      - name: Confirmed exact-file publication, stale-file refusal, private lock and cancellation
+        run: |
+          NODE_PATH=/tmp/recast-owner-browser/node_modules node scripts/small-gift-owner-browser.cjs
+          NODE_PATH=/tmp/recast-owner-browser/node_modules RECAST_BROWSER=chromium node scripts/small-gift-owner-browser.cjs
+      - name: Existing mixed-cart quantity, removal and checkout handoff
+        run: |
+          NODE_PATH=/tmp/recast-owner-browser/node_modules node scripts/shop-browser.cjs
+          NODE_PATH=/tmp/recast-owner-browser/node_modules RECAST_BROWSER=webkit node scripts/shop-browser.cjs
