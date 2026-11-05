@@ -1,0 +1,20 @@
+# Native owner review transport correction — November 5, 2026
+
+Baseline main: 30483ae10d634a71a6c252dc35dbb280915f313b (PR166 owner review/publication already deployed). Owner has now opened the authenticated Control Center on connected DESKTOP-GFOHB7M and authorized completing the prepared gifts. Existing desktop/browser controls and existing owner session only; no credential values read or exported, no permission expansion.
+
+## Reproduced live failure
+The authenticated /admin-small-gifts page loaded the valid metadata and supplier pictures but ended with Review unavailable and removed the images. The browser Network panel showed HTTP200 for all requests. The exact Sticker Sheet native /api/shop/small-gift-review/christmas-village-golden-retriever-sticker-sheet-six/print response was incorrectly image/jpeg (232784 bytes), despite its signed native file and metadata being PNG. The earlier two JPEG files also passed through the same additional image transform, which changes their expected hashes.
+
+Root cause: src/router.js wrapped every API response in preview-security.secureApplication. Its generic IMAGE_TYPES branch watermarks/re-encodes all successful image responses to JPEG. The owner native-print route performed all expected authentication, source/approval/file/supplier checks, but its verified output was subsequently reprocessed as a public unpaid preview. Prior route-only tests and mocked browser fixtures did not exercise this outer response transformation. This is not a missing owner login, broken Printful task, or evidence that the stored native print file is corrupt.
+
+## Narrow correction
+New src/owner-native-print-boundary.js keeps the original secureApplication for ALL other requests and scheduled work. Exactly three existing GET native-print paths (known Golden Retriever coaster, magnet and sticker sheet) require the same existing Admin Bearer before any private read, then call the unchanged smallGiftOwnerReview handler. That handler still verifies source revision, preapproval hash, four-hash signature, final native bytes, SKU, supplier task, variant, design and placement. The returned bytes keep their JPEG/transparent PNG MIME unchanged and private,no-store,no-transform/no-referrer/nosniff/noindex headers. No arbitrary path, query credential or public image qualifies. POST and other methods remain on the original protected path. No storage privilege or publication rule is relaxed.
+
+The router change is only its secureApplication import, plus the new focused module and tests. Existing social/rendering/cart/fulfillment imports and behavior are retained. No buyer offer, supplier task, clean file, paid order, payment, model render or physical production has been created by the transport fix.
+
+## Verification
+Five new tests through the FULL production router passed locally on the connected PC: exact native JPEG/PNG preservation, no image processing/public derivative, anonymous/wrong-token rejection before storage reads, changed bytes/mismatched supplier refusal, exact endpoint/method matching and continued public watermark protection. An initial source-copy omission of the socialRoutes import was corrected before running tests; final router diff must be one import replacement. Full Node suite, hosted tests, dry-run and deployment are still pending at this checkpoint; do not claim live resolution from code alone.
+
+After all release checks, reload the already-authenticated owner page, inspect actual supplier and native pixels, explicitly publish only visually acceptable exact products using the existing owner action, then independently verify catalog entries and actual Add to Cart/quantity/removal/checkout handoff without payment. Digital proof review does not establish physical sample quality. The remaining 35-design/17-category catalog is not completed by this fix.
+
+Rollback: revert this focused import/module release and redeploy. Preserve existing private files, task records, user session, customer carts and prior approved product offers. The prior public preview security code itself is unchanged.
