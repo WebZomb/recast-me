@@ -1,3 +1,4 @@
+import {attachGiftPublication} from './admin-small-gift-publication.js?v=1';
 const $=s=>document.querySelector(s);
 const key='recast_admin_token';
 const allowedIds=new Set(['christmas-village-golden-retriever-coaster-4pack','christmas-village-golden-retriever-magnet-3pack','christmas-village-golden-retriever-sticker-sheet-six']);
@@ -40,11 +41,12 @@ async function load(){
    const url=URL.createObjectURL(blob);urls.add(url);
    grid.append(figure(url,'Clean production file · '+item.printSize.width+' × '+item.printSize.height+' px · '+item.mime));
    const hash=el('code','review-signature',item.reviewSignature);hash.setAttribute('aria-label','Exact print and supplier review signature');
-   section.append(el('p','review-note','This signature locks the supplier proof, clean print file and placement together. Viewing it does not approve a sale.'),hash);
+   section.append(el('p','review-note','This signature locks the supplier proof, clean print file and placement together. Reviewing the images alone does not publish a product.'),hash);
+   await attachGiftPublication({item,section,blob,isCurrent:()=>current===generation,getToken:()=>sessionStorage.getItem(key)||'',signal:options.signal,lock});
    ready++;
   }
-  if(current===generation)$('#review-status').textContent=ready+' native print files available for private inspection. No product or production setting was changed.';
- }catch(error){if(current!==generation||error?.name==='AbortError')return;removeImages();$('#review-status').textContent='Review unavailable. Your artwork, catalog and orders were not changed.';}
+  if(current===generation)$('#review-status').textContent=ready+' native print files available for private inspection. Only an explicit Publish reviewed design confirmation changes product availability.';
+ }catch(error){if(current!==generation||error?.name==='AbortError')return;removeImages();$('#review-status').textContent='Review unavailable. Refresh to check product status; no automatic publication or printing was requested.';}
 }
 $('#review-login-form').addEventListener('submit',e=>{e.preventDefault();const token=$('#review-token').value.trim();if(token){sessionStorage.setItem(key,token);load();}});
 $('#lock-review').addEventListener('click',lock);$('#refresh-review').addEventListener('click',load);
