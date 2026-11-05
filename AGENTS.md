@@ -9,3 +9,5 @@ The Worker entry point is src/router.js; similarly named root files are not auth
 Use small reviewable GitHub changes. Never commit credentials, private transcripts, customer photos, access tokens or font files. A passing mocked test is not a provider-quality test, and a commit is not a deployment. Read activation requirements before merging the secure-preview branch.
 
 RM141 owner preference: include a focused visual polish pass with each update, checking narrow-phone layout, image fit, clear labels and touch targets without changing approved rendering behavior. Recent-history retention is six (RM138 owner instruction supersedes last-four wording above).
+
+Latest ready-made gift continuation: read docs/ASTRA-SESSION-ALL-BREED-SMALL-GIFTS-2026-11-05.md alongside the handoff. The first three Golden gifts are live; the remaining-breed queue prepares separate supplier proofs/native files and never publishes automatically. Use the session's actual release receipt and live catalog counts, not preparation counts, when reporting completion.
