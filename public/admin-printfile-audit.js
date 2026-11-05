@@ -10,6 +10,14 @@ const el=(tag,className,text)=>{
  if(text!==undefined)node.textContent=String(text);
  return node;
 };
+// Same-tab navigation preserves the existing owner session without putting
+// its token into a link. The destination separately authenticates every action.
+const qaPanel=document.querySelector('[data-panel="ready-made-qa"]');
+if(qaPanel&&!document.getElementById('small-gift-review-link')){
+ const nav=el('p','muted'),link=el('a',null,'Review clean print files and publish finished gifts');
+ link.id='small-gift-review-link';link.href='/admin-small-gifts';
+ nav.append(link);qaPanel.prepend(nav);
+}
 const label=s=>({
  complete:'Supplier dimensions checked',not_started:'Awaiting catalog check',
  checking:'Checking template',needs_review:'Supplier template needs review',
