@@ -5,6 +5,7 @@ import {magnetPilotRoute,magnetPilotOwnerProof} from './shop-magnet-pilot.js';
 import {stickerSheetPilotRoute,stickerSheetPilotOwnerProof} from './shop-sticker-sheet-pilot.js';
 import {printfileAuditRoute} from './shop-printfile-audit.js';
 import {smallGiftReleaseStatus} from './shop-small-gift-release.js';
+import {giftBatchStatus} from './shop-gift-batch.js';
 import {smallGiftOwnerReview} from './shop-small-gift-qa.js';
 import {smallGiftOwnerPublish} from './shop-small-gift-publish.js';
 import {privateJson} from './commerce-store.js';
@@ -15,8 +16,9 @@ export async function shopRoutes(request,env){
  if(ownerPublication)return ownerPublication;
  const ownerReview=await smallGiftOwnerReview(request,env);
  if(ownerReview)return ownerReview;
- if(!['/api/shop/catalog','/api/shop/preparation','/api/shop/expansion','/api/shop/coaster-pilot','/api/shop/coaster-pilot/qa','/api/shop/printfile-audit','/api/shop/magnet-pilot','/api/shop/magnet-pilot/qa','/api/shop/sticker-sheet-pilot','/api/shop/sticker-sheet-pilot/qa','/api/shop/small-gifts'].includes(path))return null;
+ if(!['/api/shop/catalog','/api/shop/preparation','/api/shop/expansion','/api/shop/coaster-pilot','/api/shop/coaster-pilot/qa','/api/shop/printfile-audit','/api/shop/magnet-pilot','/api/shop/magnet-pilot/qa','/api/shop/sticker-sheet-pilot','/api/shop/sticker-sheet-pilot/qa','/api/shop/small-gifts','/api/shop/gift-batch'].includes(path))return null;
  if(request.method!=='GET')return privateJson({ok:false},405);
+ if(path==='/api/shop/gift-batch'){const response=privateJson({ok:true,...await giftBatchStatus(env)});response.headers.set('x-robots-tag','noindex, nofollow');return response;}
  if(path==='/api/shop/small-gifts'){const response=privateJson({ok:true,...await smallGiftReleaseStatus(env)});response.headers.set('x-robots-tag','noindex, nofollow');return response;}
  if(path==='/api/shop/preparation'){const response=privateJson({ok:true,...await shopPreparationStatus(env)});response.headers.set('x-robots-tag','noindex, nofollow');return response;}
  if(path==='/api/shop/expansion'){const response=privateJson({ok:true,...await shopExpansionStatus(env)});response.headers.set('x-robots-tag','noindex, nofollow');return response;}
