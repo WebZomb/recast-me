@@ -41,7 +41,11 @@ export async function smallGiftOwnerPublish(request,env,{inspect=inspectSmallGif
  let input,item,row;
  try{
   sameOrigin(request);
-  if(request.headers.get('origin')!==new URL(request.url).origin)throw fault('origin_required','Publish from the existing owner review page.',403);
+  const site=new URL(request.url).origin;
+  if(request.headers.get('origin')!==site)throw fault('origin_required','Publish from the existing owner review page.',403);
+  const live=String(env.LIVE_APP_URL||env.PUBLIC_APP_URL||'https://recastmeai.com').replace(/\/$/,'');
+  if(site!==live)throw fault('live_owner_site','Product publication is allowed only from the configured live owner site.',403);
+  if(env.PREMADE_SMALL_GIFT_RELEASE_ENABLED!=='true')throw fault('publication_disabled','Finished-gift publication is currently disabled.',503);
   input=await inputJson(request);
   item=SMALL_GIFTS.find(gift=>gift.id===input.id);
   if(!item)return reply({ok:false,error:'Unknown prepared product.'},404);
