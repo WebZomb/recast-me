@@ -17,6 +17,9 @@ const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypt
   await context.addInitScript(()=>sessionStorage.setItem('recast_admin_token','fixture-owner-session'));
   await context.route('**/*',async route=>{
    const request=route.request(),url=new URL(request.url()),p=url.pathname;
+   // WebKit routes locally created blob images through this test interceptor.
+   // Let the browser decode its own native file; it is not a network resource.
+   if(url.protocol==='blob:')return route.continue();
    if(url.hostname==='cdn.shopify.com'){
     if(request.headers().authorization)leakedAuth++;
     return route.fulfill({contentType:'image/png',body:image});
