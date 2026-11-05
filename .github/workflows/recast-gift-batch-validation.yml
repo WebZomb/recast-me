@@ -1,0 +1,48 @@
+name: Recast breed gift review validation
+on:
+  pull_request:
+    paths:
+      - 'src/shop-gift-*.js'
+      - 'src/shop-small-gift-*.js'
+      - 'src/owner-native-print-boundary.js'
+      - 'src/router.js'
+      - 'src/shop-routes.js'
+      - 'public/admin-small-gift*.js'
+      - 'public/admin-small-gifts.html'
+      - 'public/admin-gift-batch.css'
+      - 'tests/gift-batch-fixtures.mjs'
+      - 'tests/shop-gift-batch*.test.mjs'
+      - 'scripts/gift-batch-owner-browser.cjs'
+      - '.github/workflows/recast-gift-batch-validation.yml'
+permissions:
+  contents: read
+concurrency:
+  group: gift-breed-review-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+jobs:
+  breed-proof-review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Source isolation and full HTTP owner protection
+        run: node --test tests/shop-gift-batch.test.mjs tests/shop-gift-batch-owner.test.mjs tests/owner-native-print-boundary.test.mjs
+      - name: Install isolated browser fixtures
+        run: |
+          npm install --prefix /tmp/recast-gift-browser --no-save --ignore-scripts --no-audit --no-fund playwright@1.64.1
+          node /tmp/recast-gift-browser/node_modules/playwright/cli.js install --with-deps chromium webkit
+      - name: Mocked narrow-phone and desktop publication review
+        run: |
+          NODE_PATH=/tmp/recast-gift-browser/node_modules node scripts/gift-batch-owner-browser.cjs
+          NODE_PATH=/tmp/recast-gift-browser/node_modules RECAST_BROWSER=webkit node scripts/gift-batch-owner-browser.cjs
+      - name: Retain mocked browser review evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gift-breed-review
+          path: gift-batch-browser-results/
+          if-no-files-found: ignore

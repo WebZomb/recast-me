@@ -7,6 +7,7 @@ const storePaths=Object.freeze({
  'christmas-village-golden-retriever-magnet-3pack':'/shop-magnet-sets',
  'christmas-village-golden-retriever-sticker-sheet-six':'/shop-sticker-sheets'
 });
+const productPaths=Object.freeze({coaster:'/shop-coaster-sets',magnet:'/shop-magnet-sets','sticker-sheet':'/shop-sticker-sheets'});
 const el=(tag,cls,text)=>{const n=document.createElement(tag);if(cls)n.className=cls;if(text!==undefined)n.textContent=String(text);return n;};
 const validHash=value=>typeof value==='string'&&/^[a-f0-9]{64}$/.test(value);
 async function loaded(image){
@@ -16,10 +17,11 @@ async function loaded(image){
  if(!image.naturalWidth)throw Error('image');
 }
 export async function attachGiftPublication({item,section,blob,isCurrent,getToken,signal,lock}){
- if(!Object.hasOwn(storePaths,item.id)||!isCurrent())return;
+ const storePath=storePaths[item.id]||(Object.hasOwn(productPaths,item.product)&&item.storePath===productPaths[item.product]?item.storePath:null);
+ if(!storePath||!isCurrent())return;
  const panel=el('div','gift-publication'),status=el('p','publication-status');status.setAttribute('role','status');
  panel.append(status);section.append(panel);
- const linkToShop=()=>{const link=el('a','published-store-link','View this product collection');link.href=storePaths[item.id];panel.append(link);};
+ const linkToShop=()=>{const link=el('a','published-store-link','View this product collection');link.href=storePath;panel.append(link);};
  if(item.checkoutEnabled){status.textContent='Published · customers can select this design in its collection.';linkToShop();return;}
  const label=el('label','publication-review-check'),box=el('input');box.type='checkbox';box.disabled=true;
  label.append(box,el('span',null,'I inspected the original, every Printful product view and the clean print file. The subject, placement, crop and print details are correct.'));
@@ -54,7 +56,7 @@ export async function attachGiftPublication({item,section,blob,isCurrent,getToke
    if(!current())return;
    if(response.status===401||response.status===403){lock();return;}
    const data=await response.json();
-   if(!response.ok||data.ok!==true||data.published!==true||data.id!==item.id||data.storePath!==storePaths[item.id]){
+   if(!response.ok||data.ok!==true||data.published!==true||data.id!==item.id||data.storePath!==storePath){
     status.textContent='Publication was not confirmed. Refresh the review and storefront status before another attempt. No paid production was requested.';button.textContent='Refresh to check status';return;
    }
    section.querySelector('.availability').textContent='Published · Add to Cart enabled for this exact design';

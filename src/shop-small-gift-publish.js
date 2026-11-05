@@ -3,13 +3,13 @@
 // private files. It publishes an existing verified offer, never a paid order.
 import {requireAdmin} from './workflow.js';
 import {sameOrigin,change,privateJson,fault} from './commerce-store.js';
-import {SMALL_GIFTS,smallGiftSignature,publishSmallGift} from './shop-small-gift-release.js';
+import {smallGiftSignature,publishSmallGift} from './shop-small-gift-release.js';
+import {giftDefinition,GIFT_COLLECTION_PATHS as paths} from './shop-gift-definitions.js';
 import {inspectSmallGift} from './shop-small-gift-qa.js';
 import {resolveShopOffer} from './shop-catalog-store.js';
 export const SMALL_GIFT_PUBLISH_PATH='/api/admin/small-gifts/publish';
 export const PUBLISH_CONFIRMATION='PUBLISH_THIS_REVIEWED_PRINT_FILE';
 const digest=value=>typeof value==='string'&&/^[a-f0-9]{64}$/.test(value);
-const paths=Object.freeze({coaster:'/shop-coaster-sets',magnet:'/shop-magnet-sets','sticker-sheet':'/shop-sticker-sheets'});
 const reply=(body,status=200)=>privateJson(body,status,{'x-robots-tag':'noindex, nofollow','x-content-type-options':'nosniff'});
 async function inputJson(request){
  if(!(request.headers.get('content-type')||'').toLowerCase().startsWith('application/json'))throw fault('publish_json','A JSON confirmation is required.',415);
@@ -47,7 +47,7 @@ export async function smallGiftOwnerPublish(request,env,{inspect=inspectSmallGif
   if(site!==live)throw fault('live_owner_site','Product publication is allowed only from the configured live owner site.',403);
   if(env.PREMADE_SMALL_GIFT_RELEASE_ENABLED!=='true')throw fault('publication_disabled','Finished-gift publication is currently disabled.',503);
   input=await inputJson(request);
-  item=SMALL_GIFTS.find(gift=>gift.id===input.id);
+  item=giftDefinition(input.id);
   if(!item)return reply({ok:false,error:'Unknown prepared product.'},404);
   row=await inspect(env,item);
   if(!row?.ready||!row.offer||!hasSupplierView(row,env))throw fault('publish_unready','The actual supplier proof and native print file are not ready.',409);
