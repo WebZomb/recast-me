@@ -17,8 +17,7 @@ import {creditPackRoutes} from './credit-packs.js';
 import {trafficRoutes} from './traffic-analytics.js';
 import { highQualityTransform, modelStatus } from "./highquality.js";
 import { routeWorkflow, scheduledWorkflow, requireAdmin } from "./workflow.js";
-import { socialRoutes } from './social.js';
-import { secureApplication } from './preview-security.js';
+import { secureApplication } from './owner-native-print-boundary.js';
 import { readinessSnapshot } from './render-health.js';
 
 import { printFinishRoutes } from './print-finish.js';
