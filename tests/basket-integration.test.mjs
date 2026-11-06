@@ -329,3 +329,37 @@ test('approved premade print files are reused unchanged and tampering blocks fin
  const {finishApprovedDesign}=await import('../src/order-approval.js');const design=await finishApprovedDesign(f.env,job);assert.equal(design.finalKey,p.record.premadePrint.key);assert.equal(design.finishMethod,'premade-locked-v1');
  await f.env.ARTWORK.put(design.finalKey,Uint8Array.of(1,2,3));await assert.rejects(()=>finishApprovedDesign(f.env,job),e=>e.code==='premade_print_changed');
 });
+
+test('existing mug baskets select their own saved side view without changing approval or basket state',async t=>{
+ const f=await fixture(t),added=await f.add();
+ const base=added.data.basket.lines[0].thumbnail,token=base.split('/').pop();
+ const key=`commerce/checkout-previews/${token}.json`;
+ await f.env.ARTWORK.put(key,JSON.stringify({views:[{index:0,title:'Front'},{index:1,title:'Handle on Right'}]}));
+ const before=[...f.env.ARTWORK.objects.entries()].map(([k,v])=>[k,v.bytes.toString()]);
+ const result=await f.call('/api/basket?id=basket');
+ assert.equal(result.data.basket.lines[0].thumbnail,base+'/1');
+ assert.equal(result.data.basket.revision,1);
+ for(const [k,v] of before)assert.equal(await(await f.env.ARTWORK.get(k)).text(),v);
+});
+
+test('premade mug cart uses the buyer-scoped side proof, never the public catalog token',async t=>{
+ const f=await fixture(t),p=await premadeFixture(f),key=`commerce/checkout-previews/${p.record.token}`;
+ const preview=await read(f.env,key+'.json');preview.views.push({index:1,title:'Handle on Left'});
+ await f.env.ARTWORK.put(key+'.json',JSON.stringify(preview));
+ await f.env.ARTWORK.put(key+'/view-1.jpg',p.bytes);
+ const a=await f.call('/api/basket/premade',{basketId:'basket',offerId:p.offer.id,revision:p.offer.artworkRevision});
+ const added=await f.call('/api/basket/action',{basketId:'basket',approvalToken:a.data.approvalToken,command:{type:'add',actionId:'p',lineId:'p',expectedRevision:0,quantity:1}});
+ assert.equal(added.data.basket.lines[0].thumbnail,`/api/approved-preview/${a.data.approvalToken}/1`);
+ assert.notEqual(a.data.approvalToken,p.record.token);
+ assert.ok(await f.env.ARTWORK.head(`commerce/checkout-previews/${a.data.approvalToken}/view-1.jpg`));
+});
+
+test('cart retains its original preview when no valid saved side angle exists',async t=>{
+ const f=await fixture(t),added=await f.add(),base=added.data.basket.lines[0].thumbnail,token=base.split('/').pop();
+ for(const data of [{},{views:[]},{views:[{index:0,title:'Front'}]},{views:[{index:'../1',title:'Handle on Left'}]},{views:[{index:3,title:'Handle on Left'}]},{views:'invalid'}]){
+  await f.env.ARTWORK.put(`commerce/checkout-previews/${token}.json`,JSON.stringify(data));
+  assert.equal((await f.call('/api/basket?id=basket')).data.basket.lines[0].thumbnail,base);
+ }
+ await f.env.ARTWORK.put(`commerce/checkout-previews/${token}.json`,'invalid json');
+ assert.equal((await f.call('/api/basket?id=basket')).data.basket.lines[0].thumbnail,base);
+});
