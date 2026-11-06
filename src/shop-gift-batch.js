@@ -41,6 +41,18 @@ export async function runGiftBatch(env,{create=createMockup,poll=mockupStatus,fr
   for(const item of GIFT_BATCH_ITEMS){
    if(!await current())break;
    const key=giftBatchKey(item.id);let state=await read(env,key);
+   // Only the three Siamese source-validation holds occurred before any task.
+   // Resume them once the recovered original has a reviewed live mug offer.
+   let sourceHold=null;
+   if(state?.status==='needs_review'&&state.code==='gift_batch_source'&&giftMaster(item).id==='christmas-village-siamese-cat'&&!state.startedAt&&!state.mockupId&&!state.design){
+    if(await read(env,smallGiftKey(item.id)))continue;
+    try{await valid(item);}catch{continue;}
+    const tasks=await env.ARTWORK.list({prefix:`mockups/${giftMaster(item).requestId}/${item.sku}/`,limit:1});
+    if(tasks.truncated||tasks.objects.length)continue;
+    const original=await env.ARTWORK.get(key);
+    if(!original||JSON.stringify(await original.json())!==JSON.stringify(state))continue;
+    sourceHold={state,etag:original.etag};state=null;
+   }
    if(state?.status==='needs_review'||state?.status==='creating_preview'||state?.status==='frozen')continue;
    if(state?.status==='pending_preview'){
     if(tally.polled>=4)continue;
@@ -81,7 +93,12 @@ export async function runGiftBatch(env,{create=createMockup,poll=mockupStatus,fr
    if(!await current())break;
    const design=recommendedCheckoutDesign(FULFILLMENT[item.sku]);
    state={id:item.id,status:'creating_preview',sourceRevision:giftMaster(item).sha256,design,startedAt:now()};
-   if(!await env.ARTWORK.put(key,JSON.stringify(state),{onlyIf:new Headers({'If-None-Match':'*'})}))continue;
+   if(sourceHold){
+    const archive=`shop/recovery/siamese-gifts-20261106/${item.id}/original-hold.json`;
+    await env.ARTWORK.put(archive,JSON.stringify(sourceHold.state),{onlyIf:new Headers({'If-None-Match':'*'})});
+    state.sourceRecovery=archive;
+   }
+   if(!await env.ARTWORK.put(key,JSON.stringify(state),{onlyIf:sourceHold?{etagMatches:sourceHold.etag}:new Headers({'If-None-Match':'*'})}))continue;
    tally.created++;
    try{
     const response=await create(internal(env,'/api/mockup/create',{requestId:meta.requestId,accessToken:meta.accessToken,sku:item.sku,design}),env),data=await response.json();
