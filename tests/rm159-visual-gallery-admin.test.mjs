@@ -56,12 +56,12 @@ test('the two illustrated worlds are original standalone SVG with only local ass
  assert.match(a,/Grand golden multi-ring portal/);
  assert.match(b,/Central three-dimensional mystery die/);
  const page=text('public/index.html'),css=text('public/simple-flow-v117.css');
- assert.match(page,/recast-discover-cinematic-v160\.webp/);
- assert.match(page,/recast-surprise-cinematic-v160\.webp/);
+ assert.match(page,/discovery-pets-approved-20261106\.webp/);
+ assert.match(page,/discovery-pets-approved-20261106\.webp/);
  assert.match(page,/simple-flow-v117\.css\?v=7/);
  assert.match(css,/\.discovery-art-v159/);
  assert.match(text('public/discovery-glass-v160.css'),/\.discovery-art-v160/);
- for(const image of ['recast-discover-cinematic-v160.webp','recast-surprise-cinematic-v160.webp']){
+ for(const image of ['discovery-pets-approved-20261106.webp']){
   assert.ok(fs.statSync('public/assets/'+image).size>100000,image+' should be a full-quality generated illustration');
  }
 });

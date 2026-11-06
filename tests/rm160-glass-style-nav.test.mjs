@@ -3,16 +3,16 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 const read=p=>fs.readFileSync(p,'utf8');
 
-test('two cinematic fantasy illustrations are real optimized binary WebP assets',()=>{
-  for(const asset of ['recast-discover-cinematic-v160.webp','recast-surprise-cinematic-v160.webp']){
+test('approved pet discovery board is an optimized WebP shared by both controls',()=>{
+  for(const asset of ['discovery-pets-approved-20261106.webp']){
     const f=fs.readFileSync('public/assets/'+asset);
     assert.ok(f.length>100000 && f.length<800000,asset+' must be sharp but fast enough for mobile');
     assert.equal(f.subarray(0,4).toString(),'RIFF');
     assert.equal(f.subarray(8,12).toString(),'WEBP');
   }
   const html=read('public/index.html');
-  assert.match(html,/src="\/assets\/recast-discover-cinematic-v160\.webp"/);
-  assert.match(html,/src="\/assets\/recast-surprise-cinematic-v160\.webp"/);
+  assert.match(html,/src="\/assets\/discovery-pets-approved-20261106\.webp"/);
+  assert.match(html,/src="\/assets\/discovery-pets-approved-20261106\.webp"/);
   assert.match(html,/discovery-glass-v160\.css/);
   assert.equal((html.match(/glass-discovery-card/g)||[]).length,2);
   assert.match(html,/data-style-count/);

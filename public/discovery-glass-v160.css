@@ -259,3 +259,28 @@
     flex: 1 0 67px;
   }
 }
+
+/* Owner-approved November 6 artwork. Each viewport reveals one image from
+   the exact approved 1536x1024 board. Its baked-in labels stay outside the
+   crop; the existing HTML labels/counts remain accessible and responsive. */
+#recast-form .adventure-extra-actions .glass-discovery-card .discovery-art-v160.discovery-approved {
+  aspect-ratio: 720 / 692;
+}
+#recast-form .adventure-extra-actions .glass-discovery-card .discovery-art-v160.discovery-approved::before,
+#recast-form .adventure-extra-actions .glass-discovery-card .discovery-art-v160.discovery-approved::after {
+  content: none;
+}
+#recast-form .adventure-extra-actions .glass-discovery-card .discovery-art-v160.discovery-approved img.discovery-artwork {
+  position: absolute;
+  width: 213.333333% !important;
+  max-width: none !important;
+  height: auto !important;
+  aspect-ratio: 1536 / 1024 !important;
+  left: -4.444444%;
+  top: -6.936416%;
+  filter: none;
+  transform: none;
+}
+#recast-form .adventure-extra-actions #surprise-world .discovery-art-v160.discovery-approved img.discovery-artwork {
+  left: -109.444444%;
+}

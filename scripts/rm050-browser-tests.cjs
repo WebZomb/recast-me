@@ -174,8 +174,9 @@ const policy={highDaily:3,standardDaily:5,purchaseBonus:3,websiteCalls:70,social
    await page.waitForFunction(()=>document.querySelector('#photo-thumbnails img')?.naturalWidth>0);
    assert.ok(await page.locator('#photo-thumbnails img').first().evaluate(img=>Math.max(img.naturalWidth,img.naturalHeight)<=480),'Upload display retains a small copy');
    await page.locator('.adventure-extra-actions').scrollIntoViewIfNeeded();
+   await page.waitForFunction(()=>[...document.querySelectorAll('.discovery-approved img')].every(img=>img.complete&&img.naturalWidth===1536));
    await page.screenshot({path:path.join(out,`${engine.name()}-${width}-rm141-style-cards.png`)});
-   for(const [selector,asset] of [['#surprise-world','recast-surprise-cinematic-v160.webp'],['#more-adventures','recast-discover-cinematic-v160.webp']]){
+   for(const [selector,asset] of [['#surprise-world','discovery-pets-approved-20261106.webp'],['#more-adventures','discovery-pets-approved-20261106.webp']]){
     assert.equal(await page.locator(selector+' img').count(),1,'Each discovery control has a unique illustrated scene');
     assert.match(await page.locator(selector+' img').first().getAttribute('src'),new RegExp(asset.replaceAll('.','\\.')));
     assert.ok(await page.locator(selector).evaluate(button=>{const a=button.getBoundingClientRect(),b=button.parentElement.getBoundingClientRect();return a.left>=b.left-1&&a.right<=b.right+1}),'Discovery card fits its container');
@@ -183,7 +184,7 @@ const policy={highDaily:3,standardDaily:5,purchaseBonus:3,websiteCalls:70,social
    }
    assert.match(await page.locator('[data-surprise-count]').textContent(),/Random pick · 47 styles/);
    assert.match(await page.locator('[data-style-count]').textContent(),/Explore 48 styles/);
-   assert.equal(await page.locator('.discovery-art-v160').count(),2,'Cinematic illustrated portal and mystery scene appear');
+   assert.equal(await page.locator('.discovery-art-v160').count(),2,'Approved pet transformations appear');
    for(const img of await page.locator('#adventure-choices img').all()){
     assert.ok(await img.evaluate(el=>{const a=el.getBoundingClientRect(),b=el.parentElement.getBoundingClientRect();return Math.abs(a.top-b.top-2)<1&&Math.abs(a.width-(b.width-4))<1&&getComputedStyle(el).objectFit==='cover'}),'Featured images fill card edge to edge');
    }
