@@ -150,8 +150,14 @@ function renderCatalog(gallery,offers){
   $('#collection-empty').textContent='The artwork gallery is temporarily unavailable. Please check back soon.';
  }
  const unique=new Set(verified.map(o=>o.designId+'|'+o.artworkRevision));
+ if(unique.size){
+  $('#collection-description').textContent='Shop ready-made Christmas dog and cat '+collection.label.toLowerCase()+'. Choose your favorite design, view the actual product and add it to your cart.';
+  $('#collection-sizes').textContent='Available options: '+[...new Set(verified.map(o=>o.variantLabel))].join(' · ');
+  $('.collection-note strong').textContent='Christmas gifts, ready to choose';
+  $('.collection-note p').textContent='The finished designs below include actual product previews. Choose a favorite and buy it as shown.';
+ }
  $('#collection-availability').textContent=unique.size
-  ?unique.size+' designs have verified supplier photos and are ready to buy. Others are still being prepared.'
+  ?unique.size+' designs are ready to buy.'+(unique.size<designs.length?' More designs are being prepared.':'')
   :'Artwork previews are available now. Real '+collection.label.toLowerCase()+' print previews and checkout will appear only after supplier approval.';
 }
 if(collection){
