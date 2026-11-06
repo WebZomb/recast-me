@@ -95,3 +95,35 @@ test('shared provider rate denial produces no supplier claim or task',async()=>{
  assert.equal(result.created,0);assert.equal(called,0);
  assert.equal(await env.ARTWORK.get(giftBatchKey(GIFT_BATCH_ITEMS[0].id)),null);
 });
+
+test('recovered Siamese pre-provider source holds resume once under the existing rate limit and preserve their audit records',async()=>{
+ const env=await queueFixture();
+ const targets=GIFT_BATCH_ITEMS.filter(i=>giftMaster(i).id==='christmas-village-siamese-cat');
+ for(const item of GIFT_BATCH_ITEMS)await json(env,giftBatchKey(item.id),targets.includes(item)?{id:item.id,status:'needs_review',code:'gift_batch_source'}:{id:item.id,status:'frozen'});
+ const before=await (await env.ARTWORK.get('shop/catalog/v1.json')).text();
+ const calls=[];const deps={rate:async()=>true,poll:completed,freeze:frozen,create:async request=>{calls.push(await request.json());return Response.json({ok:true,mockupId:'siamese-first'});}};
+ assert.equal((await runGiftBatch(env,deps)).created,2);
+ assert.equal((await runGiftBatch(env,deps)).created,1);
+ await runGiftBatch(env,deps);
+ assert.equal(calls.length,3);assert.equal(new Set(calls.map(c=>c.sku)).size,3);
+ for(const item of targets){
+  assert.equal((await (await env.ARTWORK.get(`shop/recovery/siamese-gifts-20261106/${item.id}/original-hold.json`)).json()).code,'gift_batch_source');
+  assert.equal((await (await env.ARTWORK.get(giftBatchKey(item.id))).json()).status,'frozen');
+ }
+ assert.equal(await (await env.ARTWORK.get('shop/catalog/v1.json')).text(),before);
+});
+test('Siamese source recovery never resumes an unreviewed source, prior task, uncertain creation, or changed hold',async()=>{
+ for(const scenario of ['unreviewed','task','started','design','rate','lost-response','changed']){
+  const env=await queueFixture(),item=GIFT_BATCH_ITEMS.find(i=>giftMaster(i).id==='christmas-village-siamese-cat'),source=giftMaster(item);
+  for(const row of GIFT_BATCH_ITEMS)await json(env,giftBatchKey(row.id),{id:row.id,status:'frozen'});
+  const hold={id:item.id,status:'needs_review',code:'gift_batch_source',...(scenario==='started'?{startedAt:'old'}:{}),...(scenario==='design'?{design:{}}:{})};
+  await json(env,giftBatchKey(item.id),hold);
+  if(scenario==='unreviewed')await json(env,'shop/catalog/v1.json',{offers:[]});
+  if(scenario==='task')await json(env,`mockups/${source.requestId}/${item.sku}/old/task.json`,{});
+  let calls=0;
+  const deps={rate:async()=>{if(scenario==='changed')await json(env,giftBatchKey(item.id),{...hold,status:'owner_hold'});return scenario!=='rate';},create:async()=>{calls++;throw Error('unknown acceptance');}};
+  await runGiftBatch(env,deps);await runGiftBatch(env,deps);
+  assert.equal(calls,scenario==='lost-response'?1:0,scenario);
+  if(scenario==='changed')assert.equal((await (await env.ARTWORK.get(giftBatchKey(item.id))).json()).status,'owner_hold');
+ }
+});

@@ -439,6 +439,8 @@ const byDesign=new Map(EXPANSION_DESIGNS.map(d=>[d.id,d]));
 // Reviewed against the exact Printful 11 oz and 15 oz handle-left and 3D previews.
 // The source-revision, saved clean print file and position remain immutable.
 export const REVIEWED_EXPANSION_PROOFS=Object.freeze({
+ 'village-siamese-cat-mug-11oz':'88bec6f6685766c6fb593816df75004d24f3db309f2c55c9de75419a7d01a1d0',
+ 'village-siamese-cat-mug-15oz':'3894ecd0883074c96a052ef23b6aa1dec31aa289ab146c2a8dd0cb7b5b8be114',
  'village-golden-retriever-mug-11oz':'b114d98c685bd48caa8d0cedd9a890714fc4936273b1a4d85d75e9c36cc5669b',
  'village-golden-retriever-mug-15oz':'ef15ee055e30aeb1f121cec08a1e7200aed283f6d7e17985f51b56b32661049d',
  'village-labrador-retriever-mug-11oz':'859163145a6650e7e9e092047ada6d25077cf90a76837ac2ee1927e170ec5f33',
