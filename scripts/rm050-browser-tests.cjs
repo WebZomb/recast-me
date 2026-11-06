@@ -184,6 +184,8 @@ const policy={highDaily:3,standardDaily:5,purchaseBonus:3,websiteCalls:70,social
     console.log('APPROVED_DISCOVERY_CROP',engine.name(),width,selector,JSON.stringify(crop));
     assert.ok(crop.image.width>crop.frame.width*2&&crop.image.height>crop.frame.height,'Approved artwork fills the crop');
     assert.equal(crop.visibility,'visible');assert.equal(crop.opacity,'1');
+    const badge=await page.locator(selector+' .discovery-count').boundingBox();
+    assert.ok(badge.y>=crop.frame.y+crop.frame.height-1,'Style counts must not cover approved pet imagery');
    }
    await page.locator('.adventure-extra-actions').screenshot({path:path.join(out,`${engine.name()}-${width}-approved-discovery.png`)});
    await page.screenshot({path:path.join(out,`${engine.name()}-${width}-rm141-style-cards.png`)});

@@ -284,3 +284,22 @@
 #recast-form .adventure-extra-actions #surprise-world .discovery-art-v160.discovery-approved img.discovery-artwork {
   left: -109.444444%;
 }
+
+/* Keep counts readable without covering the pet's face on narrow phones. */
+#recast-form .adventure-extra-actions .glass-discovery-card > .discovery-count {
+  position: static !important;
+  inset: auto !important;
+  flex: 0 0 auto;
+  align-self: center;
+  margin: 0 4px 9px;
+  min-height: 0 !important;
+  padding: 0 3px !important;
+  border: 0 !important;
+  border-radius: 0;
+  background: transparent !important;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  color: #d8d3ee !important;
+  white-space: normal;
+}
