@@ -259,3 +259,47 @@
     flex: 1 0 67px;
   }
 }
+
+/* Owner-approved November 6 artwork. Each viewport reveals one image from
+   the exact approved 1536x1024 board. Its baked-in labels stay outside the
+   crop; the existing HTML labels/counts remain accessible and responsive. */
+#recast-form .adventure-extra-actions .glass-discovery-card .discovery-art-v160.discovery-approved {
+  aspect-ratio: 720 / 692;
+}
+#recast-form .adventure-extra-actions .glass-discovery-card .discovery-art-v160.discovery-approved::before,
+#recast-form .adventure-extra-actions .glass-discovery-card .discovery-art-v160.discovery-approved::after {
+  content: none;
+}
+#recast-form .adventure-extra-actions .glass-discovery-card .discovery-art-v160.discovery-approved img.discovery-artwork {
+  position: absolute;
+  width: 213.333333% !important;
+  max-width: none !important;
+  height: auto !important;
+  aspect-ratio: 1536 / 1024 !important;
+  left: -4.444444%;
+  top: -6.936416%;
+  filter: none;
+  transform: none;
+}
+#recast-form .adventure-extra-actions #surprise-world .discovery-art-v160.discovery-approved img.discovery-artwork {
+  left: -109.444444%;
+}
+
+/* Keep counts readable without covering the pet's face on narrow phones. */
+#recast-form .adventure-extra-actions .glass-discovery-card > .discovery-count {
+  position: static !important;
+  inset: auto !important;
+  flex: 0 0 auto;
+  align-self: center;
+  margin: 0 4px 9px;
+  min-height: 0 !important;
+  padding: 0 3px !important;
+  border: 0 !important;
+  border-radius: 0;
+  background: transparent !important;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  color: #d8d3ee !important;
+  white-space: normal;
+}
