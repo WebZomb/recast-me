@@ -2,6 +2,8 @@ import {runShopSeed} from './shop-seed.js';
 import {runShopExpansion} from './shop-expansion.js';
 import {runSmallGiftRelease} from './shop-small-gift-release.js';
 import {runGiftBatch} from './shop-gift-batch.js';
+import {runHeldTaskReconcile,heldTaskReconcileRoute} from './shop-held-task-reconcile.js';
+import {siameseSourceRepairRoute} from './shop-siamese-source-repair.js';
 import {runPrintfileAudit} from './shop-printfile-audit.js';
 import {runCoasterPilot} from './shop-coaster-pilot.js';
 import {runMagnetPilot} from './shop-magnet-pilot.js';
@@ -27,6 +29,8 @@ import { printFinishRoutes } from './print-finish.js';
 const application = {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
+    const sourceRepair=await siameseSourceRepairRoute(request,env);if(sourceRepair)return sourceRepair;
+    const heldTask=await heldTaskReconcileRoute(request,env);if(heldTask)return heldTask;
     const shop=await shopRoutes(request,env);if(shop)return shop;
     const basketAdmin=await basketAdminRoute(request,env,{requireAdmin});
     if(basketAdmin)return basketAdmin;
@@ -82,6 +86,7 @@ const application = {
     ctx.waitUntil(runShopExpansion(env).catch(()=>console.error('Christmas Village mug preparation needs review.')));
     ctx.waitUntil(runSmallGiftRelease(env).catch(()=>console.error('Small gift print-file preparation needs review.')));
     ctx.waitUntil(runGiftBatch(env).catch(()=>console.error('Breed-specific gift preparation needs review.')));
+    ctx.waitUntil(runHeldTaskReconcile(env).catch(()=>console.error('Saved supplier-task reconciliation needs review.')));
     ctx.waitUntil(runPrintfileAudit(env).catch(()=>console.error('Physical product printfile audit needs review.')));
     ctx.waitUntil(runCoasterPilot(env).catch(()=>console.error('Coaster preview canary needs review.')));
     ctx.waitUntil(runMagnetPilot(env).catch(()=>console.error('Magnet supplier-proof canary needs review.')));
