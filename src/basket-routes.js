@@ -41,6 +41,15 @@ export async function basketDetails(env,identity,state){
   line.title=bound?.display?.title||row?.title||line.product;line.variantLabel=bound?.display?.variantLabel||row?.variantTitle||'';
   line.sourceKind=bound?.offerId?'premade':'custom';
   line.thumbnail='/api/approved-preview/'+saved.approval.approvalToken;
+  // The primary mug proof shows the wrap seam. Prefer a frozen side angle
+  // on every read, so existing baskets improve without rewriting approvals.
+  if(line.product==='Mug'){
+   try{
+    const preview=await read(env,`commerce/checkout-previews/${saved.approval.approvalToken}.json`);
+    const side=Array.isArray(preview?.views)?preview.views.find(v=>Number.isInteger(v?.index)&&v.index>=0&&v.index<=2&&/handle on (left|right)/i.test(v.title||'')):null;
+    if(side)line.thumbnail+='/'+side.index;
+   }catch{/* A missing preview must not prevent editing or removing a cart line. */}
+  }
   line.unitPriceCents=cents;line.lineTotalCents=cents===null?null:cents*line.quantity;
   if(cents===null)priced=false;else total+=line.lineTotalCents;
  }
