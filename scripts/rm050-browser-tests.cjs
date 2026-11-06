@@ -175,6 +175,17 @@ const policy={highDaily:3,standardDaily:5,purchaseBonus:3,websiteCalls:70,social
    assert.ok(await page.locator('#photo-thumbnails img').first().evaluate(img=>Math.max(img.naturalWidth,img.naturalHeight)<=480),'Upload display retains a small copy');
    await page.locator('.adventure-extra-actions').scrollIntoViewIfNeeded();
    await page.waitForFunction(()=>[...document.querySelectorAll('.discovery-approved img')].every(img=>img.complete&&img.naturalWidth===1536));
+   await page.locator('.discovery-approved img').evaluateAll(async images=>{await Promise.all(images.map(img=>img.decode()));await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));});
+   for(const selector of ['#more-adventures','#surprise-world']){
+    const crop=await page.locator(selector+' .discovery-approved').evaluate(frame=>{
+     const img=frame.querySelector('img'),f=frame.getBoundingClientRect(),i=img.getBoundingClientRect(),s=getComputedStyle(img);
+     return {frame:{x:f.x,y:f.y,width:f.width,height:f.height},image:{x:i.x,y:i.y,width:i.width,height:i.height},display:s.display,visibility:s.visibility,opacity:s.opacity};
+    });
+    console.log('APPROVED_DISCOVERY_CROP',engine.name(),width,selector,JSON.stringify(crop));
+    assert.ok(crop.image.width>crop.frame.width*2&&crop.image.height>crop.frame.height,'Approved artwork fills the crop');
+    assert.equal(crop.visibility,'visible');assert.equal(crop.opacity,'1');
+   }
+   await page.locator('.adventure-extra-actions').screenshot({path:path.join(out,`${engine.name()}-${width}-approved-discovery.png`)});
    await page.screenshot({path:path.join(out,`${engine.name()}-${width}-rm141-style-cards.png`)});
    for(const [selector,asset] of [['#surprise-world','discovery-pets-approved-20261106.webp'],['#more-adventures','discovery-pets-approved-20261106.webp']]){
     assert.equal(await page.locator(selector+' img').count(),1,'Each discovery control has a unique illustrated scene');
