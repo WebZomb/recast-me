@@ -3,6 +3,7 @@ import {runShopExpansion} from './shop-expansion.js';
 import {runSmallGiftRelease} from './shop-small-gift-release.js';
 import {runGiftBatch} from './shop-gift-batch.js';
 import {runHeldTaskReconcile,heldTaskReconcileRoute} from './shop-held-task-reconcile.js';
+import {siameseSourceRepairRoute} from './shop-siamese-source-repair.js';
 import {runPrintfileAudit} from './shop-printfile-audit.js';
 import {runCoasterPilot} from './shop-coaster-pilot.js';
 import {runMagnetPilot} from './shop-magnet-pilot.js';
@@ -28,6 +29,7 @@ import { printFinishRoutes } from './print-finish.js';
 const application = {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
+    const sourceRepair=await siameseSourceRepairRoute(request,env);if(sourceRepair)return sourceRepair;
     const heldTask=await heldTaskReconcileRoute(request,env);if(heldTask)return heldTask;
     const shop=await shopRoutes(request,env);if(shop)return shop;
     const basketAdmin=await basketAdminRoute(request,env,{requireAdmin});
