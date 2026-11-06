@@ -4,6 +4,7 @@ import {read,change,fault,recommendedCheckoutDesign} from './commerce-store.js';
 import {FULFILLMENT} from './entry.js';
 import {EXPANSION_DESIGNS,claimMugPreviewRateSlot} from './shop-expansion.js';
 import {createMockup,mockupStatus} from './workflow.js';
+import {recheckGiftPoll} from './shop-gift-poll-recheck.js';
 import {GIFT_BATCH_ITEMS,ALL_SMALL_GIFTS,giftMaster,giftArtworkTitle,giftBatchKey} from './shop-gift-definitions.js';
 import {freezeSmallGift,smallGiftKey,verifySmallGiftArea} from './shop-small-gift-release.js';
 const leaseKey='shop/preparation/gift-batch/v1/lease.json';
@@ -41,6 +42,14 @@ export async function runGiftBatch(env,{create=createMockup,poll=mockupStatus,fr
   for(const item of GIFT_BATCH_ITEMS){
    if(!await current())break;
    const key=giftBatchKey(item.id);let state=await read(env,key);
+   if(state?.status==='needs_review'&&state.code==='gift_batch_poll'&&env.PREMADE_GIFT_POLL_RECHECK_ENABLED==='true'&&tally.polled<4){
+    try{
+     const meta=await valid(item),rechecked=await recheckGiftPoll(env,item,state,meta,{poll});
+     if(rechecked.attempted)tally.polled++;
+     state=rechecked.state;
+     if(rechecked.attempted&&state.status==='pending_preview')continue;
+    }catch{/* Preserve the original hold; never create a replacement task. */}
+   }
    if(state?.status==='needs_review'||state?.status==='creating_preview'||state?.status==='frozen')continue;
    if(state?.status==='pending_preview'){
     if(tally.polled>=4)continue;
@@ -105,7 +114,8 @@ export async function giftBatchStatus(env){
    if(status==='ready_for_review'&&release)ready++;
    if(status==='published')published++;
    if(status==='needs_review')heldCount++;
-   items.push({id:item.id,product:item.product,status,printFileReady:release?.status==='ready_for_review'||status==='published',checkoutEnabled:status==='published',code:release?.code||task?.code||null});
+   const recheck=status==='needs_review'?await read(env,'shop/preparation/gift-poll-rechecks/v1/'+item.id+'.json'):null;
+   items.push({id:item.id,product:item.product,status,printFileReady:release?.status==='ready_for_review'||status==='published',checkoutEnabled:status==='published',code:release?.code||task?.code||null,pollRecheckStatus:recheck?.status||null});
   }
   designs.push({id:source.id,title:giftArtworkTitle(source),breed:source.breed,pet:source.pet,items});
  }
