@@ -1,7 +1,7 @@
-import {attachGiftPublication} from './admin-small-gift-publication.js?v=2';
+import {attachGiftPublication} from './admin-small-gift-publication.js?v=3';
 const $=s=>document.querySelector(s),key='recast_admin_token';
 const initial='christmas-village-golden-retriever';
-const suffixes=['-coaster-4pack','-magnet-3pack','-sticker-sheet-six'];
+const suffixes=['-coaster-4pack','-magnet-3pack','-sticker-sheet-six','-sticker-3x3'];
 let generation=0,controller=null,selected=new URL(location.href).searchParams.get('design')||initial;
 let progress=[];const urls=new Set();
 const el=(tag,cls,text)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(text!==undefined)e.textContent=String(text);return e;};
@@ -21,7 +21,7 @@ async function loadProgress(current,signal){
   for(const design of progress){
    const live=design.items.filter(i=>i.checkoutEnabled===true).length;
    const ready=design.items.filter(i=>i.printFileReady&&!i.checkoutEnabled).length;
-   const option=el('option',null,design.title+' · '+live+'/3 live'+(ready?' · '+ready+' to review':''));
+   const option=el('option',null,design.title+' · '+live+'/'+design.items.length+' live'+(ready?' · '+ready+' to review':''));
    option.value=design.id;picker.append(option);
   }
   if(progress.some(d=>d.id===selected))picker.value=selected;

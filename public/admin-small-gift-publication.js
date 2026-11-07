@@ -7,7 +7,7 @@ const storePaths=Object.freeze({
  'christmas-village-golden-retriever-magnet-3pack':'/shop-magnet-sets',
  'christmas-village-golden-retriever-sticker-sheet-six':'/shop-sticker-sheets'
 });
-const productPaths=Object.freeze({coaster:'/shop-coaster-sets',magnet:'/shop-magnet-sets','sticker-sheet':'/shop-sticker-sheets'});
+const productPaths=Object.freeze({coaster:'/shop-coaster-sets',magnet:'/shop-magnet-sets','sticker-sheet':'/shop-sticker-sheets',sticker:'/shop-stickers'});
 const el=(tag,cls,text)=>{const n=document.createElement(tag);if(cls)n.className=cls;if(text!==undefined)n.textContent=String(text);return n;};
 const validHash=value=>typeof value==='string'&&/^[a-f0-9]{64}$/.test(value);
 async function loaded(image){

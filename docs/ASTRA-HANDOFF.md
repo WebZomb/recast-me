@@ -497,3 +497,5 @@ November 6 continuation: [finished collection copy and recovered offers](ASTRA-S
 November 6 final seven-option recovery milestone: PR179 merged45ebf7488e324560fefbf2452b1bab2b4d75fbfa and guarded deploy42288034473 succeeded. All177 offers are live (72 mug sizes and35 each of coasters, magnets and sticker sheets);105/105 small gifts published,zero holds. [Detailed proof, tests and outstanding limitations](ASTRA-SESSION-FINISHED-COLLECTIONS-2026-11-06.md). The13 larger/other categories remain unfinished.
 
 November 6 collection/cart request efficiency prepared: per-family catalog verification and request-local Shopify reuse; 941 local tests passed. No source/proof safety checks removed. Deployment and live timing pending. See [session](ASTRA-SESSION-SHOP-SPEED-2026-11-06.md).
+
+November 6 individual-sticker trial prepared: one exact Golden Retriever 3×3-inch design added to the bounded supplier-proof queue; 900×900@300DPI fits existing source. No automatic publication, no other34 stickers queued. 939 baseline Node tests pass; release/provider results pending. See [trial evidence](ASTRA-SESSION-SINGLE-STICKER-2026-11-06.md).
