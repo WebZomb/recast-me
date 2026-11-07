@@ -13,8 +13,8 @@
   "input": {
     "image": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-christmas-village-golden-retriever-artwork-approved-20261103.png?v=1793745022",
     "output_format": "jpeg",
-    "output_width": 12800,
-    "output_height": 12800,
+    "output_width": 8192,
+    "output_height": 8192,
     "crop_to_fill": false,
     "face_enhancement": false
   },
@@ -29,7 +29,7 @@
     "Verify account access and total billing including any minimum top-up and fee within authorized cap",
     "Persist one-time request claim before provider call; ambiguous outcome requires reconciliation, never retry",
     "Save result separately; preserve all existing approved source revisions",
-    "Large masters exceed normal Cloudflare Images 100MP/12000px transform limits: keep raw master separate and use a validated large-file native-print preparation path; do not send through ordinary preview transforms",
+    "Verify JPEG is within Images binding 20MB input limit and decoded master/print areas are below 100MP; 60x80 blanket and largest canvas require a separate large-file path and are outside this trial",
     "Inspect full composition and 100% crops for subject, eyes, paws, scarf, scenery and false detail",
     "Check decoded dimensions, format and pixel integrity",
     "Prepare one product-specific supplier proof before any sales approval"
@@ -46,5 +46,14 @@
     "https://developers.cloudflare.com/ai-gateway/usage/worker-binding-methods/",
     "https://developers.cloudflare.com/ai-gateway/features/unified-billing/",
     "https://developers.cloudflare.com/images/get-started/limits/"
-  ]
+  ],
+  "firstProduct": {
+    "sku": "RECAST-BLANKET-50X60",
+    "nativePrintArea": {
+      "width": 9450,
+      "height": 7950,
+      "dpi": 150
+    },
+    "layout": "fit entire square artwork without enlargement on dark backdrop; verify supplier orientation and trim"
+  }
 }
