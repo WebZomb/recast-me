@@ -1,4 +1,4 @@
-// Preparation only: 34 additional approved artworks x three existing products.
+// Preparation only: 34 artworks x three existing products plus one single-sticker trial.
 // Never publishes a catalog offer, places an order, or generates AI artwork.
 import {read,change,fault,recommendedCheckoutDesign} from './commerce-store.js';
 import {FULFILLMENT} from './entry.js';
@@ -126,5 +126,5 @@ export async function giftBatchStatus(env){
   }
   designs.push({id:source.id,title:giftArtworkTitle(source),breed:source.breed,pet:source.pet,items});
  }
- return {enabled:enabled(env),totalDesigns:35,totalProducts:105,readyForReview:ready,published,needsReview:heldCount,automaticPublication:false,designs};
+ return {enabled:enabled(env),totalDesigns:35,totalProducts:ALL_SMALL_GIFTS.length,readyForReview:ready,published,needsReview:heldCount,automaticPublication:false,designs};
 }
