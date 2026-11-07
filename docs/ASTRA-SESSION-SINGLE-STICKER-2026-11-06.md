@@ -9,3 +9,5 @@ Added precisely one Golden Retriever single-sticker item to the existing bounded
 After deployment, the existing enabled cron can submit one supplier mockup and freeze its native file. This does not create a customer order, charge, fulfillment or publicly buyable offer. Actual supplier pictures, placement/cut edge and native file must be visually reviewed before authenticated publication. Current cloud browser no longer holds the prior owner session; no token was retrieved or copied.
 
 Larger products remain blocked on higher-resolution originals. Rollback: revert this focused registry/UI change; leave any completed preview evidence intact and never automatically retry an ambiguous provider response.
+
+Combined speed+sticker head32f2fce passes942 Node tests. Hosted breed UI initially timed out because its Golden fixture still expected three files; updated that fixture to four and added an exact sticker-collection link assertion. No production code bypass or weakened assertion. Revalidation pending.
