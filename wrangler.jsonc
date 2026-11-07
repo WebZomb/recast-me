@@ -124,7 +124,7 @@
     "directory": "./public",
     "binding": "ASSETS",
     "not_found_handling": "404-page",
-    "run_worker_first": ["/api/*", "/proof/*"]
+    "run_worker_first": ["/api/*", "/proof/*", "/shop-stickers", "/shop-stickers.html"]
   }
 
   // Preserve the existing production Images binding during controlled testing.

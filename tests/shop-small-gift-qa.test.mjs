@@ -48,7 +48,7 @@ test('authenticated metadata exposes only reviewed commercial source, supplier p
  assert.equal(response.headers.get('cache-control'),'private, no-store');
  assert.equal(response.headers.get('x-robots-tag'),'noindex, nofollow');
  const text=await response.text(),data=JSON.parse(text);
- assert.equal(data.readOnly,true);assert.equal(data.items.length,4);
+ assert.equal(data.readOnly,true);assert.equal(data.items.length,3);
  const item=data.items.find(x=>x.id===fx.item.id);
  assert.equal(item.checkoutEnabled,false);
  assert.equal(item.mime,'image/png');assert.equal(item.supplierPictures.length,1);

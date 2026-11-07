@@ -1,5 +1,5 @@
 import {groupShopOffers} from './shop-model.js?v=4';
-import {SHOP_COLLECTIONS} from './shop-collections.js?v=1';
+import {SHOP_COLLECTIONS} from './shop-collections.js?v=2';
 import {initialize,addPremade,openCart} from './basket.js?v=3';
 const $=s=>document.querySelector(s);
 const money=c=>new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(c/100);

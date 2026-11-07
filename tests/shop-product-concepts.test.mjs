@@ -77,7 +77,7 @@ test('distinct product concepts are never manufacturer mockups or bypassed check
  const slugs=['blankets','pillows','canvas','tumblers','hoodies','t-shirts','tote-bags','phone-cases','sticker-sheets','stickers','posters','framed-prints','journals','coaster-sets','magnet-sets','puzzles'];
  for(const slug of slugs){
   const html=read('public/shop-'+slug+'.html');
-  assert.match(html,/shop-category\.js\?v=4/);
+  assert.match(html,/shop-category\.js\?v=5/);
   assert.match(html,/shop-category\.css\?v=2/);
   assert.match(html,/name="robots" content="noindex,follow"/);
  }

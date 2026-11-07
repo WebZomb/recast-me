@@ -30,6 +30,8 @@ import { printFinishRoutes } from './print-finish.js';
 const application = {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
+    // Single stickers were replaced by six-picture sheets; preserve historical orders.
+    if(['GET','HEAD'].includes(request.method)&&['/shop-stickers','/shop-stickers.html'].includes(url.pathname))return Response.redirect(new URL('/shop-sticker-sheets',url.origin).href,301);
     const frenchieRepair=await frenchiePreviewRepairRoute(request,env);if(frenchieRepair)return frenchieRepair;
     const sourceRepair=await siameseSourceRepairRoute(request,env);if(sourceRepair)return sourceRepair;
     const heldTask=await heldTaskReconcileRoute(request,env);if(heldTask)return heldTask;

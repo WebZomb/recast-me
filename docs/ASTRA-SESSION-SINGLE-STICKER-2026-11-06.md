@@ -11,3 +11,15 @@ After deployment, the existing enabled cron can submit one supplier mockup and f
 Larger products remain blocked on higher-resolution originals. Rollback: revert this focused registry/UI change; leave any completed preview evidence intact and never automatically retry an ambiguous provider response.
 
 Combined speed+sticker head32f2fce passes942 Node tests. Hosted breed UI initially timed out because its Golden fixture still expected three files; updated that fixture to four and added an exact sticker-collection link assertion. No production code bypass or weakened assertion. Revalidation pending.
+
+## Deployment receipt
+
+PR182 merged317bc6d5cca6f3625cdd8890e71d6869b1e155b8; guarded deployment42332013530 and production smoke succeeded. Customer policy42326434039, breed proof42326434030, owner publication42326434111 and security/bundle passed on9aca12fc. Reconciled squash ancestry viaeba087af with exactly identical validated tree9ca220305062bd9e54a3974d94de721b8c6d9484; no content change. Owner access restored through secure browser credential entry; no secret exposed. Public queue now106 entries,105published and single-sticker trial initially not_started. Supplier proof and publication not yet claimed at this checkpoint.
+
+## Scope correction: individual stickers intentionally retired
+
+The one new Printful preview completed, but native freeze was correctly rejected (`gift_freeze_rejected`). Direct Shopify connector read confirms Recast Me Ai shop b2wnfu-7g.myshopify.com, old product15419161739508/variant67710900470004/SKU RECAST-STICKER-3X3 is ARCHIVED at9.99. RM061 explicitly records the owner's decision to replace single stickers with six-picture sheets. The prior category registry mistakenly presented this historical mapping as future inventory. No product was unarchived or published.
+
+Correction restores the105 original gift registry and removes the new trial from unattended preparation; existing preview/hold evidence is retained without deletion or resubmission. Removes the retired collection from navigation and redirects its two old page URLs to sticker sheets. Historical fulfillment mapping remains untouched. The proposed34 additional stickers were developed only in an unpublished local worktree and are not being activated. There are16 relevant browsing families, four buyable and twelve remaining larger-product families. Existing35 sheet designs remain live.
+
+Initial redirect test parsed JSONC as JSON and failed; corrected test extracts the supported asset route array. Production redirect is explicitly included in run_worker_first so an old static HTML asset cannot shadow it. Native orders and old proof URLs are unchanged. Hosted release pending at this checkpoint.
