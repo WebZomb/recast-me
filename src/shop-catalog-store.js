@@ -46,10 +46,13 @@ export function shopOfferProperties(offer,record){
  return {'Artwork ID':record.requestId,'Recast Design':'Ready-made design — purchased as shown','Recast Next Step':'Payment completes your order — no further design approval needed','Approved Preview':new URL('/proof/'+record.previewToken,offer.mockupUrl).href,
   '_Recast Design':JSON.stringify(record.design),'_Recast Proof':record.proofHash,'_Recast Mockup':record.mockupId,'_Recast Preview Token':record.previewToken,'_Recast Preapproval':record.token,'_Recast Offer':offer.id,'_Recast Revision':offer.artworkRevision};
 }
-export async function publicShopCatalog(env){
+export async function publicShopCatalog(env,{product=null}={}){
+ if(product!==null&&(typeof product!=='string'||!/^[-a-z]{1,32}$/.test(product)))throw fault('shop_product_filter','Choose a valid product collection.',400);
  const catalog=await readShopCatalog(env);if(!catalog.offers.length)return {version:1,offers:[]};
+ const candidates=product===null?catalog.offers:catalog.offers.filter(offer=>offer.product===product);
+ if(!candidates.length)return {version:1,offers:[]};
  const products=await shopifyCatalog(env);
- const offers=await collectVerifiedShopOffers(catalog.offers,async offer=>{
+ const offers=await collectVerifiedShopOffers(candidates,async offer=>{
   const checked=await resolveShopOffer(env,offer.id,offer.artworkRevision,{catalog,products,integrity:false});
   return {...publicOffer(offer),priceCents:checked.priceCents,productPreviewUrl:preferredShopPreview(offer,checked.record)};
  });

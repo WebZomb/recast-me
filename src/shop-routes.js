@@ -29,5 +29,5 @@ export async function shopRoutes(request,env){
  if(path==='/api/shop/magnet-pilot/qa'){const response=await magnetPilotOwnerProof(request,env);response.headers.set('x-robots-tag','noindex, nofollow');return response;}
  if(path==='/api/shop/sticker-sheet-pilot'){const response=await stickerSheetPilotRoute(request,env);response.headers.set('x-robots-tag','noindex, nofollow');return response;}
  if(path==='/api/shop/sticker-sheet-pilot/qa'){const response=await stickerSheetPilotOwnerProof(request,env);response.headers.set('x-robots-tag','noindex, nofollow');return response;}
- try{return privateJson({ok:true,...await publicShopCatalog(env)});}catch{return privateJson({ok:false,error:'The gift collection is temporarily unavailable.'},503);}
+ try{return privateJson({ok:true,...await publicShopCatalog(env,{product:new URL(request.url).searchParams.get('product')})});}catch{return privateJson({ok:false,error:'The gift collection is temporarily unavailable.'},503);}
 }
