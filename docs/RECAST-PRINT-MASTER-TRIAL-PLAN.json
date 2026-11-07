@@ -1,0 +1,50 @@
+{
+  "version": 1,
+  "status": "awaiting_paid_processing_authorization",
+  "scope": "one approved Golden Retriever source only",
+  "source": {
+    "designId": "christmas-village-golden-retriever",
+    "sha256": "6e0a3f4c45a33cb4cc002344c95139d4712d1c6dc98566340dd41172e09e015f",
+    "url": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-christmas-village-golden-retriever-artwork-approved-20261103.png?v=1793745022",
+    "width": 1254,
+    "height": 1254
+  },
+  "model": "topaz/gigapixel-standard-2",
+  "input": {
+    "image": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-christmas-village-golden-retriever-artwork-approved-20261103.png?v=1793745022",
+    "output_format": "jpeg",
+    "output_width": 12800,
+    "output_height": 12800,
+    "crop_to_fill": false,
+    "face_enhancement": false
+  },
+  "maximumTotalSpendUSD": 5,
+  "maximumProviderSubmissions": 1,
+  "automaticRetries": false,
+  "automaticPublication": false,
+  "automaticSourceReplacement": false,
+  "automaticCreditTopUp": false,
+  "requiredChecks": [
+    "Confirm exact source SHA256 before processing",
+    "Verify account access and total billing including any minimum top-up and fee within authorized cap",
+    "Persist one-time request claim before provider call; ambiguous outcome requires reconciliation, never retry",
+    "Save result separately; preserve all existing approved source revisions",
+    "Large masters exceed normal Cloudflare Images 100MP/12000px transform limits: keep raw master separate and use a validated large-file native-print preparation path; do not send through ordinary preview transforms",
+    "Inspect full composition and 100% crops for subject, eyes, paws, scarf, scenery and false detail",
+    "Check decoded dimensions, format and pixel integrity",
+    "Prepare one product-specific supplier proof before any sales approval"
+  ],
+  "notYetVerified": [
+    "Cloudflare AI Gateway credits and permissions",
+    "Provider maximum scale acceptance for 1254px input",
+    "Final task charge",
+    "Actual enhanced visual quality",
+    "Printful acceptance of large source files"
+  ],
+  "sources": [
+    "https://developers.cloudflare.com/ai/models/topaz/gigapixel-standard-2/",
+    "https://developers.cloudflare.com/ai-gateway/usage/worker-binding-methods/",
+    "https://developers.cloudflare.com/ai-gateway/features/unified-billing/",
+    "https://developers.cloudflare.com/images/get-started/limits/"
+  ]
+}
