@@ -8,13 +8,13 @@ The 35 existing approved originals are 1254×1254. The supplier's larger product
 
 ## Proposed authorization
 
-At most $5 total for one Golden Retriever source through Cloudflare AI Gateway / Topaz Gigapixel Standard 2, including any required credit purchase fee. No subscription, auto-top-up, recurring charge or automatic retry. If the required minimum purchase or confirmed processing quote exceeds the cap, do not proceed. Account access, credit balance and provider scale acceptance remain unverified. The plan targets 12800×12800 so the largest currently mapped print widths can be evaluated, but does not authorize publishing any large product.
+At most $5 total for one Golden Retriever source through Cloudflare AI Gateway / Topaz Gigapixel Standard 2, including any required credit purchase fee. No subscription, auto-top-up, recurring charge or automatic retry. If the required minimum purchase or confirmed processing quote exceeds the cap, do not proceed. Account access, credit balance and provider scale acceptance remain unverified. The plan targets 8192×8192 for a first 50×60-inch blanket proof (native 9450×7950@150DPI), fitting the entire square artwork without further enlargement, but does not authorize publishing any large product.
 
 ## Quality and implementation gates
 
 Confirm pinned input bytes and rights. Persist the one-time claim before submitting. Reconcile an ambiguous outcome rather than resubmitting. Save the candidate as a new private revision; preserve the 1254px original. Compare full composition and 100%-scale detail, including eyes/paws/scarf and surrounding scenery; face reconstruction is disabled. Reject smearing, invented detail, changed subject or failed native resolution.
 
-A 12800px square exceeds the standard Cloudflare Images 100MP/12000px transformation limits. A separate large-file preparation path and smaller review derivatives must be validated before using this master; merely dropping it into the existing image pipeline is not a completed solution. Confirm supplier input-size limits and generate an actual product-specific proof before approving any native print file. No auto-publication or production order.
+The 8192px candidate and 50×60 native print area are below the ordinary 100MP/12000px transformation limits; verify the JPEG also stays within the Images binding 20MB input limit. The 60×80 blanket and largest canvas still require a separate large-file path and are outside this first trial. Confirm supplier input-size limits and generate an actual product-specific proof before approving any native print file. No auto-publication or production order.
 
 ## Official documentation consulted November 7, 2026
 
@@ -24,3 +24,5 @@ A 12800px square exceeds the standard Cloudflare Images 100MP/12000px transforma
 - https://developers.cloudflare.com/images/get-started/limits/ — ordinary image processing size constraints.
 
 This route does not depend on buying the unavailable free-workspace Runway upscale feature. No provider account/service was activated by this research.
+
+Read-only source verification: fetching the exact pinned Shopify asset produced3,219,403 bytes, decoded1254×1254, and matched SHA2566e0a3f4c45a33cb4cc002344c95139d4712d1c6dc98566340dd41172e09e015f. The similarly named repository browser-fixture image has different bytes and must not be substituted for this approved source.
