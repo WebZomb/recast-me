@@ -37,7 +37,7 @@ test('product pages cover all 17 configured physical categories with one canonic
   assert.match(html,new RegExp('data-collection="'+c.slug+'"'));
   assert.match(html,new RegExp('https://recastmeai.com/shop-'+c.slug+'\\.html'));
   assert.match(html,/name="robots" content="noindex,follow"/,'New preview-only product pages are not indexed before buyability proof');
-  assert.match(html,/shop-category\.js\?v=3/);
+  assert.match(html,/shop-category\.js\?v=4/);
   assert.match(html,/shop-category\.css\?v=2/);
   assert.match(html,/id="collection-dog"/);
   assert.match(html,/id="collection-cat"/);
@@ -52,7 +52,7 @@ test('existing mug and Christmas views link real item pages without replacing th
  assert.match(shop,/link\.href=collection\.url/);
  assert.match(shop,/groupShopOffers\(offers\)/,'Existing approved mug grouping preserved');
  assert.match(shop,/await addPremade\(offer\)/,'Existing approved checkout preserved');
- for(const html of [home,christmas])assert.match(html,/shop\.js\?v=10/);
+ for(const html of [home,christmas])assert.match(html,/shop\.js\?v=11/);
 });
 test('future approved blanket offers must exactly match the design revision and product family',()=>{
  const art=designs[0],blanket=collectionBySlug('blankets');

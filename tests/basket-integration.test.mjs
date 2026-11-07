@@ -363,3 +363,31 @@ test('cart retains its original preview when no valid saved side angle exists',a
  await f.env.ARTWORK.put(`commerce/checkout-previews/${token}.json`,'invalid json');
  assert.equal((await f.call('/api/basket?id=basket')).data.basket.lines[0].thumbnail,base);
 });
+
+test('collection filtering verifies only requested products and preserves fresh proof checks',async t=>{
+ const f=await fixture(t),p=await premadeFixture(f);
+ await f.env.ARTWORK.put(p.SHOP_CATALOG_KEY,JSON.stringify({version:1,revision:2,offers:[p.offer,{...p.offer,id:'unrelated-coaster',product:'coaster'}]}));
+ const reads=[],get=f.env.ARTWORK.get.bind(f.env.ARTWORK);f.env.ARTWORK.get=async key=>{reads.push(key);return get(key);};
+ const result=await f.call('/api/shop/catalog?product=mug');
+ assert.equal(result.response.status,200);assert.deepEqual(result.data.offers.map(o=>o.id),[p.offer.id]);
+ assert.equal(reads.includes('shop/proofs/unrelated-coaster.json'),false);
+ const before=f.calls.length;assert.deepEqual((await f.call('/api/shop/catalog?product=blanket')).data.offers,[]);assert.equal(f.calls.length,before);
+ const meta=await read(f.env,`requests/${p.art}/request.json`);meta.source='original-photo';await f.env.ARTWORK.put(`requests/${p.art}/request.json`,JSON.stringify(meta));
+ assert.deepEqual((await f.call('/api/shop/catalog?product=mug')).data.offers,[]);
+});
+
+test('one premade cart add shares its current Shopify catalog only within that request',async t=>{
+ const f=await fixture(t),p=await premadeFixture(f);
+ const a=await f.call('/api/basket/premade',{basketId:'basket',offerId:p.offer.id,revision:p.offer.artworkRevision});assert.equal(a.response.status,200);
+ const requests=()=>f.calls.filter(c=>c.body.query?.includes('query RecastCatalog')).length;
+ const before=requests();
+ const added=await f.call('/api/basket/action',{basketId:'basket',approvalToken:a.data.approvalToken,command:{type:'add',actionId:'single-catalog',lineId:'single-catalog',expectedRevision:0,quantity:1}});
+ assert.equal(added.response.status,200,JSON.stringify(added.data));assert.equal(added.data.basket.subtotalCents,2499);assert.equal(requests()-before,1);
+ await f.call('/api/basket?id=basket');assert.equal(requests()-before,2,'A later request must read current product data again');
+});
+
+test('an empty basket does not need a supplier catalog read',async t=>{
+ const f=await fixture(t),before=f.calls.length;
+ const result=await f.call('/api/basket?id=empty');assert.equal(result.response.status,200);
+ assert.deepEqual(result.data.basket.lines,[]);assert.equal(result.data.basket.subtotalCents,0);assert.equal(result.data.basket.canCheckout,false);assert.equal(f.calls.length,before);
+});

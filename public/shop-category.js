@@ -177,7 +177,7 @@ if(collection){
  $('#open-cart').addEventListener('click',openCart);
  const [gallery,catalog]=await Promise.all([
   fetch('/shop-gallery.json',{cache:'no-cache'}).then(r=>r.ok?r.json():null).catch(()=>null),
-  fetch('/api/shop/catalog',{cache:'no-store'}).then(r=>r.ok?r.json():null).catch(()=>null)
+  fetch('/api/shop/catalog?product='+encodeURIComponent(collection.offerType),{cache:'no-store'}).then(r=>r.ok?r.json():null).catch(()=>null)
  ]);
  renderCatalog(gallery,catalog?.version===1?catalog.offers:[]);
  await initialize({launcher:'#open-cart'});

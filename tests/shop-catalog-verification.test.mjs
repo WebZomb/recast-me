@@ -28,7 +28,7 @@ test('no availability cache and every request independently reruns all verificat
 });
 test('public catalog still invokes existing proof and active Shopify validation with current prices',()=>{
  const code=readFileSync(new URL('../src/shop-catalog-store.js',import.meta.url),'utf8');
- assert.match(code,/collectVerifiedShopOffers\(catalog.offers/);
+ assert.match(code,/collectVerifiedShopOffers\(candidates/);
  assert.match(code,/resolveShopOffer\(env,offer.id,offer.artworkRevision,\{catalog,products,integrity:false\}\)/);
  assert.match(code,/priceCents:checked.priceCents/);
  assert.match(code,/row=rows.find\(r=>r.variantId===offer.variantId&&r.sku===offer.sku&&r.status==='ACTIVE'/);

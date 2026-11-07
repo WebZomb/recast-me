@@ -16,7 +16,8 @@ export async function resolveBasketApproval(env,identity,token,catalog){
  const bound=await read(env,await bindingKey(identity,token));
  const record=await read(env,`commerce/preapprovals/${token}.json`);
  if(!bound||!record||bound.ownerId!==identity.ownerId||bound.recordHash!==await hash(JSON.stringify(record)))throw fault('basket_approval','Review this product again before checkout.',409);
- const rows=flattenShopifyProducts(catalog||await shopifyCatalog(env));
+ catalog=catalog||await shopifyCatalog(env);
+ const rows=flattenShopifyProducts(catalog);
  const row=rows.find(r=>r.sku===record.sku&&r.status==='ACTIVE'&&!r.digital);
  if(!row||row.variantId.split('/').pop()!==bound.approval.variantId)throw fault('basket_product_changed','This product has changed. Remove it and review the current product before adding it again.',409);
  const meta=await read(env,`requests/${record.requestId}/request.json`);
@@ -25,14 +26,15 @@ export async function resolveBasketApproval(env,identity,token,catalog){
  const source=await env.ARTWORK.get(record.snapshotKey);
  if(!source||await hash(await source.text())!==record.sourceHash)throw fault('basket_artwork_changed','This saved design needs review before checkout.',409);
  if(bound.offerId){const checked=await resolveShopOffer(env,bound.offerId,bound.artworkRevision,{products:catalog});if(checked.record.token!==bound.sourceApprovalToken||record.catalogSourceApproval!==checked.record.token||record.buyerScope!==await hash(JSON.stringify([identity.ownerId,identity.basketId])))throw fault('basket_approval','This finished design has changed. Please select it again.',409);}
- return {...bound,row};
+ return {...bound,row,catalog};
 }
 export function basketProjection(state){
  return {basketId:state.basketId,revision:state.revision,canEdit:state.actions.length<BASKET_LIMITS.actions,appliedActions:state.actions.map(a=>a.actionId),lines:state.lines.map(line=>({lineId:line.lineId,quantity:line.quantity,
   artworkId:line.approval.artworkId,sku:line.approval.sku,product:FULFILLMENT[line.approval.sku]?.product||'Product'}))};
 }
-export async function basketDetails(env,identity,state){
- const view=basketProjection(state);let rows=[];try{rows=flattenShopifyProducts(await shopifyCatalog(env));}catch{}
+export async function basketDetails(env,identity,state,catalog){
+ const view=basketProjection(state);let rows=[];
+ if(view.lines.length)try{rows=flattenShopifyProducts(catalog||await shopifyCatalog(env));}catch{}
  let total=0,priced=true;
  for(const line of view.lines){
   const saved=state.lines.find(x=>x.lineId===line.lineId),row=rows.find(x=>x.sku===line.sku&&x.status==='ACTIVE'&&x.variantId.split('/').pop()===saved.approval.variantId);
@@ -97,7 +99,7 @@ export async function basketRoutes(request,env,ctx){
   if(path==='/api/basket/action'&&request.method==='POST'){
    const approved=body.command?.type==='add'?await resolveBasketApproval(env,identity,body.approvalToken):null;
    const result=await mutateStoredBasket(env.ARTWORK,identity,body.command,approved?.approval);
-   return privateJson({ok:true,basket:await basketDetails(env,identity,result.state),replayed:result.replayed});
+   return privateJson({ok:true,basket:await basketDetails(env,identity,result.state,approved?.catalog),replayed:result.replayed});
   }
   if(path==='/api/basket/checkout'&&request.method==='POST'){
    const {state}=await readStoredBasket(env.ARTWORK,identity);

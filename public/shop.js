@@ -140,7 +140,7 @@ function render(offers,previews=[]){
 }
 $('#close-detail').onclick=()=>$('#product-detail').close();$('#open-cart').onclick=openCart;
 let previews=[];
-const catalogRequest=fetch('/api/shop/catalog',{cache:'no-store'});
+const catalogRequest=fetch('/api/shop/catalog?product=mug',{cache:'no-store'});
 try{
  const response=await fetch('/shop-gallery.json',{cache:'no-cache'});
  if(response.ok){
