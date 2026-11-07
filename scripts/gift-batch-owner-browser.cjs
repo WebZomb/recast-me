@@ -29,7 +29,7 @@ const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypt
     if(request.headers().authorization)leakedAuth++;
     return route.fulfill({contentType:'image/png',body:image});
    }
-   if(p==='/api/shop/gift-batch')return route.fulfill({json:{ok:true,totalProducts:106,published:published.size,readyForReview:6,needsReview:0,designs:sources.map(source=>({id:source.id,title:source.breed+' Christmas Village',items:giftsForArtwork(source.id).map(item=>({id:item.id,checkoutEnabled:published.has(item.id),printFileReady:true}))}))}});
+   if(p==='/api/shop/gift-batch')return route.fulfill({json:{ok:true,totalProducts:105,published:published.size,readyForReview:6,needsReview:0,designs:sources.map(source=>({id:source.id,title:source.breed+' Christmas Village',items:giftsForArtwork(source.id).map(item=>({id:item.id,checkoutEnabled:published.has(item.id),printFileReady:true}))}))}});
    if(p==='/api/shop/small-gift-review'){
     assert.equal(request.headers().authorization,'Bearer fixture-owner-session');
     const source=sources.find(s=>s.id===(url.searchParams.get('design')||sources[0].id));
@@ -52,9 +52,8 @@ const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypt
    return route.fulfill({contentType:file.endsWith('.html')?'text/html':file.endsWith('.css')?'text/css':'application/javascript',body:fs.readFileSync(file)});
   });
   await page.goto('https://recast.test/admin-small-gifts');
-  await page.waitForFunction(()=>document.querySelector('#review-status').textContent.startsWith('4 native'));
-  assert.equal(await page.locator('.gift-review').count(),4);assert.equal(posts,0);
-  assert.equal(await page.locator('.gift-review').last().getByRole('link',{name:'View this product collection'}).getAttribute('href'),'/shop-stickers');
+  await page.waitForFunction(()=>document.querySelector('#review-status').textContent.startsWith('3 native'));
+  assert.equal(await page.locator('.gift-review').count(),3);assert.equal(posts,0);
   await page.locator('#gift-design-select').selectOption(sources[1].id);
   await page.waitForFunction(id=>document.querySelector('.gift-review')?.dataset.giftId.startsWith(id),sources[1].id);
   await page.waitForFunction(()=>document.querySelectorAll('.publication-review-check input:not(:disabled)').length===3);

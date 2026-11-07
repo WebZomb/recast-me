@@ -43,7 +43,7 @@ const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('n
    assert.equal(await page.locator('#collection-cat .collection-card').count(),13);
    assert.equal(await page.locator('.collection-card[data-offer-status="verified"]').count(),0);
    assert.equal(await page.getByRole('button',{name:'Add to cart'}).count(),0,'No approved blanket = no add action');
-   assert.equal(await page.locator('#collection-nav a').count(),17);
+   assert.equal(await page.locator('#collection-nav a').count(),16);
    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),true,'No horizontal layout overflow at '+width);
    await page.locator('.collection-card').first().getByRole('button',{name:'See artwork'}).click();
    assert.equal(await page.locator('#collection-detail').isVisible(),true);
@@ -64,7 +64,7 @@ const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('n
    await page.evaluate(()=>window.scrollTo(0,0));
    await page.screenshot({path:path.join(out,`${engine}-blankets-${width}.png`)});
    if(width===393){
-    const additional=['pillows','canvas','tumblers','hoodies','t-shirts','tote-bags','phone-cases','sticker-sheets','stickers','posters','framed-prints','journals','coaster-sets','magnet-sets','puzzles'];
+    const additional=['pillows','canvas','tumblers','hoodies','t-shirts','tote-bags','phone-cases','sticker-sheets','posters','framed-prints','journals','coaster-sets','magnet-sets','puzzles'];
     for(const slug of additional){
      await page.goto('https://recast.test/shop-'+slug+'.html');
      await page.waitForFunction(()=>document.querySelectorAll('.collection-card').length===35);
@@ -79,7 +79,8 @@ const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('n
     await page.goto('https://recast.test/shop.html');
     await page.waitForFunction(()=>document.querySelectorAll('.concept-product').length===35);
     assert.equal(await page.locator('#product-nav a[href="/shop-blankets.html"]').count(),1);
-    assert.equal(await page.locator('#product-nav a').count(),17);
+    assert.equal(await page.locator('#product-nav a').count(),16);
+    assert.equal(await page.locator('#product-nav a[href="/shop-stickers.html"]').count(),0,'Retired individual stickers must not be offered as a future collection');
    }
    approved=true;
    await page.goto('https://recast.test/shop-blankets.html');

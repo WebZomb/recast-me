@@ -13,7 +13,7 @@ export async function nativeGiftFixture(item){
  const position={area_width:item.width,area_height:item.height,width:item.width,height:item.height,top:0,left:0};
  const record={token,requestId:source.requestId,sku:item.sku,mockupId:'fixture-native-v1',approvalMode:'product-mockup',sourceHash,proofHash,position,design,snapshotKey,previewToken:token,approvedAt:'2026-11-05T00:00:00Z'};
  await put(`requests/${source.requestId}/request.json`,{requestId:source.requestId,source:'premade-catalog',catalogDesignId:source.id,catalogMasterHash:source.sha256,catalogRightsConfirmedAt:'2026-11-03T00:00:00Z',contentSafety:{status:'approved'},accessToken:'fixture-private-'+source.id,width:1254,height:1254,previewMime:'image/png'});
- for(const template of [...SMALL_GIFTS,item])await put(`shop/preparation/printfile-audit/v1/${template.catalogId}.json`,{status:'complete',productId:template.catalogId,variants:[{sku:template.sku,area:{width:template.width,height:template.height,dpi:300}}]});
+ for(const template of SMALL_GIFTS)await put(`shop/preparation/printfile-audit/v1/${template.catalogId}.json`,{status:'complete',productId:template.catalogId,variants:[{sku:template.sku,area:{width:template.width,height:template.height,dpi:300}}]});
  const pilot={status:'ready_for_review',mockupId:record.mockupId,design};
  const task={status:'completed',requestId:source.requestId,sku:item.sku,mockupId:record.mockupId,taskKey:'fixture-task-'+item.id,printfulVariantId:item.variantId,sourceHash:proofHash,position,design,images:[{title:'Supplier fixture',url:`https://recastmeai.com/api/mockup/image/${source.requestId}/${item.sku}/0?token=fixture-only`}]};
  await put(`mockups/${source.requestId}/${item.sku}/${record.mockupId}/task.json`,task);

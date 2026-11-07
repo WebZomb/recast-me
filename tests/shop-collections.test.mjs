@@ -22,11 +22,11 @@ test('35 exact-source Christmas pet illustrations are reused for each physical i
   assert.equal(readyOffer(d),false);
  }
 });
-test('product pages cover all 17 configured physical categories with one canonical destination per item',()=>{
- assert.equal(SHOP_COLLECTIONS.length,17);
- assert.equal(nonMugs.length,16);
- assert.equal(new Set(SHOP_COLLECTIONS.map(c=>c.slug)).size,17);
- assert.equal(new Set(SHOP_COLLECTIONS.map(c=>c.url)).size,17);
+test('product pages cover all 16 configured physical categories with one canonical destination per item',()=>{
+ assert.equal(SHOP_COLLECTIONS.length,16);
+ assert.equal(nonMugs.length,15);
+ assert.equal(new Set(SHOP_COLLECTIONS.map(c=>c.slug)).size,16);
+ assert.equal(new Set(SHOP_COLLECTIONS.map(c=>c.url)).size,16);
  assert.equal(collectionBySlug('blankets').offerType,'blanket');
  assert.deepEqual(collectionBySlug('blankets').sizes,['50 × 60 in','60 × 80 in']);
  assert.equal(collectionBySlug('mugs').url,'/shop');
@@ -37,7 +37,7 @@ test('product pages cover all 17 configured physical categories with one canonic
   assert.match(html,new RegExp('data-collection="'+c.slug+'"'));
   assert.match(html,new RegExp('https://recastmeai.com/shop-'+c.slug+'\\.html'));
   assert.match(html,/name="robots" content="noindex,follow"/,'New preview-only product pages are not indexed before buyability proof');
-  assert.match(html,/shop-category\.js\?v=4/);
+  assert.match(html,/shop-category\.js\?v=5/);
   assert.match(html,/shop-category\.css\?v=2/);
   assert.match(html,/id="collection-dog"/);
   assert.match(html,/id="collection-cat"/);
@@ -52,7 +52,7 @@ test('existing mug and Christmas views link real item pages without replacing th
  assert.match(shop,/link\.href=collection\.url/);
  assert.match(shop,/groupShopOffers\(offers\)/,'Existing approved mug grouping preserved');
  assert.match(shop,/await addPremade\(offer\)/,'Existing approved checkout preserved');
- for(const html of [home,christmas])assert.match(html,/shop\.js\?v=11/);
+ for(const html of [home,christmas])assert.match(html,/shop\.js\?v=12/);
 });
 test('future approved blanket offers must exactly match the design revision and product family',()=>{
  const art=designs[0],blanket=collectionBySlug('blankets');
@@ -80,4 +80,16 @@ test('page renderer shows no cart when supplier is not certified and never uses 
  assert.match(css,/collection-preview--blanket/);
  assert.match(css,/object-fit:contain/,'Avoid cropping the source dog and cat artwork');
  assert.match(css,/@media\(max-width:600px\)/,'Narrow phone layout exists');
+});
+
+test('retired single-sticker links redirect to sheets without touching order data',async()=>{
+ const {default:router}=await import('../src/router.js');
+ assert.equal(collectionBySlug('stickers'),null);
+ for(const path of ['/shop-stickers','/shop-stickers.html'])for(const method of ['GET','HEAD']){
+  const response=await router.fetch(new Request('https://recastmeai.com'+path+'?old=link',{method}),{},{});
+  assert.equal(response.status,301);assert.equal(response.headers.get('location'),'https://recastmeai.com/shop-sticker-sheets');
+ }
+ const routes=JSON.parse(read('wrangler.jsonc').match(/"run_worker_first":\s*(\[[^\]]+\])/)[1]);
+ assert.ok(routes.includes('/shop-stickers'));
+ assert.ok(routes.includes('/shop-stickers.html'));
 });
