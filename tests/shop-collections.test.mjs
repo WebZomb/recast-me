@@ -37,7 +37,7 @@ test('product pages cover all 16 configured physical categories with one canonic
   assert.match(html,new RegExp('data-collection="'+c.slug+'"'));
   assert.match(html,new RegExp('https://recastmeai.com/shop-'+c.slug+'\\.html'));
   assert.match(html,/name="robots" content="noindex,follow"/,'New preview-only product pages are not indexed before buyability proof');
-  assert.match(html,/shop-category\.js\?v=5/);
+  assert.match(html,/shop-category\.js\?v=6/);
   assert.match(html,/shop-category\.css\?v=2/);
   assert.match(html,/id="collection-dog"/);
   assert.match(html,/id="collection-cat"/);

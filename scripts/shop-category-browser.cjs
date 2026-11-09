@@ -68,7 +68,9 @@ const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('n
     for(const slug of additional){
      await page.goto('https://recast.test/shop-'+slug+'.html');
      await page.waitForFunction(()=>document.querySelectorAll('.collection-card').length===35);
-     assert.equal(await page.locator('.collection-card .collection-preview--'+slug).count(),35,'All '+slug+' concepts need their own honest silhouette');
+     assert.equal(await page.locator('.collection-card-image > img').count(),35,'All '+slug+' cards show original artwork or verified photos');
+     assert.equal(await page.locator('.collection-card-image .collection-preview').count(),0,'No CSS silhouette masquerades as a product card');
+     assert.equal(await page.locator('.christmas-shop-switch a[href="/specials.html"]').count(),1,'Original Christmas collection remains accessible');
      assert.equal(await page.getByRole('button',{name:'Add to cart'}).count(),0,'Unapproved '+slug+' concepts cannot be purchased');
      assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),true,'No '+slug+' phone overflow');
      if(['pillows','tumblers','hoodies','phone-cases'].includes(slug)){

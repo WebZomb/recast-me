@@ -19,7 +19,8 @@ function verifiedByDesign(offers,design){
  return offers.filter(o=>o.designId===design.designId&&o.artworkRevision===design.artworkRevision&&readyOffer(o));
 }
 function displayPreview(visual,design,{size}={}){
- visual.replaceChildren(createProductConcept(design,{slug:item,size,large:false}));
+ const img=viewImage(artworkFor(design),shortTitle(design)+' — original Christmas artwork');
+ visual.replaceChildren(img,el('span','collection-preview-label','Original Christmas artwork'));
 }
 function photoPreview(visual,offer){
  const url=safeUrl(offer.productPreviewUrl)||safeUrl(offer.mockupUrl);
