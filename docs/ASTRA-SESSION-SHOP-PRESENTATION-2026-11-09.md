@@ -7,3 +7,6 @@ Prepared: visible Christmas Collection / Ready-Made Gifts / Use Your Photo links
 Validation: initial focused run 25/26 passed, one missing fast-png dependency; after npm ci all 26 passed. Complete Node regression 942/942 passed. Local browser fixture could not launch: installed Playwright has no matching browser executable; attempted browser download returned a corrupt/truncated archive. Browser visual verification remains outstanding. Worker dry-run and hosted deployment status to be recorded after completion. No production deployment claimed by this record.
 
 Separate daily Facebook task updated to test gift-recipient, product and transformation keyword groups, retaining caption-footer exclusion, one-post cadence and no spending. No paid rendering, orders or ads. Rollback this focused presentation commit; no data migration.
+
+
+Follow-up validation: Worker dry-run passed. Cache-busted category script to v6 and updated browser assertions to require artwork/verified photos instead of CSS silhouettes. The next CI run exposed two stale v5 URL assertions; updated both to v6. Browser validation remains delegated to repository CI because local Chromium installation failed. No paid actions.
