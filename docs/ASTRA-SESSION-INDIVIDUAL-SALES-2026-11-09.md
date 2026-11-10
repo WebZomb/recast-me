@@ -1,0 +1,11 @@
+# Individual product sales illustrations — November 9, 2026
+
+Baseline 2a55de008e70b101d6b67758d953d1ad8a9f1581. Owner explicitly requires premium Christmas product illustrations on every listing before the actual supplier view; category headers alone do not fulfill this.
+
+Created two initial illustrations with built-in image generation: Golden Retriever Christmas Village pillow and canvas. Reference was the exact pinned Golden Village original from shop-gallery.json; pillow scene quality referenced the existing seasonal navy-chair image. Prompt: retain Golden face/Santa hat/scarf/village/bridge and colors; show item clearly in rich warm Christmas room; no text or manufacturer catalog backdrop. Visually reviewed generated images. These are marketing concepts, not pixel-identical production assets or proofs; the square canvas concept does not certify a particular planned size. Original sources and supplier print files untouched. No paid external services, printing or orders.
+
+Added revision/product-specific sales-image registry and illustration-first category cards/dialogs. Real supplier previews remain distinct controls when available; only existing verified offers enable purchase. Missing illustrations keep original-art fallback and cannot be misrepresented as completed. This checkpoint completes TWO images only; all remaining product/design combinations and unfinished supplier categories remain open.
+
+943 Node tests passed, including wrong-revision/cross-design rejection. Worker bundle, hosted browser CI and deployment receipts pending. Phone fixture extended to check first-image selection, original artwork switching and unapproved checkout refusal. Rollback registry entries/UI commit; preserve supplier records.
+
+Expanded this checkpoint to FIVE Golden Village product illustrations: pillow, canvas, four-coaster set, three-magnet set and six-picture sticker sheet. The latter three are existing buyable collections; no new supplier offers are activated. Generated/visually inspected correct item counts and pinned pet identity. Two-image statements above describe the earlier checkpoint; the five-image manifest is current. Initial943 checks and bundle passed; final-head rerun required after expansion.
