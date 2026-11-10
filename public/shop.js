@@ -1,7 +1,7 @@
 import {shopLoading,readShopCatalog,browsingImage,trackImage,readShopGallery} from './shop-loading.js?v=1';
 import {groupShopOffers} from './shop-model.js?v=4';
 import {SHOP_COLLECTIONS} from './shop-collections.js?v=2';
-import {initialize,addPremade,openCart} from './basket.js?v=4';
+import {initialize,addPremade,openCart} from './basket.js?v=5';
 const $=s=>document.querySelector(s);
 const money=c=>new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(c/100);
 const productNames={mug:'Mugs',blanket:'Blankets',canvas:'Canvas',tumbler:'Tumblers',pillow:'Pillows',hoodie:'Hoodies',tee:'T-shirts',poster:'Posters',frame:'Framed prints',journal:'Journals',coaster:'Coasters',magnet:'Magnets',sticker:'Stickers'};

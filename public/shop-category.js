@@ -4,7 +4,7 @@ import {createProductConcept,conceptSizeOptions} from './shop-product-concepts.j
 import {blanketPrintAudit} from './shop-print-readiness.js?v=1';
 import {SHOP_COLLECTIONS,collectionBySlug,collectionDesigns,categoryOffers} from './shop-collections.js?v=2';
 import {readyOffer} from './shop-model.js?v=4';
-import {initialize,addPremade,openCart} from './basket.js?v=4';
+import {initialize,addPremade,openCart} from './basket.js?v=5';
 
 const $=selector=>document.querySelector(selector);
 const item=($('body')?.dataset?.collection||'').toLowerCase();
