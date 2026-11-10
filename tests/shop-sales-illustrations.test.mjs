@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import {salesIllustration} from '../public/shop-sales-illustrations.js';
+import {salesIllustration,SALES_ILLUSTRATIONS} from '../public/shop-sales-illustrations.js';
 const design=JSON.parse(fs.readFileSync('public/shop-gallery.json')).designs[0];
 test('sales illustrations match only the reviewed product and artwork revision',()=>{
  for(const collection of ['pillows','canvas','coaster-sets','magnet-sets','sticker-sheets']){
@@ -12,4 +12,11 @@ test('sales illustrations match only the reviewed product and artwork revision',
  }
  assert.equal(salesIllustration('blankets',design),null);
  assert.equal(salesIllustration('pillows',null),null);
+});
+
+test('every registered sales image and thumbnail contains WebP image bytes',()=>{
+ for(const entry of SALES_ILLUSTRATIONS)for(const url of [entry.url,entry.thumbnailUrl]){
+  const bytes=fs.readFileSync('public'+url);assert.ok(bytes.length>10000,url);
+  assert.equal(bytes.toString('ascii',0,4),'RIFF',url);assert.equal(bytes.toString('ascii',8,12),'WEBP',url);
+ }
 });

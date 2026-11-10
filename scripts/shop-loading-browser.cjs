@@ -22,6 +22,7 @@ const {chromium}=require('playwright'),fs=require('node:fs'),path=require('node:
   assert.equal(requests,1);assert.equal(await page.locator('#shop-loading').isVisible(),true,'Browse cards render before the live response');
   assert.equal(await page.locator('#shop-loading progress').isVisible(),true);assert.equal(await page.locator('#shop-loading progress').getAttribute('value'),null,'No invented percentage');
   assert.equal(await page.getByRole('button',{name:'Add to cart',exact:true}).count(),0,'Pending catalog never enables purchase');
+  if(pagePath.includes('coaster')){await page.locator('.collection-card').first().scrollIntoViewIfNeeded();await page.waitForFunction(()=>document.querySelector('.collection-card img').naturalWidth>0);}
   await page.locator('#shop-loading').scrollIntoViewIfNeeded();await page.screenshot({path:path.join(out,`${pagePath.includes('coaster')?'coasters':'mugs'}-${width}-loading.png`)});
   release();await page.getByRole('button',{name:'Try again',exact:true}).waitFor();
   assert.equal(await page.locator('.concept-product,.collection-card').count(),35,'A failed check keeps the gallery visible');
