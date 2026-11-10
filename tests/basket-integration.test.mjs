@@ -406,3 +406,45 @@ test('premade approval returns a fresh basket revision without requiring a separ
  const stale=await f.call('/api/basket/action',{basketId:'basket',approvalToken:a.data.approvalToken,command:{type:'add',actionId:'stale-fast',lineId:'stale-fast',expectedRevision:a.data.basketRevision,quantity:1}});
  assert.equal(stale.data.code,'revision_conflict');
 });
+
+
+test('cart timing diagnostics contain only numeric stages and preserve source approval validation',async t=>{
+ const f=await fixture(t),p=await premadeFixture(f);
+ const a=await f.call('/api/basket/premade',{basketId:'basket',offerId:p.offer.id,revision:p.offer.artworkRevision});
+ assert.equal(a.response.status,200,JSON.stringify(a.data));
+ assert.match(a.response.headers.get('server-timing'),/^verify;dur=[0-9.]+, copy;dur=[0-9.]+, save;dur=[0-9.]+, total;dur=[0-9.]+$/);
+ const add=await f.call('/api/basket/action',{basketId:'basket',approvalToken:a.data.approvalToken,command:{type:'add',actionId:'timed-add',lineId:'timed-add',expectedRevision:a.data.basketRevision,quantity:1}});
+ assert.equal(add.response.status,200,JSON.stringify(add.data));
+ assert.match(add.response.headers.get('server-timing'),/^verify;dur=[0-9.]+, save;dur=[0-9.]+, details;dur=[0-9.]+, total;dur=[0-9.]+$/);
+ assert.equal(add.data.basket.lines.length,1);
+ assert.doesNotMatch(add.response.headers.get('server-timing'),/token|request|owner|approval/);
+});
+
+
+test('one-request premade add preserves exact approval, current price and idempotent replay',async t=>{
+ const f=await fixture(t),p=await premadeFixture(f);
+ const body={basketId:'basket',offerId:p.offer.id,revision:p.offer.artworkRevision,command:{type:'add',actionId:'direct-add',lineId:'direct-line',expectedRevision:0,quantity:1}};
+ const before=f.calls.filter(c=>c.body.query?.includes('query RecastCatalog')).length;
+ const added=await f.call('/api/basket/premade-add',body);
+ assert.equal(added.response.status,200,JSON.stringify(added.data));assert.equal(added.data.basket.lines.length,1);assert.equal(added.data.basket.subtotalCents,2499);
+ assert.equal(f.calls.filter(c=>c.body.query?.includes('query RecastCatalog')).length-before,1,'Fresh products are shared only inside the add request');
+ const replay=await f.call('/api/basket/premade-add',body);assert.equal(replay.data.replayed,true);assert.equal(replay.data.basket.lines.length,1);
+ const again=await f.call('/api/basket/premade-add',{...body,command:{...body.command,actionId:'different',lineId:'different'}});assert.equal(again.data.code,'revision_conflict');
+ assert.equal((await f.call('/api/basket?id=basket')).data.basket.lines.length,1);
+});
+test('one-request add refuses forged commands and changed source bytes before mutating the basket',async t=>{
+ const f=await fixture(t),p=await premadeFixture(f),base={basketId:'basket',offerId:p.offer.id,revision:p.offer.artworkRevision};
+ for(const command of [{type:'remove',actionId:'bad',lineId:'other',expectedRevision:0},{type:'add',actionId:'bad',lineId:'other',expectedRevision:0,quantity:1,approvalToken:p.record.token}]){
+  const r=await f.call('/api/basket/premade-add',{...base,command});assert.equal(r.response.status,400);
+ }
+ await f.env.ARTWORK.put(p.offer.artworkKey,new Uint8Array([8,8,8]));
+ const bad=await f.call('/api/basket/premade-add',{...base,command:{type:'add',actionId:'source-bad',lineId:'source-bad',expectedRevision:0,quantity:1}});
+ assert.notEqual(bad.response.status,200);assert.equal((await f.call('/api/basket?id=basket')).data.basket.lines.length,0);
+});
+test('a modified saved buyer clone cannot bypass direct-add source and design checks',async t=>{
+ const f=await fixture(t),p=await premadeFixture(f);
+ const a=await f.call('/api/basket/premade',{basketId:'basket',offerId:p.offer.id,revision:p.offer.artworkRevision});
+ const key='commerce/preapprovals/'+a.data.approvalToken+'.json',saved=await read(f.env,key);saved.design={...saved.design,scale:1};await f.env.ARTWORK.put(key,JSON.stringify(saved));
+ const bad=await f.call('/api/basket/premade-add',{basketId:'basket',offerId:p.offer.id,revision:p.offer.artworkRevision,command:{type:'add',actionId:'clone-bad',lineId:'clone-bad',expectedRevision:0,quantity:1}});
+ assert.equal(bad.data.code,'shop_approval_changed');assert.equal((await f.call('/api/basket?id=basket')).data.basket.lines.length,0);
+});

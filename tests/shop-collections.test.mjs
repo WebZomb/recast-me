@@ -52,7 +52,7 @@ test('existing mug and Christmas views link real item pages without replacing th
  assert.match(shop,/link\.href=collection\.url/);
  assert.match(shop,/groupShopOffers\(offers\)/,'Existing approved mug grouping preserved');
  assert.match(shop,/await addPremade\(offer[,)]/,'Existing approved checkout preserved');
- for(const html of [home,christmas])assert.match(html,/shop\.js\?v=13/);
+ for(const html of [home,christmas])assert.match(html,/shop\.js\?v=14/);
 });
 test('future approved blanket offers must exactly match the design revision and product family',()=>{
  const art=designs[0],blanket=collectionBySlug('blankets');

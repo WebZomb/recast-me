@@ -376,6 +376,10 @@ export function secureApplication(application) {
             data.renderControls = renderControlStatus(env);
           }
           const protectedResponse=json(stripPrivateFields(data), response.status);
+          // Only bounded numeric cart timings may cross the JSON sanitization boundary.
+          const cartTiming=response.headers.get('server-timing');
+          if(['/api/basket/premade','/api/basket/premade-add','/api/basket/action'].includes(path)&&cartTiming&&cartTiming.length<256&&/^(?:verify|copy|save|details|total);dur=[0-9.]+(?:, (?:verify|copy|save|details|total);dur=[0-9.]+)*$/.test(cartTiming))protectedResponse.headers.set('server-timing',cartTiming);
+
           if(path==='/api/basket/session'&&request.method==='POST'&&response.ok&&response.headers.has('set-cookie')){
             protectedResponse.headers.set('set-cookie',response.headers.get('set-cookie'));
           }

@@ -31,14 +31,16 @@ export async function resolveShopOffer(env,offerId,revision,{catalog,products,in
  const locked=await verifiedPremadePrint(env,record,{checkBytes:integrity});
  if(locked.finalHash!==offer.proof.printFileHash||record.premadePrint.artworkRevision!==offer.artworkRevision)reject();
  if(integrity){
-  const master=await env.ARTWORK.get(offer.artworkKey),snapshot=await env.ARTWORK.get(record.snapshotKey);
-  if(!master||!snapshot||await hashBytes(await master.arrayBuffer())!==offer.artworkRevision||await hash(await snapshot.text())!==record.sourceHash)reject();
-  await checkStoredArtwork(env,meta);
+  const [master,snapshot]=await Promise.all([env.ARTWORK.get(offer.artworkKey),env.ARTWORK.get(record.snapshotKey)]);
+  if(!master||!snapshot)reject();
+  const [masterHash,snapshotHash]=await Promise.all([master.arrayBuffer().then(hashBytes),snapshot.text().then(hash),checkStoredArtwork(env,meta)]);
+  if(masterHash!==offer.artworkRevision||snapshotHash!==record.sourceHash)reject();
  }
- const rows=flattenShopifyProducts(products||await shopifyCatalog(env));
+ const currentProducts=products||await shopifyCatalog(env);
+ const rows=flattenShopifyProducts(currentProducts);
  const row=rows.find(r=>r.variantId===offer.variantId&&r.sku===offer.sku&&r.status==='ACTIVE'&&!r.digital);
  if(!row||!Number.isFinite(Number(row.price))||Number(row.price)<=0)reject();
- return {offer,record,row,priceCents:Math.round(Number(row.price)*100)};
+ return {offer,record,row,priceCents:Math.round(Number(row.price)*100),products:currentProducts};
 }
 export function shopOfferProperties(offer,record){
  return {'Artwork ID':record.requestId,'Recast Design':'Ready-made design — purchased as shown','Recast Next Step':'Payment completes your order — no further design approval needed','Approved Preview':new URL('/proof/'+record.previewToken,offer.mockupUrl).href,

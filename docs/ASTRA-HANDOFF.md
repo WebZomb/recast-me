@@ -515,3 +515,5 @@ November9 individual sales illustrations: owner requires premium per-product/per
 November9 follow-up: first batch expanded to FIVE Golden Village images, adding existing buyable coaster/magnet/sticker-sheet sets. Remaining breeds/categories still unfinished; release pending final checks.
 
 November9 shop loading/speed prepared: artwork-first browsing, honest progress/retry, fresh basket revision avoids extra GET, session reuse, parallel independent proof reads, three Labrador sales scenes and lighter thumbnails.947 regression checks/bundle pass; browser/release pending. See [session](ASTRA-SESSION-SHOP-LOADING-2026-11-09.md).
+
+November9 live latency follow-up: loading/image release8d72afd deployed42745072824; availability16.8→13.3s in single samples, but isolated cart add still31.8s. Prepared combined verified-and-saved premade add, durable replay recovery and bounded parallel preview copies.954 Node/build pass; release/live timing pending. See [cart latency session](ASTRA-SESSION-CART-LATENCY-2026-11-09.md).

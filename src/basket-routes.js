@@ -1,3 +1,4 @@
+import {forEachBounded} from './commerce-concurrency.js';
 import {prepareCheckout,flattenShopifyProducts,FULFILLMENT} from './entry.js';
 import {shopifyCatalog} from './index.js';
 import {sameOrigin,privateJson,hash,fault} from './commerce-store.js';
@@ -13,19 +14,18 @@ const bindingKey=async(identity,token)=>'commerce/basket-approvals/v1/'+await ha
 async function read(env,key){const object=await env.ARTWORK.get(key);return object?await object.json():null;}
 export async function resolveBasketApproval(env,identity,token,catalog){
  if(!validToken(token))throw fault('basket_approval','Review this product again.',409);
- const bound=await read(env,await bindingKey(identity,token));
- const record=await read(env,`commerce/preapprovals/${token}.json`);
+ const [bound,record]=await Promise.all([read(env,await bindingKey(identity,token)),read(env,`commerce/preapprovals/${token}.json`)]);
  if(!bound||!record||bound.ownerId!==identity.ownerId||bound.recordHash!==await hash(JSON.stringify(record)))throw fault('basket_approval','Review this product again before checkout.',409);
  catalog=catalog||await shopifyCatalog(env);
  const rows=flattenShopifyProducts(catalog);
  const row=rows.find(r=>r.sku===record.sku&&r.status==='ACTIVE'&&!r.digital);
  if(!row||row.variantId.split('/').pop()!==bound.approval.variantId)throw fault('basket_product_changed','This product has changed. Remove it and review the current product before adding it again.',409);
- const meta=await read(env,`requests/${record.requestId}/request.json`);
+ const [meta,source]=await Promise.all([read(env,`requests/${record.requestId}/request.json`),env.ARTWORK.get(record.snapshotKey)]);
  if(!meta)throw fault('basket_artwork_missing','This artwork is unavailable. Remove this item or reopen the saved picture.',409);
- await checkStoredArtwork(env,meta);
- const source=await env.ARTWORK.get(record.snapshotKey);
- if(!source||await hash(await source.text())!==record.sourceHash)throw fault('basket_artwork_changed','This saved design needs review before checkout.',409);
- if(bound.offerId){const checked=await resolveShopOffer(env,bound.offerId,bound.artworkRevision,{products:catalog});if(checked.record.token!==bound.sourceApprovalToken||record.catalogSourceApproval!==checked.record.token||record.buyerScope!==await hash(JSON.stringify([identity.ownerId,identity.basketId])))throw fault('basket_approval','This finished design has changed. Please select it again.',409);}
+ if(!source)throw fault('basket_artwork_changed','This saved design needs review before checkout.',409);
+ const [snapshotHash,checked]=await Promise.all([source.text().then(hash),bound.offerId?resolveShopOffer(env,bound.offerId,bound.artworkRevision,{products:catalog}):null,checkStoredArtwork(env,meta)]);
+ if(snapshotHash!==record.sourceHash)throw fault('basket_artwork_changed','This saved design needs review before checkout.',409);
+ if(bound.offerId&&(checked.record.token!==bound.sourceApprovalToken||record.catalogSourceApproval!==checked.record.token||record.buyerScope!==await hash(JSON.stringify([identity.ownerId,identity.basketId]))))throw fault('basket_approval','This finished design has changed. Please select it again.',409);
  return {...bound,row,catalog};
 }
 export function basketProjection(state){
@@ -35,8 +35,7 @@ export function basketProjection(state){
 export async function basketDetails(env,identity,state,catalog){
  const view=basketProjection(state);let rows=[];
  if(view.lines.length)try{rows=flattenShopifyProducts(catalog||await shopifyCatalog(env));}catch{}
- let total=0,priced=true;
- for(const line of view.lines){
+ await forEachBounded(view.lines,async line=>{
   const saved=state.lines.find(x=>x.lineId===line.lineId),row=rows.find(x=>x.sku===line.sku&&x.status==='ACTIVE'&&x.variantId.split('/').pop()===saved.approval.variantId);
   const bound=await read(env,await bindingKey(identity,saved.approval.approvalToken));
   const cents=row&&Number.isFinite(Number(row.price))&&Number(row.price)>0?Math.round(Number(row.price)*100):null;
@@ -53,8 +52,8 @@ export async function basketDetails(env,identity,state,catalog){
    }catch{/* A missing preview must not prevent editing or removing a cart line. */}
   }
   line.unitPriceCents=cents;line.lineTotalCents=cents===null?null:cents*line.quantity;
-  if(cents===null)priced=false;else total+=line.lineTotalCents;
- }
+ });
+ const priced=view.lines.every(line=>line.unitPriceCents!==null),total=view.lines.reduce((sum,line)=>sum+(line.lineTotalCents||0),0);
  return {...view,currency:'USD',subtotalCents:priced?total:null,canCheckout:priced&&view.lines.length>0};
 }
 async function bodyOf(request){
@@ -64,7 +63,7 @@ async function bodyOf(request){
 export async function basketRoutes(request,env,ctx){
  const path=new URL(request.url).pathname;
  if(!path.startsWith('/api/basket'))return null;
- if(path==='/api/basket/status'&&request.method==='GET')return privateJson({ok:true,enabled:basketConfigured(env)});
+ if(path==='/api/basket/status'&&request.method==='GET')return privateJson({ok:true,enabled:basketConfigured(env),premadeAddVersion:1});
  if(!basketConfigured(env))return privateJson({ok:false,error:'The basket is being prepared. You can still buy products individually.',code:'basket_configuration'},503);
  try{
   sameOrigin(request);
@@ -72,19 +71,34 @@ export async function basketRoutes(request,env,ctx){
   const body=request.method==='POST'?await bodyOf(request):{};
   if(path==='/api/basket/session'&&request.method==='POST')return initializeBasketSession(request,env,body);
   const basketId=request.method==='GET'?new URL(request.url).searchParams.get('id'):body.basketId;
+  const started=performance.now();
+  const timing=parts=>({'server-timing':Object.entries({...parts,total:performance.now()-started}).map(([name,ms])=>name+';dur='+ms.toFixed(1)).join(', ')});
   const identity=await basketSessionIdentity(request,env,basketId);
   if(path==='/api/basket'&&request.method==='GET'){
    const {state}=await readStoredBasket(env.ARTWORK,identity);return privateJson({ok:true,basket:await basketDetails(env,identity,state)});
   }
-  if(path==='/api/basket/premade'&&request.method==='POST'){
-   if(Object.keys(body).some(k=>!['basketId','offerId','revision'].includes(k)))throw fault('shop_request','Refresh this gift before adding it.',400);
+  if(['/api/basket/premade','/api/basket/premade-add'].includes(path)&&request.method==='POST'){
+   const direct=path==='/api/basket/premade-add';
+   if(direct&&(body.command?.type!=='add'||Object.keys(body.command).some(k=>!['type','actionId','expectedRevision','lineId','quantity'].includes(k))))throw fault('shop_request','Refresh this gift before adding it.',400);
+   if(Object.keys(body).some(k=>!['basketId','offerId','revision',...(direct?['command']:[])].includes(k)))throw fault('shop_request','Refresh this gift before adding it.',400);
+   const verifyStart=performance.now();
    const checked=await resolveShopOffer(env,body.offerId,body.revision),{offer,row}=checked;
+   const verifiedAt=performance.now();
    const record=await clonePremadeApproval(env,identity,offer,checked.record);
+   const clonedAt=performance.now();
    const approval={artworkId:record.requestId,sku:record.sku,variantId:row.variantId.split('/').pop(),approvalToken:record.token,proofHash:record.proofHash};
    const bound={ownerId:identity.ownerId,recordHash:await hash(JSON.stringify(record)),approval,properties:shopOfferProperties(offer,record),offerId:offer.id,sourceApprovalToken:checked.record.token,artworkRevision:offer.artworkRevision,display:{title:offer.title,variantLabel:offer.variantLabel||offer.product}};
    await env.ARTWORK.put(await bindingKey(identity,record.token),JSON.stringify(bound),{httpMetadata:{contentType:'application/json',cacheControl:'private, no-store'}});
+   if(direct){
+    // The complete current source/proof/price check above is reused within this
+    // request only. Every later add and checkout independently verifies again.
+    const savedAt=performance.now();
+    const result=await mutateStoredBasket(env.ARTWORK,identity,body.command,approval);
+    const committedAt=performance.now(),basket=await basketDetails(env,identity,result.state,checked.products);
+    return privateJson({ok:true,basket,replayed:result.replayed},200,timing({verify:verifiedAt-verifyStart,copy:clonedAt-verifiedAt,save:committedAt-savedAt,details:performance.now()-committedAt}));
+   }
    const {state}=await readStoredBasket(env.ARTWORK,identity);
-   return privateJson({ok:true,approvalToken:record.token,basketRevision:state.revision,canEdit:state.actions.length<BASKET_LIMITS.actions});
+   return privateJson({ok:true,approvalToken:record.token,basketRevision:state.revision,canEdit:state.actions.length<BASKET_LIMITS.actions},200,timing({verify:verifiedAt-verifyStart,copy:clonedAt-verifiedAt,save:performance.now()-clonedAt}));
   }
   if(path==='/api/basket/approve'&&request.method==='POST'){
    if(FULFILLMENT[body.designApproval?.sku]?.digital)throw fault('basket_physical_only','Buy digital downloads individually.',409);
@@ -98,9 +112,12 @@ export async function basketRoutes(request,env,ctx){
    return privateJson({ok:true,approvalToken:record.token});
   }
   if(path==='/api/basket/action'&&request.method==='POST'){
+   const verifyStart=performance.now();
    const approved=body.command?.type==='add'?await resolveBasketApproval(env,identity,body.approvalToken):null;
+   const verifiedAt=performance.now();
    const result=await mutateStoredBasket(env.ARTWORK,identity,body.command,approved?.approval);
-   return privateJson({ok:true,basket:await basketDetails(env,identity,result.state,approved?.catalog),replayed:result.replayed});
+   const savedAt=performance.now(),basket=await basketDetails(env,identity,result.state,approved?.catalog);
+   return privateJson({ok:true,basket,replayed:result.replayed},200,timing({verify:verifiedAt-verifyStart,save:savedAt-verifiedAt,details:performance.now()-savedAt}));
   }
   if(path==='/api/basket/checkout'&&request.method==='POST'){
    const {state}=await readStoredBasket(env.ARTWORK,identity);

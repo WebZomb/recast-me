@@ -1,5 +1,5 @@
 const ID='recast_basket_id_v1',PENDING='recast_basket_pending_v1',SAVED='recast_saved_carts_v1';
-let basket=null,basketId=null,pending=null,enabled=false,busy=false,panel=null,status=null,list=null,initializing=null,initialFetchDone=false,sessionReady=false,initialRead=null;
+let basket=null,basketId=null,pending=null,enabled=false,busy=false,panel=null,status=null,list=null,initializing=null,initialFetchDone=false,sessionReady=false,initialRead=null,premadeAddVersion=0;
 const EDIT_LIMIT='Your basket has reached its edit limit. Your items are saved. You can check out as shown or contact support to change them.';
 const money=c=>new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(c/100);
 const node=(tag,text,cls)=>{const el=document.createElement(tag);if(text!==undefined)el.textContent=text;if(cls)el.className=cls;return el;};
@@ -31,7 +31,7 @@ async function run(action){
 }
 async function sendPending(){
  if(!pending)return;
- try{basket=(await api('/api/basket/action',pending)).basket;savePending(null);}
+ try{const {kind,...body}=pending;basket=(await api(kind==='premade-add'?'/api/basket/premade-add':'/api/basket/action',body)).basket;savePending(null);}
  catch(error){
   if(['revision_conflict','line_missing','basket_product_changed','basket_approval','shop_offer_unavailable','action_limit','line_limit'].includes(error.code)){savePending(null);await refresh();}
   throw error;
@@ -109,7 +109,7 @@ export function openCart(){
  run(async()=>{identify();try{await refresh();}catch(e){if(e.code==='basket_session'&&!pending){basket=null;status.textContent='Choose a gift or open your own Recast to start shopping.';render();return;}throw e;}});
 }
 export async function initialize({launcher}={}){
- if(!initializing)initializing=(async()=>{try{enabled=(await api('/api/basket/status')).enabled===true;if(enabled)identify();}catch{enabled=false;}return enabled;})();
+ if(!initializing)initializing=(async()=>{try{const config=await api('/api/basket/status');enabled=config.enabled===true;premadeAddVersion=config.premadeAddVersion===1?1:0;if(enabled)identify();}catch{enabled=false;}return enabled;})();
  await initializing;if(!enabled)return false;
  if(!document.querySelector('link[data-basket-css],link[href^="/basket.css"]')){const css=node('link');css.rel='stylesheet';css.href='/basket.css?v=2';css.dataset.basketCss='';document.head.append(css);}
  const target=launcher?document.querySelector(launcher):null;
@@ -134,6 +134,13 @@ export async function addPremade(offer,{onProgress=()=>{}}={}){
  try{
   progress('Checking gift…');
   if(!sessionReady){await api('/api/basket/session',{offerId:offer.id,revision:offer.artworkRevision});sessionReady=true;}
+  if(premadeAddVersion===1){
+   if(basket?.canEdit===false)throw Error(EDIT_LIMIT);
+   // Persist the complete immutable command BEFORE any add can reach storage.
+   // A lost response is reconciled by this same action ID, never a fresh add.
+   savePending({kind:'premade-add',basketId,offerId:offer.id,revision:offer.artworkRevision,command:{type:'add',actionId:crypto.randomUUID(),expectedRevision:basket?.revision??0,lineId:crypto.randomUUID(),quantity:1}});
+   progress('Saving item…');await sendPending();status.textContent='Added to your cart.';return;
+  }
   const approval=await api('/api/basket/premade',{basketId,offerId:offer.id,revision:offer.artworkRevision});
   // Compatibility with an older Worker during a rolling release.
   if(!Number.isSafeInteger(approval.basketRevision))await refresh();
