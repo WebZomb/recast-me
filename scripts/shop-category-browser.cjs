@@ -72,6 +72,18 @@ const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('n
      assert.equal(await page.locator('.collection-card-image .collection-preview').count(),0,'No CSS silhouette masquerades as a product card');
      assert.equal(await page.locator('.christmas-shop-switch a[href="/specials.html"]').count(),1,'Original Christmas collection remains accessible');
      assert.equal(await page.getByRole('button',{name:'Add to cart'}).count(),0,'Unapproved '+slug+' concepts cannot be purchased');
+     if(['pillows','canvas'].includes(slug)){
+      const card=page.locator('.collection-card').first();
+      assert.match(await card.locator('img').getAttribute('src'),/golden-village-/);
+      await card.getByRole('button',{name:'View gift'}).click();
+      assert.equal(await page.getByRole('button',{name:'Sales illustration',exact:true}).getAttribute('aria-pressed'),'true');
+      assert.equal(await page.locator('#collection-detail-add').isVisible(),false);
+      assert.match(await page.locator('#collection-detail-image').getAttribute('src'),/golden-village-/);
+      await page.getByRole('button',{name:'Original artwork',exact:true}).click();
+      assert.match(await page.locator('#collection-detail-image').getAttribute('src'),/cdn.shopify.com/);
+      await page.locator('#close-collection-detail').click();
+     }
+
      assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),true,'No '+slug+' phone overflow');
      if(['pillows','tumblers','hoodies','phone-cases'].includes(slug)){
       await page.locator('.collection-card').first().scrollIntoViewIfNeeded();

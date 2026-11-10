@@ -1,3 +1,4 @@
+import {salesIllustration} from './shop-sales-illustrations.js?v=1';
 import {createProductConcept,conceptSizeOptions} from './shop-product-concepts.js?v=1';
 import {blanketPrintAudit} from './shop-print-readiness.js?v=1';
 import {SHOP_COLLECTIONS,collectionBySlug,collectionDesigns,categoryOffers} from './shop-collections.js?v=2';
@@ -19,8 +20,10 @@ function verifiedByDesign(offers,design){
  return offers.filter(o=>o.designId===design.designId&&o.artworkRevision===design.artworkRevision&&readyOffer(o));
 }
 function displayPreview(visual,design,{size}={}){
- const img=viewImage(artworkFor(design),shortTitle(design)+' — original Christmas artwork');
- visual.replaceChildren(img,el('span','collection-preview-label','Original Christmas artwork'));
+ const sales=salesIllustration(item,design);
+ const img=viewImage(sales?.url||artworkFor(design),shortTitle(design)+(sales?' — illustrated '+collection.label+' concept':' — original Christmas artwork'));
+ visual.replaceChildren(img,el('span','collection-preview-label',sales?'Illustrated product concept':'Original Christmas artwork'));
+ return Boolean(sales);
 }
 function photoPreview(visual,offer){
  const url=safeUrl(offer.productPreviewUrl)||safeUrl(offer.mockupUrl);
@@ -61,6 +64,8 @@ function detail(design,offers,selected){
   b.disabled=disabled;b.setAttribute('aria-pressed','false');options.append(b);controls.push(b);return b;
  }
  const art=artworkFor(design);
+ const sales=salesIllustration(item,design);
+ const salesButton=sales?control('Sales illustration',()=>chooseDetailPhoto(sales.url,'Illustrated product concept. Confirm final size and placement in the actual supplier preview before buying.',title+' illustrated '+collection.label)):null;
  const selectOriginal=()=>chooseDetailPhoto(art,'Original approved pet illustration. This original source is not necessarily a print-ready file for '+collection.label+'.',title+' original artwork');
  if(offers.length){
   let initial=null;
@@ -75,7 +80,8 @@ function detail(design,offers,selected){
    if(o.id===selectedOffer?.id)initial=b;
   }
   control('Original artwork',selectOriginal);
-  if(initial){initial.click();}
+  if(salesButton){salesButton.click();price.textContent=money(selectedOffer.priceCents);add.hidden=false;}
+  else if(initial){initial.click();}
   else{selectOriginal();price.textContent=money(selectedOffer.priceCents);add.hidden=false;}
  }else{
   const sizes=conceptSizeOptions(item,collection.sizes);
@@ -90,7 +96,7 @@ function detail(design,offers,selected){
   pending.title='An actual product-specific Printful proof has not been approved for this design.';
   price.textContent='Product-specific print file and supplier proof pending · not yet available to buy';
   add.hidden=true;add.onclick=null;
-  first.click();
+  (salesButton||first).click();
  }
  $('#collection-detail').showModal();
 }
@@ -116,7 +122,7 @@ function card(design,allOffers){
  const pendingMessage=blanketCheck&&!blanketCheck.fullBleedReady?'High-resolution blanket artwork in preparation':'Real product preview in preparation';
  const note=el('p','collection-card-note',offer?'Verified product · ready to buy':pendingMessage);
  const actions=el('div','collection-card-actions');
- const show=btn(offer?'See real product':'See artwork',()=>detail(design,offers,offer),'collection-secondary');
+ const show=btn(salesIllustration(item,design)?'View gift':offer?'See real product':'See artwork',()=>detail(design,offers,offer),'collection-secondary');
  actions.append(show);
  if(offer){
   const price=el('strong','collection-price',money(offer.priceCents));
@@ -126,9 +132,9 @@ function card(design,allOffers){
   size.addEventListener('change',()=>{
    offer=offers.find(o=>o.id===size.value)||offers[0];
    price.textContent=money(offer.priceCents);
-   photoPreview(visual,offer);
+   if(!displayPreview(visual,design))photoPreview(visual,offer);
   });
-  if(!photoPreview(visual,offer))displayPreview(visual,design);
+  if(!salesIllustration(item,design)&&!photoPreview(visual,offer))displayPreview(visual,design);
   info.append(name,note,price,size,actions,buy);
  }else{
   info.append(name,note,actions);
