@@ -51,8 +51,8 @@ test('existing mug and Christmas views link real item pages without replacing th
  assert.match(shop,/import \{SHOP_COLLECTIONS\} from/);
  assert.match(shop,/link\.href=collection\.url/);
  assert.match(shop,/groupShopOffers\(offers\)/,'Existing approved mug grouping preserved');
- assert.match(shop,/await addPremade\(offer\)/,'Existing approved checkout preserved');
- for(const html of [home,christmas])assert.match(html,/shop\.js\?v=12/);
+ assert.match(shop,/await addPremade\(offer[,)]/,'Existing approved checkout preserved');
+ for(const html of [home,christmas])assert.match(html,/shop\.js\?v=13/);
 });
 test('future approved blanket offers must exactly match the design revision and product family',()=>{
  const art=designs[0],blanket=collectionBySlug('blankets');
@@ -75,7 +75,7 @@ test('page renderer shows no cart when supplier is not certified and never uses 
  assert.match(read('public/shop-collections.js'),/status==='verified'/);
  assert.match(code,/readyOffer\(o\)/);
  assert.match(code,/High-resolution blanket artwork in preparation/);
- assert.match(code,/addPremade\(offer\)/);
+ assert.match(code,/addPremade\(offer[,)]/);
  assert.doesNotMatch(code,/\.salesImage/,'Mug sales illustration must not be misrepresented as blanket image');
  assert.match(css,/collection-preview--blanket/);
  assert.match(css,/object-fit:contain/,'Avoid cropping the source dog and cat artwork');

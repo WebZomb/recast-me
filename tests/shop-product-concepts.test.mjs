@@ -72,7 +72,7 @@ test('distinct product concepts are never manufacturer mockups or bypassed check
  assert.match(ui,/createProductConcept\(/);
  assert.match(ui,/blanketPrintAudit\(/);
  assert.match(ui,/Real Printful pending/);
- assert.match(ui,/addPremade\(offer\)/);
+ assert.match(ui,/addPremade\(offer[,)]/);
  assert.doesNotMatch(ui,/\.salesImage/,'Do not recycle a mug sales illustration as a physical blanket image');
  const slugs=['blankets','pillows','canvas','tumblers','hoodies','t-shirts','tote-bags','phone-cases','sticker-sheets','stickers','posters','framed-prints','journals','coaster-sets','magnet-sets','puzzles'];
  for(const slug of slugs){

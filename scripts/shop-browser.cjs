@@ -20,10 +20,10 @@ const fs=require('fs'),path=require('path'),assert=require('node:assert/strict')
    else if(p==='/api/basket/status')data.enabled=true;
    else if(p==='/api/basket/session'){}
    else if(p==='/api/basket')data.basket=state;
-   else if(p==='/api/basket/premade'){requestedOffers.push(body.offerId);const offer=offers.find(o=>o.id===body.offerId);const token=String(++counter).padStart(48,'0');bindings[token]={sourceKind:'premade',artworkId:offer.designId,product:'Mug',title:offer.title,variantLabel:offer.variantLabel,sku:'RECAST-MUG-11OZ',unitPriceCents:offer.priceCents,thumbnail:offer.mockupUrl};data.approvalToken=token;}
+   else if(p==='/api/basket/premade'){requestedOffers.push(body.offerId);const offer=offers.find(o=>o.id===body.offerId);const token=String(++counter).padStart(48,'0');bindings[token]={sourceKind:'premade',artworkId:offer.designId,product:'Mug',title:offer.title,variantLabel:offer.variantLabel,sku:'RECAST-MUG-11OZ',unitPriceCents:offer.priceCents,thumbnail:offer.mockupUrl};data.approvalToken=token;data.basketRevision=state.revision;data.canEdit=true;}
    else if(p==='/api/basket/approve'){const token=String(++counter).padStart(48,'0');bindings[token]={sourceKind:'custom',artworkId:'ART-CUSTOM',product:'Mug',title:'My own Recast mug',variantLabel:'White · 11 oz',sku:'RECAST-MUG-11OZ',unitPriceCents:2499,thumbnail:'/shop-assets/christmas-golden-artwork.png'};data.approvalToken=token;}
    else if(p==='/api/basket/action'){
-    const c=body.command;if(!state.appliedActions.includes(c.actionId)){
+    const c=body.command;if(!state.appliedActions.includes(c.actionId)){assert.equal(c.expectedRevision,state.revision,'Every edit still uses the authoritative revision');
      if(c.type==='add')state.lines.push({...bindings[body.approvalToken],lineId:c.lineId,quantity:c.quantity});
      if(c.type==='quantity')state.lines.find(l=>l.lineId===c.lineId).quantity=c.quantity;
      if(c.type==='remove')state.lines=state.lines.filter(l=>l.lineId!==c.lineId);
@@ -69,11 +69,11 @@ const fs=require('fs'),path=require('path'),assert=require('node:assert/strict')
   await page.getByRole('button',{name:'See real product',exact:true}).first().click();await page.locator('#product-detail').waitFor({state:'visible'});await page.locator('#close-detail').click();
   const beforeFirstAdd=requestCounts.get('GET /api/basket')||0;
   await page.locator('.product').first().getByRole('button',{name:'Add to cart',exact:true}).click();await page.locator('.recast-basket[open]').waitFor();await page.waitForFunction(()=>document.querySelectorAll('.basket-line').length===1);
-  assert.equal((requestCounts.get('GET /api/basket')||0)-beforeFirstAdd,1,'Premade add must read the current basket once');
+  assert.equal((requestCounts.get('GET /api/basket')||0)-beforeFirstAdd,0,'Fresh revision in approval removes the extra basket GET');
   assert.equal(requestedOffers[0],'golden-large');assert.equal(state.lines[0].sourceKind,'premade');assert.match(await page.locator('[data-basket-subtotal]').innerText(),/29.99/);
   await page.getByRole('button',{name:'Continue shopping',exact:true}).click();await page.waitForFunction(()=>document.querySelectorAll('.product').length===2);
   const beforeSecondAdd=requestCounts.get('GET /api/basket')||0;
-  await page.locator('.product').nth(1).getByRole('button',{name:'Add to cart',exact:true}).click();await page.waitForFunction(()=>document.querySelectorAll('.basket-line').length===2);assert.equal((requestCounts.get('GET /api/basket')||0)-beforeSecondAdd,1,'Second premade add must use one refresh');await page.getByRole('button',{name:'Continue shopping',exact:true}).click();
+  await page.locator('.product').nth(1).getByRole('button',{name:'Add to cart',exact:true}).click();await page.waitForFunction(()=>document.querySelectorAll('.basket-line').length===2);assert.equal((requestCounts.get('GET /api/basket')||0)-beforeSecondAdd,0,'Second add must avoid an extra basket GET');await page.getByRole('button',{name:'Continue shopping',exact:true}).click();
   await page.goto('https://recast.test/custom-fixture.html');await page.waitForFunction(()=>window.ready);const beforeCustomAdd=requestCounts.get('GET /api/basket')||0;await page.getByRole('button',{name:'Approve & add to cart',exact:true}).click();await page.waitForFunction(()=>document.querySelectorAll('.basket-line').length===3);assert.equal((requestCounts.get('GET /api/basket')||0)-beforeCustomAdd,1,'Custom add must avoid redundant refresh');
   assert.equal(state.lines.filter(l=>l.sourceKind==='premade').length,2);assert.equal(state.lines.filter(l=>l.sourceKind==='custom').length,1);assert.equal(state.subtotalCents,7997);
   await page.locator('.basket-line').last().getByRole('combobox').selectOption('2');await page.waitForFunction(()=>document.querySelector('[data-basket-open]').textContent==='Cart (4)');assert.equal(state.subtotalCents,10496);

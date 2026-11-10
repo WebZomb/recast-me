@@ -1,6 +1,7 @@
+import {shopLoading,readShopCatalog,browsingImage,trackImage,readShopGallery} from './shop-loading.js?v=1';
 import {groupShopOffers} from './shop-model.js?v=4';
 import {SHOP_COLLECTIONS} from './shop-collections.js?v=2';
-import {initialize,addPremade,openCart} from './basket.js?v=3';
+import {initialize,addPremade,openCart} from './basket.js?v=4';
 const $=s=>document.querySelector(s);
 const money=c=>new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(c/100);
 const productNames={mug:'Mugs',blanket:'Blankets',canvas:'Canvas',tumbler:'Tumblers',pillow:'Pillows',hoodie:'Hoodies',tee:'T-shirts',poster:'Posters',frame:'Framed prints',journal:'Journals',coaster:'Coasters',magnet:'Magnets',sticker:'Stickers'};
@@ -11,7 +12,7 @@ function button(text,fn){const el=node('button',text);el.type='button';el.addEve
 function salesImage(offer){const source=salesForApproved.get(offer.designId+'|'+offer.artworkRevision);if(source)return source;return offer.designId==='christmas-golden-retriever-winter-lights'&&offer.product==='mug'&&offer.artworkRevision==='a003e979d4a1c2056d37f9c23610399dd83ed82ec0f85cde8733f99fbd1ff0a2'?({'golden-winter-lights-mug-11oz':'https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-christmas-golden-winter-lights-festive-sales-v2-20261103.webp?v=1793757067','golden-winter-lights-mug-15oz':'/shop-assets/golden-mug-15oz-sales.webp'}[offer.id]||null):null;}
 async function add(offer,control){
  if(adding)return;adding=true;control.disabled=true;const label=control.textContent;control.textContent='Adding…';$('#shop-announcement').textContent='';
- try{await addPremade(offer);$('#product-detail').close();$('#shop-announcement').textContent='Added to your cart.';}
+ try{await addPremade(offer,{onProgress:message=>{control.textContent=message;}});$('#product-detail').close();$('#shop-announcement').textContent='Added to your cart.';}
  catch(error){$('#shop-announcement').textContent=error.message;}
  finally{control.disabled=false;control.textContent=label;adding=false;}
 }
@@ -70,7 +71,7 @@ function showPreview(design,showingArtwork){
 function previewCard(design){
  const card=node('article',null,'concept-product'),visual=node('div',null,'product-visual');
  card.dataset.designId=design.id;card.dataset.offerStatus='preview';
- const img=node('img');img.loading='lazy';img.decoding='async';img.width=600;img.height=600;
+ const img=trackImage(node('img'));img.loading='lazy';img.decoding='async';img.width=600;img.height=600;
  const badge=node('span',null,'image-caption'),details=node('div',null,'details');
  const title=node('h3',design.title),note=node('p','Print preview pending · Not yet available to buy','preview-note');
  const sizes=node('p','11 oz and 15 oz planned','preview-size');
@@ -80,7 +81,7 @@ function previewCard(design){
  const expand=button('View 4 options',()=>showPreview(design,showingArtwork));
  const actions=node('div',null,'preview-actions');actions.append(toggle,expand);
  function updateImage(){
-  img.src=showingArtwork||!mugScene?design.artworkImage:mugScene;
+  img.src=browsingImage(showingArtwork||!mugScene?design.artworkImage:mugScene);
   img.alt=design.title+(showingArtwork?' — original artwork':' — decorated mug illustration, not supplier proof');
   badge.textContent=showingArtwork?'Original artwork':'Mug illustration';
   toggle.textContent=showingArtwork?'See mug':'See artwork';
@@ -92,7 +93,7 @@ function previewCard(design){
  return card;
 }
 function card(variants){
- let selected=variants[0];const card=node('article',null,'product'),visual=node('div',null,'product-visual'),img=node('img');
+ let selected=variants[0];const card=node('article',null,'product'),visual=node('div',null,'product-visual'),img=trackImage(node('img'));
  img.loading='lazy';img.width=600;img.height=600;
  const badge=node('span',null,'image-caption'),details=node('div',null,'details');
  const title=node('h3',selected.designId?.startsWith('christmas-village-')?selected.breed+' · Christmas Village':selected.breed||selected.title),price=node('strong');
@@ -100,7 +101,7 @@ function card(variants){
  for(const offer of variants)size.add(new Option(offer.variantLabel,offer.id));
  const buy=button('Add to cart',()=>add(selected,buy));buy.className='primary';
  const real=button('See real product',()=>showProduct(selected));real.className='real-product';
- function update(){const sales=salesImage(selected);img.src=sales||selected.productPreviewUrl||selected.mockupUrl;img.alt=selected.title+(sales?' — sales illustration':' — real product preview');badge.textContent=sales?'Illustration':'Product preview';price.textContent=money(selected.priceCents);buy.disabled=false;}
+ function update(){const sales=salesImage(selected);img.src=sales?browsingImage(sales):selected.productPreviewUrl||selected.mockupUrl;img.alt=selected.title+(sales?' — sales illustration':' — real product preview');badge.textContent=sales?'Illustration':'Product preview';price.textContent=money(selected.priceCents);buy.disabled=false;}
  size.onchange=()=>{selected=variants.find(o=>o.id===size.value);update();};
  img.onerror=()=>{img.alt='Image unavailable — see real product';};
  visual.append(img,badge);details.append(title,price,size,real,buy);card.append(visual,details);update();return card;
@@ -140,14 +141,18 @@ function render(offers,previews=[]){
 }
 $('#close-detail').onclick=()=>$('#product-detail').close();$('#open-cart').onclick=openCart;
 let previews=[];
-const catalogRequest=fetch('/api/shop/catalog?product=mug',{cache:'no-store'});
-try{
- const response=await fetch('/shop-gallery.json',{cache:'no-cache'});
- if(response.ok){
-  const data=await response.json();
-  if(data.version===1&&Array.isArray(data.designs))previews=data.designs.filter(d=>d&&d.status==='preview'&&d.product==='mug'&&['dog','cat'].includes(d.pet)&&typeof d.title==='string'&&typeof d.breed==='string'&&String(d.artworkImage).startsWith('https://cdn.shopify.com/')&&(!d.salesImage||String(d.salesImage).startsWith('https://cdn.shopify.com/')));
- }
-}catch{/* The verified shop remains available if the artwork preview gallery is offline. */}
-try{const response=await catalogRequest;const data=await response.json();if(!response.ok||data.version!==1||!Array.isArray(data.offers))throw Error('Catalog unavailable');render(data.offers,previews);}
-catch{$('#empty').hidden=false;$('#empty h2').textContent='The shop is temporarily unavailable.';$('#empty p').textContent='Please refresh to try again.';}
-await initialize({launcher:'#open-cart'});
+const loading=shopLoading($('#shop-loading'));
+void initialize({launcher:'#open-cart'});
+
+let active=false;
+async function load(){
+ if(active)return;active=true;loading.start(load);
+ const result=readShopCatalog('/api/shop/catalog?product=mug').then(catalog=>({catalog}),error=>({error}));
+ const data=await readShopGallery();
+ if(data?.version===1&&Array.isArray(data.designs))previews=data.designs.filter(d=>d&&d.status==='preview'&&d.product==='mug'&&['dog','cat'].includes(d.pet)&&typeof d.title==='string'&&typeof d.breed==='string'&&String(d.artworkImage).startsWith('https://cdn.shopify.com/')&&(!d.salesImage||String(d.salesImage).startsWith('https://cdn.shopify.com/')));
+ render([],previews);document.body.dataset.shopPreview='true';
+ const {catalog,error}=await result;
+ if(error){loading.fail(load);}else{render(catalog.offers,previews);loading.finish();}
+ active=false;
+}
+void load();

@@ -83,7 +83,8 @@ export async function basketRoutes(request,env,ctx){
    const approval={artworkId:record.requestId,sku:record.sku,variantId:row.variantId.split('/').pop(),approvalToken:record.token,proofHash:record.proofHash};
    const bound={ownerId:identity.ownerId,recordHash:await hash(JSON.stringify(record)),approval,properties:shopOfferProperties(offer,record),offerId:offer.id,sourceApprovalToken:checked.record.token,artworkRevision:offer.artworkRevision,display:{title:offer.title,variantLabel:offer.variantLabel||offer.product}};
    await env.ARTWORK.put(await bindingKey(identity,record.token),JSON.stringify(bound),{httpMetadata:{contentType:'application/json',cacheControl:'private, no-store'}});
-   return privateJson({ok:true,approvalToken:record.token});
+   const {state}=await readStoredBasket(env.ARTWORK,identity);
+   return privateJson({ok:true,approvalToken:record.token,basketRevision:state.revision,canEdit:state.actions.length<BASKET_LIMITS.actions});
   }
   if(path==='/api/basket/approve'&&request.method==='POST'){
    if(FULFILLMENT[body.designApproval?.sku]?.digital)throw fault('basket_physical_only','Buy digital downloads individually.',409);

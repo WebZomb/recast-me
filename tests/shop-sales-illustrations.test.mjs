@@ -6,7 +6,7 @@ const design=JSON.parse(fs.readFileSync('public/shop-gallery.json')).designs[0];
 test('sales illustrations match only the reviewed product and artwork revision',()=>{
  for(const collection of ['pillows','canvas','coaster-sets','magnet-sets','sticker-sheets']){
   const entry=salesIllustration(collection,design);
-  assert.ok(entry);assert.ok(fs.existsSync('public'+entry.url));
+  assert.ok(entry);assert.ok(fs.existsSync('public'+entry.url));assert.ok(fs.existsSync('public'+entry.thumbnailUrl));
   assert.equal(salesIllustration(collection,{...design,artworkRevision:'0'.repeat(64)}),null);
   assert.equal(salesIllustration(collection,{...design,designId:'another-pet'}),null);
  }

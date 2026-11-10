@@ -20,15 +20,13 @@ export async function resolveShopOffer(env,offerId,revision,{catalog,products,in
  catalog=catalog||await readShopCatalog(env);
  const offer=validateOffer(catalog.offers.find(o=>o.id===offerId),FULFILLMENT);
  if(offer.artworkRevision!==revision||!/^RC-[A-Z0-9-]{8,60}$/.test(offer.requestId||'')||!/^[a-f0-9]{48}$/.test(offer.approvalToken||''))reject();
- const record=await read(env,`commerce/preapprovals/${offer.approvalToken}.json`);
- const meta=await read(env,`requests/${offer.requestId}/request.json`);
+ const [record,meta]=await Promise.all([read(env,`commerce/preapprovals/${offer.approvalToken}.json`),read(env,`requests/${offer.requestId}/request.json`)]);
  // Only owner-imported catalog art may become public stock. Customer art never qualifies.
  if(!meta||meta.source!=='premade-catalog'||meta.catalogDesignId!==offer.designId||!meta.catalogRightsConfirmedAt)reject();
  if(!record||record.token!==offer.approvalToken||record.requestId!==offer.requestId||record.sku!==offer.sku||record.approvalMode!=='product-mockup'||record.sourceHash!==offer.sourceHash||record.proofHash!==offer.proofHash||record.mockupId!==offer.mockupId||record.previewToken!==record.token||!record.approvedAt||!record.position||!record.design)reject();
  if(offer.approvalRecordHash!==await hash(JSON.stringify(record)))reject();
- const task=await read(env,`mockups/${record.requestId}/${record.sku}/${record.mockupId}/task.json`);
+ const [task,proof]=await Promise.all([read(env,`mockups/${record.requestId}/${record.sku}/${record.mockupId}/task.json`),read(env,`shop/proofs/${offer.id}.json`)]);
  if(!task||task.status!=='completed'||task.sourceHash!==record.proofHash||task.printfulVariantId!==FULFILLMENT[offer.sku].printfulVariantId||JSON.stringify(task.design)!==JSON.stringify(record.design)||JSON.stringify(task.position)!==JSON.stringify(record.position)||String(task.taskKey)!==String(offer.proof.taskId))reject();
- const proof=await read(env,`shop/proofs/${offer.id}.json`);
  if(!proof||proof.approved!==true||proof.artworkRevision!==offer.artworkRevision||proof.printFileHash!==offer.proof.printFileHash||proof.placementHash!==offer.proof.placementHash||proof.mockupUrl!==offer.mockupUrl)reject();
  const locked=await verifiedPremadePrint(env,record,{checkBytes:integrity});
  if(locked.finalHash!==offer.proof.printFileHash||record.premadePrint.artworkRevision!==offer.artworkRevision)reject();

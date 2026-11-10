@@ -513,3 +513,5 @@ November 9: Christmas shop navigation and presentation repair prepared; original
 November9 individual sales illustrations: owner requires premium per-product/per-design scenes, headers alone insufficient. TWO Golden Village pillow/canvas concepts and revision-matched illustration-first UI prepared; remaining assortment unfinished. See [session](ASTRA-SESSION-INDIVIDUAL-SALES-2026-11-09.md).
 
 November9 follow-up: first batch expanded to FIVE Golden Village images, adding existing buyable coaster/magnet/sticker-sheet sets. Remaining breeds/categories still unfinished; release pending final checks.
+
+November9 shop loading/speed prepared: artwork-first browsing, honest progress/retry, fresh basket revision avoids extra GET, session reuse, parallel independent proof reads, three Labrador sales scenes and lighter thumbnails.947 regression checks/bundle pass; browser/release pending. See [session](ASTRA-SESSION-SHOP-LOADING-2026-11-09.md).
