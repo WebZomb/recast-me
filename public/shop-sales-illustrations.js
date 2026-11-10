@@ -12,6 +12,24 @@ const entries = Object.freeze([
     "designId": "christmas-village-golden-retriever",
     "artworkRevision": "6e0a3f4c45a33cb4cc002344c95139d4712d1c6dc98566340dd41172e09e015f",
     "url": "/shop-assets/sales/golden-village-canvas-20261109.webp"
+  },
+  {
+    "collection": "coaster-sets",
+    "designId": "christmas-village-golden-retriever",
+    "artworkRevision": "6e0a3f4c45a33cb4cc002344c95139d4712d1c6dc98566340dd41172e09e015f",
+    "url": "/shop-assets/sales/golden-village-coaster-sets-20261109.webp"
+  },
+  {
+    "collection": "magnet-sets",
+    "designId": "christmas-village-golden-retriever",
+    "artworkRevision": "6e0a3f4c45a33cb4cc002344c95139d4712d1c6dc98566340dd41172e09e015f",
+    "url": "/shop-assets/sales/golden-village-magnet-sets-20261109.webp"
+  },
+  {
+    "collection": "sticker-sheets",
+    "designId": "christmas-village-golden-retriever",
+    "artworkRevision": "6e0a3f4c45a33cb4cc002344c95139d4712d1c6dc98566340dd41172e09e015f",
+    "url": "/shop-assets/sales/golden-village-sticker-sheets-20261109.webp"
   }
 ]);
 export function salesIllustration(collection, design) {

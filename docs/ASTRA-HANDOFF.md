@@ -511,3 +511,5 @@ November7 continued free build: exact8192px candidate transferred/hash-verified;
 November 9: Christmas shop navigation and presentation repair prepared; original Christmas Collection linked from shop pages, approved seasonal images reused, unfinished thumbnails show exact art instead of CSS shapes. See [session and validation limits](ASTRA-SESSION-SHOP-PRESENTATION-2026-11-09.md).
 
 November9 individual sales illustrations: owner requires premium per-product/per-design scenes, headers alone insufficient. TWO Golden Village pillow/canvas concepts and revision-matched illustration-first UI prepared; remaining assortment unfinished. See [session](ASTRA-SESSION-INDIVIDUAL-SALES-2026-11-09.md).
+
+November9 follow-up: first batch expanded to FIVE Golden Village images, adding existing buyable coaster/magnet/sticker-sheet sets. Remaining breeds/categories still unfinished; release pending final checks.
