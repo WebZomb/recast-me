@@ -1,5 +1,5 @@
 const ID='recast_basket_id_v1',PENDING='recast_basket_pending_v1',SAVED='recast_saved_carts_v1';
-let basket=null,basketId=null,pending=null,enabled=false,busy=false,panel=null,status=null,list=null,initializing=null,initialFetchDone=false;
+let basket=null,basketId=null,pending=null,enabled=false,busy=false,panel=null,status=null,list=null,initializing=null,initialFetchDone=false,sessionReady=false,initialRead=null;
 const EDIT_LIMIT='Your basket has reached its edit limit. Your items are saved. You can check out as shown or contact support to change them.';
 const money=c=>new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(c/100);
 const node=(tag,text,cls)=>{const el=document.createElement(tag);if(text!==undefined)el.textContent=text;if(cls)el.className=cls;return el;};
@@ -20,7 +20,7 @@ async function switchCart(id){
 function button(text,action){const el=node('button',text);el.type='button';el.className='button ghost';el.onclick=action;return el;}
 function savePending(value){localStorage.setItem(PENDING,JSON.stringify(value));pending=value;}
 async function refresh(){
- basket=(await api('/api/basket?id='+encodeURIComponent(basketId))).basket;rememberCart();
+ basket=(await api('/api/basket?id='+encodeURIComponent(basketId))).basket;sessionReady=true;rememberCart();
  if(pending&&basket.appliedActions.includes(pending.command.actionId))savePending(null);
  render();return basket;
 }
@@ -66,6 +66,7 @@ function render(){
   content.append(controls);item.append(content);list.append(item);
  }
  if(!basket?.lines.length)list.append(node('p','Your cart is empty. Add a finished pet gift or choose a product for your own Recast.'));
+ const progress=panel.querySelector('[data-basket-progress]');if(progress)progress.hidden=!busy;
  const retry=panel.querySelector('[data-basket-retry]');retry.hidden=!pending;retry.disabled=busy;
  panel.querySelector('[data-basket-limit]').hidden=basket?.canEdit!==false;
  panel.querySelector('[data-basket-checkout]').disabled=busy||!!pending||!basket?.lines.length||basket.canCheckout===false;
@@ -76,6 +77,7 @@ function ensurePanel(){
  panel=node('dialog',undefined,'recast-basket');panel.setAttribute('aria-labelledby','basket-title');
  const heading=node('header',undefined,'basket-heading'),title=node('h2','Your cart');title.id='basket-title';const close=button('✕',()=>panel.close());close.setAttribute('aria-label','Close cart');heading.append(title,close);
  list=node('div');status=node('p');status.setAttribute('role','status');
+ const progress=node('progress');progress.dataset.basketProgress='';progress.setAttribute('aria-label','Saving your cart');progress.hidden=true;progress.style.width='100%';
  const note=node('p','Ready-made gifts and your own Recasts, together. Every item keeps its exact approved artwork and placement.');
  const limit=node('p',EDIT_LIMIT);limit.dataset.basketLimit='';limit.hidden=true;
  const subtotal=node('p',undefined,'basket-total');subtotal.append(node('span','Subtotal'));const amount=node('strong','$0.00');amount.dataset.basketSubtotal='';subtotal.append(amount);
@@ -94,7 +96,7 @@ function ensurePanel(){
  const confirm=node('div');confirm.hidden=true;confirm.append(node('p','Start a separate empty cart? This cart stays saved. This does not cancel any checkout or order. If payment is processing, check My Orders first.'));
  const start=button('Start separate cart',()=>{confirm.hidden=false;});start.dataset.newCart='';
  const yes=button('Start empty cart',()=>run(async()=>{await switchCart(crypto.randomUUID());confirm.hidden=true;})),no=button('Keep current cart',()=>{confirm.hidden=true;});confirm.append(yes,no);carts.append(label,start,confirm);
- panel.append(heading,note,limit,list,subtotal,delivery,status,actions,carts);document.body.append(panel);
+ panel.append(heading,note,limit,list,subtotal,delivery,status,progress,actions,carts);document.body.append(panel);
  if(!document.querySelector('link[data-basket-css]')){const css=node('link');css.rel='stylesheet';css.href='/basket.css?v=2';css.dataset.basketCss='';document.head.append(css);}
 }
 function showCart(){
@@ -118,18 +120,28 @@ export async function initialize({launcher}={}){
  }
  if(!initialFetchDone){
   initialFetchDone=true;
-  try{await refresh();}catch{/* No cart session exists until the first approved item is selected. */}
+  initialRead=refresh().catch(()=>{/* No session exists until the first approved selection. */});
  }
- return true;
+ await initialRead;return true;
 }
-export async function addPremade(offer){
+export async function addPremade(offer,{onProgress=()=>{}}={}){
+ onProgress('Opening cart…');
  if(!await initialize())throw Error('The cart is being prepared. Please try again later.');
- identify();await api('/api/basket/session',{offerId:offer.id,revision:offer.artworkRevision});await refresh();
- if(pending)throw Error('Open your cart and check its unfinished save first.');
- if(basket.canEdit===false)throw Error(EDIT_LIMIT);
- const approval=await api('/api/basket/premade',{basketId,offerId:offer.id,revision:offer.artworkRevision});
- savePending({basketId,approvalToken:approval.approvalToken,command:{type:'add',actionId:crypto.randomUUID(),expectedRevision:basket.revision,lineId:crypto.randomUUID(),quantity:1}});
- await sendPending();showCart();
+ if(busy)throw Error('Your cart is saving. Please wait a moment.');
+ identify();if(pending)throw Error('Open your cart and check its unfinished save first.');
+ busy=true;showCart();
+ const progress=message=>{status.textContent=message;onProgress(message);};
+ try{
+  progress('Checking gift…');
+  if(!sessionReady){await api('/api/basket/session',{offerId:offer.id,revision:offer.artworkRevision});sessionReady=true;}
+  const approval=await api('/api/basket/premade',{basketId,offerId:offer.id,revision:offer.artworkRevision});
+  // Compatibility with an older Worker during a rolling release.
+  if(!Number.isSafeInteger(approval.basketRevision))await refresh();
+  if(approval.canEdit===false||(!Number.isSafeInteger(approval.basketRevision)&&basket.canEdit===false))throw Error(EDIT_LIMIT);
+  savePending({basketId,approvalToken:approval.approvalToken,command:{type:'add',actionId:crypto.randomUUID(),expectedRevision:approval.basketRevision??basket.revision,lineId:crypto.randomUUID(),quantity:1}});
+  progress('Saving item…');await sendPending();status.textContent='Added to your cart.';
+ }catch(error){status.textContent=error.message;throw error;}
+ finally{busy=false;render();}
 }
 export function addReviewAction(modal,req,getApproval,closeReview){
  if(!enabled||req.shareId)return;

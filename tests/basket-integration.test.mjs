@@ -391,3 +391,18 @@ test('an empty basket does not need a supplier catalog read',async t=>{
  const result=await f.call('/api/basket?id=empty');assert.equal(result.response.status,200);
  assert.deepEqual(result.data.basket.lines,[]);assert.equal(result.data.basket.subtotalCents,0);assert.equal(result.data.basket.canCheckout,false);assert.equal(f.calls.length,before);
 });
+
+
+test('premade approval returns a fresh basket revision without requiring a separate basket GET',async t=>{
+ const f=await fixture(t),p=await premadeFixture(f);
+ await f.add('existing',0);
+ const a=await f.call('/api/basket/premade',{basketId:'basket',offerId:p.offer.id,revision:p.offer.artworkRevision});
+ assert.equal(a.response.status,200,JSON.stringify(a.data));
+ assert.equal(a.data.basketRevision,1);assert.equal(a.data.canEdit,true);
+ const added=await f.call('/api/basket/action',{basketId:'basket',approvalToken:a.data.approvalToken,command:{type:'add',actionId:'fast-add',lineId:'fast-add',expectedRevision:a.data.basketRevision,quantity:1}});
+ assert.equal(added.response.status,200,JSON.stringify(added.data));
+ assert.equal(added.data.basket.lines.length,2);
+ // Another tab changed the revision; an obsolete command must still be rejected.
+ const stale=await f.call('/api/basket/action',{basketId:'basket',approvalToken:a.data.approvalToken,command:{type:'add',actionId:'stale-fast',lineId:'stale-fast',expectedRevision:a.data.basketRevision,quantity:1}});
+ assert.equal(stale.data.code,'revision_conflict');
+});

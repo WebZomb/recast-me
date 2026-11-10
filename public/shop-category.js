@@ -1,9 +1,10 @@
-import {salesIllustration} from './shop-sales-illustrations.js?v=1';
+import {shopLoading,readShopCatalog,browsingImage,trackImage,readShopGallery} from './shop-loading.js?v=1';
+import {salesIllustration} from './shop-sales-illustrations.js?v=2';
 import {createProductConcept,conceptSizeOptions} from './shop-product-concepts.js?v=1';
 import {blanketPrintAudit} from './shop-print-readiness.js?v=1';
 import {SHOP_COLLECTIONS,collectionBySlug,collectionDesigns,categoryOffers} from './shop-collections.js?v=2';
 import {readyOffer} from './shop-model.js?v=4';
-import {initialize,addPremade,openCart} from './basket.js?v=3';
+import {initialize,addPremade,openCart} from './basket.js?v=4';
 
 const $=selector=>document.querySelector(selector);
 const item=($('body')?.dataset?.collection||'').toLowerCase();
@@ -13,7 +14,7 @@ const el=(tag,cls,text)=>{const n=document.createElement(tag);if(cls)n.className
 const btn=(label,action,cls)=>{const n=el('button',cls,label);n.type='button';n.addEventListener('click',action);return n;};
 const shortTitle=d=>d.title.replace(/\s+(Christmas Village )?Mug$/i,'').replace(/\s+Mug$/i,'');
 const safeUrl=url=>typeof url==='string'&&/^https:\/\//.test(url)?url:null;
-const viewImage=(url,alt)=>{const i=el('img');i.src=url;i.alt=alt;i.loading='lazy';i.decoding='async';i.width=480;i.height=480;return i;};
+const viewImage=(url,alt)=>{const i=trackImage(el('img'));i.src=browsingImage(url);i.alt=alt;i.loading='lazy';i.decoding='async';i.width=480;i.height=480;return i;};
 let isAdding=false,selectedOffer=null;
 const artworkFor=d=>d.artworkImage;
 function verifiedByDesign(offers,design){
@@ -21,7 +22,7 @@ function verifiedByDesign(offers,design){
 }
 function displayPreview(visual,design,{size}={}){
  const sales=salesIllustration(item,design);
- const img=viewImage(sales?.url||artworkFor(design),shortTitle(design)+(sales?' — illustrated '+collection.label+' concept':' — original Christmas artwork'));
+ const img=viewImage(sales?.thumbnailUrl||sales?.url||artworkFor(design),shortTitle(design)+(sales?' — illustrated '+collection.label+' concept':' — original Christmas artwork'));
  visual.replaceChildren(img,el('span','collection-preview-label',sales?'Illustrated product concept':'Original Christmas artwork'));
  return Boolean(sales);
 }
@@ -104,7 +105,7 @@ async function add(offer,control){
  if(isAdding||!readyOffer(offer))return;
  isAdding=true;control.disabled=true;const before=control.textContent;control.textContent='Adding…';
  try{
-  await addPremade(offer);
+  await addPremade(offer,{onProgress:message=>{control.textContent=message;}});
   $('#collection-announcement').textContent='Added to cart.';
   if($('#collection-detail').open)$('#collection-detail').close();
  }catch(e){$('#collection-announcement').textContent=e?.message||'Could not add this item. Please try again.';}
@@ -142,7 +143,7 @@ function card(design,allOffers){
  article.append(visual,info);
  return article;
 }
-function renderCatalog(gallery,offers){
+function renderCatalog(gallery,offers,{checking=false}={}){
  const designs=collectionDesigns(gallery?.designs);
  const verified=categoryOffers(offers,collection,designs);
  const count=el('span',null,designs.length+' holiday pet designs');
@@ -163,7 +164,7 @@ function renderCatalog(gallery,offers){
   $('.collection-note strong').textContent='Christmas gifts, ready to choose';
   $('.collection-note p').textContent='The finished designs below include actual product previews. Choose a favorite and buy it as shown.';
  }
- $('#collection-availability').textContent=unique.size
+ $('#collection-availability').textContent=checking?'Checking current prices and availability…':unique.size
   ?unique.size+' designs are ready to buy.'+(unique.size<designs.length?' More designs are being prepared.':'')
   :'Artwork previews are available now. Real '+collection.label.toLowerCase()+' print previews and checkout will appear only after supplier approval.';
 }
@@ -181,11 +182,21 @@ if(collection){
  $('#collection-detail-image').before(stage);
  $('#close-collection-detail').addEventListener('click',()=>$('#collection-detail').close());
  $('#collection-detail-add').addEventListener('click',()=>{if(selectedOffer)add(selectedOffer,$('#collection-detail-add'));});
- $('#open-cart').addEventListener('click',openCart);
- const [gallery,catalog]=await Promise.all([
-  fetch('/shop-gallery.json',{cache:'no-cache'}).then(r=>r.ok?r.json():null).catch(()=>null),
-  fetch('/api/shop/catalog?product='+encodeURIComponent(collection.offerType),{cache:'no-store'}).then(r=>r.ok?r.json():null).catch(()=>null)
- ]);
- renderCatalog(gallery,catalog?.version===1?catalog.offers:[]);
- await initialize({launcher:'#open-cart'});
+ $('#open-cart').onclick=openCart;
+ const loading=shopLoading($('#shop-loading'));
+ void initialize({launcher:'#open-cart'});
+
+ let active=false;
+ async function load(){
+  if(active)return;active=true;loading.start(load);
+  // Start the live check immediately, but never hold the artwork hostage to it.
+  const catalogRequest=readShopCatalog('/api/shop/catalog?product='+encodeURIComponent(collection.offerType));
+  const result=catalogRequest.then(catalog=>({catalog}),error=>({error}));
+  const gallery=await readShopGallery();
+  renderCatalog(gallery,[],{checking:true});document.body.dataset.shopPreview='true';
+  const {catalog,error}=await result;
+  if(error){loading.fail(load);}else{renderCatalog(gallery,catalog.offers);loading.finish();}
+  active=false;
+ }
+ void load();
 }
