@@ -45,10 +45,17 @@ const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('n
    assert.equal(await page.getByRole('button',{name:'Add to cart'}).count(),0,'No approved blanket = no add action');
    assert.equal(await page.locator('#collection-nav a').count(),16);
    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),true,'No horizontal layout overflow at '+width);
-   await page.locator('.collection-card').first().getByRole('button',{name:'See artwork'}).click();
+   const first=page.locator('.collection-card').first();
+   assert.match(await first.locator('.collection-card-image img').getAttribute('src'),/recast-christmas-golden-blankets-sales-20261111/,'Premium Golden blanket scene appears first');
+   const husky=page.locator('.collection-card[data-design-id="christmas-village-husky"]');
+   assert.match(await husky.locator('.collection-card-image img').getAttribute('src'),/recast-christmas-husky-blanket-sales-20261111/,'Husky keeps a distinct product-specific first image');
+   await first.getByRole('button',{name:'View gift'}).click();
    assert.equal(await page.locator('#collection-detail').isVisible(),true);
+   assert.equal(await page.getByRole('button',{name:'Sales illustration',exact:true}).getAttribute('aria-pressed'),'true');
+   assert.match(await page.locator('#collection-detail-image').getAttribute('src'),/recast-christmas-golden-blankets-sales-20261111/);
    assert.equal(await page.locator('#collection-detail-add').isVisible(),false);
    assert.equal(await page.getByRole('button',{name:'Real Printful pending'}).isDisabled(),true);
+   await page.getByRole('button',{name:'Layout 50 × 60 in'}).click();
    assert.equal(await page.locator('#collection-detail-concept .collection-preview').getAttribute('data-preview-size'),'50 × 60 in');
    const shortRatio=await page.locator('#collection-detail-concept .collection-artwork').evaluate(el=>Number.parseFloat(getComputedStyle(el).aspectRatio));
    assert.ok(Math.abs(shortRatio-5/6)<0.02,'The actual 50×60 blanket outline needs the right proportions');
