@@ -11,3 +11,12 @@ Ten *marketing-only* illustrations uploaded to connected Shopify Files and mappe
 Validation status as prepared: generated/cropped images visually inspected; Shopify upload responses verified; final GitHub CI, browser and production deployment need separate receipts. Existing category noindex and commerce restrictions unchanged. Not finished: many breed/product combinations; exact source matching still needs human visual comparison per asset. No claims of approved supplier output or faster cart from these changes.
 
 Rollback: revert this code branch and redeploy. Existing approved product proofs, offers and source revisions survive. New Shopify Files remain unreferenced if rolled back.
+
+
+## Golden Retriever expansion (same session)
+
+Also added **nine** premium Golden Retriever Christmas Village illustrations to Shopify Files, with individual product-shaped first images for blankets, tumblers, hoodies, T-shirts, tote bags, phone cases, framed prints, posters and puzzles. Exact `christmas-village-golden-retriever` revision: `6e0a3f4c45a33cb4cc002344c95139d4712d1c6dc98566340dd41172e09e015f`. The existing five Golden Village marketing scenes (pillow, canvas, coaster, magnet and sticker sheet) were preserved. New scenes are visually reviewed square crops from a 3×3 illustrated holiday product gallery and are marketing concepts, not actual Printful artwork/proofs. Nine uploads returned canonical Shopify URLs and media IDs; no new print source or supplier product was activated.
+
+A proposed Siamese cat creative batch was **rejected** because it mixed different dogs and cats across the panels. No Siamese design URLs were added; wrong-subject images must never be shown as a specific breed's item.
+
+Final scope for this branch is **19 new scenes across 2 named breeds**, taking 11 previous non-mug scene entries to **30**. This is still a small subset of the potential 35-design × 15 non-mug-family assortment. Version and checkout gates above remain unchanged. Regression tests cover exact Golden design/revision mapping and both new Shopify-hosted CDN scene families. CI and actual customer-browser tests are to be recorded after running, not inferred from file updates.
