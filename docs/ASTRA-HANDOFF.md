@@ -1,3 +1,7 @@
+Nov 11 update: added nine Golden Retriever scenes alongside ten Husky scenes (19 new/30 total non-mug sales-illustration entries). Reject mixed-pet Siamese concepts. All remain marketing-only; see [same first-image session](ASTRA-SESSION-HUSKY-SALES-2026-11-11.md). Remaining item/breed matrix is unfinished.
+
+Nov 11, 2026: Ten Husky Christmas product lifestyle illustrations are pinned to their exact gallery revision in a review branch; see [Husky premium first-image session](ASTRA-SESSION-HUSKY-SALES-2026-11-11.md). This is a partial image-assortment expansion; supplier proof and buyability rules remain unchanged.
+
 # Recast Me — cumulative Astra handoff
 
 RM146 (2026-10-12) — Owner selected continuous Full photo wrap after explicit crop/camera tradeoff. Tough Case defaults to existing v6 cover; v10 below-camera fit remains optional. Mug v11 uses two full-height half-width panels meeting at centre with no filler strips, preserving old approvals. 524 tests/dry-run PASS; hosted CI/release/real supplier verification pending. See [RM146](ASTRA-SESSION-RM-146.md).

@@ -1,5 +1,5 @@
 import {shopLoading,readShopCatalog,browsingImage,trackImage,readShopGallery} from './shop-loading.js?v=1';
-import {salesIllustration} from './shop-sales-illustrations.js?v=2';
+import {salesIllustration} from './shop-sales-illustrations.js?v=3';
 import {createProductConcept,conceptSizeOptions} from './shop-product-concepts.js?v=1';
 import {blanketPrintAudit} from './shop-print-readiness.js?v=1';
 import {SHOP_COLLECTIONS,collectionBySlug,collectionDesigns,categoryOffers} from './shop-collections.js?v=2';
