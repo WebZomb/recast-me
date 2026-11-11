@@ -148,6 +148,69 @@ const entries = Object.freeze([
     "artworkRevision": "c5a2531cd402cfa39db4f047f9b3e4f96e454795821bb5721618a54f2ad48ea8",
     "url": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-christmas-husky-coaster-sets-sales-20261111.webp?v=1794376316",
     "thumbnailUrl": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-christmas-husky-coaster-sets-sales-20261111.webp?v=1794376316"
+  },
+  {
+    "collection": "blankets",
+    "designId": "christmas-village-golden-retriever",
+    "artworkRevision": "6e0a3f4c45a33cb4cc002344c95139d4712d1c6dc98566340dd41172e09e015f",
+    "url": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-christmas-golden-blankets-sales-20261111.webp?v=1794377098",
+    "thumbnailUrl": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-christmas-golden-blankets-sales-20261111.webp?v=1794377098"
+  },
+  {
+    "collection": "tumblers",
+    "designId": "christmas-village-golden-retriever",
+    "artworkRevision": "6e0a3f4c45a33cb4cc002344c95139d4712d1c6dc98566340dd41172e09e015f",
+    "url": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-christmas-golden-tumblers-sales-20261111.webp?v=1794377101",
+    "thumbnailUrl": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-christmas-golden-tumblers-sales-20261111.webp?v=1794377101"
+  },
+  {
+    "collection": "hoodies",
+    "designId": "christmas-village-golden-retriever",
+    "artworkRevision": "6e0a3f4c45a33cb4cc002344c95139d4712d1c6dc98566340dd41172e09e015f",
+    "url": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-christmas-golden-hoodies-sales-20261111.webp?v=1794377104",
+    "thumbnailUrl": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-christmas-golden-hoodies-sales-20261111.webp?v=1794377104"
+  },
+  {
+    "collection": "t-shirts",
+    "designId": "christmas-village-golden-retriever",
+    "artworkRevision": "6e0a3f4c45a33cb4cc002344c95139d4712d1c6dc98566340dd41172e09e015f",
+    "url": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-christmas-golden-t-shirts-sales-20261111.webp?v=1794377107",
+    "thumbnailUrl": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-christmas-golden-t-shirts-sales-20261111.webp?v=1794377107"
+  },
+  {
+    "collection": "tote-bags",
+    "designId": "christmas-village-golden-retriever",
+    "artworkRevision": "6e0a3f4c45a33cb4cc002344c95139d4712d1c6dc98566340dd41172e09e015f",
+    "url": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-christmas-golden-tote-bags-sales-20261111.webp?v=1794377111",
+    "thumbnailUrl": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-christmas-golden-tote-bags-sales-20261111.webp?v=1794377111"
+  },
+  {
+    "collection": "phone-cases",
+    "designId": "christmas-village-golden-retriever",
+    "artworkRevision": "6e0a3f4c45a33cb4cc002344c95139d4712d1c6dc98566340dd41172e09e015f",
+    "url": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-christmas-golden-phone-cases-sales-20261111.webp?v=1794377114",
+    "thumbnailUrl": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-christmas-golden-phone-cases-sales-20261111.webp?v=1794377114"
+  },
+  {
+    "collection": "framed-prints",
+    "designId": "christmas-village-golden-retriever",
+    "artworkRevision": "6e0a3f4c45a33cb4cc002344c95139d4712d1c6dc98566340dd41172e09e015f",
+    "url": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-christmas-golden-framed-prints-sales-20261111.webp?v=1794377118",
+    "thumbnailUrl": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-christmas-golden-framed-prints-sales-20261111.webp?v=1794377118"
+  },
+  {
+    "collection": "posters",
+    "designId": "christmas-village-golden-retriever",
+    "artworkRevision": "6e0a3f4c45a33cb4cc002344c95139d4712d1c6dc98566340dd41172e09e015f",
+    "url": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-christmas-golden-posters-sales-20261111.webp?v=1794377121",
+    "thumbnailUrl": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-christmas-golden-posters-sales-20261111.webp?v=1794377121"
+  },
+  {
+    "collection": "puzzles",
+    "designId": "christmas-village-golden-retriever",
+    "artworkRevision": "6e0a3f4c45a33cb4cc002344c95139d4712d1c6dc98566340dd41172e09e015f",
+    "url": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-christmas-golden-puzzles-sales-20261111.webp?v=1794377125",
+    "thumbnailUrl": "https://cdn.shopify.com/s/files/1/0854/3810/3796/files/recast-christmas-golden-puzzles-sales-20261111.webp?v=1794377125"
   }
 ]);
 export function salesIllustration(collection, design) {
