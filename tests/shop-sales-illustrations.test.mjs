@@ -14,7 +14,7 @@ test('sales illustrations match only the reviewed product and artwork revision',
   assert.equal(salesIllustration(collection,{...design,artworkRevision:'0'.repeat(64)}),null);
   assert.equal(salesIllustration(collection,{...design,designId:'another-pet'}),null);
  }
- assert.equal(salesIllustration('blankets',design),null);
+ assert.equal(salesIllustration('journals',design),null);
  assert.equal(salesIllustration('pillows',null),null);
 });
 
@@ -35,6 +35,19 @@ test('ten Husky scenes match only the pinned pet and product family',()=>{
  assert.equal(new Set(keys).size,keys.length);
 });
 
+
+test('nine added Golden Retriever product scenes stay on the approved original revision',()=>{
+ const goldenFamilies=['blankets','tumblers','hoodies','t-shirts','tote-bags','phone-cases','framed-prints','posters','puzzles'];
+ for(const collection of goldenFamilies){
+  const scene=salesIllustration(collection,design);
+  assert.ok(scene,collection);
+  assert.equal(scene.artworkRevision,design.artworkRevision);
+  assert.equal(scene.thumbnailUrl,scene.url);
+  assert.equal(salesIllustration(collection,{...design,artworkRevision:'0'.repeat(64)}),null);
+  assert.equal(salesIllustration(collection,{...design,designId:husky.designId}),null);
+ }
+});
+
 test('marketing images use decoded local WebP bytes or this shop’s pinned Shopify CDN',()=>{
  for(const entry of SALES_ILLUSTRATIONS)for(const url of [entry.url,entry.thumbnailUrl]){
   if(url.startsWith('/shop-assets/sales/')){
@@ -45,7 +58,7 @@ test('marketing images use decoded local WebP bytes or this shop’s pinned Shop
   }else{
    assert.ok(url.startsWith(approvedCdn),url);
    const parsed=new URL(url);
-   assert.match(parsed.pathname,/\/recast-christmas-husky-[a-z-]+-sales-20261111\.webp$/);
+   assert.match(parsed.pathname,/\/recast-christmas-(husky|golden)-[a-z-]+-sales-20261111\.webp$/);
    assert.match(parsed.searchParams.get('v')||'',/^\d+$/);
    assert.equal(parsed.searchParams.has('width'),false);
   }
