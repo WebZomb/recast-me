@@ -1,3 +1,5 @@
+Nov 11 update: added nine Golden Retriever scenes alongside ten Husky scenes (19 new/30 total non-mug sales-illustration entries). Reject mixed-pet Siamese concepts. All remain marketing-only; see [same first-image session](ASTRA-SESSION-HUSKY-SALES-2026-11-11.md). Remaining item/breed matrix is unfinished.
+
 Nov 11, 2026: Ten Husky Christmas product lifestyle illustrations are pinned to their exact gallery revision in a review branch; see [Husky premium first-image session](ASTRA-SESSION-HUSKY-SALES-2026-11-11.md). This is a partial image-assortment expansion; supplier proof and buyability rules remain unchanged.
 
 # Recast Me — cumulative Astra handoff
