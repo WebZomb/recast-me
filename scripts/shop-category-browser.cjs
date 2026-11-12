@@ -46,13 +46,13 @@ const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('n
    assert.equal(await page.locator('#collection-nav a').count(),16);
    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),true,'No horizontal layout overflow at '+width);
    const first=page.locator('.collection-card').first();
-   assert.match(await first.locator('.collection-card-image img').getAttribute('src'),/recast-christmas-golden-blankets-sales-20261111/,'Premium Golden blanket scene appears first');
+   assert.match(await first.locator('.collection-card-image img').getAttribute('src'),/christmas-village-golden-retriever-blankets-v1/,'Premium Golden blanket scene appears first');
    const husky=page.locator('.collection-card[data-design-id="christmas-village-husky"]');
-   assert.match(await husky.locator('.collection-card-image img').getAttribute('src'),/recast-christmas-husky-blanket-sales-20261111/,'Husky keeps a distinct product-specific first image');
+   assert.match(await husky.locator('.collection-card-image img').getAttribute('src'),/christmas-village-husky-blankets-v1/,'Husky keeps a distinct product-specific first image');
    await first.getByRole('button',{name:'View gift'}).click();
    assert.equal(await page.locator('#collection-detail').isVisible(),true);
    assert.equal(await page.getByRole('button',{name:'Sales illustration',exact:true}).getAttribute('aria-pressed'),'true');
-   assert.match(await page.locator('#collection-detail-image').getAttribute('src'),/recast-christmas-golden-blankets-sales-20261111/);
+   assert.match(await page.locator('#collection-detail-image').getAttribute('src'),/christmas-village-golden-retriever-blankets-v1/);
    assert.equal(await page.locator('#collection-detail-add').isVisible(),false);
    assert.equal(await page.getByRole('button',{name:'Real Printful pending'}).isDisabled(),true);
    await page.getByRole('button',{name:'Layout 50 × 60 in'}).click();

@@ -4,3 +4,9 @@ node_modules/
 .env*
 
 shop-browser-results/
+
+shop-category-browser-results/
+
+shop-loading-browser-results/
+
+.scene-workspace/
