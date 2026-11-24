@@ -78,3 +78,9 @@ export function groupShopOffers(offers){
  }
  return [...groups.values()].map(variants=>variants.sort((a,b)=>a.priceCents-b.priceCents));
 }
+
+/** Resolve a shared mug link against the currently approved live catalog only. */
+export function linkedMug(offers, search) {
+  const id = new URLSearchParams(search).get('gift');
+  return id ? offers.find(o => o?.id === id && o.product === 'mug' && readyOffer(o) && o.productPreviewUrl) || null : null;
+}
