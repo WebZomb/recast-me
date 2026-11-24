@@ -1,5 +1,5 @@
 import {shopLoading,readShopCatalog,browsingImage,trackImage,readShopGallery} from './shop-loading.js?v=1';
-import {groupShopOffers} from './shop-model.js?v=4';
+import {groupShopOffers,linkedMug} from './shop-model.js?v=5';
 import {SHOP_COLLECTIONS} from './shop-collections.js?v=2';
 import {initialize,addPremade,openCart} from './basket.js?v=5';
 const $=s=>document.querySelector(s);
@@ -96,7 +96,7 @@ function card(variants){
  let selected=variants[0];const card=node('article',null,'product'),visual=node('div',null,'product-visual'),img=trackImage(node('img'));
  img.loading='lazy';img.width=600;img.height=600;
  const badge=node('span',null,'image-caption'),details=node('div',null,'details');
- const title=node('h3',selected.designId?.startsWith('christmas-village-')?selected.breed+' · Christmas Village':selected.breed||selected.title),price=node('strong');
+ const title=node('h3',selected.title),price=node('strong');
  const size=node('select');size.setAttribute('aria-label','Size for '+selected.title);
  for(const offer of variants)size.add(new Option(offer.variantLabel,offer.id));
  const buy=button('Add to cart',()=>add(selected,buy));buy.className='primary';
@@ -152,7 +152,13 @@ async function load(){
  if(data?.version===1&&Array.isArray(data.designs))previews=data.designs.filter(d=>d&&d.status==='preview'&&d.product==='mug'&&['dog','cat'].includes(d.pet)&&typeof d.title==='string'&&typeof d.breed==='string'&&String(d.artworkImage).startsWith('https://cdn.shopify.com/')&&(!d.salesImage||String(d.salesImage).startsWith('https://cdn.shopify.com/')));
  render([],previews);document.body.dataset.shopPreview='true';
  const {catalog,error}=await result;
- if(error){loading.fail(load);}else{render(catalog.offers,previews);loading.finish();}
+ if(error){loading.fail(load);}else{render(catalog.offers,previews);loading.finish();
+  const gift=new URLSearchParams(location.search).get('gift');
+  if(gift){
+   const offer=linkedMug(catalog.offers,location.search);
+   if(offer)showProduct(offer);
+   else $('#shop-announcement').textContent='That mug preview is unavailable. Browse the current designs below.';
+  }}
  active=false;
 }
 void load();

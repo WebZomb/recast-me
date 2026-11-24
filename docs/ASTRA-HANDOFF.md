@@ -528,3 +528,5 @@ November9 VERIFIED loading/cart releases: PR1898d72afd deployed42745072824; all 
 ## November 12, 2026 — complete first-image catalog
 
 Prepared all35 Christmas pet designs across15 non-mug collections (525 first images):513 new exact-source compositions,12 retained approved scenes. This fills495 missing entries and replaces18 earlier low-resolution/collage concepts. Original artwork, mug gallery, real supplier preview controls, prices and buyability gates remain unchanged. See [complete first-image session](ASTRA-SESSION-COMPLETE-FIRST-IMAGES-2026-11-12.md) and the hashed coverage receipt for QA, final release state and rollback. Do not confuse image coverage with supplier approval of additional product categories.
+
+November 23: [Christmas mug discovery audit and implementation](ASTRA-SESSION-CHRISTMAS-MUG-DISCOVERY-2026-11-23.md). Public shop and creator paths separated; exact verified offer links prepared. No production or growth claim.
